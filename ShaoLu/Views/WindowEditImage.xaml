@@ -1,0 +1,18 @@
+﻿<Window x:Class="ShaoLu.Views.WindowEditImage"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        mc:Ignorable="d"
+        xmlns:local="clr-namespace:ShaoLu.Views"
+        xmlns:viewmodels="clr-namespace:ShaoLu.Viewmodels"
+        d:DataContext="{d:DesignInstance Type=viewmodels:EditImageViewModel}"
+        Title="{lex:Loc EditImageTitle}" Height="450" Width="800">
+    <Grid>
+        <wd:CropImage Source="{Binding ImgSrc}"/>
+    </Grid>
+</Window>

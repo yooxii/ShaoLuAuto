@@ -1,0 +1,103 @@
+﻿<Window x:Class="ShaoLu.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+        xmlns:local="clr-namespace:ShaoLu"
+        xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
+        xmlns:conv="clr-namespace:ShaoLu.Converters"
+        d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        mc:Ignorable="d"
+        Title="{lex:Loc AppTitle}" Height="450" Width="800">
+
+    <Window.Resources>
+
+        <!-- 识图步骤的UI -->
+        <DataTemplate x:Key="ImageStepTemplate" DataType="{x:Type viewmodel:ImageRecognitionStep}">
+            <Grid Margin="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ImagePath}" VerticalAlignment="Center" MaxWidth="300" MinWidth="150"/>
+                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3"/>
+                    <Button Content="{lex:Loc Edit}" Command="{Binding PreviewImageCommand}" Margin="3"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Column="2">
+                    <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
+                    <Slider Value="{Binding SimilarityThreshold}" VerticalAlignment="Center" Minimum="0" Maximum="1" Width="200"/>
+                    <TextBox Text="{Binding SimilarityThreshold,StringFormat=0.00}" PreviewTextInput="TextBox_PreviewTextInput" InputMethod.IsInputMethodEnabled="False"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <!-- 输入文字步骤的UI -->
+        <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type viewmodel:TypeTextStep}">
+            <StackPanel Orientation="Horizontal">
+                <TextBox Text="{Binding TextToType}" />
+                <TextBox Text="{Binding DelayBetweenKeys}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <conv:StepTemplateSelector x:Key="StepSelector"
+                     ImageTemplate="{StaticResource ImageStepTemplate}"
+                     TextTemplate="{StaticResource TextStepTemplate}"/>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Menu>
+            <MenuItem x:Name="File" Header="{lex:Loc}">
+                <MenuItem x:Name="New" Header="{lex:Loc}"/>
+                <MenuItem x:Name="Open" Header="{lex:Loc}"/>
+                <MenuItem x:Name="Save" Header="{lex:Loc}"/>
+            </MenuItem>
+            <MenuItem x:Name="Setting" Header="{lex:Loc}">
+            </MenuItem>
+            <MenuItem x:Name="Language" Header="{lex:Loc}">
+                <MenuItem x:Name="English" Tag="en-US"  Header="{lex:Loc}" IsChecked="{Binding English}" Click="Language_Click"/>
+                <MenuItem x:Name="SimplifiedChinese" Tag="zh-CN" Header="{lex:Loc}" IsChecked="{Binding Simplified}" Click="Language_Click"/>
+                <MenuItem x:Name="TraditionalChinese" Tag="zh-TW" Header="{lex:Loc}" IsChecked="{Binding Tranditional}" Click="Language_Click"/>
+            </MenuItem>
+            <MenuItem x:Name="Quit" Header="{lex:Loc}" Click="Quit_Click"/>
+            <MenuItem Header="测试裁剪" Click="TestCrop_Click"/>
+        </Menu> <!--菜单-->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="10"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="BtnAddStep" Content="{lex:Loc}" Grid.Column="1" Margin="3" Command="{Binding AddImageStepCommand}"/>
+                <Button x:Name="BtnDelStep" Content="{lex:Loc}" Grid.Column="3" Margin="3"/>
+            </Grid> <!--步骤按钮-->
+            <Grid Grid.Row="1">
+                <ListBox ItemsSource="{Binding AutomationSteps}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <!-- 这里会自动根据具体类型渲染出对应的配置表单 -->
+                            <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource StepSelector}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

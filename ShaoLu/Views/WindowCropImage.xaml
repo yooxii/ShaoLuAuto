@@ -1,0 +1,60 @@
+﻿<Window
+    x:Class="ShaoLu.Views.WindowCropImage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:ShaoLu.Views"
+    mc:Ignorable="d" 
+    d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <WrapPanel>
+            <CheckBox
+                x:Name="myCheckBox"
+                wd:ElementHelper.CornerRadius="3"
+                Content="开启等比缩放"
+                IsChecked="False" />
+            <StackPanel Margin="10,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Text="裁剪区域比例:" />
+                <Slider
+                    x:Name="myRectScaleSlider"
+                    Width="100"
+                    wd:ElementHelper.CornerRadius="3"
+                    Maximum="1"
+                    Minimum="0"
+                    Value="0.5" />
+            </StackPanel>
+
+        </WrapPanel>
+        <wd:CropImage
+            Name="MyCropImage"
+            Grid.Row="1"
+            IsRatioScale="{Binding ElementName=myCheckBox, Path=IsChecked}"
+            RectScale="{Binding ElementName=myRectScaleSlider, Path=Value}"
+            ScaleSize="2.35,1" />
+        <StackPanel
+            Grid.Row="2"
+            Margin="0,10"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            wd:PanelHelper.Spacing="3"
+            Orientation="Horizontal">
+            <Button
+                wd:ElementHelper.CornerRadius="3"
+                Click="OnImportClickHandler"
+                Content="选择图片"
+                Style="{StaticResource WD.PrimaryButton}" />
+            <Button
+                wd:ElementHelper.CornerRadius="3"
+                Click="SaveCrop_Click"
+                Content="保存图片"
+                Style="{StaticResource WD.SuccessPrimaryButton}" />
+        </StackPanel>
+    </Grid>
+</Window>

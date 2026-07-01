@@ -12,7 +12,13 @@
         xmlns:viewmodels="clr-namespace:ShaoLu.Viewmodels"
         d:DataContext="{d:DesignInstance Type=viewmodels:EditImageViewModel}"
         Title="{lex:Loc EditImageTitle}" Height="450" Width="800">
+    <!--xmlns:imgtool="clr-namespace:ImageTool"-->
     <Grid>
-        <wd:CropImage Source="{Binding ImgSrc}"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <wd:CropImage x:Name="EditImage" Source="{Binding ImgSrc}"/>
+        <Button Grid.Row="1" Content="{lex:Loc EditImageSave}" Command="{Binding SaveCommand}"/>
     </Grid>
 </Window>

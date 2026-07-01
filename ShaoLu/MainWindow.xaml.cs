@@ -1,4 +1,5 @@
-﻿using ShaoLu.Viewmodels;
+﻿using ShaoLu.Utils;
+using ShaoLu.Viewmodels;
 using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
@@ -105,8 +106,43 @@ namespace ShaoLu
 
         private void TestCrop_Click(object sender, RoutedEventArgs e)
         {
-            WindowCropImage windowCropImage = new();
-            windowCropImage.Show();
+            //WindowCropImage windowCropImage = new();
+            //windowCropImage.Show();
+            WindowEditImage windowEditImage = new();
+            windowEditImage.Show();
+        }
+
+        private void BtnDelStep_Click(object sender, RoutedEventArgs e)
+        {
+            if (StepsListBox.SelectedItem == null)
+            {
+                return;
+            }
+            if (StepsListBox.SelectedItem is AutomationStepBase selectedStep)
+            {
+                mainViewModel.AutomationStepBases.Remove(selectedStep);
+            }
+        }
+
+        private void Open_Click(object sender, RoutedEventArgs e)
+        {
+            Services.FileServices fileServices = new();
+            var filePath = fileServices.OpenPathDialog("打开文件", "步骤文件|*.json");
+            if (filePath != null)
+            {
+                var AutomationStepBases = StepsFile.LoadStepsFromJson(filePath);
+                mainViewModel.AutomationStepBases = AutomationStepBases;
+            }
+        }
+
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+            Services.FileServices fileServices = new();
+            var filePath = fileServices.SavePathDialog("保存文件", "步骤文件|*.json");
+            if (filePath != null)
+            {
+                StepsFile.SaveStepsToJson(mainViewModel.AutomationStepBases, filePath);
+            }
         }
     }
 }

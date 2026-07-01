@@ -97,6 +97,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Crop 的本地化字符串。
+        /// </summary>
+        public static string Crop {
+            get {
+                return ResourceManager.GetString("Crop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Edit 的本地化字符串。
         /// </summary>
         public static string Edit {
@@ -255,6 +264,15 @@ namespace ShaoLu.Resources {
         public static string SimplifiedChinese_Header {
             get {
                 return ResourceManager.GetString("SimplifiedChinese_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Steps Box 的本地化字符串。
+        /// </summary>
+        public static string StepsBox {
+            get {
+                return ResourceManager.GetString("StepsBox", resourceCulture);
             }
         }
         

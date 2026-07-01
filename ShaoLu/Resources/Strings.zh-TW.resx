@@ -189,4 +189,10 @@
   <data name="EditImageTitle" xml:space="preserve">
     <value>圖片編輯</value>
   </data>
+  <data name="Crop" xml:space="preserve">
+    <value>裁剪</value>
+  </data>
+  <data name="StepsBox" xml:space="preserve">
+    <value>步驟記録區</value>
+  </data>
 </root>

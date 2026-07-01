@@ -25,6 +25,10 @@
    				您可以根据需要调整该值，例如设置为 Radius="4" 以获得更大的圆角。
 			 -->
                 <wd:Resources />
+                <!--
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
+                -->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

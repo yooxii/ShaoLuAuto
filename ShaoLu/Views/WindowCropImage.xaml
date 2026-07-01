@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-    xmlns:local="clr-namespace:ShaoLu.Views"
+    xmlns:local="clr-namespace:ShaoLu.Controls"
     mc:Ignorable="d" 
     d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
@@ -33,7 +33,7 @@
 
         </WrapPanel>
         <wd:CropImage
-            Name="MyCropImage"
+            x:Name="MyCropImage"
             Grid.Row="1"
             IsRatioScale="{Binding ElementName=myCheckBox, Path=IsChecked}"
             RectScale="{Binding ElementName=myRectScaleSlider, Path=Value}"

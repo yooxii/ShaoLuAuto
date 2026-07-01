@@ -1,0 +1,44 @@
+﻿<Window x:Class="ImageTool.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ImageTool"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        WindowStyle="None"
+        SizeToContent="Manual"
+        AllowsTransparency="True"
+        ResizeMode="CanResizeWithGrip"
+        Width="720" Height="576"
+        MinWidth="720" MinHeight="576"
+        Background="#171717"
+        Title="ZDY ' ImageViewer"
+        PreviewKeyDown="Window_PreviewKeyDown"
+        InputMethod.IsInputMethodEnabled="False"
+        mc:Ignorable="d">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/ImageTool;component/Themes/Icons.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/ImageTool;component/Themes/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid x:Name="ImageViewHeader" VerticalAlignment="Top" Height="64" Panel.ZIndex="100">
+            <Grid Background="Transparent" PreviewMouseLeftButtonDown="ImageViewHeader_MouseLeftButtonDown" />
+            <DockPanel LastChildFill="False" Margin="24 0 14 0">
+                <Image Source="/favicon.ico" Width="24" Height="24"/>
+                <Button DockPanel.Dock="Right" Style="{StaticResource ImageTool.IconCloseButton}"
+                        Click="Button_Close_Click">
+                    <Path Data="{StaticResource ImageTool.Icon.Close}" Style="{StaticResource ImageTool.IconPath}" Width="14" Height="14"/>
+                </Button>
+            </DockPanel>
+        </Grid>
+
+        <local:ImageEditor x:Name="ImageEditor" IsKeyInputEnabled="True" IsLoadFolder="False"/>
+    </Grid>
+
+</Window>

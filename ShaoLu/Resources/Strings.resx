@@ -189,4 +189,10 @@
   <data name="EditImageTitle" xml:space="preserve">
     <value>Edit Image</value>
   </data>
+  <data name="Crop" xml:space="preserve">
+    <value>Crop</value>
+  </data>
+  <data name="StepsBox" xml:space="preserve">
+    <value>Steps Box</value>
+  </data>
 </root>

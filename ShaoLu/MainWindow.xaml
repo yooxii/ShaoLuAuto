@@ -59,8 +59,8 @@
         <Menu>
             <MenuItem x:Name="File" Header="{lex:Loc}">
                 <MenuItem x:Name="New" Header="{lex:Loc}"/>
-                <MenuItem x:Name="Open" Header="{lex:Loc}"/>
-                <MenuItem x:Name="Save" Header="{lex:Loc}"/>
+                <MenuItem x:Name="Open" Header="{lex:Loc}" Click="Open_Click"/>
+                <MenuItem x:Name="Save" Header="{lex:Loc}" Click="Save_Click"/>
             </MenuItem>
             <MenuItem x:Name="Setting" Header="{lex:Loc}">
             </MenuItem>
@@ -70,12 +70,13 @@
                 <MenuItem x:Name="TraditionalChinese" Tag="zh-TW" Header="{lex:Loc}" IsChecked="{Binding Tranditional}" Click="Language_Click"/>
             </MenuItem>
             <MenuItem x:Name="Quit" Header="{lex:Loc}" Click="Quit_Click"/>
-            <MenuItem Header="测试裁剪" Click="TestCrop_Click"/>
+            <!--<MenuItem Header="测试裁剪" Click="TestCrop_Click"/>-->
         </Menu> <!--菜单-->
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition/>
+                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -86,17 +87,21 @@
                     <ColumnDefinition Width="10"/>
                 </Grid.ColumnDefinitions>
                 <Button x:Name="BtnAddStep" Content="{lex:Loc}" Grid.Column="1" Margin="3" Command="{Binding AddImageStepCommand}"/>
-                <Button x:Name="BtnDelStep" Content="{lex:Loc}" Grid.Column="3" Margin="3"/>
+                <Button x:Name="BtnDelStep" Content="{lex:Loc}" Grid.Column="3" Margin="3" Click="BtnDelStep_Click"/>
             </Grid> <!--步骤按钮-->
             <Grid Grid.Row="1">
-                <ListBox ItemsSource="{Binding AutomationSteps}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <!-- 这里会自动根据具体类型渲染出对应的配置表单 -->
-                            <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource StepSelector}"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <GroupBox Header="{lex:Loc StepsBox}">
+                    <ListBox x:Name="StepsListBox" ItemsSource="{Binding AutomationStepBases}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource StepSelector}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </GroupBox>
+            </Grid>
+            <Grid Grid.Row="2"> 
+                <Button x:Name="BtnRun" Content="{lex:Loc}" Margin="3" Command="{Binding RunCommand}"/>
             </Grid>
         </Grid>
     </Grid>

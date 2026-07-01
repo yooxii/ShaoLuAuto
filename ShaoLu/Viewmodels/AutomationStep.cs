@@ -18,6 +18,7 @@ namespace ShaoLu.Viewmodels
     // 基类
     public abstract class AutomationStepBase : ObservableObject
     {
+        public int StepId { get; set; }
         public string StepName { get; set; }
         public StepType Type { get; set; }
         // 其他公共属性...
@@ -35,6 +36,9 @@ namespace ShaoLu.Viewmodels
         private ImageSource _imgSrc;
         public ImageSource ImgSrc { get => _imgSrc; set => SetProperty(ref _imgSrc, value); }
 
+
+        public ImageSource _imgEdited;
+        public ImageSource ImgEdited { get => _imgEdited; set => SetProperty(ref _imgEdited, value); }
 
 
         private float _similarityThreshold = 0.85F;

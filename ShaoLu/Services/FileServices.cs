@@ -17,7 +17,7 @@ namespace ShaoLu.Services
             return result == true ? isDir ? Path.GetDirectoryName(dialog.FileName) : dialog.FileName : null;
         }
 
-        public string SavePathDialog(string title, string saveName, string filter, string initPath)
+        public string SavePathDialog(string title = "Open File", string filter = "All File|*.*", string saveName = "", string initPath = null)
         {
             SaveFileDialog dialog = new()
             {

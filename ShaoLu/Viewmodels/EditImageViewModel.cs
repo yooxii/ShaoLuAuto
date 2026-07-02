@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 
@@ -19,12 +20,26 @@ namespace ShaoLu.Viewmodels
             set => SetProperty(ref _imgSrc, value);
         }
 
-        private RelayCommand saveCommand;
-        public ICommand SaveCommand => saveCommand ??= new RelayCommand(Save);
+        private ImageSource _imgDst;
+        public ImageSource ImgDst {
+            get => _imgDst;
+            set => SetProperty(ref _imgDst, value);
+        }
 
-        private void Save()
+        private Rect _cropRect;
+        public Rect CropRect {
+            get => _cropRect;
+            set => SetProperty(ref _cropRect, value);
+        }
+
+        public event Action<ImageSource, Rect> OnImageSaved;
+
+        public void SaveCroppedImage(ImageSource croppedImage, Rect rect)
         {
-
+            if (croppedImage != null)
+            {
+                OnImageSaved?.Invoke(croppedImage, rect);
+            }
         }
     }
 }

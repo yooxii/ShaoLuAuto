@@ -2,9 +2,10 @@
 using OpenCvSharp.Extensions;
 using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using WindowsInput;
 using static ShaoLu.Models.AutoguiModel;
 
@@ -13,7 +14,7 @@ namespace ShaoLu.Utils
     public class Autogui
     {
 
-        public enum Poisition
+        public enum Position
         {
             Center = 0,
             LeftTop = 1,
@@ -43,14 +44,14 @@ namespace ShaoLu.Utils
             Apoint res = new();
 
             // 将模板转换为 Mat（只需转换一次，避免在循环中重复转换）
-            using var templateMat = new Mat(BitmapConverter.ToMat(templateImage));
+            using var templateMat = BitmapConverter.ToMat(templateImage);
             using var grayTemplate = templateMat.CvtColor(ColorConversionCodes.BGR2GRAY);
 
             while (true)
             {
                 // 1. 每次循环都重新获取屏幕截图（因为屏幕内容是动态变化的）
                 using var screenImg = CaptureScreen();
-                using var screenMat = new Mat(BitmapConverter.ToMat(screenImg));
+                using var screenMat = BitmapConverter.ToMat(screenImg);
                 using var grayScreen = screenMat.CvtColor(ColorConversionCodes.BGR2GRAY);
 
                 // 2. 执行模板匹配
@@ -96,7 +97,7 @@ namespace ShaoLu.Utils
         public static Bitmap CaptureScreen()
         {
             Rectangle bounds = Screen.PrimaryScreen.Bounds;
-            Bitmap bmpSrceen = new(bounds.Width, bounds.Height, PixelFormat.Format32bppArgb);
+            Bitmap bmpSrceen = new(bounds.Width, bounds.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             using Graphics g = Graphics.FromImage(bmpSrceen);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
@@ -121,40 +122,63 @@ namespace ShaoLu.Utils
 
         /// <summary>
         /// 将鼠标移动到指定的Apoint位置。
-        /// 0，中心；1，左上；2，右上；3，左下；4，右下
         /// </summary>
-        /// <param name="point">给定的位置</param>
-        /// <param name="poisition">0，中心；1，左上；2，右上；3，左下；4，右下</param>
-        public static void MoveMouseTo(Apoint point, Poisition poisition = 0)
+        /// <param name="point">给定的位置区域</param>
+        /// <param name="position">锚点位置：0-中心, 1-左上, 2-右上, 3-左下, 4-右下</param>
+        /// <param name="position_offset">相对于锚点的像素偏移量</param>
+        public static void MoveMouseTo(Apoint point, Position position = Position.Center, OpenCvSharp.Point? position_offset = null)
         {
-            if (point.IsEmpty)
+            // 1. 防御性检查：如果点无效或为空，直接返回
+            if (point == null || point.IsEmpty)
             {
                 return;
             }
-            switch (poisition)
+
+            int targetX;
+            int targetY;
+
+            // 2. 根据锚点类型确定基准坐标
+            switch (position)
             {
-                case Poisition.Center:
-                    MoveMouseTo(point.Center.X, point.Center.Y);
+                case Position.Center:
+                    targetX = point.Center.X;
+                    targetY = point.Center.Y;
                     break;
-                case Poisition.LeftTop:
-                    MoveMouseTo(point.LeftTop.X, point.LeftTop.Y);
+                case Position.LeftTop:
+                    targetX = point.LeftTop.X;
+                    targetY = point.LeftTop.Y;
                     break;
-                case Poisition.RightTop:
-                    MoveMouseTo(point.RightTop.X, point.RightTop.Y);
+                case Position.RightTop:
+                    targetX = point.RightTop.X;
+                    targetY = point.RightTop.Y;
                     break;
-                case Poisition.LeftDown:
-                    MoveMouseTo(point.LeftDown.X, point.LeftDown.Y);
+                case Position.LeftDown:
+                    targetX = point.LeftDown.X;
+                    targetY = point.LeftDown.Y;
                     break;
-                case Poisition.RightDown:
-                    MoveMouseTo(point.RightDown.X, point.RightDown.Y);
+                case Position.RightDown:
+                    targetX = point.RightDown.X;
+                    targetY = point.RightDown.Y;
                     break;
                 default:
-                    MoveMouseTo(point.Center.X, point.Center.Y);
+                    targetX = point.Center.X;
+                    targetY = point.Center.Y;
                     break;
             }
+
+            // 3. 应用偏移量
+            if (position_offset.HasValue)
+            {
+                targetX += position_offset.Value.X;
+                targetY += position_offset.Value.Y;
+            }
+
+            // 4. 执行移动
+            // 注意：此处假设 MoveMouseTo(double, double) 是已存在的底层实现
+            MoveMouseTo(targetX, targetY);
         }
 
-        public static bool ClickImageOnScreen(Bitmap templateImage, Poisition clickpoi = 0, int clicks = 1, double clickgaptime = 0.1, double threshold = 0.8, double waittime = 0.1, double timeout = 3)
+        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, OpenCvSharp.Point? position_offset = null, int clicks = 1, double clickgaptime = 0.1, double threshold = 0.8, double waittime = 0.1, double timeout = 3)
         {
             int waitTimeMs = (int)(waittime * 1000);
             int clickGapTimeMs = (int)(clickgaptime * 1000);
@@ -170,7 +194,7 @@ namespace ShaoLu.Utils
                 Apoint point = FindImageOnScreen(templateImage, threshold, 0.2, 0.4);
                 if (!point.IsEmpty)
                 {
-                    MoveMouseTo(point, clickpoi);
+                    MoveMouseTo(point, position, position_offset);
                     for (int i = 0; i < clicks; i++)
                     {
                         sim.Mouse.LeftButtonClick();
@@ -184,6 +208,51 @@ namespace ShaoLu.Utils
                     return false; // 超时退出
                 }
             }
+        }
+
+#nullable enable
+        /// <summary>
+        /// 将 WPF ImageSource 转换为 System.Drawing.Bitmap
+        /// </summary>
+        public static Bitmap? ConvertImageSourceToBitmap(ImageSource imageSource)
+        {
+            if (imageSource == null) return null;
+
+            // 如果是 BitmapSource，可以直接处理
+            if (imageSource is BitmapSource bitmapSource)
+            {
+                try
+                {
+                    // 创建一个新的 Bitmap
+                    int width = bitmapSource.PixelWidth;
+                    int height = bitmapSource.PixelHeight;
+
+                    // 确保格式支持转换，通常转为 Bgra32 或 Pbgra32
+                    // 如果源格式不是标准格式，可能需要先转换格式
+                    var format = bitmapSource.Format;
+
+                    // 使用 InteropBitmap 进行高效转换
+                    // 注意：CopyPixels 需要unsafe代码或者使用 Marshal，这里使用更安全的 Interop 方式
+
+                    using var stream = new System.IO.MemoryStream();
+                    // 编码为 PNG 或 BMP 到内存流
+                    BitmapEncoder encoder = new PngBitmapEncoder(); // 或者 BmpBitmapEncoder
+                    encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+                    encoder.Save(stream);
+
+                    // 从流中创建 GDI+ Bitmap
+                    stream.Position = 0;
+                    return new Bitmap(stream);
+                }
+                catch (Exception ex)
+                {
+                    // 记录日志或处理异常
+                    System.Diagnostics.Debug.WriteLine($"转换图像失败: {ex.Message}");
+                    return null;
+                }
+            }
+
+            return null;
         }
     }
 }

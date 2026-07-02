@@ -97,6 +97,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Run 的本地化字符串。
+        /// </summary>
+        public static string BtnRun_Content {
+            get {
+                return ResourceManager.GetString("BtnRun_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Cancel 的本地化字符串。
+        /// </summary>
+        public static string Cancel {
+            get {
+                return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Crop 的本地化字符串。
         /// </summary>
         public static string Crop {
@@ -225,9 +243,9 @@ namespace ShaoLu.Resources {
         /// <summary>
         ///   查找类似 Save 的本地化字符串。
         /// </summary>
-        public static string Save_header {
+        public static string Save {
             get {
-                return ResourceManager.GetString("Save_header", resourceCulture);
+                return ResourceManager.GetString("Save", resourceCulture);
             }
         }
         

@@ -1,13 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using ShaoLu;
 using ShaoLu.Models;
 using ShaoLu.Views;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -32,19 +28,40 @@ namespace ShaoLu.Viewmodels
         private string _imagePath;
         public string ImagePath { get => _imagePath; set => SetProperty(ref _imagePath, value); }
 
-
+        [JsonIgnore]
         private ImageSource _imgSrc;
-        public ImageSource ImgSrc { get => _imgSrc; set => SetProperty(ref _imgSrc, value); }
+        [JsonIgnore]
+        public ImageSource ImgSrc
+        {
+            get
+            {
+                if (_imgSrc is null)
+                    LoadImage();
+                return _imgSrc;
+            }
+            set => SetProperty(ref _imgSrc, value);
+        }
 
 
-        public ImageSource _imgEdited;
-        public ImageSource ImgEdited { get => _imgEdited; set => SetProperty(ref _imgEdited, value); }
+        [JsonIgnore]
+        public ImageSource _croppedImg;
+        [JsonIgnore]
+        public ImageSource CroppedImg { get => _croppedImg; set => SetProperty(ref _croppedImg, value); }
+
+        public Rect _croppedRect;
+        public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
+
+
+        private Point _offest;
+        public Point Offest { get => _offest; set => SetProperty(ref _offest, value); }
 
 
         private float _similarityThreshold = 0.85F;
-        public float SimilarityThreshold {
+        public float SimilarityThreshold
+        {
             get => _similarityThreshold;
-            set {
+            set
+            {
                 if (SetProperty(ref _similarityThreshold, value))
                 {
                     _similarityThreshold = _similarityThreshold < 0 ? 0 : _similarityThreshold > 1 ? 1 : _similarityThreshold;
@@ -63,8 +80,8 @@ namespace ShaoLu.Viewmodels
             ImagePath = fileServices.OpenPathDialog(title, filter);
         }
 
-        private RelayCommand previewImageCommand;
-        public ICommand PreviewImageCommand => previewImageCommand ??= new RelayCommand(EditImage);
+        private RelayCommand eidtImageCommand;
+        public ICommand EditImageCommand => eidtImageCommand ??= new RelayCommand(EditImage);
 
         private bool LoadImage()
         {
@@ -92,7 +109,7 @@ namespace ShaoLu.Viewmodels
 
             ImgSrc = null;
             var Warning_Title = LocalizeDictionary.Instance.GetLocalizedObject("Warning_Title", null, null) ?? "Warning";
-            MessageBox.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            System.Windows.Forms.MessageBox.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return false;
         }
 
@@ -106,7 +123,9 @@ namespace ShaoLu.Viewmodels
                 windowEditImage.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
+                    windowEditImage.editImageViewModel.ImgDst = CroppedImg;
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
+                windowEditImage.editImageViewModel.OnImageSaved += (img, rect) => { CroppedImg = img; CroppedRect = rect; };
             }
         }
     }

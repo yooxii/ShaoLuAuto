@@ -1,3 +1,9 @@
 <Solution>
-  <Project Path="ShaoLu/ShaoLu.csproj" Id="6326f714-723e-4eab-8f52-0dfdda17b648" />
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="ShaoLu/ShaoLu.csproj" Id="6326f714-723e-4eab-8f52-0dfdda17b648">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
 </Solution>

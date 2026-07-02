@@ -159,7 +159,7 @@
   <data name="Quit_Header" xml:space="preserve">
     <value>Quit</value>
   </data>
-  <data name="Save_header" xml:space="preserve">
+  <data name="Save" xml:space="preserve">
     <value>Save</value>
   </data>
   <data name="Select" xml:space="preserve">
@@ -194,5 +194,11 @@
   </data>
   <data name="StepsBox" xml:space="preserve">
     <value>Steps Box</value>
+  </data>
+  <data name="BtnRun_Content" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
   </data>
 </root>

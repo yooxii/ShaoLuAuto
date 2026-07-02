@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WPFDevelopers.Controls;
 
 namespace ShaoLu.Views
 {
@@ -26,6 +27,29 @@ namespace ShaoLu.Views
         {
             InitializeComponent();
             DataContext = editImageViewModel;
+        }
+
+        private void CropImage_Click(object sender, RoutedEventArgs e)
+        {
+            editImageViewModel.ImgDst = EditImage.CurrentAreaBitmap;
+        }
+
+        private void SaveImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is EditImageViewModel vm)
+            {
+                var croppedImg = editImageViewModel.ImgDst;
+                var croppedRect = EditImage.CurrentRect;
+
+                vm.SaveCroppedImage(croppedImg, croppedRect);
+
+                this.Close();
+            }
+        }
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

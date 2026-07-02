@@ -28,7 +28,7 @@
                     <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding ImagePath}" VerticalAlignment="Center" MaxWidth="300" MinWidth="150"/>
                     <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3"/>
-                    <Button Content="{lex:Loc Edit}" Command="{Binding PreviewImageCommand}" Margin="3"/>
+                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Grid.Column="2">
                     <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
@@ -60,7 +60,7 @@
             <MenuItem x:Name="File" Header="{lex:Loc}">
                 <MenuItem x:Name="New" Header="{lex:Loc}"/>
                 <MenuItem x:Name="Open" Header="{lex:Loc}" Click="Open_Click"/>
-                <MenuItem x:Name="Save" Header="{lex:Loc}" Click="Save_Click"/>
+                <MenuItem x:Name="Save" Header="{lex:Loc Save}" Click="Save_Click"/>
             </MenuItem>
             <MenuItem x:Name="Setting" Header="{lex:Loc}">
             </MenuItem>
@@ -100,7 +100,7 @@
                     </ListBox>
                 </GroupBox>
             </Grid>
-            <Grid Grid.Row="2"> 
+            <Grid Grid.Row="2" Margin="5 0 5 5"> 
                 <Button x:Name="BtnRun" Content="{lex:Loc}" Margin="3" Command="{Binding RunCommand}"/>
             </Grid>
         </Grid>

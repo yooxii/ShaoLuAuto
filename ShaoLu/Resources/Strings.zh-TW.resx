@@ -151,7 +151,7 @@
     <value>打開</value>
   </data>
   <data name="Picture_similarity_threshold" xml:space="preserve">
-    <value>圖片相似閾值</value>
+    <value>相似閾值</value>
   </data>
   <data name="Preview" xml:space="preserve">
     <value>預覽</value>
@@ -166,7 +166,7 @@
     <value>選擇</value>
   </data>
   <data name="Select_target_pic" xml:space="preserve">
-    <value>選擇目標圖片</value>
+    <value>目標圖片:</value>
   </data>
   <data name="Setting_Header" xml:space="preserve">
     <value>設置</value>
@@ -200,5 +200,32 @@
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>取消</value>
+  </data>
+  <data name="BtnStop_Content" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="StepDetails" xml:space="preserve">
+    <value>步驟細節</value>
+  </data>
+  <data name="NoSelectionHint" xml:space="preserve">
+    <value>請選擇一個步驟</value>
+  </data>
+  <data name="StepName" xml:space="preserve">
+    <value>步驟名稱</value>
+  </data>
+  <data name="StepType" xml:space="preserve">
+    <value>步驟類型</value>
+  </data>
+  <data name="StepDescription" xml:space="preserve">
+    <value>步驟描述</value>
+  </data>
+  <data name="StepType_ClickImage" xml:space="preserve">
+    <value>點擊圖像</value>
+  </data>
+  <data name="StepType_TypeText" xml:space="preserve">
+    <value>鍵入文字</value>
+  </data>
+  <data name="StepType_LogicalIF" xml:space="preserve">
+    <value>邏輯判斷</value>
   </data>
 </root>

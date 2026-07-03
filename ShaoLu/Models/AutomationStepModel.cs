@@ -8,8 +8,9 @@ namespace ShaoLu.Models
 {
     public enum StepType
     {
-        ImageRecognition,
+        ClickImage,
         TypeText,
+        LogicalIf = 100,
         // 其他步骤类型...
     }
 

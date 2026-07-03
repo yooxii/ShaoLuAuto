@@ -1,0 +1,65 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:AutoVM="clr-namespace:ShaoLu.Viewmodels.AutomationStep"
+                    xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+                    xmlns:lex="http://wpflocalizeextension.codeplex.com"
+                    xmlns:conv="clr-namespace:ShaoLu.Converters">
+
+
+    <!-- 识图步骤的UI -->
+    <DataTemplate x:Key="ImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
+        <Grid Margin="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
+                <TextBlock x:Name="PathTextBlock"
+                           Text="{Binding ImagePath}" 
+                           VerticalAlignment="Center" 
+                           MaxWidth="300" 
+                           MinWidth="150"
+                           TextTrimming="CharacterEllipsis"
+                           TextWrapping="NoWrap"
+                           Margin="5,0"
+                           ToolTip="{Binding ImagePath}"/>
+                <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
+                <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center">
+                <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
+                <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        VerticalAlignment="Center" 
+                        Minimum="0" 
+                        Maximum="1" 
+                        Width="200"
+                        Margin="5,0"/>
+                <TextBox Text="{Binding SimilarityThreshold, StringFormat=0.00, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                         InputMethod.IsInputMethodEnabled="False"
+                         Width="50"
+                         Margin="5,0"/>
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+    <!-- 输入文字步骤的UI -->
+    <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" 
+                     MinWidth="150"
+                     Margin="0,0,10,0"
+                     VerticalAlignment="Center"/>
+
+            <TextBox Text="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" 
+                     MinWidth="80"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <conv:StepTemplateSelector x:Key="StepDetailSelector"
+                     ImageTemplate="{StaticResource ImageStepTemplate}"
+                     TextTemplate="{StaticResource TextStepTemplate}"/>
+</ResourceDictionary>

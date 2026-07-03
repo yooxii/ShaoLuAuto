@@ -1,0 +1,55 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:AutoVM="clr-namespace:ShaoLu.Viewmodels.AutomationStep"
+                    xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+                    xmlns:lex="http://wpflocalizeextension.codeplex.com"
+                    xmlns:conv="clr-namespace:ShaoLu.Converters"
+                    xmlns:models="clr-namespace:ShaoLu.Models"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <ObjectDataProvider x:Key="StepTypeValues" 
+                            MethodName="GetValues" 
+                            ObjectType="{x:Type sys:Enum}">
+        <ObjectDataProvider.MethodParameters>
+            <x:Type TypeName="models:StepType"/>
+        </ObjectDataProvider.MethodParameters>
+    </ObjectDataProvider>
+    
+    <!-- 识图步骤的UI -->
+    <DataTemplate x:Key="ImageStepSummaryTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
+        <Grid Margin="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding StepId}"
+                       TextWrapping="Wrap"
+                       Grid.Column="0" />
+            <TextBlock Text="{Binding StepName}"
+                       TextWrapping="Wrap"
+                       Grid.Column="1" />
+            <TextBlock Text="{Binding StepDescription}"
+                       TextWrapping="Wrap"
+                       Grid.Column="2" />
+        </Grid>
+    </DataTemplate>
+
+    <!-- 输入文字步骤的UI -->
+    <DataTemplate x:Key="TextStepSummaryTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" 
+                     MinWidth="150"
+                     Margin="0,0,10,0"
+                     VerticalAlignment="Center"/>
+
+            <TextBox Text="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" 
+                     MinWidth="80"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <conv:StepTemplateSelector x:Key="StepSummarySelector"
+                     ImageTemplate="{StaticResource ImageStepSummaryTemplate}"
+                     TextTemplate="{StaticResource TextStepSummaryTemplate}"/>
+</ResourceDictionary>

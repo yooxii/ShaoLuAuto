@@ -1,21 +1,10 @@
 ﻿using ShaoLu.Utils;
-using ShaoLu.Viewmodels;
+using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace ShaoLu
 {
@@ -38,6 +27,7 @@ namespace ShaoLu
             Check_current_lang();
         }
 
+        #region 输入校验
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             TextBox textBox = sender as TextBox;
@@ -68,6 +58,7 @@ namespace ShaoLu
                 e.CancelCommand();
             }
         }
+        #endregion
 
         private void Check_current_lang()
         {
@@ -114,11 +105,11 @@ namespace ShaoLu
 
         private void BtnDelStep_Click(object sender, RoutedEventArgs e)
         {
-            if (StepsListBox.SelectedItem == null)
+            if (StepsBox.SelectedItem == null)
             {
                 return;
             }
-            if (StepsListBox.SelectedItem is AutomationStepBase selectedStep)
+            if (StepsBox.SelectedItem is AutomationStepBase selectedStep)
             {
                 mainViewModel.AutomationStepBases.Remove(selectedStep);
             }

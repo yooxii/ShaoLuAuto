@@ -166,7 +166,7 @@
     <value>Select</value>
   </data>
   <data name="Select_target_pic" xml:space="preserve">
-    <value>Select target image</value>
+    <value>Target Image:</value>
   </data>
   <data name="Setting_Header" xml:space="preserve">
     <value>Setting</value>
@@ -200,5 +200,32 @@
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="BtnStop_Content" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="StepDetails" xml:space="preserve">
+    <value>Step Details</value>
+  </data>
+  <data name="NoSelectionHint" xml:space="preserve">
+    <value>Please select a step</value>
+  </data>
+  <data name="StepName" xml:space="preserve">
+    <value>Step Name</value>
+  </data>
+  <data name="StepType" xml:space="preserve">
+    <value>StepType</value>
+  </data>
+  <data name="StepDescription" xml:space="preserve">
+    <value>Step Description</value>
+  </data>
+  <data name="StepType_ClickImage" xml:space="preserve">
+    <value>ClickImage</value>
+  </data>
+  <data name="StepType_TypeText" xml:space="preserve">
+    <value>TypeText</value>
+  </data>
+  <data name="StepType_LogicalIF" xml:space="preserve">
+    <value>LogicalIF</value>
   </data>
 </root>

@@ -1,5 +1,5 @@
 ﻿using ShaoLu.Converters;
-using ShaoLu.Viewmodels;
+using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

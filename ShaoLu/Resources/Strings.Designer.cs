@@ -106,6 +106,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Stop 的本地化字符串。
+        /// </summary>
+        public static string BtnStop_Content {
+            get {
+                return ResourceManager.GetString("BtnStop_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cancel 的本地化字符串。
         /// </summary>
         public static string Cancel {
@@ -205,6 +214,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 No Selection 的本地化字符串。
+        /// </summary>
+        public static string NoSelectionHint {
+            get {
+                return ResourceManager.GetString("NoSelectionHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Open 的本地化字符串。
         /// </summary>
         public static string Open_Header {
@@ -286,11 +304,74 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Step Description 的本地化字符串。
+        /// </summary>
+        public static string StepDescription {
+            get {
+                return ResourceManager.GetString("StepDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Step Details 的本地化字符串。
+        /// </summary>
+        public static string StepDetails {
+            get {
+                return ResourceManager.GetString("StepDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Step Name 的本地化字符串。
+        /// </summary>
+        public static string StepName {
+            get {
+                return ResourceManager.GetString("StepName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Steps Box 的本地化字符串。
         /// </summary>
         public static string StepsBox {
             get {
                 return ResourceManager.GetString("StepsBox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Step Type 的本地化字符串。
+        /// </summary>
+        public static string StepType {
+            get {
+                return ResourceManager.GetString("StepType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ClickImage 的本地化字符串。
+        /// </summary>
+        public static string StepType_ClickImage {
+            get {
+                return ResourceManager.GetString("StepType_ClickImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 LogicalIF 的本地化字符串。
+        /// </summary>
+        public static string StepType_LogicalIF {
+            get {
+                return ResourceManager.GetString("StepType_LogicalIF", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 TypeText 的本地化字符串。
+        /// </summary>
+        public static string StepType_TypeText {
+            get {
+                return ResourceManager.GetString("StepType_TypeText", resourceCulture);
             }
         }
         

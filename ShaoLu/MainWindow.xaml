@@ -5,50 +5,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
         xmlns:local="clr-namespace:ShaoLu"
         xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
         xmlns:conv="clr-namespace:ShaoLu.Converters"
         d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
-        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
-        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
         mc:Ignorable="d"
-        Title="{lex:Loc AppTitle}" Height="450" Width="800">
+        Title="{lex:Loc AppTitle}" Height="600" Width="1000">
 
     <Window.Resources>
-
-        <!-- 识图步骤的UI -->
-        <DataTemplate x:Key="ImageStepTemplate" DataType="{x:Type viewmodel:ImageRecognitionStep}">
-            <Grid Margin="3">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="20"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding ImagePath}" VerticalAlignment="Center" MaxWidth="300" MinWidth="150"/>
-                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3"/>
-                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Grid.Column="2">
-                    <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
-                    <Slider Value="{Binding SimilarityThreshold}" VerticalAlignment="Center" Minimum="0" Maximum="1" Width="200"/>
-                    <TextBox Text="{Binding SimilarityThreshold,StringFormat=0.00}" PreviewTextInput="TextBox_PreviewTextInput" InputMethod.IsInputMethodEnabled="False"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-
-        <!-- 输入文字步骤的UI -->
-        <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type viewmodel:TypeTextStep}">
-            <StackPanel Orientation="Horizontal">
-                <TextBox Text="{Binding TextToType}" />
-                <TextBox Text="{Binding DelayBetweenKeys}" />
-            </StackPanel>
-        </DataTemplate>
-
-        <conv:StepTemplateSelector x:Key="StepSelector"
-                     ImageTemplate="{StaticResource ImageStepTemplate}"
-                     TextTemplate="{StaticResource TextStepTemplate}"/>
+        <ResourceDictionary>
+            <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Templates/StepSummaryTemplates.xaml"/>
+                <ResourceDictionary Source="/Templates/StepDetailTemplates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
     
     <Grid>
@@ -90,18 +63,50 @@
                 <Button x:Name="BtnDelStep" Content="{lex:Loc}" Grid.Column="3" Margin="3" Click="BtnDelStep_Click"/>
             </Grid> <!--步骤按钮-->
             <Grid Grid.Row="1">
-                <GroupBox Header="{lex:Loc StepsBox}">
-                    <ListBox x:Name="StepsListBox" ItemsSource="{Binding AutomationStepBases}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="400"/>
+                    <ColumnDefinition Width="3"/>
+                    <ColumnDefinition Width="Auto" MinWidth="200"/>
+                </Grid.ColumnDefinitions>
+                <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
+                    <!--<ListBox x:Name="StepsListBox" ItemsSource="{Binding AutomationStepBases}" SelectedItem="{Binding SelectedStep, Mode=TwoWay}" Margin="3">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource StepSelector}"/>
+                                <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource StepSummarySelector}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
-                    </ListBox>
+                    </ListBox>-->
+                    <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}" SelectionMode="Extended" SelectedItem="{Binding SelectedStep}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" />
+                            <DataGridComboBoxColumn Header="{lex:Loc StepType}" SelectedItemBinding="{Binding Type}" ItemsSource="{Binding Source={StaticResource StepTypeValues}}"/>
+                            <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </GroupBox>
+                <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
+                <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2">
+                    <!-- 当 SelectedStep 为 null 时，可以显示提示文本 -->
+                    <Grid>
+                        <ContentControl Content="{Binding SelectedStep}" 
+                        ContentTemplateSelector="{StaticResource StepDetailSelector}" />
+
+                        <!-- 可选：如果没有选中项，显示提示信息 -->
+                        <TextBlock Text="{lex:Loc NoSelectionHint}" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            Visibility="{Binding SelectedStep, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Inverse}"/>
+                    </Grid>
                 </GroupBox>
             </Grid>
-            <Grid Grid.Row="2" Margin="5 0 5 5"> 
+            <Grid Grid.Row="2" Margin="5 0 5 5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
                 <Button x:Name="BtnRun" Content="{lex:Loc}" Margin="3" Command="{Binding RunCommand}"/>
+                <Button x:Name="BtnStop" Grid.Column="1" Content="{lex:Loc}" Margin="3" Command="{Binding StopCommand}"/>
             </Grid>
         </Grid>
     </Grid>

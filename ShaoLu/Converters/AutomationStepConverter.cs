@@ -1,5 +1,5 @@
 ﻿using ShaoLu.Models;
-using ShaoLu.Viewmodels;
+using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -70,7 +70,7 @@ namespace ShaoLu.Converters
             Type concreteType = stepType switch
             {
                 // 请确保这里的映射与你实际的类名一致
-                StepType.ImageRecognition => typeof(ImageRecognitionStep),
+                StepType.ClickImage => typeof(ClickImageStep),
                 StepType.TypeText => typeof(TypeTextStep),
                 // 添加其他映射...
                 _ => throw new JsonException($"No mapping found for StepType: {stepType}")

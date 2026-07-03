@@ -2,26 +2,92 @@
 using ShaoLu.Models;
 using ShaoLu.Views;
 using System;
+using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using WPFLocalizeExtension.Engine;
 
-namespace ShaoLu.Viewmodels
+namespace ShaoLu.Viewmodels.AutomationStep
 {
     // 基类
     public abstract class AutomationStepBase : ObservableObject
     {
-        public int StepId { get; set; }
-        public string StepName { get; set; }
-        public StepType Type { get; set; }
+        private int _lineNo;
+
+        /// <summary>
+        /// 步骤行号。
+        /// 注意：此值应由包含该步骤的集合（如 ObservableCollection）在增删改时统一维护，
+        /// 或者在 UI 绑定时通过 Index 计算。此处保留 SetProperty 以支持手动刷新。
+        /// </summary>
+        public int LineNo
+        {
+            get => _lineNo;
+            set => SetProperty(ref _lineNo, value);
+        }
+
+        private string _name;
+        /// <summary>
+        /// 步骤名称
+        /// </summary>
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                // 简单的防御性编程，防止 Null 导致绑定崩溃
+                if (value == null) throw new ArgumentNullException(nameof(Name));
+                SetProperty(ref _name, value);
+            }
+        }
+
+        private string _description;
+        /// <summary>
+        /// 步骤描述
+        /// </summary>
+        public string Description
+        {
+            get => _description;
+            set => SetProperty(ref _description, value);
+        }
+
+        private StepType _type;
+        /// <summary>
+        /// 步骤类型
+        /// </summary>
+        public StepType Type
+        {
+            get => _type;
+            set => SetProperty(ref _type, value);
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// 确保创建时即分配唯一 ID 和默认值
+        /// </summary>
+        protected AutomationStepBase()
+        {
+            this.LineNo = 0;
+            this.Name = string.Empty;
+            this.Description = string.Empty;
+        }
+
+        /// <summary>
+        /// 带参构造函数（方便测试和初始化）
+        /// </summary>
+        protected AutomationStepBase(string name, StepType type) : this()
+        {
+            this.Name = name ?? throw new ArgumentNullException(nameof(name));
+            this.Type = type;
+        }
         // 其他公共属性...
     }
 
-    // 识图步骤
-    public class ImageRecognitionStep : AutomationStepBase
+    // 图像基类
+    public abstract class ImageRecognitionBase : AutomationStepBase
     {
         readonly Services.FileServices fileServices = new();
 
@@ -50,12 +116,6 @@ namespace ShaoLu.Viewmodels
 
         public Rect _croppedRect;
         public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
-
-
-        private Point _offest;
-        public Point Offest { get => _offest; set => SetProperty(ref _offest, value); }
-
-
         private float _similarityThreshold = 0.85F;
         public float SimilarityThreshold
         {
@@ -130,10 +190,26 @@ namespace ShaoLu.Viewmodels
         }
     }
 
+    // 识图步骤
+    public class ClickImageStep : ImageRecognitionBase
+    {
+        private Point _offest;
+        public Point Offest { get => _offest; set => SetProperty(ref _offest, value); }
+
+    }
+
     // 输入文字步骤
     public class TypeTextStep : AutomationStepBase
     {
         public string TextToType { get; set; }
         public int DelayBetweenKeys { get; set; }
+    }
+
+    public class LogicalIfStep : ImageRecognitionBase
+    {
+        public string Condition { get; set; }
+        public bool IsTrue { get; set; }
+        public ObservableCollection<AutomationStepBase> TrueSteps { get; set; }
+        public ObservableCollection<AutomationStepBase> FalseSteps { get; set; }
     }
 }

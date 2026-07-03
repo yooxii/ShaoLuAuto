@@ -1,5 +1,5 @@
 ﻿using ShaoLu.Models;
-using ShaoLu.Viewmodels;
+using ShaoLu.Viewmodels.AutomationStep;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -16,7 +16,7 @@ namespace ShaoLu.Converters
             {
                 return step.Type switch
                 {
-                    StepType.ImageRecognition => ImageTemplate,
+                    StepType.ClickImage => ImageTemplate,
                     StepType.TypeText => TextTemplate,
                     _ => ImageTemplate,
                 };

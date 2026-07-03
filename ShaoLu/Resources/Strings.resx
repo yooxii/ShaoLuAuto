@@ -201,4 +201,31 @@
   <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="BtnStop_Content" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="StepDetails" xml:space="preserve">
+    <value>Step Details</value>
+  </data>
+  <data name="NoSelectionHint" xml:space="preserve">
+    <value>No Selection</value>
+  </data>
+  <data name="StepName" xml:space="preserve">
+    <value>Step Name</value>
+  </data>
+  <data name="StepType" xml:space="preserve">
+    <value>Step Type</value>
+  </data>
+  <data name="StepDescription" xml:space="preserve">
+    <value>Step Description</value>
+  </data>
+  <data name="StepType_ClickImage" xml:space="preserve">
+    <value>ClickImage</value>
+  </data>
+  <data name="StepType_TypeText" xml:space="preserve">
+    <value>TypeText</value>
+  </data>
+  <data name="StepType_LogicalIF" xml:space="preserve">
+    <value>LogicalIF</value>
+  </data>
 </root>

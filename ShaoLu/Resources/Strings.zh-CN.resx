@@ -151,7 +151,7 @@
     <value>打开</value>
   </data>
   <data name="Picture_similarity_threshold" xml:space="preserve">
-    <value>图片相似阈值</value>
+    <value>相似阈值</value>
   </data>
   <data name="Preview" xml:space="preserve">
     <value>预览</value>
@@ -166,7 +166,7 @@
     <value>选择</value>
   </data>
   <data name="Select_target_pic" xml:space="preserve">
-    <value>选择目标图片</value>
+    <value>目标图片:</value>
   </data>
   <data name="Setting_Header" xml:space="preserve">
     <value>设置</value>
@@ -200,5 +200,32 @@
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>取消</value>
+  </data>
+  <data name="BtnStop_Content" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="StepDetails" xml:space="preserve">
+    <value>步骤细节</value>
+  </data>
+  <data name="NoSelectionHint" xml:space="preserve">
+    <value>请选择一个步骤</value>
+  </data>
+  <data name="StepName" xml:space="preserve">
+    <value>步骤名称</value>
+  </data>
+  <data name="StepType" xml:space="preserve">
+    <value>步骤类型</value>
+  </data>
+  <data name="StepDescription" xml:space="preserve">
+    <value>步骤描述</value>
+  </data>
+  <data name="StepType_ClickImage" xml:space="preserve">
+    <value>点击图片</value>
+  </data>
+  <data name="StepType_TypeText" xml:space="preserve">
+    <value>键入文字</value>
+  </data>
+  <data name="StepType_LogicalIF" xml:space="preserve">
+    <value>逻辑判断</value>
   </data>
 </root>

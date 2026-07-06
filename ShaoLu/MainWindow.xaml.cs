@@ -13,7 +13,7 @@ namespace ShaoLu
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly Viewmodels.MainViewModel mainViewModel = new();
+        private readonly Viewmodels.MainViewModel mainViewModel = ViewModelLocator.Main;
         public MainWindow()
         {
             InitializeComponent();
@@ -133,6 +133,15 @@ namespace ShaoLu
             if (filePath != null)
             {
                 StepsFile.SaveStepsToJson(mainViewModel.AutomationStepBases, filePath);
+            }
+        }
+
+        private void BtnAddStep_Click(object sender, RoutedEventArgs e)
+        {
+            if (StepsBox.SelectedItem is AutomationStepBase selectedStep)
+            {
+               var index = mainViewModel.AutomationStepBases.IndexOf(selectedStep);
+                mainViewModel.AddImageStep(index);
             }
         }
     }

@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Expression.Drawing.Core;
+using ShaoLu;
 using ShaoLu.Models;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
@@ -53,15 +55,28 @@ namespace ShaoLu.Viewmodels
 
         #region 命令
 
-        private RelayCommand addImageStepCommand;
-        public ICommand AddImageStepCommand => addImageStepCommand ??= new RelayCommand(AddImageStep);
-
-
         private RelayCommand runCommand;
         public ICommand RunCommand => runCommand ??= new RelayCommand(Run);
 
         private RelayCommand stopCommand;
         public ICommand StopCommand => stopCommand ??= new RelayCommand(Stop);
+
+
+        private RelayCommand addStepCommand;
+        public ICommand AddStepCommand => addStepCommand ??= new RelayCommand(AddStep);
+
+        private void AddStep()
+        {
+            AddImageStep();
+        }
+
+        private RelayCommand delStepCommand;
+        public ICommand DelStepCommand => delStepCommand ??= new RelayCommand(DelStep);
+
+        private void DelStep()
+        {
+
+        }
 
         #endregion
 
@@ -79,10 +94,24 @@ namespace ShaoLu.Viewmodels
             }
         }
 
-        private void AddImageStep()
+        public void AddImageStep(int index = -1)
         {
+            AutomationStepBases ??= [];
+            if (AutomationStepBases.Count == 0 || index < 0 || index > AutomationStepBases.Count)
+            {
+                AutomationStepBases.Add(new ClickImageStep());
+                return;
+            }
             var imgStep = new ClickImageStep();
-            AutomationStepBases.Add(imgStep);
+            AutomationStepBases.Insert(index, imgStep);
+        }
+
+        public void DelStep(AutomationStepBase delObject)
+        {
+            if (AutomationStepBases.Count > 0)
+            {
+                AutomationStepBases.Remove(delObject);
+            }
         }
 
         private void Stop()
@@ -229,5 +258,6 @@ namespace ShaoLu.Viewmodels
                 });
             }
         }
+
     }
 }

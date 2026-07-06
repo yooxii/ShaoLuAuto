@@ -205,19 +205,19 @@
     <value>Stop</value>
   </data>
   <data name="StepDetails" xml:space="preserve">
-    <value>Step Details</value>
+    <value>Details</value>
   </data>
   <data name="NoSelectionHint" xml:space="preserve">
     <value>Please select a step</value>
   </data>
   <data name="StepName" xml:space="preserve">
-    <value>Step Name</value>
+    <value>Name</value>
   </data>
   <data name="StepType" xml:space="preserve">
-    <value>StepType</value>
+    <value>Type</value>
   </data>
   <data name="StepDescription" xml:space="preserve">
-    <value>Step Description</value>
+    <value>Description</value>
   </data>
   <data name="StepType_ClickImage" xml:space="preserve">
     <value>ClickImage</value>
@@ -227,5 +227,11 @@
   </data>
   <data name="StepType_LogicalIF" xml:space="preserve">
     <value>LogicalIF</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
   </data>
 </root>

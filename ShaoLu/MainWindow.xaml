@@ -8,6 +8,7 @@
         lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
         lex:ResxLocalizationProvider.DefaultDictionary="Strings"
         xmlns:local="clr-namespace:ShaoLu"
+        xmlns:utils="clr-namespace:ShaoLu.Utils"
         xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
         xmlns:conv="clr-namespace:ShaoLu.Converters"
         d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
@@ -17,10 +18,18 @@
     <Window.Resources>
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <utils:ViewModelLocator x:Key="VMLocator" />
+
+            <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Main, Source={StaticResource VMLocator}}">
+                <MenuItem Header="{lex:Loc Add}" Command="{Binding AddStepCommand}" CommandParameter="{Binding }"/>
+                <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
+            </ContextMenu>
+            
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Templates/StepSummaryTemplates.xaml"/>
                 <ResourceDictionary Source="/Templates/StepDetailTemplates.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            
         </ResourceDictionary>
     </Window.Resources>
     
@@ -59,8 +68,8 @@
                     <ColumnDefinition />
                     <ColumnDefinition Width="10"/>
                 </Grid.ColumnDefinitions>
-                <Button x:Name="BtnAddStep" Content="{lex:Loc}" Grid.Column="1" Margin="3" Command="{Binding AddImageStepCommand}"/>
-                <Button x:Name="BtnDelStep" Content="{lex:Loc}" Grid.Column="3" Margin="3" Click="BtnDelStep_Click"/>
+                <Button x:Name="BtnAddStep" Content="{lex:Loc}" Grid.Column="1" Margin="3" Command="{Binding AddStepCommand}"/>
+                <Button x:Name="BtnDelStep" Content="{lex:Loc}" Grid.Column="3" Margin="3" Command="{Binding DelStepCommand}"/>
             </Grid> <!--步骤按钮-->
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
@@ -69,18 +78,11 @@
                     <ColumnDefinition Width="Auto" MinWidth="200"/>
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
-                    <!--<ListBox x:Name="StepsListBox" ItemsSource="{Binding AutomationStepBases}" SelectedItem="{Binding SelectedStep, Mode=TwoWay}" Margin="3">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource StepSummarySelector}"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>-->
-                    <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}" SelectionMode="Extended" SelectedItem="{Binding SelectedStep}">
+                    <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}" ContextMenu="{StaticResource DataGridMenu}" SelectionMode="Extended" SelectedItem="{Binding SelectedStep}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True"/>
                             <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" />
-                            <DataGridComboBoxColumn Header="{lex:Loc StepType}" SelectedItemBinding="{Binding Type}" ItemsSource="{Binding Source={StaticResource StepTypeValues}}"/>
                             <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" />
                         </DataGrid.Columns>
                     </DataGrid>

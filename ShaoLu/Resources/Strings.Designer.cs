@@ -61,6 +61,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Add 的本地化字符串。
+        /// </summary>
+        public static string Add {
+            get {
+                return ResourceManager.GetString("Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 AutoBurn 的本地化字符串。
         /// </summary>
         public static string AppTitle {
@@ -129,6 +138,15 @@ namespace ShaoLu.Resources {
         public static string Crop {
             get {
                 return ResourceManager.GetString("Crop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Delete 的本地化字符串。
+        /// </summary>
+        public static string Delete {
+            get {
+                return ResourceManager.GetString("Delete", resourceCulture);
             }
         }
         

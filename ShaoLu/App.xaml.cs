@@ -1,4 +1,7 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using ShaoLu.Viewmodels;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -20,6 +23,10 @@ namespace ShaoLu
             base.OnStartup(e);
             // 1. 初始化语言
             Services.LanguageService.Initialize();
+
+            Ioc.Default.ConfigureServices(new ServiceCollection()
+                .AddSingleton<MainViewModel>()
+                .BuildServiceProvider());
         }
     }
 }

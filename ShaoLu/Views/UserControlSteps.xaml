@@ -1,0 +1,111 @@
+﻿<UserControl x:Class="ShaoLu.Views.UserControlSteps"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        xmlns:local="clr-namespace:ShaoLu"
+        xmlns:utils="clr-namespace:ShaoLu.Utils"
+        xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
+        xmlns:conv="clr-namespace:ShaoLu.Converters"
+        d:DataContext="{d:DesignInstance Type=viewmodel:StepsViewModel}"
+        mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <utils:ViewModelLocator x:Key="VMLocator" />
+
+            <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Steps, Source={StaticResource VMLocator}}">
+                <MenuItem Header="{lex:Loc Add}">
+                    <MenuItem Header="{lex:Loc AddImageStep}" Command="{Binding AddStepCommand}" CommandParameter="ClickImage"/>
+                    <MenuItem Header="{lex:Loc AddTextStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeText"/>
+                    <MenuItem Header="{lex:Loc AddIFStep}" Command="{Binding AddStepCommand}" CommandParameter="LogicalIf"/>
+                </MenuItem>
+                <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
+            </ContextMenu>
+
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Templates/StepSummaryTemplates.xaml"/>
+                <ResourceDictionary Source="/Templates/StepDetailTemplates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Grid>
+                <!--<Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="10"/>
+                </Grid.ColumnDefinitions>-->
+                <ToolBarTray>
+                    <ToolBar>
+                        <Label Content="{lex:Loc BtnAddStep_Content}" Grid.Column="0" Margin="3"/>
+                        <Button Content="{lex:Loc AddImageStep}" Grid.Column="1" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="ClickImage"/>
+                        <Button Content="{lex:Loc AddTextStep}" Grid.Column="1" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="TypeText"/>
+                        <Button Content="{lex:Loc AddIFStep}" Grid.Column="1" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="LogicalIf"/>
+                        <Separator/>
+                        <Button Content="{lex:Loc BtnDelStep_Content}" Grid.Column="3" Margin="3" Command="{Binding DelStepCommand}"/>
+                    </ToolBar>
+                    <ToolBar>
+                        <Button Content="{lex:Loc BtnRun_Content}" Margin="3" Command="{Binding RunCommand}"/>
+                        <Button Content="{lex:Loc BtnStop_Content}" Margin="3" Command="{Binding StopCommand}"/>
+                    </ToolBar>
+                </ToolBarTray>
+            </Grid>
+            <!--步骤按钮-->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="400"/>
+                    <ColumnDefinition Width="3"/>
+                    <ColumnDefinition Width="Auto" MinWidth="200"/>
+                </Grid.ColumnDefinitions>
+                <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
+                    <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}" ContextMenu="{StaticResource DataGridMenu}" SelectionMode="Extended" SelectedItem="{Binding SelectedStep}" utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" Width="*" CanUserSort="False"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </GroupBox>
+                <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
+                <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2">
+                    <!-- 当 SelectedStep 为 null 时，可以显示提示文本 -->
+                    <Grid>
+                        <ContentControl Content="{Binding SelectedStep}" 
+                        ContentTemplateSelector="{StaticResource StepDetailSelector}" />
+
+                        <!-- 可选：如果没有选中项，显示提示信息 -->
+                        <TextBlock Text="{lex:Loc NoSelectionHint}" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            Visibility="{Binding SelectedStep, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Inverse}"/>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+            <Grid Grid.Row="2" Margin="5 0 5 5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="BtnRun" Content="{lex:Loc}" Margin="3" Command="{Binding RunCommand}"/>
+                <Button x:Name="BtnStop" Grid.Column="1" Content="{lex:Loc}" Margin="3" Command="{Binding StopCommand}"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

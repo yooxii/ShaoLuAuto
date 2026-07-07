@@ -113,12 +113,17 @@
     <Compile Include="Tools\ResxGenerator.cs" />
     <Compile Include="Utils\Autogui.cs" />
     <Compile Include="Converters\StepTemplateSelector.cs" />
+    <Compile Include="Utils\DataGridSelectedItemsBehavior.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="Utils\StepsFile.cs" />
     <Compile Include="Utils\ViewModelLocator.cs" />
     <Compile Include="Viewmodels\AutomationStep.cs" />
     <Compile Include="Viewmodels\EditImageViewModel.cs" />
     <Compile Include="Viewmodels\MainViewModel.cs" />
+    <Compile Include="Viewmodels\StepsViewModel.cs" />
+    <Compile Include="Views\UserControlSteps.xaml.cs">
+      <DependentUpon>UserControlSteps.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\WindowCropImage.xaml.cs">
       <DependentUpon>WindowCropImage.xaml</DependentUpon>
     </Compile>
@@ -160,6 +165,10 @@
     <Page Include="Resources\ImageLoadState.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\UserControlSteps.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowCropImage.xaml">
       <SubType>Designer</SubType>

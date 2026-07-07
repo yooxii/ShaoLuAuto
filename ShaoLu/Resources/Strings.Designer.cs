@@ -70,6 +70,33 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 AddIFStep 的本地化字符串。
+        /// </summary>
+        public static string AddIFStep {
+            get {
+                return ResourceManager.GetString("AddIFStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AddImageStep 的本地化字符串。
+        /// </summary>
+        public static string AddImageStep {
+            get {
+                return ResourceManager.GetString("AddImageStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AddTextStep 的本地化字符串。
+        /// </summary>
+        public static string AddTextStep {
+            get {
+                return ResourceManager.GetString("AddTextStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 AutoBurn 的本地化字符串。
         /// </summary>
         public static string AppTitle {

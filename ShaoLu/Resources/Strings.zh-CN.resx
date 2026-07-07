@@ -234,4 +234,13 @@
   <data name="Delete" xml:space="preserve">
     <value>删除</value>
   </data>
+  <data name="AddImageStep" xml:space="preserve">
+    <value>点击图像</value>
+  </data>
+  <data name="AddTextStep" xml:space="preserve">
+    <value>键入文字</value>
+  </data>
+  <data name="AddIFStep" xml:space="preserve">
+    <value>逻辑判断</value>
+  </data>
 </root>

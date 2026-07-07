@@ -8,30 +8,12 @@
         lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
         lex:ResxLocalizationProvider.DefaultDictionary="Strings"
         xmlns:local="clr-namespace:ShaoLu"
-        xmlns:utils="clr-namespace:ShaoLu.Utils"
+        xmlns:view="clr-namespace:ShaoLu.Views"
         xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
         xmlns:conv="clr-namespace:ShaoLu.Converters"
         d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
         mc:Ignorable="d"
         Title="{lex:Loc AppTitle}" Height="600" Width="1000">
-
-    <Window.Resources>
-        <ResourceDictionary>
-            <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
-            <utils:ViewModelLocator x:Key="VMLocator" />
-
-            <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Main, Source={StaticResource VMLocator}}">
-                <MenuItem Header="{lex:Loc Add}" Command="{Binding AddStepCommand}" CommandParameter="{Binding }"/>
-                <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
-            </ContextMenu>
-            
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Templates/StepSummaryTemplates.xaml"/>
-                <ResourceDictionary Source="/Templates/StepDetailTemplates.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-            
-        </ResourceDictionary>
-    </Window.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
@@ -40,7 +22,7 @@
         </Grid.RowDefinitions>
         <Menu>
             <MenuItem x:Name="File" Header="{lex:Loc}">
-                <MenuItem x:Name="New" Header="{lex:Loc}"/>
+                <MenuItem x:Name="New" Header="{lex:Loc}" Click="New_Click"/>
                 <MenuItem x:Name="Open" Header="{lex:Loc}" Click="Open_Click"/>
                 <MenuItem x:Name="Save" Header="{lex:Loc Save}" Click="Save_Click"/>
             </MenuItem>
@@ -54,62 +36,6 @@
             <MenuItem x:Name="Quit" Header="{lex:Loc}" Click="Quit_Click"/>
             <!--<MenuItem Header="测试裁剪" Click="TestCrop_Click"/>-->
         </Menu> <!--菜单-->
-        <Grid Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition/>
-                <RowDefinition Height="auto"/>
-            </Grid.RowDefinitions>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="30"/>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="10"/>
-                </Grid.ColumnDefinitions>
-                <Button x:Name="BtnAddStep" Content="{lex:Loc}" Grid.Column="1" Margin="3" Command="{Binding AddStepCommand}"/>
-                <Button x:Name="BtnDelStep" Content="{lex:Loc}" Grid.Column="3" Margin="3" Command="{Binding DelStepCommand}"/>
-            </Grid> <!--步骤按钮-->
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="400"/>
-                    <ColumnDefinition Width="3"/>
-                    <ColumnDefinition Width="Auto" MinWidth="200"/>
-                </Grid.ColumnDefinitions>
-                <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
-                    <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}" ContextMenu="{StaticResource DataGridMenu}" SelectionMode="Extended" SelectedItem="{Binding SelectedStep}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" />
-                            <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </GroupBox>
-                <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
-                <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2">
-                    <!-- 当 SelectedStep 为 null 时，可以显示提示文本 -->
-                    <Grid>
-                        <ContentControl Content="{Binding SelectedStep}" 
-                        ContentTemplateSelector="{StaticResource StepDetailSelector}" />
-
-                        <!-- 可选：如果没有选中项，显示提示信息 -->
-                        <TextBlock Text="{lex:Loc NoSelectionHint}" 
-                            HorizontalAlignment="Center" 
-                            VerticalAlignment="Center"
-                            Visibility="{Binding SelectedStep, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Inverse}"/>
-                    </Grid>
-                </GroupBox>
-            </Grid>
-            <Grid Grid.Row="2" Margin="5 0 5 5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Button x:Name="BtnRun" Content="{lex:Loc}" Margin="3" Command="{Binding RunCommand}"/>
-                <Button x:Name="BtnStop" Grid.Column="1" Content="{lex:Loc}" Margin="3" Command="{Binding StopCommand}"/>
-            </Grid>
-        </Grid>
+        <view:UserControlSteps Grid.Row="1" x:Name="Steps"/>
     </Grid>
 </Window>

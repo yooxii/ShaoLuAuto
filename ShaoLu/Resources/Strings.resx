@@ -234,4 +234,13 @@
   <data name="Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
+  <data name="AddImageStep" xml:space="preserve">
+    <value>AddImageStep</value>
+  </data>
+  <data name="AddTextStep" xml:space="preserve">
+    <value>AddTextStep</value>
+  </data>
+  <data name="AddIFStep" xml:space="preserve">
+    <value>AddIFStep</value>
+  </data>
 </root>

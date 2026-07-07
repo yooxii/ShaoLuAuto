@@ -196,6 +196,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private Point _offest;
         public Point Offest { get => _offest; set => SetProperty(ref _offest, value); }
 
+        public ClickImageStep() : base()
+        {
+            this.Type = StepType.ClickImage;
+        }
     }
 
     // 输入文字步骤
@@ -203,6 +207,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
     {
         public string TextToType { get; set; }
         public int DelayBetweenKeys { get; set; }
+
+        public TypeTextStep() : base()
+        {
+            this.Type = StepType.TypeText;
+        }
     }
 
     public class LogicalIfStep : ImageRecognitionBase
@@ -211,5 +220,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public bool IsTrue { get; set; }
         public ObservableCollection<AutomationStepBase> TrueSteps { get; set; }
         public ObservableCollection<AutomationStepBase> FalseSteps { get; set; }
+
+        public LogicalIfStep() : base()
+        {
+            this.Type = StepType.LogicalIf;
+            TrueSteps = [];
+            FalseSteps = [];
+        }
     }
 }

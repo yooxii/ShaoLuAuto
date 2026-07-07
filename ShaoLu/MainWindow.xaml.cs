@@ -1,5 +1,4 @@
 ﻿using ShaoLu.Utils;
-using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -14,6 +13,7 @@ namespace ShaoLu
     public partial class MainWindow : Window
     {
         private readonly Viewmodels.MainViewModel mainViewModel = ViewModelLocator.Main;
+        private readonly Viewmodels.StepsViewModel stepsViewModel = ViewModelLocator.Steps;
         public MainWindow()
         {
             InitializeComponent();
@@ -103,16 +103,9 @@ namespace ShaoLu
             windowEditImage.Show();
         }
 
-        private void BtnDelStep_Click(object sender, RoutedEventArgs e)
+        private void New_Click(object sender, RoutedEventArgs e)
         {
-            if (StepsBox.SelectedItem == null)
-            {
-                return;
-            }
-            if (StepsBox.SelectedItem is AutomationStepBase selectedStep)
-            {
-                mainViewModel.AutomationStepBases.Remove(selectedStep);
-            }
+            stepsViewModel.AutomationStepBases.Clear();
         }
 
         private void Open_Click(object sender, RoutedEventArgs e)
@@ -122,7 +115,8 @@ namespace ShaoLu
             if (filePath != null)
             {
                 var AutomationStepBases = StepsFile.LoadStepsFromJson(filePath);
-                mainViewModel.AutomationStepBases = AutomationStepBases;
+                stepsViewModel.AutomationStepBases.Clear();
+                stepsViewModel.CopySteps(AutomationStepBases);
             }
         }
 
@@ -132,17 +126,9 @@ namespace ShaoLu
             var filePath = fileServices.SavePathDialog("保存文件", "步骤文件|*.json");
             if (filePath != null)
             {
-                StepsFile.SaveStepsToJson(mainViewModel.AutomationStepBases, filePath);
+                StepsFile.SaveStepsToJson(stepsViewModel.AutomationStepBases, filePath);
             }
         }
 
-        private void BtnAddStep_Click(object sender, RoutedEventArgs e)
-        {
-            if (StepsBox.SelectedItem is AutomationStepBase selectedStep)
-            {
-               var index = mainViewModel.AutomationStepBases.IndexOf(selectedStep);
-                mainViewModel.AddImageStep(index);
-            }
-        }
     }
 }

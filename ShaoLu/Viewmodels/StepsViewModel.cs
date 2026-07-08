@@ -78,7 +78,8 @@ namespace ShaoLu.Viewmodels
                 {
                     "ClickImage" => new ClickImageStep(),
                     "TypeText" => new TypeTextStep(),
-                    "LogicalIf" => new LogicalIfStep(),
+                    "LogicalIf" => new FindImageStep(),
+                    "Popup" => new PopupStep(),
                     _ => new ClickImageStep(),
                 };
                 if (SelectedStep is AutomationStepBase automationStepBase)
@@ -159,7 +160,7 @@ namespace ShaoLu.Viewmodels
 
                             try
                             {
-                                ExecuteStep(step);
+                                step.Run();
                             }
                             catch (Exception ex)
                             {
@@ -178,67 +179,6 @@ namespace ShaoLu.Viewmodels
                     ShowErrorOnUi($"Automation critical error: {ex.Message}");
                 }
             });
-        }
-
-        /// <summary>
-        /// 执行单个自动化步骤
-        /// </summary>
-        private void ExecuteStep(AutomationStepBase step)
-        {
-            switch (step.Type)
-            {
-                case Models.StepType.ClickImage:
-                    HandleImageRecognitionStep(step);
-                    break;
-                case Models.StepType.TypeText:
-                    HandleTypeTextStep(step);
-                    break;
-                default:
-                    // 忽略未知类型或记录日志
-                    break;
-            }
-        }
-
-        private void HandleImageRecognitionStep(AutomationStepBase step)
-        {
-            // 使用模式匹配进行安全的类型转换
-            if (step is ClickImageStep imgStep)
-            {
-                var img = imgStep.ImgSrc;
-
-                // 防御性检查：确保图像源不为空
-                if (img == null)
-                {
-                    ShowErrorOnUi($"Error!-Image source is null for path: {imgStep.ImagePath}");
-                    return;
-                }
-
-                // 转换图像
-                // 注意：假设 ConvertImageSourceToBitmap 返回的是一个需要被 ClickImageOnScreen 使用的对象
-                // 如果它返回 IDisposable，理想情况下应在使用后 Dispose。
-                // 这里保持原逻辑调用，但包裹在 try-catch 中以捕获可能的 GDI+ 错误
-                var bitmap = Autogui.ConvertImageSourceToBitmap(img);
-
-                bool isSuccess = Autogui.ClickImageOnScreen(bitmap, Autogui.Position.RightDown, new OpenCvSharp.Point(-70, -30));
-
-                if (!isSuccess)
-                {
-                    ShowErrorOnUi($"Error!-Not Find image{imgStep.ImagePath} On Screen.");
-                }
-            }
-            else
-            {
-                ShowErrorOnUi("Internal Error: Step type mismatch for ImageRecognition.");
-            }
-        }
-
-        private void HandleTypeTextStep(AutomationStepBase step)
-        {
-            if (step is TypeTextStep textStep)
-            {
-                // 原文中此处为空，保持现状
-                // TODO: Implement TypeText logic
-            }
         }
 
         /// <summary>

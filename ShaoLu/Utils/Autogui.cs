@@ -3,6 +3,7 @@ using OpenCvSharp.Extensions;
 using System;
 using System.Drawing;
 using System.Threading;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -13,7 +14,9 @@ namespace ShaoLu.Utils
 {
     public class Autogui
     {
-
+        /// <summary>
+        /// 鼠标位置
+        /// </summary>
         public enum Position
         {
             Center = 0,
@@ -24,6 +27,13 @@ namespace ShaoLu.Utils
         }
 
         private static InputSimulator sim;
+        public static void StartAuto()
+        {
+            sim = new();
+        }
+
+#nullable enable
+        #region 图像类
 
         /// <summary>
         /// 从屏幕中查找指定的图像，并返回其在屏幕上的位置和相似度。
@@ -103,11 +113,6 @@ namespace ShaoLu.Utils
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
             g.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size, CopyPixelOperation.SourceCopy);
             return bmpSrceen;
-        }
-
-        public static void StartAuto()
-        {
-            sim = new();
         }
 
         /// <summary>
@@ -210,7 +215,6 @@ namespace ShaoLu.Utils
             }
         }
 
-#nullable enable
         /// <summary>
         /// 将 WPF ImageSource 转换为 System.Drawing.Bitmap
         /// </summary>
@@ -254,5 +258,28 @@ namespace ShaoLu.Utils
 
             return null;
         }
+        #endregion
+
+        #region 文字类
+
+        public static bool TypeText(string text, int delayBetweenKeys = 0)
+        {
+            try
+            {
+                for (int i = 0; i < text.Length; i++)
+                {
+                    char key = text[i];
+                    sim.Keyboard.TextEntry(key);
+                    Thread.Sleep(delayBetweenKeys);
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        #endregion
     }
 }

@@ -8,9 +8,11 @@ namespace ShaoLu.Models
 {
     public enum StepType
     {
+        Empty = -1,
         ClickImage,
         TypeText,
-        LogicalIf = 100,
+        FindImage,
+        Popup = 1000,
         // 其他步骤类型...
     }
 

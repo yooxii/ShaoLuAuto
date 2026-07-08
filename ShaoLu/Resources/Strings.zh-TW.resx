@@ -243,4 +243,19 @@
   <data name="AddIFStep" xml:space="preserve">
     <value>邏輯判斷</value>
   </data>
+  <data name="Type_text" xml:space="preserve">
+    <value>要鍵入的文字:</value>
+  </data>
+  <data name="Condition" xml:space="preserve">
+    <value>條件</value>
+  </data>
+  <data name="AddPopupStep" xml:space="preserve">
+    <value>彈出消息</value>
+  </data>
+  <data name="StepTrueGoto" xml:space="preserve">
+    <value>若真則</value>
+  </data>
+  <data name="StepFalseGoto" xml:space="preserve">
+    <value>若假則</value>
+  </data>
 </root>

@@ -1,19 +1,19 @@
 ﻿<UserControl x:Class="ShaoLu.Views.UserControlSteps"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:lex="http://wpflocalizeextension.codeplex.com"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
-        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
-        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
-        xmlns:local="clr-namespace:ShaoLu"
-        xmlns:utils="clr-namespace:ShaoLu.Utils"
-        xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
-        xmlns:conv="clr-namespace:ShaoLu.Converters"
-        d:DataContext="{d:DesignInstance Type=viewmodel:StepsViewModel}"
-        mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800">
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:lex="http://wpflocalizeextension.codeplex.com"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+            lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+            lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+            xmlns:local="clr-namespace:ShaoLu"
+            xmlns:utils="clr-namespace:ShaoLu.Utils"
+            xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
+            xmlns:conv="clr-namespace:ShaoLu.Converters"
+            d:DataContext="{d:DesignInstance Type=viewmodel:StepsViewModel}"
+            mc:Ignorable="d"
+            d:DesignHeight="450" d:DesignWidth="800">
     
     <UserControl.Resources>
         <ResourceDictionary>
@@ -25,6 +25,7 @@
                     <MenuItem Header="{lex:Loc AddImageStep}" Command="{Binding AddStepCommand}" CommandParameter="ClickImage"/>
                     <MenuItem Header="{lex:Loc AddTextStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeText"/>
                     <MenuItem Header="{lex:Loc AddIFStep}" Command="{Binding AddStepCommand}" CommandParameter="LogicalIf"/>
+                    <MenuItem Header="{lex:Loc AddPopupStep}" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
                 </MenuItem>
                 <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
             </ContextMenu>
@@ -44,19 +45,13 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Grid>
-                <!--<Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="10"/>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="30"/>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="10"/>
-                </Grid.ColumnDefinitions>-->
                 <ToolBarTray>
                     <ToolBar>
-                        <Label Content="{lex:Loc BtnAddStep_Content}" Grid.Column="0" Margin="3"/>
-                        <Button Content="{lex:Loc AddImageStep}" Grid.Column="1" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="ClickImage"/>
-                        <Button Content="{lex:Loc AddTextStep}" Grid.Column="1" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="TypeText"/>
-                        <Button Content="{lex:Loc AddIFStep}" Grid.Column="1" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="LogicalIf"/>
+                        <Label Content="{lex:Loc BtnAddStep_Content}" Margin="3"/>
+                        <Button Content="{lex:Loc AddImageStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="ClickImage"/>
+                        <Button Content="{lex:Loc AddTextStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="TypeText"/>
+                        <Button Content="{lex:Loc AddIFStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="LogicalIf"/>
+                        <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
                         <Separator/>
                         <Button Content="{lex:Loc BtnDelStep_Content}" Grid.Column="3" Margin="3" Command="{Binding DelStepCommand}"/>
                     </ToolBar>
@@ -80,6 +75,8 @@
                             <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
                             <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>
                             <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" Width="*" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGoto}" Width="*" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGoto}" Width="*" CanUserSort="False"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </GroupBox>

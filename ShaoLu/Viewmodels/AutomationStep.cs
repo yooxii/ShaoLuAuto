@@ -1,8 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using ShaoLu.Models;
+using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.Remoting.Messaging;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Windows;
@@ -64,6 +67,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set => SetProperty(ref _type, value);
         }
 
+        private bool _isTrue;
+        public bool IsTrue { get => _isTrue; set => SetProperty(ref _isTrue, value); }
+
+        private int _trueGoto;
+        /// <summary>
+        /// 如果真,去执行某行
+        /// </summary>
+        public int TrueGoto { get => _trueGoto; set => SetProperty(ref _trueGoto, value); }
+
+        private int _falseGoto;
+        public int FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
+
+
         /// <summary>
         /// 构造函数
         /// 确保创建时即分配唯一 ID 和默认值
@@ -83,6 +99,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             this.Name = name ?? throw new ArgumentNullException(nameof(name));
             this.Type = type;
         }
+
+        public abstract bool Run();
         // 其他公共属性...
     }
 
@@ -114,10 +132,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public ImageSource CroppedImg { get => _croppedImg; set => SetProperty(ref _croppedImg, value); }
 
+        #region 图像属性
         public Rect _croppedRect;
         public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
-        private float _similarityThreshold = 0.85F;
-        public float SimilarityThreshold
+
+
+        private OpenCvSharp.Point _offest;
+        public OpenCvSharp.Point Offest { get => _offest; set => SetProperty(ref _offest, value); }
+
+
+        private double _similarityThreshold = 0.85;
+        public double SimilarityThreshold
         {
             get => _similarityThreshold;
             set
@@ -128,7 +153,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 }
             }
         }
-
+        #endregion
 
         private RelayCommand selectImageCommand;
         public ICommand SelectImageCommand => selectImageCommand ??= new RelayCommand(SelectImage);
@@ -193,39 +218,149 @@ namespace ShaoLu.Viewmodels.AutomationStep
     // 识图步骤
     public class ClickImageStep : ImageRecognitionBase
     {
-        private Point _offest;
-        public Point Offest { get => _offest; set => SetProperty(ref _offest, value); }
+        private int _clicks;
+        public int Clicks { get => _clicks; set => SetProperty(ref _clicks, value); }
+
+
+        private double _clickGap;
+        public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
+
+
+        private double _waitTime;
+        public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
+
+
+        private double _timeout;
+        public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
 
         public ClickImageStep() : base()
         {
-            this.Type = StepType.ClickImage;
+            Type = StepType.ClickImage;
+            Clicks = 1;
+            ClickGap = 0.1;
+            WaitTime = 0.3;
+            Timeout = 3;
+        }
+
+        public override bool Run()
+        {
+            var img = Autogui.ConvertImageSourceToBitmap(ImgSrc); // TODO: 改为CropedImg
+            return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offest, Clicks, ClickGap, SimilarityThreshold, WaitTime, Timeout);
         }
     }
 
     // 输入文字步骤
     public class TypeTextStep : AutomationStepBase
     {
-        public string TextToType { get; set; }
-        public int DelayBetweenKeys { get; set; }
+
+        private string _textToType;
+        public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
+
+
+        private int _delayBetweenKeys;
+        public int DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
+
 
         public TypeTextStep() : base()
         {
             this.Type = StepType.TypeText;
         }
+
+        public override bool Run()
+        {
+            return Autogui.TypeText(TextToType, DelayBetweenKeys);
+        }
     }
 
-    public class LogicalIfStep : ImageRecognitionBase
+    // 条件步骤
+    public class FindImageStep : ImageRecognitionBase
     {
-        public string Condition { get; set; }
-        public bool IsTrue { get; set; }
-        public ObservableCollection<AutomationStepBase> TrueSteps { get; set; }
-        public ObservableCollection<AutomationStepBase> FalseSteps { get; set; }
 
-        public LogicalIfStep() : base()
+        private double _gaptime;
+        public double GapTime { get => _gaptime; set => SetProperty(ref _gaptime, value); }
+
+
+        private double _timeout;
+        public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
+
+        public FindImageStep() : base()
         {
-            this.Type = StepType.LogicalIf;
-            TrueSteps = [];
-            FalseSteps = [];
+            Type = StepType.FindImage;
+        }
+
+        public override bool Run()
+        {
+            var img = Autogui.ConvertImageSourceToBitmap(ImgSrc); // TODO: 改为CropedImg
+            var res = Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout);
+            IsTrue = !res.IsEmpty;
+            return IsTrue;
+        }
+    }
+
+    // 弹出框步骤
+    public class PopupStep : AutomationStepBase
+    {
+        private string _title;
+        public string Title { get => _title; set => SetProperty(ref _title, value); }
+
+
+        private string _popupText;
+        public string PopupText { get => _popupText; set => SetProperty(ref _popupText, value); }
+
+
+        private string _popupType;
+        public string PopupType { get => _popupType; set => SetProperty(ref _popupType, value); }
+
+        public List<string> PopupTypes { get; set; } = ["Information", "Warning", "Error", "Question"];
+
+        public PopupStep() : base()
+        {
+            this.Type = StepType.Popup;
+        }
+
+        public override bool Run()
+        {
+            var iconType = PopupType switch
+            {
+                "Information" => MessageBoxImage.Information,
+                "Warning" => MessageBoxImage.Warning,
+                "Error" => MessageBoxImage.Error,
+                "Question" => MessageBoxImage.Question,
+                _ => MessageBoxImage.Information
+            };
+
+            if (System.Windows.Application.Current != null && System.Windows.Application.Current.Dispatcher != null)
+            {
+                // 使用 InvokeAsync 避免阻塞后台线程
+                var res = System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    try
+                    {
+                        return WPFDevelopers.Controls.MessageBox.Show(PopupText, Title, MessageBoxButton.OK, iconType);
+                    }
+                    catch (Exception)
+                    {
+                        // 防止在应用关闭期间调用 Dispatcher 导致异常
+                        System.Diagnostics.Debug.WriteLine($"Failed to show messagebox: {PopupText}");
+                        IsTrue = false;
+                    }
+                    return MessageBoxResult.None;
+                });
+            }
+            return IsTrue;
+        }
+    }
+
+    public class EmptyStep : AutomationStepBase
+    {
+        public EmptyStep() : base()
+        {
+            IsTrue = true;
+            Type = StepType.Empty;
+        }
+        public override bool Run()
+        {
+            return IsTrue;
         }
     }
 }

@@ -7,8 +7,8 @@
 
 
     <!-- 识图步骤的UI -->
-    <DataTemplate x:Key="ImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
-        <Grid Margin="3">
+    <DataTemplate x:Key="ClickImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
+        <Grid Width="300">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
@@ -19,8 +19,7 @@
                 <TextBlock x:Name="PathTextBlock"
                            Text="{Binding ImagePath}" 
                            VerticalAlignment="Center" 
-                           MaxWidth="300" 
-                           MinWidth="150"
+                           MinWidth="100"
                            TextTrimming="CharacterEllipsis"
                            TextWrapping="NoWrap"
                            Margin="5,0"
@@ -35,7 +34,7 @@
                         VerticalAlignment="Center" 
                         Minimum="0" 
                         Maximum="1" 
-                        Width="200"
+                        Width="150"
                         Margin="5,0"/>
                 <TextBox Text="{Binding SimilarityThreshold, StringFormat=0.00, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                          InputMethod.IsInputMethodEnabled="False"
@@ -47,19 +46,73 @@
 
     <!-- 输入文字步骤的UI -->
     <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-            <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" 
+        <StackPanel Width="300" Orientation="Vertical">
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" 
                      MinWidth="150"
                      Margin="0,0,10,0"
                      VerticalAlignment="Center"/>
-
-            <TextBox Text="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" 
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" 
                      MinWidth="80"
                      VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+
+    <DataTemplate x:Key="FindImageStepTemplate" DataType="{x:Type AutoVM:FindImageStep}">
+        <StackPanel Width="300">
+            <StackPanel>
+                <Label Content="GapTime" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding GapTime, UpdateSourceTrigger=LostFocus}" 
+                     MinWidth="150"
+                     Margin="0,0,10,0"
+                     VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel>
+                <Label Content="Timeout" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Timeout, UpdateSourceTrigger=LostFocus}" 
+                     MinWidth="150"
+                     Margin="0,0,10,0"
+                     VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="PopupStepTemplate" DataType="{x:Type AutoVM:PopupStep}">
+        <StackPanel Width="300">
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="Title" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" 
+                     MinWidth="150"
+                     Margin="10,0,10,0"
+                     VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="PopupText" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
+                     MinWidth="150"
+                     Margin="10,0,10,0"
+                     VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="PopupType" VerticalAlignment="Center"/>
+                <ComboBox Text="{Binding PopupType, UpdateSourceTrigger=LostFocus}" 
+                     ItemsSource="{Binding PopupTypes}"
+                     MinWidth="150"
+                     Margin="10,0,10,0"
+                     VerticalAlignment="Center"/>
+            </StackPanel>
         </StackPanel>
     </DataTemplate>
 
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
-                     ImageTemplate="{StaticResource ImageStepTemplate}"
-                     TextTemplate="{StaticResource TextStepTemplate}"/>
+                     ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
+                     FindImageTemplate="{StaticResource FindImageStepTemplate}"
+                     TextTemplate="{StaticResource TextStepTemplate}"
+                     PopupTemplate="{StaticResource PopupStepTemplate}"/>
 </ResourceDictionary>

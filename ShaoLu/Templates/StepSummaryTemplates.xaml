@@ -50,6 +50,6 @@
     </DataTemplate>
 
     <conv:StepTemplateSelector x:Key="StepSummarySelector"
-                     ImageTemplate="{StaticResource ImageStepSummaryTemplate}"
+                     ClickImageTemplate="{StaticResource ImageStepSummaryTemplate}"
                      TextTemplate="{StaticResource TextStepSummaryTemplate}"/>
 </ResourceDictionary>

@@ -88,6 +88,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 AddPopupStep 的本地化字符串。
+        /// </summary>
+        public static string AddPopupStep {
+            get {
+                return ResourceManager.GetString("AddPopupStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 AddTextStep 的本地化字符串。
         /// </summary>
         public static string AddTextStep {
@@ -156,6 +165,15 @@ namespace ShaoLu.Resources {
         public static string Cancel {
             get {
                 return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Condition 的本地化字符串。
+        /// </summary>
+        public static string Condition {
+            get {
+                return ResourceManager.GetString("Condition", resourceCulture);
             }
         }
         
@@ -367,6 +385,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 FalseGoto 的本地化字符串。
+        /// </summary>
+        public static string StepFalseGoto {
+            get {
+                return ResourceManager.GetString("StepFalseGoto", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Step Name 的本地化字符串。
         /// </summary>
         public static string StepName {
@@ -381,6 +408,15 @@ namespace ShaoLu.Resources {
         public static string StepsBox {
             get {
                 return ResourceManager.GetString("StepsBox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 TrueGoto 的本地化字符串。
+        /// </summary>
+        public static string StepTrueGoto {
+            get {
+                return ResourceManager.GetString("StepTrueGoto", resourceCulture);
             }
         }
         
@@ -426,6 +462,15 @@ namespace ShaoLu.Resources {
         public static string TraditionalChinese_Header {
             get {
                 return ResourceManager.GetString("TraditionalChinese_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Type text 的本地化字符串。
+        /// </summary>
+        public static string Type_text {
+            get {
+                return ResourceManager.GetString("Type_text", resourceCulture);
             }
         }
         

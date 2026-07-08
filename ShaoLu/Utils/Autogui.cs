@@ -45,6 +45,10 @@ namespace ShaoLu.Utils
         /// <returns>匹配结果，包含坐标和相似度</returns>
         public static Apoint FindImageOnScreen(Bitmap templateImage, double threshold = 0.8, double gaptime = 0.2, double timeout = 3)
         {
+            if (templateImage == null)
+            {
+                return new();
+            }
             // 将秒转换为毫秒，方便计时和休眠
             int gapTimeMs = (int)(gaptime * 1000);
             int timeoutMs = (int)(timeout * 1000);
@@ -264,6 +268,7 @@ namespace ShaoLu.Utils
 
         public static bool TypeText(string text, int delayBetweenKeys = 0)
         {
+            if (string.IsNullOrEmpty(text)) return false;
             try
             {
                 for (int i = 0; i < text.Length; i++)
@@ -273,7 +278,7 @@ namespace ShaoLu.Utils
                     Thread.Sleep(delayBetweenKeys);
                 }
             }
-            catch
+            catch (Exception)
             {
                 return false;
             }

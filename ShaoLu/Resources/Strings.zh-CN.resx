@@ -258,4 +258,7 @@
   <data name="StepFalseGoto" xml:space="preserve">
     <value>若假则</value>
   </data>
+  <data name="AddFindImageStep" xml:space="preserve">
+    <value>寻找图像</value>
+  </data>
 </root>

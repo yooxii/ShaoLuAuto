@@ -4,10 +4,9 @@ using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Runtime.Remoting.Messaging;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -100,7 +99,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
             this.Type = type;
         }
 
-        public abstract bool Run();
+        public abstract Task<bool> RunAsync(CancellationToken cancellationToken = default);
+        public bool Run()
+        {
+            return RunAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
         // 其他公共属性...
     }
 
@@ -110,7 +113,18 @@ namespace ShaoLu.Viewmodels.AutomationStep
         readonly Services.FileServices fileServices = new();
 
         private string _imagePath;
-        public string ImagePath { get => _imagePath; set => SetProperty(ref _imagePath, value); }
+        public string ImagePath
+        {
+            get => _imagePath;
+            set
+            {
+                if (SetProperty(ref _imagePath, value))
+                {
+                    // 当原图路径改变时，如果已有裁剪图，可能需要重新考虑是否失效，这里暂不处理
+                    ImgSrc = null; // 重置缓存
+                }
+            }
+        }
 
         [JsonIgnore]
         private ImageSource _imgSrc;
@@ -119,18 +133,36 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             get
             {
-                if (_imgSrc is null)
-                    LoadImage();
+                _imgSrc ??= LoadImage(ImagePath);
                 return _imgSrc;
             }
             set => SetProperty(ref _imgSrc, value);
         }
 
+        public double ImgSrcWidth => (ImgSrc?.Width ?? 0);
 
         [JsonIgnore]
         public ImageSource _croppedImg;
         [JsonIgnore]
-        public ImageSource CroppedImg { get => _croppedImg; set => SetProperty(ref _croppedImg, value); }
+        public ImageSource CroppedImg
+        {
+            get
+            {
+                GetCroppedImageSavePath(out _, out string fullPath);
+                if (System.IO.File.Exists(fullPath))
+                    _croppedImg ??= LoadImage(fullPath);
+                return _croppedImg;
+            }
+            set
+            {
+                if (SetProperty(ref _croppedImg, value))
+                {
+                    if (value != null)
+                        // 当裁剪图更新时，自动保存到磁盘
+                        SaveCroppedImageToDisk(value);
+                }
+            }
+        }
 
         #region 图像属性
         public Rect _croppedRect;
@@ -168,16 +200,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private RelayCommand eidtImageCommand;
         public ICommand EditImageCommand => eidtImageCommand ??= new RelayCommand(EditImage);
 
-        private bool LoadImage()
+        private ImageSource LoadImage(string imagePath)
         {
             var error_msg2 = "";
             string error_msg1;
-            if (!string.IsNullOrEmpty(ImagePath) && System.IO.File.Exists(ImagePath))
+            ImageSource res;
+            if (!string.IsNullOrEmpty(imagePath) && System.IO.File.Exists(imagePath))
             {
                 try
                 {
-                    ImgSrc = new System.Windows.Media.Imaging.BitmapImage(new Uri(ImagePath));
-                    return true;
+                    res = new System.Windows.Media.Imaging.BitmapImage(new Uri(imagePath));
+                    return res;
                 }
                 catch (Exception ex)
                 {
@@ -192,15 +225,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 error_msg1 = (string)(LocalizeDictionary.Instance.GetLocalizedObject("No_img_Warning", null, null) ?? "Error loading image");
             }
 
-            ImgSrc = null;
+            res = null;
             var Warning_Title = LocalizeDictionary.Instance.GetLocalizedObject("Warning_Title", null, null) ?? "Warning";
             System.Windows.Forms.MessageBox.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
+            return res;
         }
 
         private void EditImage()
         {
-            if (LoadImage())
+            if (ImgSrc != null)
             {
                 WindowEditImage windowEditImage = new();
                 windowEditImage.Show();
@@ -208,10 +241,76 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 windowEditImage.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
+                    windowEditImage.editImageViewModel.ImgSrcWidth = ImgSrcWidth;
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
                 windowEditImage.editImageViewModel.OnImageSaved += (img, rect) => { CroppedImg = img; CroppedRect = rect; };
             }
+        }
+
+        /// <summary>
+        /// 将裁剪后的图片保存到原图所在目录，文件名添加 Cropped_ 前缀
+        /// </summary>
+        private void SaveCroppedImageToDisk(ImageSource imageSource)
+        {
+            if (imageSource == null || string.IsNullOrEmpty(ImagePath))
+                return;
+
+            try
+            {
+                GetCroppedImageSavePath(out string extension, out string fullPath);
+
+                // 2. 转换 ImageSource 为 Bitmap 并保存
+                if (imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource)
+                {
+                    var encoder = GetEncoderByExtension(extension);
+                    if (encoder != null)
+                    {
+                        using (var stream = new System.IO.FileStream(fullPath, System.IO.FileMode.Create))
+                        {
+                            encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmapSource));
+                            encoder.Save(stream);
+                        }
+
+                        // 可选：更新 ImagePath 指向新保存的裁剪图？
+                        // 通常自动化步骤中，ImagePath 指向的是“模板图”，而 CroppedImg 是运行时截图或局部图。
+                        // 这里我们只保存文件，不改变 ImagePath 绑定，以免混淆“模板”与“实例”。
+                        System.Diagnostics.Debug.WriteLine($"Cropped image saved to: {fullPath}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to save cropped image: {ex.Message}");
+                // 在生产环境中，可能需要通过 UI 线程显示警告
+            }
+        }
+
+        private void GetCroppedImageSavePath(out string extension, out string fullPath)
+        {
+            // 1. 确定保存路径
+            string directory = System.IO.Path.GetDirectoryName(ImagePath);
+            string fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(ImagePath);
+            extension = System.IO.Path.GetExtension(ImagePath);
+
+            // 保持与原图相同的格式，或者统一转为 PNG 以保证质量
+            if (string.IsNullOrEmpty(extension)) extension = ".png";
+
+            string newFileName = $"Cropped_{fileNameWithoutExt}{extension}";
+
+            // 确保路径合法，防止路径遍历攻击（虽然 ImagePath 通常来自 OpenFileDialog，但仍需防御）
+            fullPath = System.IO.Path.Combine(directory, newFileName);
+        }
+
+        private System.Windows.Media.Imaging.BitmapEncoder GetEncoderByExtension(string extension)
+        {
+            return extension.ToLower() switch
+            {
+                ".jpg" or ".jpeg" => new System.Windows.Media.Imaging.JpegBitmapEncoder(),
+                ".bmp" => new System.Windows.Media.Imaging.BmpBitmapEncoder(),
+                ".gif" => new System.Windows.Media.Imaging.GifBitmapEncoder(),
+                _ => new System.Windows.Media.Imaging.PngBitmapEncoder(),// PNG 无损，推荐
+            };
         }
     }
 
@@ -242,10 +341,24 @@ namespace ShaoLu.Viewmodels.AutomationStep
             Timeout = 3;
         }
 
-        public override bool Run()
+        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var img = Autogui.ConvertImageSourceToBitmap(ImgSrc); // TODO: 改为CropedImg
-            return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offest, Clicks, ClickGap, SimilarityThreshold, WaitTime, Timeout);
+            var sourceImage = CroppedImg ?? ImgSrc;
+
+            if (sourceImage == null)
+            {
+                System.Diagnostics.Debug.WriteLine("No image available for clicking.");
+                return false;
+            }
+            var img = Autogui.ConvertImageSourceToBitmap(sourceImage);
+            if (img == null) return false;
+            var res = await Task.Run(() =>
+            {
+                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offest, Clicks, ClickGap, SimilarityThreshold, WaitTime, Timeout);
+            });
+            img?.Dispose();
+
+            return res;
         }
     }
 
@@ -266,9 +379,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
             this.Type = StepType.TypeText;
         }
 
-        public override bool Run()
+        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            return Autogui.TypeText(TextToType, DelayBetweenKeys);
+            var res = await Task.Run(() =>
+            {
+                return Autogui.TypeText(TextToType, DelayBetweenKeys);
+            });
+            return res;
         }
     }
 
@@ -288,10 +405,23 @@ namespace ShaoLu.Viewmodels.AutomationStep
             Type = StepType.FindImage;
         }
 
-        public override bool Run()
+        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var img = Autogui.ConvertImageSourceToBitmap(ImgSrc); // TODO: 改为CropedImg
-            var res = Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout);
+            var sourceImage = CroppedImg ?? ImgSrc;
+
+            if (sourceImage == null)
+            {
+                IsTrue = false;
+                return false;
+            }
+            var img = Autogui.ConvertImageSourceToBitmap(sourceImage);
+            if (img == null)
+            {
+                IsTrue = false;
+                return false;
+            }
+            var res = await Task.Run(() => { return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout); });
+            img?.Dispose();
             IsTrue = !res.IsEmpty;
             return IsTrue;
         }
@@ -318,7 +448,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             this.Type = StepType.Popup;
         }
 
-        public override bool Run()
+        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
             var iconType = PopupType switch
             {
@@ -329,25 +459,59 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _ => MessageBoxImage.Information
             };
 
-            if (System.Windows.Application.Current != null && System.Windows.Application.Current.Dispatcher != null)
+            var buttons = MessageBoxButton.OK; // 可以根据需要扩展属性来支持其他按钮类型
+
+            // 1. 启动异步弹窗任务
+            var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, buttons, iconType);
+
+            // 2. 等待任务完成或被取消
+            try
             {
-                // 使用 InvokeAsync 避免阻塞后台线程
-                var res = System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                // 将 CancellationToken 注册到 Task
+                using (cancellationToken.Register(() =>
                 {
-                    try
+                    // 当取消发生时，在 UI 线程关闭窗口
+                    // 检查窗口是否仍然存在且未关闭
+                    if (popupWindow != null && !popupWindow.Dispatcher.HasShutdownStarted)
                     {
-                        return WPFDevelopers.Controls.MessageBox.Show(PopupText, Title, MessageBoxButton.OK, iconType);
+                        popupWindow.Dispatcher.InvokeAsync(() =>
+                        {
+                            if (popupWindow.IsVisible)
+                            {
+                                popupWindow.Close();
+                            }
+                        });
                     }
-                    catch (Exception)
+                }))
+                {
+                    // WaitAsync 是 .NET 6+ 的方法。在 .NET Framework 4.8 中，我们需要手动处理
+                    // 这里使用 Task.WhenAny 来模拟
+
+                    var cancelTask = new TaskCompletionSource<bool>();
+                    using (cancellationToken.Register(() => cancelTask.TrySetResult(true)))
                     {
-                        // 防止在应用关闭期间调用 Dispatcher 导致异常
-                        System.Diagnostics.Debug.WriteLine($"Failed to show messagebox: {PopupText}");
-                        IsTrue = false;
+                        var completedTask = await Task.WhenAny(popupTask, cancelTask.Task);
+
+                        if (completedTask == cancelTask.Task)
+                        {
+                            // 用户点击了停止
+                            IsTrue = false;
+                            return false;
+                        }
+
+                        // 用户点击了弹窗按钮
+                        var result = await popupTask;
+                        IsTrue = (result == MessageBoxResult.OK || result == MessageBoxResult.Yes);
+                        return IsTrue;
                     }
-                    return MessageBoxResult.None;
-                });
+                }
             }
-            return IsTrue;
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Popup error: {ex.Message}");
+                IsTrue = false;
+                return false;
+            }
         }
     }
 
@@ -358,7 +522,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = true;
             Type = StepType.Empty;
         }
-        public override bool Run()
+        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
             return IsTrue;
         }

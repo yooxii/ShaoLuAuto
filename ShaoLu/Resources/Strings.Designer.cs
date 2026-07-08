@@ -70,6 +70,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 AddFindImageStep 的本地化字符串。
+        /// </summary>
+        public static string AddFindImageStep {
+            get {
+                return ResourceManager.GetString("AddFindImageStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 AddIFStep 的本地化字符串。
         /// </summary>
         public static string AddIFStep {

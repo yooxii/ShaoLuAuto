@@ -52,9 +52,6 @@ namespace ShaoLu
     /// <summary>
     /// 一个支持参数且线程安全的 RelayCommand 实现，适用于 WPF (.NET Framework 4.8)。
     /// </summary>
-    /// <remarks>
-    /// 创建一个新的 RelayParameterCommand。
-    /// </remarks>
     /// <param name="execute">执行逻辑。不能为 null。</param>
     /// <param name="canExecute">判断是否可执行的逻辑。可以为 null，默认为 true。</param>
     public class RelayParameterCommand(Action<object> execute, Func<bool> canExecute = null) : ICommand
@@ -91,6 +88,7 @@ namespace ShaoLu
         /// </summary>
         public void RaiseCanExecuteChanged()
         {
+            //CanExecuteChanged?.Invoke(this, EventArgs.Empty);
             var handler = CanExecuteChanged;
             if (handler != null)
             {

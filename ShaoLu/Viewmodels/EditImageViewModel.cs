@@ -20,6 +20,13 @@ namespace ShaoLu.Viewmodels
             set => SetProperty(ref _imgSrc, value);
         }
 
+        private double _imgSrcWidth;
+        public double ImgSrcWidth
+        {
+            get => _imgSrcWidth;
+            set => SetProperty(ref _imgSrcWidth, value);
+        }
+
         private ImageSource _imgDst;
         public ImageSource ImgDst {
             get => _imgDst;

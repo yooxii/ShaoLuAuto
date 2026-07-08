@@ -4,6 +4,7 @@ using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Collections.ObjectModel;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -12,11 +13,28 @@ namespace ShaoLu.Viewmodels
 {
     public class StepsViewModel : ObservableObject
     {
+
+        private CancellationTokenSource _cts;
+
         #region 属性
 
         private volatile bool _stopSignal = false;
-
         public bool StopSignal { get => _stopSignal; set => _stopSignal = value; }
+
+
+        public bool _isRunning = false;
+        public bool IsRunning {
+            get => _isRunning;
+            set {
+                if (SetProperty(ref _isRunning, value))
+                {
+                    RunCommand.RaiseCanExecuteChanged();
+                    StopCommand.RaiseCanExecuteChanged();
+                    AddStepCommand.RaiseCanExecuteChanged();
+                    DelStepCommand.RaiseCanExecuteChanged();
+                }
+            }
+        }
 
 
         // 选中步骤
@@ -37,28 +55,29 @@ namespace ShaoLu.Viewmodels
         #region 命令
 
         private RelayCommand runCommand;
-        public ICommand RunCommand => runCommand ??= new RelayCommand(Run);
+        public RelayCommand RunCommand => runCommand ??= new RelayCommand(Run, CanRun);
 
         private RelayCommand stopCommand;
-        public ICommand StopCommand => stopCommand ??= new RelayCommand(Stop);
+        public RelayCommand StopCommand => stopCommand ??= new RelayCommand(Stop);
 
 
         private RelayParameterCommand addStepCommand;
-        public ICommand AddStepCommand => addStepCommand ??= new RelayParameterCommand(AddStep);
+        public RelayParameterCommand AddStepCommand => addStepCommand ??= new RelayParameterCommand(AddStep, CanAlertStep);
 
 
         private RelayCommand delStepCommand;
-        public ICommand DelStepCommand => delStepCommand ??= new RelayCommand(DelStep);
+        public RelayCommand DelStepCommand => delStepCommand ??= new RelayCommand(DelStep, CanAlertStep);
 
         #endregion
 
         public StepsViewModel()
         {
-            AutomationStepBases.CollectionChanged += (s, e) => UpdateLineNumbers();
+            AutomationStepBases.CollectionChanged += (s, e) => UpdateAutomationStepBases();
         }
 
-        private void UpdateLineNumbers()
+        private void UpdateAutomationStepBases()
         {
+            RunCommand.RaiseCanExecuteChanged();
             // 遍历集合并更新每个步骤的行号 (从1开始)
             for (int i = 0; i < AutomationStepBases.Count; i++)
             {
@@ -78,7 +97,7 @@ namespace ShaoLu.Viewmodels
                 {
                     "ClickImage" => new ClickImageStep(),
                     "TypeText" => new TypeTextStep(),
-                    "LogicalIf" => new FindImageStep(),
+                    "FindImage" => new FindImageStep(),
                     "Popup" => new PopupStep(),
                     _ => new ClickImageStep(),
                 };
@@ -124,61 +143,70 @@ namespace ShaoLu.Viewmodels
         private void Stop()
         {
             StopSignal = true;
+            _cts?.Cancel();
+        }
+
+        private bool CanRun()
+        {
+            return AutomationStepBases != null && AutomationStepBases.Count > 0 && !_isRunning;
+        }
+        private bool CanAlertStep()
+        {
+            return !_isRunning;
         }
 
         /// <summary>
         /// 启动自动化运行，将耗时任务移至后台线程
         /// </summary>
-        public void Run()
+        public async void Run()
         {
             // 重置停止信号
-            _stopSignal = false;
+            StopSignal = false;
+            IsRunning = true;
 
-            // 2. 将耗时任务转到线程池线程执行，避免阻塞 UI
-            Task.Run(() =>
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+
+
+            // 初始化自动化引擎（假设此方法也是耗时的或需要在线程上下文中运行）
+            Autogui.StartAuto();
+
+            while (true)
             {
-                try
+                // 检查停止信号
+                if (StopSignal || token.IsCancellationRequested)
                 {
-                    // 初始化自动化引擎（假设此方法也是耗时的或需要在线程上下文中运行）
-                    Autogui.StartAuto();
+                    IsRunning = false;
+                    break;
+                }
 
-                    while (true)
+                foreach (var step in AutomationStepBases)
+                {
+                    // 在每个步骤开始前再次检查停止信号，提高响应速度
+                    if (StopSignal || token.IsCancellationRequested)
                     {
-                        // 检查停止信号
-                        if (_stopSignal || AutomationStepBases == null || AutomationStepBases.Count == 0)
-                        {
-                            break;
-                        }
+                        IsRunning = false;
+                        break;
+                    }
 
-                        foreach (var step in AutomationStepBases)
-                        {
-                            // 在每个步骤开始前再次检查停止信号，提高响应速度
-                            if (_stopSignal)
-                            {
-                                return;
-                            }
-
-                            try
-                            {
-                                step.Run();
-                            }
-                            catch (Exception ex)
-                            {
-                                // 记录单个步骤的错误，防止整个流程崩溃
-                                ShowErrorOnUi($"Step execution failed: {ex.Message}");
-                            }
-                        }
-
-                        // 可选：如果步骤列表为空或执行过快，添加微小延迟防止 CPU 空转
-                        // Thread.Sleep(10); 
+                    try
+                    {
+                        await step.RunAsync(token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录单个步骤的错误，防止整个流程崩溃
+                        ShowErrorOnUi($"Step execution failed: {ex.Message}");
                     }
                 }
-                catch (Exception ex)
-                {
-                    // 捕获顶层未处理异常
-                    ShowErrorOnUi($"Automation critical error: {ex.Message}");
-                }
-            });
+
+                // 可选：如果步骤列表为空或执行过快，添加微小延迟防止 CPU 空转
+                // Thread.Sleep(10); 
+            }
         }
 
         /// <summary>

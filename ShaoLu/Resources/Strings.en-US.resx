@@ -258,4 +258,7 @@
   <data name="StepFalseGoto" xml:space="preserve">
     <value>False Goto</value>
   </data>
+  <data name="AddFindImageStep" xml:space="preserve">
+    <value>Find Image</value>
+  </data>
 </root>

@@ -196,6 +196,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 DelayBetweenKeys 的本地化字符串。
+        /// </summary>
+        public static string DelayBetweenKeys {
+            get {
+                return ResourceManager.GetString("DelayBetweenKeys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Delete 的本地化字符串。
         /// </summary>
         public static string Delete {

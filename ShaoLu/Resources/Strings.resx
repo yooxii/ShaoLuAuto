@@ -261,4 +261,7 @@
   <data name="AddFindImageStep" xml:space="preserve">
     <value>AddFindImageStep</value>
   </data>
+  <data name="DelayBetweenKeys" xml:space="preserve">
+    <value>DelayBetweenKeys</value>
+  </data>
 </root>

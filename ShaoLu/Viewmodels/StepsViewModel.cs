@@ -1,13 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Expression.Drawing.Core;
+using ShaoLu.Models;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
+using ShaoLu.Views;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 
 namespace ShaoLu.Viewmodels
 {
@@ -19,13 +20,15 @@ namespace ShaoLu.Viewmodels
         #region 属性
 
         private volatile bool _stopSignal = false;
-        public bool StopSignal { get => _stopSignal; set => _stopSignal = value; }
+        public bool StopSignal { get => _stopSignal; set { _stopSignal = value; IsRunning = !value; } }
 
 
         public bool _isRunning = false;
-        public bool IsRunning {
+        public bool IsRunning
+        {
             get => _isRunning;
-            set {
+            set
+            {
                 if (SetProperty(ref _isRunning, value))
                 {
                     RunCommand.RaiseCanExecuteChanged();
@@ -87,6 +90,11 @@ namespace ShaoLu.Viewmodels
 
         #region 步骤增删
 
+        private bool CanAlertStep()
+        {
+            return !_isRunning;
+        }
+
         private void AddStep(object parameter)
         {
             AutomationStepBase imgStep;
@@ -95,11 +103,11 @@ namespace ShaoLu.Viewmodels
                 AutomationStepBases ??= [];
                 imgStep = param switch
                 {
-                    "ClickImage" => new ClickImageStep(),
-                    "TypeText" => new TypeTextStep(),
-                    "FindImage" => new FindImageStep(),
-                    "Popup" => new PopupStep(),
-                    _ => new ClickImageStep(),
+                    "ClickImage" => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
+                    "TypeText" => new TypeTextStep($"TypeText_{AutomationStepBases.Count(t => t.Type == StepType.TypeText) + 1}"),
+                    "FindImage" => new FindImageStep($"FindImage_{AutomationStepBases.Count(t => t.Type == StepType.FindImage) + 1}"),
+                    "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
+                    _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
                 if (SelectedStep is AutomationStepBase automationStepBase)
                 {
@@ -150,10 +158,6 @@ namespace ShaoLu.Viewmodels
         {
             return AutomationStepBases != null && AutomationStepBases.Count > 0 && !_isRunning;
         }
-        private bool CanAlertStep()
-        {
-            return !_isRunning;
-        }
 
         /// <summary>
         /// 启动自动化运行，将耗时任务移至后台线程
@@ -162,76 +166,64 @@ namespace ShaoLu.Viewmodels
         {
             // 重置停止信号
             StopSignal = false;
-            IsRunning = true;
 
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
 
 
-            // 初始化自动化引擎（假设此方法也是耗时的或需要在线程上下文中运行）
+            // 初始化自动化引擎
             Autogui.StartAuto();
 
-            while (true)
+            for (int i = 0; i < AutomationStepBases.Count; i++)
             {
-                // 检查停止信号
+                // 在每个步骤开始前再次检查停止信号，提高响应速度
                 if (StopSignal || token.IsCancellationRequested)
                 {
-                    IsRunning = false;
                     break;
                 }
+                var step = AutomationStepBases[i];
 
-                foreach (var step in AutomationStepBases)
+                try
                 {
-                    // 在每个步骤开始前再次检查停止信号，提高响应速度
-                    if (StopSignal || token.IsCancellationRequested)
+                    SelectedStep = step;
+                    var runSuccess = await step.RunAsync(token);
+                    if (!runSuccess)
                     {
-                        IsRunning = false;
-                        break;
-                    }
-
-                    try
-                    {
-                        await step.RunAsync(token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        // 记录单个步骤的错误，防止整个流程崩溃
-                        ShowErrorOnUi($"Step execution failed: {ex.Message}");
+                        throw new Exception($"{step.Name} run fail!");
                     }
                 }
-
-                // 可选：如果步骤列表为空或执行过快，添加微小延迟防止 CPU 空转
-                // Thread.Sleep(10); 
-            }
-        }
-
-        /// <summary>
-        /// 在 UI 线程上显示错误消息
-        /// </summary>
-        private void ShowErrorOnUi(string message)
-        {
-            // 5. 确保 UI 操作在 Dispatcher 线程执行
-            if (Application.Current != null && Application.Current.Dispatcher != null)
-            {
-                // 使用 InvokeAsync 避免阻塞后台线程
-                Application.Current.Dispatcher.InvokeAsync(() =>
+                catch (OperationCanceledException)
                 {
-                    try
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    // 记录单个步骤的错误，防止整个流程崩溃
+                    WindowAsyncPopup.Show($"Step execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    if (step.FalseGoto <= 0)
                     {
-                        WPFDevelopers.Controls.MessageBox.Show(message, "Error", System.Windows.MessageBoxImage.Error);
+                        StopSignal = true;
+                        break;
                     }
-                    catch (Exception)
+                    else
                     {
-                        // 防止在应用关闭期间调用 Dispatcher 导致异常
-                        System.Diagnostics.Debug.WriteLine($"Failed to show messagebox: {message}");
+                        step.IsTrue = false;
                     }
-                });
+                }
+                if (step.IsTrue)
+                {
+                    // 跳转到指定步骤
+                    if (step.TrueGoto > 0)
+                        i = step.TrueGoto - 1 - 1;
+                }
+                else
+                {
+                    if (step.FalseGoto > 0)
+                        i = step.FalseGoto - 1 - 1;
+                }
             }
         }
+
         #endregion
     }
 }

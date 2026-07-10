@@ -18,6 +18,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
     // 基类
     public abstract class AutomationStepBase : ObservableObject
     {
+        #region 属性
         private int _lineNo;
 
         /// <summary>
@@ -78,6 +79,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private int _falseGoto;
         public int FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
 
+        #endregion
 
         /// <summary>
         /// 构造函数
@@ -142,7 +144,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public double ImgSrcWidth => (ImgSrc?.Width ?? 0);
 
         [JsonIgnore]
-        public ImageSource _croppedImg;
+        private ImageSource _croppedImg;
         [JsonIgnore]
         public ImageSource CroppedImg
         {
@@ -288,7 +290,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void GetCroppedImageSavePath(out string extension, out string fullPath)
         {
+            extension = null;
+            fullPath = null;
             // 1. 确定保存路径
+            if (string.IsNullOrEmpty(ImagePath)) return;
             string directory = System.IO.Path.GetDirectoryName(ImagePath);
             string fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(ImagePath);
             extension = System.IO.Path.GetExtension(ImagePath);
@@ -317,33 +322,40 @@ namespace ShaoLu.Viewmodels.AutomationStep
     // 识图步骤
     public class ClickImageStep : ImageRecognitionBase
     {
-        private int _clicks;
+        private int _clicks = 1;
         public int Clicks { get => _clicks; set => SetProperty(ref _clicks, value); }
 
 
-        private double _clickGap;
+        private double _clickGap = 0.1;
         public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
 
 
-        private double _waitTime;
+        private double _waitTime = 0;
         public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
 
 
-        private double _timeout;
+        private double _timeout = 3;
         public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
 
         public ClickImageStep() : base()
         {
             Type = StepType.ClickImage;
-            Clicks = 1;
-            ClickGap = 0.1;
-            WaitTime = 0.3;
-            Timeout = 3;
+        }
+        public ClickImageStep(string name) : base()
+        {
+            Type = StepType.ClickImage;
+            Name = name;
+        }
+        public ClickImageStep(string name, string description) : base()
+        {
+            Type = StepType.ClickImage;
+            Name = name;
+            Description = description;
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var sourceImage = CroppedImg ?? ImgSrc;
+            var sourceImage = CroppedImg ?? ImgSrc ?? null;
 
             if (sourceImage == null)
             {
@@ -370,13 +382,24 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
 
 
-        private int _delayBetweenKeys;
+        private int _delayBetweenKeys = 0;
         public int DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
 
 
         public TypeTextStep() : base()
         {
-            this.Type = StepType.TypeText;
+            Type = StepType.TypeText;
+        }
+        public TypeTextStep(string name) : base()
+        {
+            Type = StepType.TypeText;
+            Name = name;
+        }
+        public TypeTextStep(string name, string description) : base()
+        {
+            Type = StepType.TypeText;
+            Name = name;
+            Description = description;
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
@@ -393,16 +416,27 @@ namespace ShaoLu.Viewmodels.AutomationStep
     public class FindImageStep : ImageRecognitionBase
     {
 
-        private double _gaptime;
+        private double _gaptime = 0.1;
         public double GapTime { get => _gaptime; set => SetProperty(ref _gaptime, value); }
 
 
-        private double _timeout;
+        private double _timeout = 3;
         public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
 
         public FindImageStep() : base()
         {
             Type = StepType.FindImage;
+        }
+        public FindImageStep(string name) : base()
+        {
+            Type = StepType.FindImage;
+            Name = name;
+        }
+        public FindImageStep(string name, string description) : base()
+        {
+            Type = StepType.FindImage;
+            Name = name;
+            Description = description;
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
@@ -438,7 +472,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public string PopupText { get => _popupText; set => SetProperty(ref _popupText, value); }
 
 
-        private string _popupType;
+        private string _popupType = "Information";
         public string PopupType { get => _popupType; set => SetProperty(ref _popupType, value); }
 
         public List<string> PopupTypes { get; set; } = ["Information", "Warning", "Error", "Question"];
@@ -446,6 +480,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public PopupStep() : base()
         {
             this.Type = StepType.Popup;
+        }
+        public PopupStep(string name) : base()
+        {
+            Type = StepType.Popup;
+            Name = name;
+        }
+        public PopupStep(string name, string description) : base()
+        {
+            Type = StepType.Popup;
+            Name = name;
+            Description = description;
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
@@ -521,6 +566,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             IsTrue = true;
             Type = StepType.Empty;
+        }
+        public EmptyStep(string name) : base()
+        {
+            IsTrue = true;
+            Type = StepType.Empty;
+            Name = name;
+        }
+        public EmptyStep(string name, string description) : base()
+        {
+            IsTrue = true;
+            Type = StepType.Empty;
+            Name = name;
+            Description = description;
         }
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {

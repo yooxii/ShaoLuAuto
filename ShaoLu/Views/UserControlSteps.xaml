@@ -65,7 +65,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MinWidth="400"/>
                     <ColumnDefinition Width="3"/>
-                    <ColumnDefinition Width="Auto" MinWidth="200"/>
+                    <ColumnDefinition Width="Auto" MinWidth="255"/>
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
                     <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}" ContextMenu="{StaticResource DataGridMenu}" SelectionMode="Extended" SelectedItem="{Binding SelectedStep}" utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}">
@@ -82,16 +82,18 @@
                 <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
                 <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2">
                     <!-- 当 SelectedStep 为 null 时，可以显示提示文本 -->
-                    <Grid>
-                        <ContentControl Content="{Binding SelectedStep}" 
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch">
+                        <Grid>
+                            <ContentControl Content="{Binding SelectedStep}" 
                         ContentTemplateSelector="{StaticResource StepDetailSelector}" />
 
-                        <!-- 可选：如果没有选中项，显示提示信息 -->
-                        <TextBlock Text="{lex:Loc NoSelectionHint}" 
+                            <!-- 可选：如果没有选中项，显示提示信息 -->
+                            <TextBlock Text="{lex:Loc NoSelectionHint}" 
                             HorizontalAlignment="Center" 
                             VerticalAlignment="Center"
                             Visibility="{Binding SelectedStep, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Inverse}"/>
-                    </Grid>
+                        </Grid>
+                    </ScrollViewer>
                 </GroupBox>
             </Grid>
             <Grid Grid.Row="2" Margin="5 0 5 5">

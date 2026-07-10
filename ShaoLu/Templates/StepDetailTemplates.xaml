@@ -5,126 +5,136 @@
                     xmlns:lex="http://wpflocalizeextension.codeplex.com"
                     xmlns:conv="clr-namespace:ShaoLu.Converters">
 
-
     <!-- 识图步骤的UI -->
     <DataTemplate x:Key="ClickImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
-        <Grid Width="300">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-            </Grid.RowDefinitions>
-
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <StackPanel Orientation="Vertical">
+            <StackPanel>
                 <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
-                <TextBlock x:Name="PathTextBlock"
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="PathTextBlock"
                            Text="{Binding ImagePath}" 
                            VerticalAlignment="Center" 
-                           MinWidth="100"
-                           TextTrimming="CharacterEllipsis"
+                           MinWidth="150"
+                           MaxWidth="250"
                            TextWrapping="NoWrap"
-                           Margin="5,0"
+                           IsReadOnly="True"
                            ToolTip="{Binding ImagePath}"/>
-                <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
-                <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
+                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
+                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
+                </StackPanel>
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center">
+            <StackPanel Margin="0,5,0,0">
                 <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
-                <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                        VerticalAlignment="Center" 
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        Precision="3"
+                        Interval="0.001"
+                        Width="70"/>
+                    <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                         Minimum="0" 
                         Maximum="1" 
-                        Width="150"
-                        Margin="5,0"/>
-                <TextBox Text="{Binding SimilarityThreshold, StringFormat=0.00, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                         InputMethod.IsInputMethodEnabled="False"
-                         Width="50"
-                         Margin="5,0"/>
+                        Width="150"/>
+                </StackPanel>
             </StackPanel>
-        </Grid>
+            <StackPanel>
+                <Label Content="Clicks" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding Clicks, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"/>
+            </StackPanel>
+            <StackPanel >
+                <Label Content="ClickGap(s)" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding ClickGap, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"
+                    MaxWidth="300"
+                    Precision="3"
+                    Interval="0.01"/>
+            </StackPanel>
+            <StackPanel >
+                <Label Content="WaitTime(s)" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
+                    Precision="3" Minimum="0"
+                    Interval="0.01"/>
+            </StackPanel>
+            <StackPanel >
+                <Label Content="Timeout(s)" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
+                    Precision="3" Minimum="0"
+                    Interval="0.1"/>
+            </StackPanel>
+        </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="FindImageStepTemplate" DataType="{x:Type AutoVM:FindImageStep}">
-        <StackPanel Width="300">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <StackPanel>
+            <StackPanel>
                 <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
-                <TextBlock x:Name="PathTextBlock"
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="PathTextBlock"
                            Text="{Binding ImagePath}" 
-                           VerticalAlignment="Center" 
-                           MinWidth="100"
-                           TextTrimming="CharacterEllipsis"
+                           MinWidth="150"
+                           MaxWidth="250"
                            TextWrapping="NoWrap"
-                           Margin="5,0"
+                           IsReadOnly="True"
                            ToolTip="{Binding ImagePath}"/>
-                <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
-                <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
+                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
+                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
+                </StackPanel>
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center">
+            <StackPanel Margin="0,5,0,0">
                 <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
-                <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                        VerticalAlignment="Center" 
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        Precision="3"
+                        Interval="0.001"
+                        Width="70"/>
+                    <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                         Minimum="0" 
                         Maximum="1" 
-                        Width="150"
-                        Margin="5,0"/>
-                <TextBox Text="{Binding SimilarityThreshold, StringFormat=0.00, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                         InputMethod.IsInputMethodEnabled="False"
-                         Width="50"
-                         Margin="5,0"/>
+                        Width="150"/>
+                </StackPanel>
             </StackPanel>
             
             <StackPanel>
                 <Label Content="GapTime" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding GapTime, UpdateSourceTrigger=LostFocus}" 
-                     MinWidth="150"
-                     Margin="0,0,10,0"
-                     VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding GapTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
             </StackPanel>
             <StackPanel>
                 <Label Content="Timeout" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding Timeout, UpdateSourceTrigger=LostFocus}" 
-                     MinWidth="150"
-                     Margin="0,0,10,0"
-                     VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
             </StackPanel>
         </StackPanel>
     </DataTemplate>
 
     <!-- 输入文字步骤的UI -->
     <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
-        <StackPanel Width="300" Orientation="Vertical">
+        <StackPanel Orientation="Vertical">
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" 
-                     MinWidth="150"
-                     Margin="0,0,10,0"
-                     VerticalAlignment="Center"/>
+                     MinWidth="150"/>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" 
-                     MinWidth="80"
-                     VerticalAlignment="Center"/>
+                <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
             </StackPanel>
         </StackPanel>
     </DataTemplate>
 
 
     <DataTemplate x:Key="PopupStepTemplate" DataType="{x:Type AutoVM:PopupStep}">
-        <StackPanel Width="300">
+        <StackPanel>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="Title" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" 
                      MinWidth="150"
-                     Margin="10,0,10,0"
+                     Margin="0,0,10,0"
                      VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="PopupText" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
                      MinWidth="150"
-                     Margin="10,0,10,0"
+                     Margin="0,0,10,0"
                      VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
@@ -132,7 +142,7 @@
                 <ComboBox Text="{Binding PopupType, UpdateSourceTrigger=LostFocus}" 
                      ItemsSource="{Binding PopupTypes}"
                      MinWidth="150"
-                     Margin="10,0,10,0"
+                     Margin="0,0,10,0"
                      VerticalAlignment="Center"/>
             </StackPanel>
         </StackPanel>

@@ -261,4 +261,7 @@
   <data name="AddFindImageStep" xml:space="preserve">
     <value>寻找图像</value>
   </data>
+  <data name="DelayBetweenKeys" xml:space="preserve">
+    <value>键入文字的间隔时间</value>
+  </data>
 </root>

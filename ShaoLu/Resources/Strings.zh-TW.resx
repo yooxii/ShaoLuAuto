@@ -262,6 +262,69 @@
     <value>尋找圖像</value>
   </data>
   <data name="DelayBetweenKeys" xml:space="preserve">
-    <value>鍵入文字的間隔時間</value>
+    <value>鍵入文字的間隔時間(s)</value>
+  </data>
+  <data name="Clicks" xml:space="preserve">
+    <value>點擊次數</value>
+  </data>
+  <data name="ClickGap" xml:space="preserve">
+    <value>點擊間隔(s)</value>
+  </data>
+  <data name="WaitTime" xml:space="preserve">
+    <value>等待時間(s)</value>
+  </data>
+  <data name="Timeout" xml:space="preserve">
+    <value>超時時間(s)</value>
+  </data>
+  <data name="FindTimeInterval" xml:space="preserve">
+    <value>重新尋找的間隔時間(s)</value>
+  </data>
+  <data name="PopupText" xml:space="preserve">
+    <value>內容</value>
+  </data>
+  <data name="PopupType" xml:space="preserve">
+    <value>類型</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>標題</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>返回</value>
+  </data>
+  <data name="FontTitle" xml:space="preserve">
+    <value>字體選擇</value>
+  </data>
+  <data name="Font" xml:space="preserve">
+    <value>字體</value>
+  </data>
+  <data name="FontSize" xml:space="preserve">
+    <value>字號</value>
+  </data>
+  <data name="FontFamily" xml:space="preserve">
+    <value>字體</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>確定</value>
+  </data>
+  <data name="FontStyle" xml:space="preserve">
+    <value>樣式</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>顔色</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="Down" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>複製</value>
+  </data>
+  <data name="Paste" xml:space="preserve">
+    <value>粘貼</value>
+  </data>
+  <data name="Cut" xml:space="preserve">
+    <value>剪切</value>
   </data>
 </root>

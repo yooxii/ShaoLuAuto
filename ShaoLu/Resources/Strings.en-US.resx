@@ -262,6 +262,69 @@
     <value>Find Image</value>
   </data>
   <data name="DelayBetweenKeys" xml:space="preserve">
-    <value>Delay Between Keys</value>
+    <value>Delay Between Keys(s)</value>
+  </data>
+  <data name="Clicks" xml:space="preserve">
+    <value>Click Count</value>
+  </data>
+  <data name="ClickGap" xml:space="preserve">
+    <value>Click Interval(s)</value>
+  </data>
+  <data name="WaitTime" xml:space="preserve">
+    <value>Wait Time(s)</value>
+  </data>
+  <data name="Timeout" xml:space="preserve">
+    <value>Timeout(s)</value>
+  </data>
+  <data name="FindTimeInterval" xml:space="preserve">
+    <value>Find Time Interval(s)</value>
+  </data>
+  <data name="PopupText" xml:space="preserve">
+    <value>Popup Text</value>
+  </data>
+  <data name="PopupType" xml:space="preserve">
+    <value>Popup Type</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="FontTitle" xml:space="preserve">
+    <value>Font Select</value>
+  </data>
+  <data name="Font" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="FontSize" xml:space="preserve">
+    <value>FontSize</value>
+  </data>
+  <data name="FontFamily" xml:space="preserve">
+    <value>FontFamily</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="FontStyle" xml:space="preserve">
+    <value>FontStyle</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="Down" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="Cut" xml:space="preserve">
+    <value>Cut</value>
   </data>
 </root>

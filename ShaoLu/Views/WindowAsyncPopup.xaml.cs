@@ -1,7 +1,11 @@
-﻿using System.Drawing;
+﻿using ShaoLu.Models;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -11,9 +15,40 @@ namespace ShaoLu.Views
     {
         private TaskCompletionSource<MessageBoxResult> _tcs;
 
+        // 缓存系统图标，避免重复进行 GDI+ 到 WPF 的转换，提升性能
+        private static readonly Dictionary<MessageBoxImage, ImageSource> IconCache = [];
+
+        static WindowAsyncPopup()
+        {
+            // 预加载常用图标
+            IconCache[MessageBoxImage.Error] = SystemIcons.Error.ToBitmapSource();
+            IconCache[MessageBoxImage.Warning] = SystemIcons.Warning.ToBitmapSource();
+            IconCache[MessageBoxImage.Question] = SystemIcons.Question.ToBitmapSource();
+            IconCache[MessageBoxImage.Information] = SystemIcons.Information.ToBitmapSource();
+            IconCache[MessageBoxImage.None] = null;
+        }
+
         public WindowAsyncPopup()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// 异步显示弹窗，不阻塞调用线程，允许主窗口响应其他事件（如停止按钮）
+        /// </summary>
+        public static (Window Window, Task<MessageBoxResult> Task) Show(string message, string title, FontModel font, MessageBoxButton button, MessageBoxImage icon)
+        {
+            var tcs = new TaskCompletionSource<MessageBoxResult>();
+
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                return CreateAndShow(message, title, font, button, icon, tcs);
+            }
+            else
+            {
+                // 必须在 UI 线程创建
+                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, font, button, icon, tcs));
+            }
         }
 
         /// <summary>
@@ -25,98 +60,141 @@ namespace ShaoLu.Views
 
             if (Application.Current.Dispatcher.CheckAccess())
             {
-                return CreateAndShow(message, title, button, icon, tcs);
+                return CreateAndShow(message, title, null, button, icon, tcs);
             }
             else
             {
                 // 必须在 UI 线程创建
-                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, button, icon, tcs));
+                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, null, button, icon, tcs));
             }
         }
 
-        private static (Window Window, Task<MessageBoxResult> Task) CreateAndShow(string message, string title, MessageBoxButton button, MessageBoxImage icon, TaskCompletionSource<MessageBoxResult> tcs)
+        /// <summary>
+        /// 核心创建逻辑，统一处理窗口初始化和显示
+        /// </summary>
+        private static (Window Window, Task<MessageBoxResult> Task) CreateAndShow(string message, string title, FontModel font, MessageBoxButton button, MessageBoxImage icon, TaskCompletionSource<MessageBoxResult> tcs)
         {
             var popup = new WindowAsyncPopup
             {
-                Title = title ?? "",
+                Title = title ?? string.Empty,
                 _tcs = tcs
             };
 
-            // 设置消息
-            popup.MessageText.Text = message ?? "";
+            // 1. 设置消息文本
+            if (popup.MessageText != null)
+            {
+                popup.MessageText.Text = message ?? string.Empty;
 
-            // 设置图标
-            popup.IconImage.Source = GetIconSource(icon) ?? null;
+                // 如果提供了字体模型，应用字体设置
+                if (font != null)
+                {
+                    popup.MessageText.FontFamily = new System.Windows.Media.FontFamily(font.FontFamily);
+                    popup.MessageText.FontSize = font.FontSize;
+                    popup.MessageText.FontStyle = font.FontStyle;
+                    popup.MessageText.FontWeight = font.FontWeight;
+                    var color = System.Drawing.Color.FromArgb(font.FontColor);
+                    popup.MessageText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
+                }
+            }
 
-            // 生成按钮
+            // 2. 设置图标 (从缓存获取)
+            if (popup.IconImage != null)
+            {
+                if (IconCache.TryGetValue(icon, out var source))
+                {
+                    popup.IconImage.Source = source;
+                }
+                else
+                {
+                    // 兜底：如果没有缓存，尝试动态转换（虽然静态构造已覆盖所有标准情况）
+                    popup.IconImage.Source = GetIconSourceDynamic(icon);
+                }
+            }
+
+            // 3. 生成按钮
             popup.CreateButtons(button);
 
-            // 处理窗口关闭事件（防止用户通过 Alt+F4 或右上角 X 关闭时任务挂起）
+            // 4. 处理窗口关闭事件（防止用户通过 Alt+F4 或右上角 X 关闭时任务挂起）
             popup.Closed += (s, e) =>
             {
                 if (!tcs.Task.IsCompleted)
                 {
                     tcs.TrySetResult(MessageBoxResult.None);
                 }
+                // 帮助 GC：解除引用
+                popup._tcs = null;
             };
 
-            // 非模态显示
+            // 5. 非模态显示
             popup.Show();
+
+            // 6. 激活窗口并设置焦点，确保键盘交互正常
+            popup.Activate();
 
             return (popup, tcs.Task);
         }
 
         private void CreateButtons(MessageBoxButton buttonType)
         {
+            if (ButtonPanel == null) return;
+
             ButtonPanel.Children.Clear();
 
-            void AddButton(string content, MessageBoxResult result)
+            void AddButton(string content, MessageBoxResult result, bool isDefault = false)
             {
                 var btn = new Button
                 {
                     Content = content,
                     Width = 80,
                     Height = 30,
-                    Margin = new Thickness(5, 0, 0, 0)
+                    Margin = new Thickness(5, 0, 0, 0),
+                    IsDefault = isDefault // 设置默认按钮，响应 Enter 键
                 };
+
                 btn.Click += (s, e) =>
                 {
+                    // 线程安全地设置结果
                     _tcs?.TrySetResult(result);
                     this.Close();
                 };
+
                 ButtonPanel.Children.Add(btn);
 
-                // 设置默认焦点到第一个按钮
-                if (ButtonPanel.Children.Count == 1)
+                // 如果是默认按钮，设置焦点
+                if (isDefault)
                 {
-                    btn.Focus();
+                    // 使用 Dispatcher 确保在渲染完成后设置焦点
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        btn.Focus();
+                        Keyboard.Focus(btn);
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
                 }
             }
 
             switch (buttonType)
             {
-            case MessageBoxButton.OK:
-                AddButton("OK", MessageBoxResult.OK);
-                break;
-            case MessageBoxButton.OKCancel:
-                AddButton("OK", MessageBoxResult.OK);
-                AddButton("Cancel", MessageBoxResult.Cancel);
-                break;
-            case MessageBoxButton.YesNo:
-                AddButton("Yes", MessageBoxResult.Yes);
-                AddButton("No", MessageBoxResult.No);
-                break;
-            case MessageBoxButton.YesNoCancel:
-                AddButton("Yes", MessageBoxResult.Yes);
-                AddButton("No", MessageBoxResult.No);
-                AddButton("Cancel", MessageBoxResult.Cancel);
-                break;
+                case MessageBoxButton.OK:
+                    AddButton("OK", MessageBoxResult.OK, true);
+                    break;
+                case MessageBoxButton.OKCancel:
+                    AddButton("OK", MessageBoxResult.OK, true);
+                    AddButton("Cancel", MessageBoxResult.Cancel);
+                    break;
+                case MessageBoxButton.YesNo:
+                    AddButton("Yes", MessageBoxResult.Yes, true);
+                    AddButton("No", MessageBoxResult.No);
+                    break;
+                case MessageBoxButton.YesNoCancel:
+                    AddButton("Yes", MessageBoxResult.Yes, true);
+                    AddButton("No", MessageBoxResult.No);
+                    AddButton("Cancel", MessageBoxResult.Cancel);
+                    break;
             }
         }
 
-        private static ImageSource GetIconSource(MessageBoxImage icon)
+        private static ImageSource GetIconSourceDynamic(MessageBoxImage icon)
         {
-            // 使用 WPF 系统图标，无需外部图片资源
             return icon switch
             {
                 MessageBoxImage.Error => SystemIcons.Error.ToBitmapSource(),
@@ -132,10 +210,19 @@ namespace ShaoLu.Views
     {
         public static ImageSource ToBitmapSource(this System.Drawing.Icon icon)
         {
-            return System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
-                icon.Handle,
-                Int32Rect.Empty,
-                BitmapSizeOptions.FromEmptyOptions());
+            if (icon == null) return null;
+
+            try
+            {
+                return System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
+                    icon.Handle,
+                    Int32Rect.Empty,
+                    BitmapSizeOptions.FromEmptyOptions());
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

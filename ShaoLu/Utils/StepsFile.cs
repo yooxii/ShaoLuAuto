@@ -13,7 +13,7 @@ namespace ShaoLu.Utils
     public class StepsFile
     {
         // 缓存序列化选项，提高性能并保证配置一致
-        private static readonly JsonSerializerOptions _writeOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions _writeOptions = new()
         {
             WriteIndented = true,
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,

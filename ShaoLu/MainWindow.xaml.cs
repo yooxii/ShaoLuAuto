@@ -116,7 +116,7 @@ namespace ShaoLu
             {
                 var AutomationStepBases = StepsFile.LoadStepsFromJson(filePath);
                 stepsViewModel.AutomationStepBases.Clear();
-                stepsViewModel.CopySteps(AutomationStepBases);
+                stepsViewModel.InsertSteps(AutomationStepBases);
             }
         }
 
@@ -127,6 +127,13 @@ namespace ShaoLu
             if (filePath != null)
             {
                 StepsFile.SaveStepsToJson(stepsViewModel.AutomationStepBases, filePath);
+                if (stepsViewModel.ReadyToDeleteFiles.Count >= 0)
+                {
+                    foreach (var file in stepsViewModel.ReadyToDeleteFiles)
+                    {
+                        System.IO.File.Delete(file);
+                    }
+                }
             }
         }
 

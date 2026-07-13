@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Expression.Drawing.Core;
 using ShaoLu.Models;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -16,6 +16,8 @@ namespace ShaoLu.Viewmodels
     {
 
         private CancellationTokenSource _cts;
+
+        public List<string> ReadyToDeleteFiles = [];
 
         #region 属性
 
@@ -35,6 +37,11 @@ namespace ShaoLu.Viewmodels
                     StopCommand.RaiseCanExecuteChanged();
                     AddStepCommand.RaiseCanExecuteChanged();
                     DelStepCommand.RaiseCanExecuteChanged();
+                    UpStepCommand.RaiseCanExecuteChanged();
+                    DownStepCommand.RaiseCanExecuteChanged();
+                    CopyStepCommand.RaiseCanExecuteChanged();
+                    CutStepCommand.RaiseCanExecuteChanged();
+                    PasteStepCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -46,6 +53,8 @@ namespace ShaoLu.Viewmodels
         public AutomationStepBase SelectedStep { get => _selectedStep; set => SetProperty(ref _selectedStep, value); }
 
         public ObservableCollection<AutomationStepBase> SelectedSteps { get; set; } = [];
+
+        public ObservableCollection<AutomationStepBase> PasteSteps { get; set; } = [];
 
 
         private ObservableCollection<AutomationStepBase> _automationStepBases = [];
@@ -70,6 +79,26 @@ namespace ShaoLu.Viewmodels
 
         private RelayCommand delStepCommand;
         public RelayCommand DelStepCommand => delStepCommand ??= new RelayCommand(DelStep, CanAlertStep);
+
+
+        private RelayCommand upStepCommand;
+        public RelayCommand UpStepCommand => upStepCommand ??= new RelayCommand(UpStep, CanAlertStep);
+
+
+        private RelayCommand downStepCommand;
+        public RelayCommand DownStepCommand => downStepCommand ??= new RelayCommand(DownStep, CanAlertStep);
+
+
+        private RelayCommand copyStepCommand;
+        public RelayCommand CopyStepCommand => copyStepCommand ??= new RelayCommand(CopyStep, CanAlertStep);
+
+
+        private RelayCommand cutStepCommand;
+        public RelayCommand CutStepCommand => cutStepCommand ??= new RelayCommand(CutStep, CanAlertStep);
+
+
+        private RelayCommand pasteStepCommand;
+        public RelayCommand PasteStepCommand => pasteStepCommand ??= new RelayCommand(PasteStep, CanAlertStep);
 
         #endregion
 
@@ -139,10 +168,86 @@ namespace ShaoLu.Viewmodels
             }
         }
 
-        public void CopySteps(ObservableCollection<AutomationStepBase> steps)
+        private void UpStep()
+        {
+            if (SelectedStep == null)
+                return;
+            if (SelectedStep.LineNo <= 1)
+                return;
+            AutomationStepBases.Move(SelectedStep.LineNo - 1, SelectedStep.LineNo - 2);
+        }
+
+        private void DownStep()
+        {
+            if (SelectedStep == null)
+                return;
+            if (SelectedStep.LineNo >= AutomationStepBases.Count)
+                return;
+            AutomationStepBases.Move(SelectedStep.LineNo - 1, SelectedStep.LineNo);
+        }
+
+        public void InsertSteps(ObservableCollection<AutomationStepBase> steps, int index = -1)
         {
             AutomationStepBases ??= [];
-            AutomationStepBases.AddRange(steps);
+            if (index >= 0 && index < AutomationStepBases.Count)
+            {
+                for (int i = 0; i < steps.Count; i++)
+                {
+                    if (AutomationStepBases.Contains(steps[i]))
+                    {
+                        AutomationStepBases.Insert(index + i, steps[i].Clone());
+                    }
+                    else
+                    {
+                        AutomationStepBases.Insert(index + i, steps[i]);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < steps.Count; i++)
+                {
+                    if (AutomationStepBases.Contains(steps[i]))
+                    {
+                        AutomationStepBases.Add(steps[i].Clone());
+                    }
+                    else
+                    {
+                        AutomationStepBases.Add(steps[i]);
+                    }
+                }
+            }
+        }
+
+        private void CopyStep()
+        {
+            PasteSteps.Clear();
+            // 使用 LINQ 调用每个步骤的 Clone 方法
+            var clonedSteps = SelectedSteps.Select(step => step.Clone()).ToList();
+
+            // 将克隆后的步骤添加到 PasteSteps
+            foreach (var step in clonedSteps)
+            {
+                PasteSteps.Add(step);
+            }
+        }
+
+        private void CutStep()
+        {
+            CopyStep();
+            DelStep();
+        }
+
+        private void PasteStep()
+        {
+            if (SelectedStep != null)
+            {
+                InsertSteps(PasteSteps, SelectedStep.LineNo - 1);
+            }
+            else
+            {
+                InsertSteps(PasteSteps);
+            }
         }
 
         #endregion
@@ -186,11 +291,7 @@ namespace ShaoLu.Viewmodels
                 try
                 {
                     SelectedStep = step;
-                    var runSuccess = await step.RunAsync(token);
-                    if (!runSuccess)
-                    {
-                        throw new Exception($"{step.Name} run fail!");
-                    }
+                    await step.RunAsync(token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -199,7 +300,7 @@ namespace ShaoLu.Viewmodels
                 catch (Exception ex)
                 {
                     // 记录单个步骤的错误，防止整个流程崩溃
-                    WindowAsyncPopup.Show($"Step execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    WindowAsyncPopup.Show($"Step {step.Name} execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     if (step.FalseGoto <= 0)
                     {
                         StopSignal = true;
@@ -222,8 +323,11 @@ namespace ShaoLu.Viewmodels
                         i = step.FalseGoto - 1 - 1;
                 }
             }
+            StopSignal = true;
         }
 
         #endregion
+
+
     }
 }

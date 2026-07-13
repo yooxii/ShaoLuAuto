@@ -38,27 +38,29 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel>
-                <Label Content="Clicks" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding Clicks, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"/>
-            </StackPanel>
-            <StackPanel >
-                <Label Content="ClickGap(s)" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding ClickGap, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"
+                <StackPanel>
+                    <Label Content="{lex:Loc Clicks}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding Clicks, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"/>
+                </StackPanel>
+                <StackPanel >
+                    <Label Content="{lex:Loc ClickGap}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding ClickGap, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"
                     MaxWidth="300"
                     Precision="3"
                     Interval="0.01"/>
-            </StackPanel>
-            <StackPanel >
-                <Label Content="WaitTime(s)" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
+                </StackPanel>
+                <StackPanel >
+                    <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
                     Precision="3" Minimum="0"
                     Interval="0.01"/>
-            </StackPanel>
-            <StackPanel >
-                <Label Content="Timeout(s)" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
+                </StackPanel>
+                <StackPanel >
+                    <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
                     Precision="3" Minimum="0"
                     Interval="0.1"/>
+                </StackPanel>
             </StackPanel>
         </StackPanel>
     </DataTemplate>
@@ -95,11 +97,11 @@
             </StackPanel>
             
             <StackPanel>
-                <Label Content="GapTime" VerticalAlignment="Center"/>
+                <Label Content="{lex:Loc FindTimeInterval}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding GapTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
             </StackPanel>
             <StackPanel>
-                <Label Content="Timeout" VerticalAlignment="Center"/>
+                <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
             </StackPanel>
         </StackPanel>
@@ -115,7 +117,7 @@
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.01"/>
             </StackPanel>
         </StackPanel>
     </DataTemplate>
@@ -124,21 +126,26 @@
     <DataTemplate x:Key="PopupStepTemplate" DataType="{x:Type AutoVM:PopupStep}">
         <StackPanel>
             <StackPanel VerticalAlignment="Center">
-                <Label Content="Title" VerticalAlignment="Center"/>
+                <Label Content="{lex:Loc Title}" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" 
                      MinWidth="150"
                      Margin="0,0,10,0"
                      VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
-                <Label Content="PopupText" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
-                     MinWidth="150"
-                     Margin="0,0,10,0"
-                     VerticalAlignment="Center"/>
+                <Label Content="{lex:Loc PopupText}" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
+                               MinWidth="150"
+                               Margin="0,0,10,0"
+                               VerticalAlignment="Center"/>
+                               
+                    <Button Content="{lex:Loc Font}" Command="{Binding FontSelectCommand}" Margin="3,0,0,0"/>
+                    <Button Content="{lex:Loc Color}" Command="{Binding ColorSelectCommand}" Margin="3,0,0,0"/>
+                </StackPanel>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
-                <Label Content="PopupType" VerticalAlignment="Center"/>
+                <Label Content="{lex:Loc PopupType}" VerticalAlignment="Center"/>
                 <ComboBox Text="{Binding PopupType, UpdateSourceTrigger=LostFocus}" 
                      ItemsSource="{Binding PopupTypes}"
                      MinWidth="150"

@@ -4,6 +4,7 @@ using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,8 +20,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
     public abstract class AutomationStepBase : ObservableObject
     {
         #region 属性
-        private int _lineNo;
+        private readonly Guid _uid = Guid.NewGuid();
+        /// <summary>
+        /// 步骤的唯一uid
+        /// </summary>
+        public Guid Uid => _uid;
 
+        private int _lineNo;
         /// <summary>
         /// 步骤行号。
         /// 注意：此值应由包含该步骤的集合（如 ObservableCollection）在增删改时统一维护，
@@ -67,7 +73,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set => SetProperty(ref _type, value);
         }
 
-        private bool _isTrue;
+        private bool _isTrue = false;
         public bool IsTrue { get => _isTrue; set => SetProperty(ref _isTrue, value); }
 
         private int _trueGoto;
@@ -100,6 +106,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             this.Name = name ?? throw new ArgumentNullException(nameof(name));
             this.Type = type;
         }
+
+        public abstract AutomationStepBase Clone();
 
         public abstract Task<bool> RunAsync(CancellationToken cancellationToken = default);
         public bool Run()
@@ -143,6 +151,16 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public double ImgSrcWidth => (ImgSrc?.Width ?? 0);
 
+        private string _croppedImagePath;
+        public string CroppedImagePath
+        {
+            get => _croppedImagePath;
+            set
+            {
+                SetProperty(ref _croppedImagePath, value);
+            }
+        }
+
         [JsonIgnore]
         private ImageSource _croppedImg;
         [JsonIgnore]
@@ -150,9 +168,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             get
             {
-                GetCroppedImageSavePath(out _, out string fullPath);
-                if (System.IO.File.Exists(fullPath))
-                    _croppedImg ??= LoadImage(fullPath);
+                if (System.IO.File.Exists(CroppedImagePath))
+                    _croppedImg ??= LoadImage(CroppedImagePath);
                 return _croppedImg;
             }
             set
@@ -160,8 +177,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 if (SetProperty(ref _croppedImg, value))
                 {
                     if (value != null)
+                    {
                         // 当裁剪图更新时，自动保存到磁盘
                         SaveCroppedImageToDisk(value);
+                    }
                 }
             }
         }
@@ -170,10 +189,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public Rect _croppedRect;
         public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
 
+        [JsonIgnore]
+        public OpenCvSharp.Point Offset => new(OffsetX, OffsetY);
 
-        private OpenCvSharp.Point _offest;
-        public OpenCvSharp.Point Offest { get => _offest; set => SetProperty(ref _offest, value); }
+        private int _offsetX = 0;
+        public int OffsetX
+        {
+            get => _offsetX;
+            set => SetProperty(ref _offsetX, value);
+        }
 
+        private int _offsetY = 0;
+        public int OffsetY
+        {
+            get => _offsetY;
+            set => SetProperty(ref _offsetY, value);
+        }
 
         private double _similarityThreshold = 0.85;
         public double SimilarityThreshold
@@ -190,6 +221,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         #endregion
 
         private RelayCommand selectImageCommand;
+        [JsonIgnore]
         public ICommand SelectImageCommand => selectImageCommand ??= new RelayCommand(SelectImage);
 
         private void SelectImage()
@@ -200,7 +232,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         private RelayCommand eidtImageCommand;
+        [JsonIgnore]
         public ICommand EditImageCommand => eidtImageCommand ??= new RelayCommand(EditImage);
+
+        ~ImageRecognitionBase()
+        {
+            var stepmodel = ViewModelLocator.Steps;
+            if (!string.IsNullOrEmpty(CroppedImagePath) && File.Exists(CroppedImagePath))
+            {
+                stepmodel.ReadyToDeleteFiles.Add(CroppedImagePath);
+            }
+        }
 
         private ImageSource LoadImage(string imagePath)
         {
@@ -245,8 +287,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
                     windowEditImage.editImageViewModel.ImgSrcWidth = ImgSrcWidth;
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
+                    windowEditImage.editImageViewModel.CropRect = CroppedRect;
+                    windowEditImage.editImageViewModel.SetOffset(new Point(OffsetX, OffsetY));
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
-                windowEditImage.editImageViewModel.OnImageSaved += (img, rect) => { CroppedImg = img; CroppedRect = rect; };
+                windowEditImage.editImageViewModel.OnImageSaved += (img, rect, offset) => { CroppedImg = img; CroppedRect = rect; OffsetX = offset.X; OffsetY = offset.Y; };
             }
         }
 
@@ -260,7 +304,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
             try
             {
-                GetCroppedImageSavePath(out string extension, out string fullPath);
+                GetCroppedImageSavePath(out string extension, out _croppedImagePath);
 
                 // 2. 转换 ImageSource 为 Bitmap 并保存
                 if (imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource)
@@ -268,7 +312,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     var encoder = GetEncoderByExtension(extension);
                     if (encoder != null)
                     {
-                        using (var stream = new System.IO.FileStream(fullPath, System.IO.FileMode.Create))
+                        using (var stream = new System.IO.FileStream(CroppedImagePath, System.IO.FileMode.Create))
                         {
                             encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmapSource));
                             encoder.Save(stream);
@@ -277,7 +321,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         // 可选：更新 ImagePath 指向新保存的裁剪图？
                         // 通常自动化步骤中，ImagePath 指向的是“模板图”，而 CroppedImg 是运行时截图或局部图。
                         // 这里我们只保存文件，不改变 ImagePath 绑定，以免混淆“模板”与“实例”。
-                        System.Diagnostics.Debug.WriteLine($"Cropped image saved to: {fullPath}");
+                        System.Diagnostics.Debug.WriteLine($"Cropped image saved to: {CroppedImagePath}");
                     }
                 }
             }
@@ -294,14 +338,18 @@ namespace ShaoLu.Viewmodels.AutomationStep
             fullPath = null;
             // 1. 确定保存路径
             if (string.IsNullOrEmpty(ImagePath)) return;
-            string directory = System.IO.Path.GetDirectoryName(ImagePath);
+            string directory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ImagePath), "CropedImage");
+            if (!System.IO.Directory.Exists(directory))
+            {
+                System.IO.Directory.CreateDirectory(directory);
+            }
             string fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(ImagePath);
             extension = System.IO.Path.GetExtension(ImagePath);
 
             // 保持与原图相同的格式，或者统一转为 PNG 以保证质量
             if (string.IsNullOrEmpty(extension)) extension = ".png";
 
-            string newFileName = $"Cropped_{fileNameWithoutExt}{extension}";
+            string newFileName = $"Cropped_{fileNameWithoutExt}_{Uid}{extension}";
 
             // 确保路径合法，防止路径遍历攻击（虽然 ImagePath 通常来自 OpenFileDialog，但仍需防御）
             fullPath = System.IO.Path.Combine(directory, newFileName);
@@ -353,24 +401,38 @@ namespace ShaoLu.Viewmodels.AutomationStep
             Description = description;
         }
 
+        public override AutomationStepBase Clone()
+        {
+            return new ClickImageStep(Name, Description)
+            {
+                ImagePath = ImagePath,
+                Clicks = Clicks,
+                ClickGap = ClickGap,
+                WaitTime = WaitTime,
+                Timeout = Timeout,
+                OffsetX = OffsetX,
+                OffsetY = OffsetY,
+                SimilarityThreshold = SimilarityThreshold,
+                Type = Type,
+                IsTrue = IsTrue,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
+                LineNo = LineNo,
+            };
+        }
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var sourceImage = CroppedImg ?? ImgSrc ?? null;
-
-            if (sourceImage == null)
-            {
-                System.Diagnostics.Debug.WriteLine("No image available for clicking.");
-                return false;
-            }
-            var img = Autogui.ConvertImageSourceToBitmap(sourceImage);
-            if (img == null) return false;
+            var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for clicking.");
+            var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
             var res = await Task.Run(() =>
             {
-                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offest, Clicks, ClickGap, SimilarityThreshold, WaitTime, Timeout);
+                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offset, Clicks, ClickGap, SimilarityThreshold, WaitTime, Timeout);
             });
             img?.Dispose();
+            IsTrue = res;
 
-            return res;
+            return IsTrue;
         }
     }
 
@@ -382,8 +444,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
 
 
-        private int _delayBetweenKeys = 0;
-        public int DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
+        private double _delayBetweenKeys = 0.01;
+        public double DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
 
 
         public TypeTextStep() : base()
@@ -402,12 +464,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
             Description = description;
         }
 
+        public override AutomationStepBase Clone()
+        {
+            return new TypeTextStep(Name, Description)
+            {
+                TextToType = TextToType,
+                DelayBetweenKeys = DelayBetweenKeys
+            };
+        }
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
             var res = await Task.Run(() =>
             {
-                return Autogui.TypeText(TextToType, DelayBetweenKeys);
+                return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
             });
+            IsTrue = res;
             return res;
         }
     }
@@ -439,21 +511,25 @@ namespace ShaoLu.Viewmodels.AutomationStep
             Description = description;
         }
 
+        public override AutomationStepBase Clone()
+        {
+            return new FindImageStep(Name, Description)
+            {
+                ImagePath = ImagePath,
+                CroppedImagePath = CroppedImagePath,
+                ImgSrc = ImgSrc,
+                CroppedImg = CroppedImg,
+                CroppedRect = CroppedRect,
+                OffsetX = OffsetX,
+                OffsetY = OffsetY,
+                SimilarityThreshold = SimilarityThreshold
+            };
+        }
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var sourceImage = CroppedImg ?? ImgSrc;
-
-            if (sourceImage == null)
-            {
-                IsTrue = false;
-                return false;
-            }
-            var img = Autogui.ConvertImageSourceToBitmap(sourceImage);
-            if (img == null)
-            {
-                IsTrue = false;
-                return false;
-            }
+            var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for finding.");
+            var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
             var res = await Task.Run(() => { return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout); });
             img?.Dispose();
             IsTrue = !res.IsEmpty;
@@ -471,11 +547,33 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _popupText;
         public string PopupText { get => _popupText; set => SetProperty(ref _popupText, value); }
 
+        private FontModel _popupFont = new()
+        {
+            FontFamily = "Arial",
+            FontSize = 14,
+            FontWeight = FontWeights.Regular,
+            FontStyle = FontStyles.Normal,
+            FontColor = 0x000000,
+        };
+        public FontModel PopupFont { get => _popupFont; set => SetProperty(ref _popupFont, value); }
+
 
         private string _popupType = "Information";
         public string PopupType { get => _popupType; set => SetProperty(ref _popupType, value); }
 
+
+        [JsonIgnore]
         public List<string> PopupTypes { get; set; } = ["Information", "Warning", "Error", "Question"];
+
+        [JsonIgnore]
+        private RelayCommand fontSelectCommand;
+        [JsonIgnore]
+        public RelayCommand FontSelectCommand => fontSelectCommand ??= new RelayCommand(FontSelect);
+
+        [JsonIgnore]
+        private RelayCommand colorSelectCommand;
+        [JsonIgnore]
+        public RelayCommand ColorSelectCommand => colorSelectCommand ??= new RelayCommand(ColorSelect);
 
         public PopupStep() : base()
         {
@@ -485,12 +583,28 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             Type = StepType.Popup;
             Name = name;
+            Title = name;
         }
         public PopupStep(string name, string description) : base()
         {
             Type = StepType.Popup;
             Name = name;
             Description = description;
+        }
+
+        public override AutomationStepBase Clone()
+        {
+            return new PopupStep(Name, Description)
+            {
+                LineNo = LineNo,
+                IsTrue = IsTrue,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
+                Title = Title,
+                PopupText = PopupText,
+                PopupFont = PopupFont,
+                PopupType = PopupType
+            };
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
@@ -504,10 +618,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _ => MessageBoxImage.Information
             };
 
-            var buttons = MessageBoxButton.OK; // 可以根据需要扩展属性来支持其他按钮类型
+            var buttons = MessageBoxButton.YesNo; // 可以根据需要扩展属性来支持其他按钮类型
 
             // 1. 启动异步弹窗任务
-            var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, buttons, iconType);
+            var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, buttons, iconType);
 
             // 2. 等待任务完成或被取消
             try
@@ -555,7 +669,48 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 System.Diagnostics.Debug.WriteLine($"Popup error: {ex.Message}");
                 IsTrue = false;
-                return false;
+                return IsTrue;
+            }
+        }
+
+        private void FontSelect()
+        {
+            PopupFont ??= new();
+            var fontDialog = new FontDialog()
+            {
+                Font = PopupFont?.Font ?? new System.Drawing.Font("Arial", 12)
+            };
+
+            if (fontDialog.ShowDialog() == DialogResult.OK)
+            {
+                // 获取选择的字体信息
+                System.Drawing.Font selectedFont = fontDialog.Font;
+
+                // 将 Windows Forms 的字体转换为 WPF 的字体属性
+                FontStyle fontStyle = selectedFont.Italic ? FontStyles.Italic : FontStyles.Normal;
+                FontWeight fontWeight = selectedFont.Bold ? FontWeights.Bold : FontWeights.Normal;
+
+                // 将选择的字体应用到 WPF 控件上（例如名为 TextBlockSample 的 TextBlock）
+                PopupFont.FontFamily = selectedFont.FontFamily.Name;
+                PopupFont.FontSize = selectedFont.Size;
+                PopupFont.FontStyle = fontStyle;
+                PopupFont.FontWeight = fontWeight;
+
+                PopupFont.Style = selectedFont.Style;
+                PopupFont.Unit = selectedFont.Unit;
+            }
+        }
+
+        private void ColorSelect()
+        {
+            PopupFont ??= new();
+            ColorDialog dialog = new()
+            {
+                Color = System.Drawing.Color.FromArgb(PopupFont.FontColor)
+            };
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                PopupFont.FontColor = dialog.Color.ToArgb();
             }
         }
     }
@@ -580,6 +735,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
             Name = name;
             Description = description;
         }
+
+        public override AutomationStepBase Clone()
+        {
+            return new EmptyStep(Name, Description);
+        }
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
             return IsTrue;

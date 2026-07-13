@@ -3,7 +3,6 @@ using OpenCvSharp.Extensions;
 using System;
 using System.Drawing;
 using System.Threading;
-using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -268,19 +267,16 @@ namespace ShaoLu.Utils
 
         public static bool TypeText(string text, int delayBetweenKeys = 0)
         {
-            if (string.IsNullOrEmpty(text)) return false;
-            try
+            if (string.IsNullOrEmpty(text))
             {
-                for (int i = 0; i < text.Length; i++)
-                {
-                    char key = text[i];
-                    sim.Keyboard.TextEntry(key);
-                    Thread.Sleep(delayBetweenKeys);
-                }
+                throw new Exception("TypeText is Null.");
             }
-            catch (Exception)
+
+            for (int i = 0; i < text.Length; i++)
             {
-                return false;
+                char key = text[i];
+                sim.Keyboard.TextEntry(key);
+                Thread.Sleep(delayBetweenKeys);
             }
             return true;
         }

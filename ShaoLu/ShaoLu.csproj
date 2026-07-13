@@ -88,6 +88,7 @@
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
+    <Compile Include="Models\FontModel.cs" />
     <Compile Include="Resources\Strings.en-US.Designer.cs">
       <DependentUpon>Strings.en-US.resx</DependentUpon>
       <AutoGen>True</AutoGen>

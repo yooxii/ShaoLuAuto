@@ -124,6 +124,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Back 的本地化字符串。
+        /// </summary>
+        public static string Back {
+            get {
+                return ResourceManager.GetString("Back", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Browse 的本地化字符串。
         /// </summary>
         public static string Browse {
@@ -178,6 +187,33 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Click Interval 的本地化字符串。
+        /// </summary>
+        public static string ClickGap {
+            get {
+                return ResourceManager.GetString("ClickGap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Clicks 的本地化字符串。
+        /// </summary>
+        public static string Clicks {
+            get {
+                return ResourceManager.GetString("Clicks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Color 的本地化字符串。
+        /// </summary>
+        public static string Color {
+            get {
+                return ResourceManager.GetString("Color", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Condition 的本地化字符串。
         /// </summary>
         public static string Condition {
@@ -187,11 +223,29 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Copy 的本地化字符串。
+        /// </summary>
+        public static string Copy {
+            get {
+                return ResourceManager.GetString("Copy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Crop 的本地化字符串。
         /// </summary>
         public static string Crop {
             get {
                 return ResourceManager.GetString("Crop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Cut 的本地化字符串。
+        /// </summary>
+        public static string Cut {
+            get {
+                return ResourceManager.GetString("Cut", resourceCulture);
             }
         }
         
@@ -210,6 +264,15 @@ namespace ShaoLu.Resources {
         public static string Delete {
             get {
                 return ResourceManager.GetString("Delete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Down 的本地化字符串。
+        /// </summary>
+        public static string Down {
+            get {
+                return ResourceManager.GetString("Down", resourceCulture);
             }
         }
         
@@ -246,6 +309,60 @@ namespace ShaoLu.Resources {
         public static string File_Header {
             get {
                 return ResourceManager.GetString("File_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Find Time Interval 的本地化字符串。
+        /// </summary>
+        public static string FindTimeInterval {
+            get {
+                return ResourceManager.GetString("FindTimeInterval", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Font 的本地化字符串。
+        /// </summary>
+        public static string Font {
+            get {
+                return ResourceManager.GetString("Font", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 FontFamily 的本地化字符串。
+        /// </summary>
+        public static string FontFamily {
+            get {
+                return ResourceManager.GetString("FontFamily", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 FontSize 的本地化字符串。
+        /// </summary>
+        public static string FontSize {
+            get {
+                return ResourceManager.GetString("FontSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 FontStyle 的本地化字符串。
+        /// </summary>
+        public static string FontStyle {
+            get {
+                return ResourceManager.GetString("FontStyle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Font Select 的本地化字符串。
+        /// </summary>
+        public static string FontTitle {
+            get {
+                return ResourceManager.GetString("FontTitle", resourceCulture);
             }
         }
         
@@ -304,6 +421,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 OK 的本地化字符串。
+        /// </summary>
+        public static string OK {
+            get {
+                return ResourceManager.GetString("OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Open 的本地化字符串。
         /// </summary>
         public static string Open_Header {
@@ -313,11 +439,38 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Paste 的本地化字符串。
+        /// </summary>
+        public static string Paste {
+            get {
+                return ResourceManager.GetString("Paste", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Picture similarity threshold 的本地化字符串。
         /// </summary>
         public static string Picture_similarity_threshold {
             get {
                 return ResourceManager.GetString("Picture_similarity_threshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Popup Text 的本地化字符串。
+        /// </summary>
+        public static string PopupText {
+            get {
+                return ResourceManager.GetString("PopupText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Popup Type 的本地化字符串。
+        /// </summary>
+        public static string PopupType {
+            get {
+                return ResourceManager.GetString("PopupType", resourceCulture);
             }
         }
         
@@ -475,6 +628,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Timeout 的本地化字符串。
+        /// </summary>
+        public static string Timeout {
+            get {
+                return ResourceManager.GetString("Timeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Title 的本地化字符串。
+        /// </summary>
+        public static string Title {
+            get {
+                return ResourceManager.GetString("Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 繁體中文 的本地化字符串。
         /// </summary>
         public static string TraditionalChinese_Header {
@@ -489,6 +660,24 @@ namespace ShaoLu.Resources {
         public static string Type_text {
             get {
                 return ResourceManager.GetString("Type_text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Up 的本地化字符串。
+        /// </summary>
+        public static string Up {
+            get {
+                return ResourceManager.GetString("Up", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Wait Time 的本地化字符串。
+        /// </summary>
+        public static string WaitTime {
+            get {
+                return ResourceManager.GetString("WaitTime", resourceCulture);
             }
         }
         

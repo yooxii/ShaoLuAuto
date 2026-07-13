@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using ShaoLu.Services;
 using ShaoLu.Viewmodels;
+using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -31,12 +33,28 @@ namespace ShaoLu
             // 注册 ViewModel 单例
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<StepsViewModel>();
+            services.AddSingleton<FileServices>();
 
             // 如果有其他服务 (如 IUserService)，也在这里注册
             // services.AddSingleton<IUserService, UserService>();
 
             // 3. 构建并配置 Ioc 容器
             Ioc.Default.ConfigureServices(services.BuildServiceProvider());
+        }
+        protected override void OnExit(ExitEventArgs e)
+        {
+            base.OnExit(e);
+
+            var fileServices = Ioc.Default.GetService<FileServices>();
+            var stepsViewModel = Ioc.Default.GetService<StepsViewModel>();
+            foreach(var step in stepsViewModel.AutomationStepBases)
+            {
+                if (step is ImageRecognitionBase imageRecognitionStep)
+                {
+                    imageRecognitionStep.Dispose();
+                }
+            }
+            fileServices.CommitPendingDeletions();
         }
     }
 }

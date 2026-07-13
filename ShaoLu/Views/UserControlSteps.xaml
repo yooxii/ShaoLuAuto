@@ -18,7 +18,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
-            <utils:ViewModelLocator x:Key="VMLocator" />
+            <utils:SingletonLocator x:Key="VMLocator" />
 
             <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Steps, Source={StaticResource VMLocator}}">
                 <MenuItem Header="{lex:Loc Add}">

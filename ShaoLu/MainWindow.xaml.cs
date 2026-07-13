@@ -1,4 +1,6 @@
-﻿using ShaoLu.Utils;
+﻿using ShaoLu.Services;
+using ShaoLu.Utils;
+using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -12,8 +14,9 @@ namespace ShaoLu
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly Viewmodels.MainViewModel mainViewModel = ViewModelLocator.Main;
-        private readonly Viewmodels.StepsViewModel stepsViewModel = ViewModelLocator.Steps;
+        private readonly Viewmodels.MainViewModel mainViewModel = SingletonLocator.Main;
+        private readonly Viewmodels.StepsViewModel stepsViewModel = SingletonLocator.Steps;
+        readonly FileServices fileServer = SingletonLocator.fileServices;
         public MainWindow()
         {
             InitializeComponent();
@@ -110,7 +113,7 @@ namespace ShaoLu
 
         private void Open_Click(object sender, RoutedEventArgs e)
         {
-            Services.FileServices fileServices = new();
+            Services.PathServices fileServices = new();
             var filePath = fileServices.OpenPathDialog("打开文件", "步骤文件|*.json");
             if (filePath != null)
             {
@@ -122,18 +125,21 @@ namespace ShaoLu
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            Services.FileServices fileServices = new();
+            Services.PathServices fileServices = new();
             var filePath = fileServices.SavePathDialog("保存文件", "步骤文件|*.json");
             if (filePath != null)
             {
-                StepsFile.SaveStepsToJson(stepsViewModel.AutomationStepBases, filePath);
-                if (stepsViewModel.ReadyToDeleteFiles.Count >= 0)
+                foreach (var step in stepsViewModel.AutomationStepBases)
                 {
-                    foreach (var file in stepsViewModel.ReadyToDeleteFiles)
+                    step.IsSave = true;
+                    if (step is ImageRecognitionBase imageRecognition)
                     {
-                        System.IO.File.Delete(file);
+                        fileServer.UnmarkForDeletion(imageRecognition.CroppedImagePath);
                     }
                 }
+                StepsFile.SaveStepsToJson(stepsViewModel.AutomationStepBases, filePath);
+
+                fileServer.CommitPendingDeletions();
             }
         }
 

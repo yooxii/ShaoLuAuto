@@ -4,7 +4,6 @@ using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +24,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// 步骤的唯一uid
         /// </summary>
         public Guid Uid => _uid;
+
+        private bool _isSave = false;
+        public bool IsSave
+        {
+            get => _isSave;
+            set => SetProperty(ref _isSave, value);
+        }
 
         private int _lineNo;
         /// <summary>
@@ -118,47 +124,29 @@ namespace ShaoLu.Viewmodels.AutomationStep
     }
 
     // 图像基类
-    public abstract class ImageRecognitionBase : AutomationStepBase
+    public abstract class ImageRecognitionBase : AutomationStepBase, IDisposable
     {
-        readonly Services.FileServices fileServices = new();
+        readonly Services.PathServices pathServices = new();
+        readonly Services.FileServices fileServer = SingletonLocator.fileServices;
+        private bool _isDisposed = false;
 
+        #region 属性
         private string _imagePath;
         public string ImagePath
         {
             get => _imagePath;
-            set
-            {
-                if (SetProperty(ref _imagePath, value))
-                {
-                    // 当原图路径改变时，如果已有裁剪图，可能需要重新考虑是否失效，这里暂不处理
-                    ImgSrc = null; // 重置缓存
-                }
-            }
+            set => SetProperty(ref _imagePath, value);
         }
 
         [JsonIgnore]
-        private ImageSource _imgSrc;
-        [JsonIgnore]
-        public ImageSource ImgSrc
-        {
-            get
-            {
-                _imgSrc ??= LoadImage(ImagePath);
-                return _imgSrc;
-            }
-            set => SetProperty(ref _imgSrc, value);
-        }
+        public ImageSource ImgSrc => LoadImage(ImagePath);
 
         public double ImgSrcWidth => (ImgSrc?.Width ?? 0);
 
         private string _croppedImagePath;
         public string CroppedImagePath
         {
-            get => _croppedImagePath;
-            set
-            {
-                SetProperty(ref _croppedImagePath, value);
-            }
+            get => _croppedImagePath; set => SetProperty(ref _croppedImagePath, value);
         }
 
         [JsonIgnore]
@@ -220,6 +208,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
         #endregion
 
+        #endregion
+
+        #region 命令
+
         private RelayCommand selectImageCommand;
         [JsonIgnore]
         public ICommand SelectImageCommand => selectImageCommand ??= new RelayCommand(SelectImage);
@@ -228,52 +220,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             var title = LocalizeDictionary.Instance.GetLocalizedObject("Select_target_pic", null, null)?.ToString() ?? "Open Image File";
             var filter = (LocalizeDictionary.Instance.GetLocalizedObject("Image_File", null, null)?.ToString() ?? "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
-            ImagePath = fileServices.OpenPathDialog(title, filter);
+            ImagePath = pathServices.OpenPathDialog(title, filter);
         }
 
         private RelayCommand eidtImageCommand;
         [JsonIgnore]
         public ICommand EditImageCommand => eidtImageCommand ??= new RelayCommand(EditImage);
-
-        ~ImageRecognitionBase()
-        {
-            var stepmodel = ViewModelLocator.Steps;
-            if (!string.IsNullOrEmpty(CroppedImagePath) && File.Exists(CroppedImagePath))
-            {
-                stepmodel.ReadyToDeleteFiles.Add(CroppedImagePath);
-            }
-        }
-
-        private ImageSource LoadImage(string imagePath)
-        {
-            var error_msg2 = "";
-            string error_msg1;
-            ImageSource res;
-            if (!string.IsNullOrEmpty(imagePath) && System.IO.File.Exists(imagePath))
-            {
-                try
-                {
-                    res = new System.Windows.Media.Imaging.BitmapImage(new Uri(imagePath));
-                    return res;
-                }
-                catch (Exception ex)
-                {
-                    // Handle exceptions (e.g., invalid image format)
-                    System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
-                    error_msg1 = (string)(LocalizeDictionary.Instance.GetLocalizedObject("Loading_img_Warning", null, null) ?? "Error loading image");
-                    error_msg2 = ex.Message;
-                }
-            }
-            else
-            {
-                error_msg1 = (string)(LocalizeDictionary.Instance.GetLocalizedObject("No_img_Warning", null, null) ?? "Error loading image");
-            }
-
-            res = null;
-            var Warning_Title = LocalizeDictionary.Instance.GetLocalizedObject("Warning_Title", null, null) ?? "Warning";
-            System.Windows.Forms.MessageBox.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return res;
-        }
 
         private void EditImage()
         {
@@ -294,17 +246,68 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        #endregion
+
+        private ImageSource LoadImage(string imagePath)
+        {
+            var error_msg2 = "";
+            string error_msg1;
+            ImageSource res;
+            if (!string.IsNullOrEmpty(imagePath) && System.IO.File.Exists(imagePath))
+            {
+                try
+                {
+                    // 添加 CacheOption.OnLoad 以允许文件在加载后被删除或移动（如果需要）
+                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(imagePath);
+                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    bitmap.Freeze(); // 冻结以提高性能并允许跨线程访问
+                    return bitmap;
+                }
+                catch (Exception ex)
+                {
+                    // Handle exceptions (e.g., invalid image format)
+                    System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
+                    error_msg1 = (string)(LocalizeDictionary.Instance.GetLocalizedObject("Loading_img_Warning", null, null) ?? "Error loading image");
+                    error_msg2 = ex.Message;
+                }
+            }
+            else
+            {
+                error_msg1 = (string)(LocalizeDictionary.Instance.GetLocalizedObject("No_img_Warning", null, null) ?? "Error loading image");
+            }
+
+            res = null;
+            var Warning_Title = LocalizeDictionary.Instance.GetLocalizedObject("Warning_Title", null, null) ?? "Warning";
+            System.Windows.Forms.MessageBox.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return res;
+        }
+
+        #region 文件操作
+
         /// <summary>
         /// 将裁剪后的图片保存到原图所在目录，文件名添加 Cropped_ 前缀
         /// </summary>
-        private void SaveCroppedImageToDisk(ImageSource imageSource)
+        public void SaveCroppedImageToDisk(ImageSource imageSource)
         {
             if (imageSource == null || string.IsNullOrEmpty(ImagePath))
                 return;
 
             try
             {
-                GetCroppedImageSavePath(out string extension, out _croppedImagePath);
+                var fullpath = GetCroppedImageSavePath(out string extension);
+                // 【关键】如果路径变了，且旧路径存在，标记旧路径为待删除
+                if (!string.IsNullOrEmpty(_croppedImagePath) && _croppedImagePath != fullpath)
+                {
+                    // 只有当这个步骤是“未保存”状态时，我们才清理旧的临时文件
+                    // 如果 IsSave 为 true，说明用户已经正式保存过，旧文件可能是有用的历史版本，暂不删除
+                    if (!IsSave)
+                    {
+                        fileServer.MarkForDeletion(_croppedImagePath);
+                    }
+                }
 
                 // 2. 转换 ImageSource 为 Bitmap 并保存
                 if (imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource)
@@ -312,16 +315,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     var encoder = GetEncoderByExtension(extension);
                     if (encoder != null)
                     {
-                        using (var stream = new System.IO.FileStream(CroppedImagePath, System.IO.FileMode.Create))
+                        using (var stream = new System.IO.FileStream(fullpath, System.IO.FileMode.Create))
                         {
                             encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmapSource));
                             encoder.Save(stream);
+                            CroppedImagePath = fullpath;
                         }
 
                         // 可选：更新 ImagePath 指向新保存的裁剪图？
                         // 通常自动化步骤中，ImagePath 指向的是“模板图”，而 CroppedImg 是运行时截图或局部图。
                         // 这里我们只保存文件，不改变 ImagePath 绑定，以免混淆“模板”与“实例”。
-                        System.Diagnostics.Debug.WriteLine($"Cropped image saved to: {CroppedImagePath}");
+                        System.Diagnostics.Debug.WriteLine($"Cropped image saved to: {fullpath}");
                     }
                 }
             }
@@ -332,12 +336,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
-        private void GetCroppedImageSavePath(out string extension, out string fullPath)
+        private string GetCroppedImageSavePath(out string extension)
         {
             extension = null;
-            fullPath = null;
+            string fullPath;
             // 1. 确定保存路径
-            if (string.IsNullOrEmpty(ImagePath)) return;
+            if (string.IsNullOrEmpty(ImagePath)) return null;
             string directory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ImagePath), "CropedImage");
             if (!System.IO.Directory.Exists(directory))
             {
@@ -353,6 +357,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
             // 确保路径合法，防止路径遍历攻击（虽然 ImagePath 通常来自 OpenFileDialog，但仍需防御）
             fullPath = System.IO.Path.Combine(directory, newFileName);
+            return fullPath;
         }
 
         private System.Windows.Media.Imaging.BitmapEncoder GetEncoderByExtension(string extension)
@@ -365,6 +370,44 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _ => new System.Windows.Media.Imaging.PngBitmapEncoder(),// PNG 无损，推荐
             };
         }
+
+
+        #region IDisposable Implementation
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    // 释放托管资源
+                    // 当步骤被移除时，立即标记其裁剪图为待删除
+                    if (!IsSave)
+                        fileServer.MarkForDeletion(CroppedImagePath);
+
+                    // 如果有其他需要释放的资源（如 Bitmap 对象），在这里释放
+                    _croppedImg = null;
+                }
+
+                _isDisposed = true;
+            }
+        }
+
+        // 保留析构函数作为安全网，但主要逻辑已移至 Dispose
+        ~ImageRecognitionBase()
+        {
+            Dispose(false);
+        }
+
+        #endregion
+
+        #endregion
     }
 
     // 识图步骤
@@ -403,22 +446,24 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override AutomationStepBase Clone()
         {
-            return new ClickImageStep(Name, Description)
+            var res = new ClickImageStep(Name, Description)
             {
+                Type = Type,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
                 ImagePath = ImagePath,
+                CroppedImg = CroppedImg,
+                CroppedRect = CroppedRect,
+                OffsetX = OffsetX,
+                OffsetY = OffsetY,
+                SimilarityThreshold = SimilarityThreshold,
                 Clicks = Clicks,
                 ClickGap = ClickGap,
                 WaitTime = WaitTime,
                 Timeout = Timeout,
-                OffsetX = OffsetX,
-                OffsetY = OffsetY,
-                SimilarityThreshold = SimilarityThreshold,
-                Type = Type,
-                IsTrue = IsTrue,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
-                LineNo = LineNo,
             };
+            res.SaveCroppedImageToDisk(res.CroppedImg);
+            return res;
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
@@ -513,17 +558,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override AutomationStepBase Clone()
         {
-            return new FindImageStep(Name, Description)
+            var res = new FindImageStep(Name, Description)
             {
+                Type = Type,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
                 ImagePath = ImagePath,
-                CroppedImagePath = CroppedImagePath,
-                ImgSrc = ImgSrc,
                 CroppedImg = CroppedImg,
                 CroppedRect = CroppedRect,
-                OffsetX = OffsetX,
-                OffsetY = OffsetY,
-                SimilarityThreshold = SimilarityThreshold
+                SimilarityThreshold = SimilarityThreshold,
+                GapTime = GapTime,
+                Timeout = Timeout
             };
+            res.SaveCroppedImageToDisk(res.CroppedImg);
+            return res;
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
@@ -596,7 +644,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             return new PopupStep(Name, Description)
             {
-                LineNo = LineNo,
                 IsTrue = IsTrue,
                 TrueGoto = TrueGoto,
                 FalseGoto = FalseGoto,

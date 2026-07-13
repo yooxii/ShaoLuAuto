@@ -9,7 +9,7 @@ namespace ShaoLu.Views
     /// </summary>
     public partial class UserControlSteps : UserControl
     {
-        public StepsViewModel stepsViewModel = ViewModelLocator.Steps;
+        public StepsViewModel stepsViewModel = SingletonLocator.Steps;
         public UserControlSteps()
         {
             InitializeComponent();

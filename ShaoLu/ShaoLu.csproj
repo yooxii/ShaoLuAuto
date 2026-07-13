@@ -109,7 +109,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Strings.zh-CN.resx</DependentUpon>
     </Compile>
-    <Compile Include="Services\FileServices.cs" />
+    <Compile Include="Services\Services.cs" />
     <Compile Include="Tools\LanguageService.cs" />
     <Compile Include="Tools\ResxGenerator.cs" />
     <Compile Include="Utils\Autogui.cs" />
@@ -117,7 +117,7 @@
     <Compile Include="Utils\DataGridSelectedItemsBehavior.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="Utils\StepsFile.cs" />
-    <Compile Include="Utils\ViewModelLocator.cs" />
+    <Compile Include="Utils\SingletonLocator.cs" />
     <Compile Include="Viewmodels\AutomationStep.cs" />
     <Compile Include="Viewmodels\EditImageViewModel.cs" />
     <Compile Include="Viewmodels\MainViewModel.cs" />

@@ -17,8 +17,6 @@ namespace ShaoLu.Viewmodels
 
         private CancellationTokenSource _cts;
 
-        public List<string> ReadyToDeleteFiles = [];
-
         #region 属性
 
         private volatile bool _stopSignal = false;
@@ -104,7 +102,20 @@ namespace ShaoLu.Viewmodels
 
         public StepsViewModel()
         {
-            AutomationStepBases.CollectionChanged += (s, e) => UpdateAutomationStepBases();
+            AutomationStepBases.CollectionChanged += (s, e) =>
+            {
+                UpdateAutomationStepBases();
+                if (e.OldItems != null)
+                {
+                    foreach (var item in e.OldItems)
+                    {
+                        if (item is IDisposable disposable)
+                        {
+                            disposable.Dispose();
+                        }
+                    }
+                }
+            };
         }
 
         private void UpdateAutomationStepBases()
@@ -278,6 +289,8 @@ namespace ShaoLu.Viewmodels
 
             // 初始化自动化引擎
             Autogui.StartAuto();
+            Application.Current.MainWindow.WindowState = WindowState.Minimized;
+
 
             for (int i = 0; i < AutomationStepBases.Count; i++)
             {
@@ -301,7 +314,7 @@ namespace ShaoLu.Viewmodels
                 {
                     // 记录单个步骤的错误，防止整个流程崩溃
                     WindowAsyncPopup.Show($"Step {step.Name} execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    if (step.FalseGoto <= 0)
+                    if (step.FalseGoto < 0)
                     {
                         StopSignal = true;
                         break;
@@ -324,6 +337,7 @@ namespace ShaoLu.Viewmodels
                 }
             }
             StopSignal = true;
+            Application.Current.MainWindow.WindowState = WindowState.Normal;
         }
 
         #endregion

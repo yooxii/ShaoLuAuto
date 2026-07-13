@@ -99,6 +99,10 @@ namespace ShaoLu.Utils
                 Thread.Sleep(gapTimeMs);
             }
 
+            if (res.Similarity < threshold)
+            {
+                throw new Exception("No matching image found!");
+            }
             // 超时未找到，返回包含最后一次相似度的默认 Apoint 对象
             return res;
         }

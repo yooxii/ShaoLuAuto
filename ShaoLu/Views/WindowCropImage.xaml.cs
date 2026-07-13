@@ -23,7 +23,7 @@ namespace ShaoLu.Views
     /// </summary>
     public partial class WindowCropImage : Window
     {
-        private readonly Services.FileServices fileServices = new();
+        private readonly Services.PathServices fileServices = new();
         public WindowCropImage()
         {
             InitializeComponent();

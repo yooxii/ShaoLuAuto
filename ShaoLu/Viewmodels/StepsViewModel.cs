@@ -8,13 +8,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace ShaoLu.Viewmodels
 {
     public class StepsViewModel : ObservableObject
     {
-
+        private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private CancellationTokenSource _cts;
 
         #region 属性
@@ -264,8 +265,10 @@ namespace ShaoLu.Viewmodels
         #endregion
 
         #region 步骤执行
+
         private void Stop()
         {
+            logger.Info("Stop Auto");
             StopSignal = true;
             _cts?.Cancel();
         }
@@ -287,6 +290,7 @@ namespace ShaoLu.Viewmodels
             var token = _cts.Token;
 
 
+            logger.Info("Start Auto");
             // 初始化自动化引擎
             Autogui.StartAuto();
             Application.Current.MainWindow.WindowState = WindowState.Minimized;
@@ -308,12 +312,17 @@ namespace ShaoLu.Viewmodels
                 }
                 catch (OperationCanceledException)
                 {
+                    logger.Info("Operation Canceled");
                     break;
                 }
                 catch (Exception ex)
                 {
                     // 记录单个步骤的错误，防止整个流程崩溃
-                    WindowAsyncPopup.Show($"Step {step.Name} execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    logger.Warn(ex, "Step \"{0}\" execution Failed:", step.Name);
+                    var (_, popupTask) = WindowAsyncPopup.Show($"Step {step.Name} execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    await popupTask;
+
                     if (step.FalseGoto < 0)
                     {
                         StopSignal = true;
@@ -338,6 +347,7 @@ namespace ShaoLu.Viewmodels
             }
             StopSignal = true;
             Application.Current.MainWindow.WindowState = WindowState.Normal;
+            logger.Info("Auto Finished");
         }
 
         #endregion

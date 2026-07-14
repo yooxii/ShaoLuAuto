@@ -7,6 +7,7 @@ namespace ShaoLu.Services
     public static class LanguageService
     {
         private const string LangConfigPath = "current_language.txt";
+        private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// 初始化语言：优先读取用户上次保存的语言，否则使用系统语言
@@ -29,10 +30,11 @@ namespace ShaoLu.Services
             {
                 LocalizeDictionary.Instance.Culture = new CultureInfo(cultureName);
                 File.WriteAllText(LangConfigPath, cultureName);
+                logger.Info("Language set to: {0}", cultureName);
             }
             catch (CultureNotFoundException)
             {
-                System.Diagnostics.Debug.WriteLine($"不支持的语言代码: {cultureName}");
+                logger.Error("Language {0} not found.", cultureName);
             }
         }
 

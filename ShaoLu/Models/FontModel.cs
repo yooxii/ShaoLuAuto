@@ -16,5 +16,13 @@ namespace ShaoLu.Models
         public string FontBackgroundColor { get; set; }
         public string FontBorderColor { get; set; }
         public string FontBorderWidth { get; set; }
+
+        public FontModel()
+        {
+            FontSize = (float)SystemFonts.MessageFontSize;
+            FontFamily = SystemFonts.MessageFontFamily.Source;
+            FontStyle = SystemFonts.MessageFontStyle;
+            FontWeight = SystemFonts.MessageFontWeight;
+        }
     }
 }

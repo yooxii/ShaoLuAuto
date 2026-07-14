@@ -62,7 +62,7 @@
                         <Button Content="{lex:Loc Copy}" Margin="3" Command="{Binding CopyStepCommand}"/>
                         <Button Content="{lex:Loc Cut}" Margin="3" Command="{Binding CutStepCommand}"/>
                         <Button Content="{lex:Loc Paste}" Margin="3" Command="{Binding PasteStepCommand}"/>
-                        <Button Content="{lex:Loc BtnDelStep_Content}" Margin="3" Command="{Binding DelStepCommand}"/>
+                        <Button Content="{lex:Loc Delete}" Margin="3" Command="{Binding DelStepCommand}"/>
                     </ToolBar>
                     <ToolBar>
                         <Button Content="{lex:Loc BtnRun_Content}" Margin="3" Command="{Binding RunCommand}"/>
@@ -78,16 +78,25 @@
                     <ColumnDefinition Width="Auto" MinWidth="255"/>
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
-                    <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}" ContextMenu="{StaticResource DataGridMenu}" SelectionMode="Extended" SelectedItem="{Binding SelectedStep}" utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
-                            <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>
-                            <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" Width="*" CanUserSort="False"/>
-                            <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGoto}" Width="*" CanUserSort="False"/>
-                            <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGoto}" Width="*" CanUserSort="False"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+                        <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}"
+                                  ContextMenu="{StaticResource DataGridMenu}" SelectionMode="Extended"
+                                  SelectedItem="{Binding SelectedStep}"
+                                  utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
+                                <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>
+                                <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" Width="*" CanUserSort="False"/>
+                                <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGoto}" Width="*" CanUserSort="False"/>
+                                <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGoto}" Width="*" CanUserSort="False"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
                 </GroupBox>
                 <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
                 <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2">

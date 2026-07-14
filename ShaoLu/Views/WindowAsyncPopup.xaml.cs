@@ -93,7 +93,7 @@ namespace ShaoLu.Views
                     popup.MessageText.FontStyle = font.FontStyle;
                     popup.MessageText.FontWeight = font.FontWeight;
                     var color = System.Drawing.Color.FromArgb(font.FontColor);
-                    popup.MessageText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
+                    popup.MessageText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, color.R, color.G, color.B));
                 }
             }
 

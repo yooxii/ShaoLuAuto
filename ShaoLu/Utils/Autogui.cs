@@ -13,6 +13,8 @@ namespace ShaoLu.Utils
 {
     public class Autogui
     {
+        private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// 鼠标位置
         /// </summary>
@@ -101,7 +103,7 @@ namespace ShaoLu.Utils
 
             if (res.Similarity < threshold)
             {
-                throw new Exception("No matching image found!");
+                throw new Exception("No matching image found on screen!");
             }
             // 超时未找到，返回包含最后一次相似度的默认 Apoint 对象
             return res;
@@ -258,7 +260,7 @@ namespace ShaoLu.Utils
                 catch (Exception ex)
                 {
                     // 记录日志或处理异常
-                    System.Diagnostics.Debug.WriteLine($"转换图像失败: {ex.Message}");
+                    logger.Error(ex, "Failed to convert ImageSource to Bitmap.");
                     return null;
                 }
             }

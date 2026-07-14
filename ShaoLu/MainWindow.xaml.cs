@@ -16,7 +16,7 @@ namespace ShaoLu
     {
         private readonly Viewmodels.MainViewModel mainViewModel = SingletonLocator.Main;
         private readonly Viewmodels.StepsViewModel stepsViewModel = SingletonLocator.Steps;
-        readonly FileServices fileServer = SingletonLocator.fileServices;
+        readonly FileServices fileServer = SingletonLocator.FileServices;
         public MainWindow()
         {
             InitializeComponent();

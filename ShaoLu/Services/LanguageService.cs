@@ -45,5 +45,10 @@ namespace ShaoLu.Services
         {
             return LocalizeDictionary.Instance.Culture.Name;
         }
+
+        public static string GetLocalizedString(string key)
+        {
+            return LocalizeDictionary.Instance.GetLocalizedObject(key, null, null)?.ToString();
+        }
     }
 }

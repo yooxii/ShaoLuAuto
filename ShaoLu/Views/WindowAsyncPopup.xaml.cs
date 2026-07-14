@@ -1,4 +1,5 @@
 ﻿using ShaoLu.Models;
+using ShaoLu.Viewmodels;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -13,7 +14,7 @@ namespace ShaoLu.Views
 {
     public partial class WindowAsyncPopup : Window
     {
-        private TaskCompletionSource<MessageBoxResult> _tcs;
+        private TaskCompletionSource<string> _tcs;
 
         // 缓存系统图标，避免重复进行 GDI+ 到 WPF 的转换，提升性能
         private static readonly Dictionary<MessageBoxImage, ImageSource> IconCache = [];
@@ -36,43 +37,40 @@ namespace ShaoLu.Views
         /// <summary>
         /// 异步显示弹窗，不阻塞调用线程，允许主窗口响应其他事件（如停止按钮）
         /// </summary>
-        public static (Window Window, Task<MessageBoxResult> Task) Show(string message, string title, FontModel font, MessageBoxButton button, MessageBoxImage icon)
+        public static (Window Window, Task<string> Task) Show(string message, string title, FontModel font, PopupButtons buttons, MessageBoxImage icon)
         {
-            var tcs = new TaskCompletionSource<MessageBoxResult>();
+            var tcs = new TaskCompletionSource<string>();
 
             if (Application.Current.Dispatcher.CheckAccess())
             {
-                return CreateAndShow(message, title, font, button, icon, tcs);
+                return CreateAndShow(message, title, font, buttons, icon, tcs);
             }
             else
             {
                 // 必须在 UI 线程创建
-                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, font, button, icon, tcs));
+                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, font, buttons, icon, tcs));
             }
         }
 
-        /// <summary>
-        /// 异步显示弹窗，不阻塞调用线程，允许主窗口响应其他事件（如停止按钮）
-        /// </summary>
-        public static (Window Window, Task<MessageBoxResult> Task) Show(string message, string title, MessageBoxButton button, MessageBoxImage icon)
+        public static (Window Window, Task<string> Task) Show(string message, string title, PopupButtons buttons, MessageBoxImage icon)
         {
-            var tcs = new TaskCompletionSource<MessageBoxResult>();
+            var tcs = new TaskCompletionSource<string>();
 
             if (Application.Current.Dispatcher.CheckAccess())
             {
-                return CreateAndShow(message, title, null, button, icon, tcs);
+                return CreateAndShow(message, title, null, buttons, icon, tcs);
             }
             else
             {
                 // 必须在 UI 线程创建
-                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, null, button, icon, tcs));
+                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, null, buttons, icon, tcs));
             }
         }
 
         /// <summary>
         /// 核心创建逻辑，统一处理窗口初始化和显示
         /// </summary>
-        private static (Window Window, Task<MessageBoxResult> Task) CreateAndShow(string message, string title, FontModel font, MessageBoxButton button, MessageBoxImage icon, TaskCompletionSource<MessageBoxResult> tcs)
+        private static (Window Window, Task<string> Task) CreateAndShow(string message, string title, FontModel font, PopupButtons buttons, MessageBoxImage icon, TaskCompletionSource<string> tcs)
         {
             var popup = new WindowAsyncPopup
             {
@@ -112,14 +110,14 @@ namespace ShaoLu.Views
             }
 
             // 3. 生成按钮
-            popup.CreateButtons(button);
+            popup.CreateButtons(buttons);
 
             // 4. 处理窗口关闭事件（防止用户通过 Alt+F4 或右上角 X 关闭时任务挂起）
             popup.Closed += (s, e) =>
             {
                 if (!tcs.Task.IsCompleted)
                 {
-                    tcs.TrySetResult(MessageBoxResult.None);
+                    tcs.TrySetResult(string.Empty);
                 }
                 // 帮助 GC：解除引用
                 popup._tcs = null;
@@ -134,13 +132,13 @@ namespace ShaoLu.Views
             return (popup, tcs.Task);
         }
 
-        private void CreateButtons(MessageBoxButton buttonType)
+        private void CreateButtons(PopupButtons buttons)
         {
             if (ButtonPanel == null) return;
 
             ButtonPanel.Children.Clear();
 
-            void AddButton(string content, MessageBoxResult result, bool isDefault = false)
+            void AddButton(string content, string result, bool isDefault = false)
             {
                 var btn = new Button
                 {
@@ -171,25 +169,9 @@ namespace ShaoLu.Views
                     }), System.Windows.Threading.DispatcherPriority.Loaded);
                 }
             }
-
-            switch (buttonType)
+            foreach (var button in buttons.Buttons)
             {
-                case MessageBoxButton.OK:
-                    AddButton("OK", MessageBoxResult.OK, true);
-                    break;
-                case MessageBoxButton.OKCancel:
-                    AddButton("OK", MessageBoxResult.OK, true);
-                    AddButton("Cancel", MessageBoxResult.Cancel);
-                    break;
-                case MessageBoxButton.YesNo:
-                    AddButton("Yes", MessageBoxResult.Yes, true);
-                    AddButton("No", MessageBoxResult.No);
-                    break;
-                case MessageBoxButton.YesNoCancel:
-                    AddButton("Yes", MessageBoxResult.Yes, true);
-                    AddButton("No", MessageBoxResult.No);
-                    AddButton("Cancel", MessageBoxResult.Cancel);
-                    break;
+                AddButton(button.DisplayText, button.Value, button == buttons.DefaultButton);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using ShaoLu.Models;
+using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
@@ -19,6 +20,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
     public abstract class AutomationStepBase : ObservableObject
     {
         #region 属性
+
+        private bool _isNeed = true;
+        public bool IsNeed
+        {
+            get => _isNeed;
+            set => SetProperty(ref _isNeed, value);
+        }
+
         private readonly Guid _uid = Guid.NewGuid();
         /// <summary>
         /// 步骤的唯一uid
@@ -126,8 +135,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
     // 图像基类
     public abstract class ImageRecognitionBase : AutomationStepBase, IDisposable
     {
-        readonly Services.PathServices pathServices = new();
-        readonly Services.FileServices fileServer = SingletonLocator.fileServices;
+        readonly PathServices pathServices = new();
+        readonly FileServices fileServer = SingletonLocator.FileServices;
         private bool _isDisposed = false;
 
         #region 属性
@@ -218,8 +227,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void SelectImage()
         {
-            var title = LocalizeDictionary.Instance.GetLocalizedObject("Select_target_pic", null, null)?.ToString() ?? "Open Image File";
-            var filter = (LocalizeDictionary.Instance.GetLocalizedObject("Image_File", null, null)?.ToString() ?? "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
+            var title = LanguageService.GetLocalizedString("Select_target_pic") ?? "Open Image File";
+            var filter = (LanguageService.GetLocalizedString("Image_File") ?? "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
             ImagePath = pathServices.OpenPathDialog(title, filter);
         }
 
@@ -270,17 +279,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     // Handle exceptions (e.g., invalid image format)
                     System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
-                    error_msg1 = (string)(LocalizeDictionary.Instance.GetLocalizedObject("Loading_img_Warning", null, null) ?? "Error loading image");
+                    error_msg1 = LanguageService.GetLocalizedString("Loading_img_Warning") ?? "Error loading image";
                     error_msg2 = ex.Message;
                 }
             }
             else
             {
-                error_msg1 = (string)(LocalizeDictionary.Instance.GetLocalizedObject("No_img_Warning", null, null) ?? "Error loading image");
+                error_msg1 = LanguageService.GetLocalizedString("No_img_Warning") ?? "Error loading image";
             }
 
             res = null;
-            var Warning_Title = LocalizeDictionary.Instance.GetLocalizedObject("Warning_Title", null, null) ?? "Warning";
+            var Warning_Title = LanguageService.GetLocalizedString("Warning_Title") ?? "Warning";
             System.Windows.Forms.MessageBox.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return res;
         }
@@ -665,7 +674,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _ => MessageBoxImage.Information
             };
 
-            var buttons = MessageBoxButton.YesNo; // 可以根据需要扩展属性来支持其他按钮类型
+            var buttons = PopupButtons.YesNo; // 可以根据需要扩展属性来支持其他按钮类型
 
             // 1. 启动异步弹窗任务
             var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, buttons, iconType);
@@ -707,7 +716,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
                         // 用户点击了弹窗按钮
                         var result = await popupTask;
-                        IsTrue = (result == MessageBoxResult.OK || result == MessageBoxResult.Yes);
+                        IsTrue = (result == PopupButton.Yes.Value);
                         return IsTrue;
                     }
                 }

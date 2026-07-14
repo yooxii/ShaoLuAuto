@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace ShaoLu.Models
 {
-    public class Settings
+    public class StepSettings
     {
-
+        public bool ShowErrorPopup { get; set; } = false;
     }
+
     public class AppSettings
     {
         public string Theme { get; set; } = "Light";

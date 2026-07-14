@@ -403,6 +403,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 No 的本地化字符串。
+        /// </summary>
+        public static string No {
+            get {
+                return ResourceManager.GetString("No", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 No pictures selected 的本地化字符串。
         /// </summary>
         public static string No_img_Warning {
@@ -534,6 +543,15 @@ namespace ShaoLu.Resources {
         public static string SimplifiedChinese_Header {
             get {
                 return ResourceManager.GetString("SimplifiedChinese_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Step 的本地化字符串。
+        /// </summary>
+        public static string Step {
+            get {
+                return ResourceManager.GetString("Step", resourceCulture);
             }
         }
         
@@ -687,6 +705,15 @@ namespace ShaoLu.Resources {
         public static string Warning_Title {
             get {
                 return ResourceManager.GetString("Warning_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Yes 的本地化字符串。
+        /// </summary>
+        public static string Yes {
+            get {
+                return ResourceManager.GetString("Yes", resourceCulture);
             }
         }
     }

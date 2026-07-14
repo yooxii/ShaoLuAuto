@@ -169,13 +169,18 @@ namespace ShaoLu.Viewmodels
         }
 
 
-        private void DelStep()
+        private async void DelStep()
         {
-            if (SelectedSteps.Count > 0)
+            var (_, popup) = WindowAsyncPopup.Show("确定删除所选步骤吗？", "删除步骤", PopupButtons.YesNo, MessageBoxImage.Warning);
+            var res = await popup;
+            if (res == PopupButton.Yes.Value)
             {
-                for (int i = SelectedSteps.Count - 1; i >= 0; i--)
+                if (SelectedSteps.Count > 0)
                 {
-                    AutomationStepBases.Remove(SelectedSteps[i]);
+                    for (int i = SelectedSteps.Count - 1; i >= 0; i--)
+                    {
+                        AutomationStepBases.Remove(SelectedSteps[i]);
+                    }
                 }
             }
         }
@@ -319,7 +324,7 @@ namespace ShaoLu.Viewmodels
                 {
                     // 记录单个步骤的错误，防止整个流程崩溃
                     logger.Warn(ex, "Step \"{0}\" execution Failed:", step.Name);
-                    var (_, popupTask) = WindowAsyncPopup.Show($"Step {step.Name} execution failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    var (_, popupTask) = WindowAsyncPopup.Show($"Step {step.Name} execution failed: {ex.Message}", "Error", PopupButtons.YesCancel, MessageBoxImage.Error);
 
                     await popupTask;
 

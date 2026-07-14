@@ -34,7 +34,7 @@ namespace ShaoLu.Views
 
                 vm.SaveCroppedImage(croppedImg, croppedRect);
 
-                WindowAsyncPopup.Show("Save Success!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                WindowAsyncPopup.Show("Save Success!", "Success", PopupButtons.OK, MessageBoxImage.Information);
             }
         }
 

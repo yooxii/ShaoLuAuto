@@ -85,7 +85,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -118,6 +118,7 @@
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
     <Compile Include="Models\FontModel.cs" />
+    <Compile Include="Viewmodels\PopupButton.cs" />
     <Compile Include="Models\Settings.cs" />
     <Compile Include="Resources\Strings.en-US.Designer.cs">
       <DependentUpon>Strings.en-US.resx</DependentUpon>
@@ -143,7 +144,7 @@
     <Compile Include="Services\JsonConfigurationService.cs" />
     <Compile Include="Services\Services.cs" />
     <Compile Include="Services\SettingsManager.cs" />
-    <Compile Include="Tools\LanguageService.cs" />
+    <Compile Include="Services\LanguageService.cs" />
     <Compile Include="Tools\ResxGenerator.cs" />
     <Compile Include="Utils\Autogui.cs" />
     <Compile Include="Converters\StepTemplateSelector.cs" />

@@ -15,5 +15,10 @@ namespace ShaoLu.Views
             InitializeComponent();
             DataContext = stepsViewModel;
         }
+
+        private void Refresh_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            UpdateLayout();
+        }
     }
 }

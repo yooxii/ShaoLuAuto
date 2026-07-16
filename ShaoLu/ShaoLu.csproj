@@ -113,8 +113,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Controls\MultiCropImage.cs" />
-    <Compile Include="Converters\AutomationStepConverter.cs" />
+    <Compile Include="Converters\AutomationStepJsonConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
+    <Compile Include="Converters\SelectedStepConverter.cs" />
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
     <Compile Include="Models\FontModel.cs" />
@@ -156,6 +157,7 @@
     <Compile Include="Viewmodels\ConfigViewModel.cs" />
     <Compile Include="Viewmodels\EditImageViewModel.cs" />
     <Compile Include="Viewmodels\MainViewModel.cs" />
+    <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />
     <Compile Include="Views\UserControlSteps.xaml.cs">
       <DependentUpon>UserControlSteps.xaml</DependentUpon>
@@ -168,6 +170,9 @@
     </Compile>
     <Compile Include="Views\WindowAsyncPopup.xaml.cs">
       <DependentUpon>WindowAsyncPopup.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowSettings.xaml.cs">
+      <DependentUpon>WindowSettings.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -217,6 +222,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\WindowSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -239,10 +248,12 @@
     <EmbeddedResource Include="Resources\Strings.en-US.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Strings.en-US.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Strings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Strings.zh-TW.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>

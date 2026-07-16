@@ -328,7 +328,7 @@ namespace ShaoLu.Viewmodels
 
                     await popupTask;
 
-                    if (step.FalseGoto < 0)
+                    if (step.FalseGoto is null)
                     {
                         StopSignal = true;
                         break;
@@ -341,13 +341,13 @@ namespace ShaoLu.Viewmodels
                 if (step.IsTrue)
                 {
                     // 跳转到指定步骤
-                    if (step.TrueGoto > 0)
-                        i = step.TrueGoto - 1 - 1;
+                    if (step.TrueGoto is null)
+                        i = step.TrueGoto.LineNo - 1 - 1;
                 }
                 else
                 {
-                    if (step.FalseGoto > 0)
-                        i = step.FalseGoto - 1 - 1;
+                    if (step.FalseGoto is null)
+                        i = step.FalseGoto.LineNo - 1 - 1;
                 }
             }
             StopSignal = true;

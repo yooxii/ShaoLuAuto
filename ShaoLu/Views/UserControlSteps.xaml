@@ -18,6 +18,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <conv:SelectedStepConverter x:Key="SelectedStepConverter"/>
             <utils:SingletonLocator x:Key="VMLocator" />
 
             <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Steps, Source={StaticResource VMLocator}}">
@@ -57,6 +58,7 @@
                         <Button Content="{lex:Loc BtnStop_Content}" Margin="3" Command="{Binding StopCommand}"/>
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Edit}">
+                        <Button Content="{lex:Loc Refresh}" Margin="3" Click="Refresh_Click"/>
                         <Button Content="{lex:Loc Up}" Margin="3" Command="{Binding UpStepCommand}"/>
                         <Button Content="{lex:Loc Down}" Margin="3" Command="{Binding DownStepCommand}"/>
                         <Button Content="{lex:Loc Copy}" Margin="3" Command="{Binding CopyStepCommand}"/>
@@ -95,8 +97,8 @@
                                 <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
                                 <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>
                                 <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" Width="*" CanUserSort="False"/>
-                                <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGoto}" Width="*" CanUserSort="False"/>
-                                <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGoto}" Width="*" CanUserSort="False"/>
+                                <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGoto, Converter={StaticResource SelectedStepConverter},Mode=TwoWay}" Width="*" CanUserSort="False"/>
+                                <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGoto, Converter={StaticResource SelectedStepConverter},Mode=TwoWay}" Width="*" CanUserSort="False"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>

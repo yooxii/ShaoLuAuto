@@ -177,7 +177,7 @@
   <data name="TraditionalChinese_Header" xml:space="preserve">
     <value>繁體中文</value>
   </data>
-  <data name="Warning_Title" xml:space="preserve">
+  <data name="Warning" xml:space="preserve">
     <value>警告</value>
   </data>
   <data name="No_img_Warning" xml:space="preserve">
@@ -335,5 +335,20 @@
   </data>
   <data name="No" xml:space="preserve">
     <value>否</value>
+  </data>
+  <data name="Warn" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="Question" xml:space="preserve">
+    <value>問題</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>錯誤</value>
+  </data>
+  <data name="Buttons" xml:space="preserve">
+    <value>按鈕組</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>刷新</value>
   </data>
 </root>

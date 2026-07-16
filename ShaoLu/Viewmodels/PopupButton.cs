@@ -1,22 +1,44 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Expression.Drawing.Core;
-using ShaoLu.Services;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
+using static ShaoLu.Services.LanguageService;
 
 namespace ShaoLu.Viewmodels
 {
     public class PopupButton : ObservableObject
     {
-        private string _value;
-        private string _displayText;
+        private string _value = "";
+        private string _displayText = "";
 
-        public string Value { get => _value; set => SetProperty(ref _value, value); }
-        public string DisplayText { get => _displayText; set => SetProperty(ref _displayText, value); }
+        public string Value
+        {
+            get => _value;
+            set
+            {
+                if (SetProperty(ref _value, value))
+                {
+                    if (DefaultValues.Contains(value))
+                    {
+                        DisplayText = GetLocalizedString(value);
+                    }
+                }
+            }
+        }
 
-        public static PopupButton OK = new() { Value = "Yes", DisplayText = LanguageService.GetLocalizedString("OK") };
-        public static PopupButton Yes = new() { Value = "Yes", DisplayText = LanguageService.GetLocalizedString("Yes") };
-        public static PopupButton No = new() { Value = "No", DisplayText = LanguageService.GetLocalizedString("No") };
-        public static PopupButton Cancel = new() { Value = "Cancel", DisplayText = LanguageService.GetLocalizedString("Cancel") };
+        public string DisplayText
+        {
+            get => _displayText; set => SetProperty(ref _displayText, value);
+        }
+
+        public static PopupButton OK = new() { Value = "OK", DisplayText = GetLocalizedString("OK") };
+        public static PopupButton Yes = new() { Value = "Yes", DisplayText = GetLocalizedString("Yes") };
+        public static PopupButton No = new() { Value = "No", DisplayText = GetLocalizedString("No") };
+        public static PopupButton Cancel = new() { Value = "Cancel", DisplayText = GetLocalizedString("Cancel") };
+
+        [JsonIgnore]
+        public List<string> DefaultValues { get; set; } = ["OK", "Yes", "No", "Cancel"];
 
     }
 
@@ -35,6 +57,7 @@ namespace ShaoLu.Viewmodels
         public static PopupButtons YesCancel = new([PopupButton.Yes, PopupButton.Cancel]);
         public static PopupButtons YesNoCancel = new([PopupButton.Yes, PopupButton.No, PopupButton.Cancel]);
 
+        public PopupButtons() { }
         public PopupButtons(PopupButtons buttons)
         {
             Buttons.AddRange(buttons.Buttons);

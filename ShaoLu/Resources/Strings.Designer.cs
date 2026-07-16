@@ -178,6 +178,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Buttons 的本地化字符串。
+        /// </summary>
+        public static string Buttons {
+            get {
+                return ResourceManager.GetString("Buttons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Cancel 的本地化字符串。
         /// </summary>
         public static string Cancel {
@@ -300,6 +309,15 @@ namespace ShaoLu.Resources {
         public static string English_Header {
             get {
                 return ResourceManager.GetString("English_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Error 的本地化字符串。
+        /// </summary>
+        public static string Error {
+            get {
+                return ResourceManager.GetString("Error", resourceCulture);
             }
         }
         
@@ -493,11 +511,29 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Question 的本地化字符串。
+        /// </summary>
+        public static string Question {
+            get {
+                return ResourceManager.GetString("Question", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Quit 的本地化字符串。
         /// </summary>
         public static string Quit_Header {
             get {
                 return ResourceManager.GetString("Quit_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Refresh 的本地化字符串。
+        /// </summary>
+        public static string Refresh {
+            get {
+                return ResourceManager.GetString("Refresh", resourceCulture);
             }
         }
         
@@ -700,11 +736,20 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Warn 的本地化字符串。
+        /// </summary>
+        public static string Warn {
+            get {
+                return ResourceManager.GetString("Warn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Warning 的本地化字符串。
         /// </summary>
-        public static string Warning_Title {
+        public static string Warning {
             get {
-                return ResourceManager.GetString("Warning_Title", resourceCulture);
+                return ResourceManager.GetString("Warning", resourceCulture);
             }
         }
         

@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using ShaoLu;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -12,6 +13,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
+using WPFDevelopers.Controls;
 using WPFLocalizeExtension.Engine;
 
 namespace ShaoLu.Viewmodels.AutomationStep
@@ -41,6 +43,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set => SetProperty(ref _isSave, value);
         }
 
+
         private int _lineNo;
         /// <summary>
         /// 步骤行号。
@@ -49,8 +52,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// </summary>
         public int LineNo
         {
-            get => _lineNo;
-            set => SetProperty(ref _lineNo, value);
+            get => _lineNo; set => SetProperty(ref _lineNo, value);
         }
 
         private string _name;
@@ -91,14 +93,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private bool _isTrue = false;
         public bool IsTrue { get => _isTrue; set => SetProperty(ref _isTrue, value); }
 
-        private int _trueGoto;
+        private AutomationStepBase _trueGoto;
         /// <summary>
         /// 如果真,去执行某行
         /// </summary>
-        public int TrueGoto { get => _trueGoto; set => SetProperty(ref _trueGoto, value); }
+        public AutomationStepBase TrueGoto { get => _trueGoto; set => SetProperty(ref _trueGoto, value); }
 
-        private int _falseGoto;
-        public int FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
+        private AutomationStepBase _falseGoto;
+        public AutomationStepBase FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
 
         #endregion
 
@@ -227,8 +229,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void SelectImage()
         {
-            var title = LanguageService.GetLocalizedString("Select_target_pic") ?? "Open Image File";
-            var filter = (LanguageService.GetLocalizedString("Image_File") ?? "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
+            var title = LanguageService.GetLocalizedString("Select_target_pic", "Open Image File");
+            var filter = LanguageService.GetLocalizedString("Image_File", "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
             ImagePath = pathServices.OpenPathDialog(title, filter);
         }
 
@@ -279,17 +281,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     // Handle exceptions (e.g., invalid image format)
                     System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
-                    error_msg1 = LanguageService.GetLocalizedString("Loading_img_Warning") ?? "Error loading image";
+                    error_msg1 = LanguageService.GetLocalizedString("Loading_img_Warning", "Error loading image");
                     error_msg2 = ex.Message;
                 }
             }
             else
             {
-                error_msg1 = LanguageService.GetLocalizedString("No_img_Warning") ?? "Error loading image";
+                error_msg1 = LanguageService.GetLocalizedString("No_img_Warning", "Error loading image");
             }
 
             res = null;
-            var Warning_Title = LanguageService.GetLocalizedString("Warning_Title") ?? "Warning";
+            var Warning_Title = LanguageService.GetLocalizedString("Warning", "Warning");
             System.Windows.Forms.MessageBox.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return res;
         }
@@ -618,6 +620,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _popupType = "Information";
         public string PopupType { get => _popupType; set => SetProperty(ref _popupType, value); }
 
+        private PopupButtons _popupButtons = PopupButtons.OK;
+        public PopupButtons PopupButtons { get => _popupButtons; set => SetProperty(ref _popupButtons, value); }
+
 
         [JsonIgnore]
         public List<string> PopupTypes { get; set; } = ["Information", "Warning", "Error", "Question"];
@@ -631,6 +636,16 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private RelayCommand colorSelectCommand;
         [JsonIgnore]
         public RelayCommand ColorSelectCommand => colorSelectCommand ??= new RelayCommand(ColorSelect);
+
+        [JsonIgnore]
+        private RelayCommand addButtonCommand;
+        [JsonIgnore]
+        public RelayCommand AddButtonCommand => addButtonCommand ??= new RelayCommand(AddButton);
+
+        [JsonIgnore]
+        private RelayCommand delButtonCommand;
+        [JsonIgnore]
+        public RelayCommand DelButtonCommand => delButtonCommand ??= new RelayCommand(DelButton);
 
         public PopupStep() : base()
         {
@@ -674,10 +689,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _ => MessageBoxImage.Information
             };
 
-            var buttons = PopupButtons.YesNo; // 可以根据需要扩展属性来支持其他按钮类型
-
             // 1. 启动异步弹窗任务
-            var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, buttons, iconType);
+            var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, PopupButtons, iconType);
 
             // 2. 等待任务完成或被取消
             try
@@ -767,6 +780,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 PopupFont.FontColor = dialog.Color.ToArgb();
+            }
+        }
+
+        private void AddButton()
+        {
+            PopupButtons.Buttons.Add(new PopupButton());
+        }
+
+        private void DelButton()
+        {
+            if (PopupButtons.Buttons.Count > 0)
+            {
+                PopupButtons.Buttons.RemoveAt(PopupButtons.Buttons.Count - 1);
             }
         }
     }

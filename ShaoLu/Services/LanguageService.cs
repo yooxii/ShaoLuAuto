@@ -31,6 +31,7 @@ namespace ShaoLu.Services
                 LocalizeDictionary.Instance.Culture = new CultureInfo(cultureName);
                 File.WriteAllText(LangConfigPath, cultureName);
                 logger.Info("Language set to: {0}", cultureName);
+
             }
             catch (CultureNotFoundException)
             {
@@ -46,9 +47,20 @@ namespace ShaoLu.Services
             return LocalizeDictionary.Instance.Culture.Name;
         }
 
+        /// <summary>
+        /// 获取本地化字符串, 如果找不到则返回key本身
+        /// </summary>
         public static string GetLocalizedString(string key)
         {
-            return LocalizeDictionary.Instance.GetLocalizedObject(key, null, null)?.ToString();
+            return LocalizeDictionary.Instance.GetLocalizedObject(key, null, null)?.ToString() ?? key;
+        }
+
+        /// <summary>
+        /// 获取本地化字符串, 如果找不到则返回defaultValue
+        /// </summary>
+        public static string GetLocalizedString(string key, string defaultValue)
+        {
+            return LocalizeDictionary.Instance.GetLocalizedObject(key, null, null)?.ToString() ?? defaultValue;
         }
     }
 }

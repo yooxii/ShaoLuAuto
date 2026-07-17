@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ShaoLu.Viewmodels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,20 @@ namespace ShaoLu.Views
         public WindowSettings()
         {
             InitializeComponent();
+            DataContext = new SettingsWindowViewModel();
+        }
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is SettingsCategory category && DataContext is SettingsWindowViewModel vm)
+            {
+                vm.SelectedCategory = category;
+            }
         }
     }
 }

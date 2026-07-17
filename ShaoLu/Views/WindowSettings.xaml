@@ -3,17 +3,63 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ShaoLu.Views" xmlns:viewmodels="clr-namespace:ShaoLu.Viewmodels" d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
+        xmlns:local="clr-namespace:ShaoLu.Views"
+        xmlns:conv="clr-namespace:ShaoLu.Converters"
+        xmlns:vm="clr-namespace:ShaoLu.Viewmodels"
+        xmlns:models="clr-namespace:ShaoLu.Models"
+        d:DataContext="{d:DesignInstance Type=vm:SettingsWindowViewModel}"
         mc:Ignorable="d"
         Title="WindowSettings" Height="450" Width="800">
+    <Window.Resources>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="180"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <TreeView x:Name="treeView" >
-            
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 左侧：TreeView -->
+        <TreeView Grid.Column="0" Grid.RowSpan="2"
+                  ItemsSource="{Binding Categories}"
+                  SelectedItemChanged="TreeView_SelectedItemChanged">
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type vm:SettingsCategory}"
+                                          ItemsSource="{Binding Children}">
+                    <TextBlock Text="{Binding Title}" Margin="4,2"/>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
         </TreeView>
-        <ContentControl x:Name="contentControl" Grid.Column="1" Content="{Binding SelectedSetItem}" />
+
+        <!-- 右侧：动态设置面板 -->
+        <ContentControl Grid.Column="1" Grid.Row="0"
+                        Content="{Binding SelectedCategory.ViewModel}"
+                        Margin="16">
+            <ContentControl.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="/Templates/SettingsTemplates.xaml"/>
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+            </ContentControl.Resources>
+        </ContentControl>
+
+        <!-- 底部按钮 -->
+        <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" 
+                    HorizontalAlignment="Right" Margin="16">
+            <Button Content="保存" Command="{Binding SaveCommand}" 
+                    Width="80" Height="30" Margin="0,0,8,0"/>
+            <Button Content="取消" Click="Cancel_Click" 
+                    Width="80" Height="30"/>
+        </StackPanel>
     </Grid>
 </Window>

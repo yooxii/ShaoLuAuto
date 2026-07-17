@@ -143,5 +143,10 @@ namespace ShaoLu
             }
         }
 
+        private void Setting_Click(object sender, RoutedEventArgs e)
+        {
+            WindowSettings windowSettings = new();
+            windowSettings.ShowDialog();
+        }
     }
 }

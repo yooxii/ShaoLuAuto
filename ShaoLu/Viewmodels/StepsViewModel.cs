@@ -341,12 +341,12 @@ namespace ShaoLu.Viewmodels
                 if (step.IsTrue)
                 {
                     // 跳转到指定步骤
-                    if (step.TrueGoto is null)
+                    if (step.TrueGoto is not null)
                         i = step.TrueGoto.LineNo - 1 - 1;
                 }
                 else
                 {
-                    if (step.FalseGoto is null)
+                    if (step.FalseGoto is not null)
                         i = step.FalseGoto.LineNo - 1 - 1;
                 }
             }

@@ -1,8 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
+using ShaoLu.Services;
+using ShaoLu.Utils;
+using ShaoLu.Views;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace ShaoLu.Viewmodels
 {
@@ -80,7 +84,7 @@ namespace ShaoLu.Viewmodels
         {
             // 注意：构造函数中调用异步方法，使用 .GetAwaiter().GetResult() 或改为异步初始化
             // 这里为了简单演示，使用同步阻塞（仅首次加载，通常很快）
-            Settings = SettingsService.LoadAsync().GetAwaiter().GetResult();
+            Settings = SingletonLocator.Settings;
             BuildTree();
         }
 
@@ -88,14 +92,14 @@ namespace ShaoLu.Viewmodels
         {
             var appNode = new SettingsCategory
             {
-                Title = "App 设置",
+                Title = "App " + LanguageService.GetLocalizedString("Settings"),
                 ViewModel = new AppSettingsViewModel(Settings.App),
                 IsExpanded = true
             };
 
             var stepNode = new SettingsCategory
             {
-                Title = "Step 设置",
+                Title = "Step " + LanguageService.GetLocalizedString("Settings"),
                 ViewModel = new StepSettingsViewModel(Settings.Step),
                 IsExpanded = true
             };
@@ -122,6 +126,14 @@ namespace ShaoLu.Viewmodels
             await SettingsService.SaveAsync(Settings);
 
             // 可以在这里添加保存成功的提示或关闭窗口逻辑
+            string msg = LanguageService.GetLocalizedString("SaveAndBack");
+            string title = LanguageService.GetLocalizedString("Save");
+            var (_, popup) = WindowAsyncPopup.Show(msg, title, PopupButtons.YesCancel, MessageBoxImage.Information);
+            var res = await popup;
+            if (res == PopupButton.Yes.Value)
+            {
+
+            }
         }
     }
 }

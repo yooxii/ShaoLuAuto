@@ -171,6 +171,9 @@
   <data name="Setting_Header" xml:space="preserve">
     <value>Setting</value>
   </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Setting</value>
+  </data>
   <data name="SimplifiedChinese_Header" xml:space="preserve">
     <value>简体中文</value>
   </data>
@@ -350,5 +353,14 @@
   </data>
   <data name="Refresh" xml:space="preserve">
     <value>Refresh</value>
+  </data>
+  <data name="ShowErrorPopup" xml:space="preserve">
+    <value>Show Error Popup</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SaveAndBack" xml:space="preserve">
+    <value>It has been saved.Do you want to return?</value>
   </data>
 </root>

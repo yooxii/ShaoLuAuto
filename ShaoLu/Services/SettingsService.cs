@@ -23,7 +23,7 @@ public class SettingsService
             return new AppSettings();
 
         using var stream = File.OpenRead(SettingsFilePath);
-        return await JsonSerializer.DeserializeAsync<AppSettings>(stream, JsonOptions)
+        return JsonSerializer.Deserialize<AppSettings>(stream, JsonOptions)
                ?? new AppSettings();
     }
 

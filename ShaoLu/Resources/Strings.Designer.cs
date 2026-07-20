@@ -547,6 +547,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 SaveAndBack 的本地化字符串。
+        /// </summary>
+        public static string SaveAndBack {
+            get {
+                return ResourceManager.GetString("SaveAndBack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Select 的本地化字符串。
         /// </summary>
         public static string Select {
@@ -570,6 +579,24 @@ namespace ShaoLu.Resources {
         public static string Setting_Header {
             get {
                 return ResourceManager.GetString("Setting_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Setting 的本地化字符串。
+        /// </summary>
+        public static string Settings {
+            get {
+                return ResourceManager.GetString("Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ShowErrorPopup 的本地化字符串。
+        /// </summary>
+        public static string ShowErrorPopup {
+            get {
+                return ResourceManager.GetString("ShowErrorPopup", resourceCulture);
             }
         }
         
@@ -678,6 +705,15 @@ namespace ShaoLu.Resources {
         public static string StepType_TypeText {
             get {
                 return ResourceManager.GetString("StepType_TypeText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Theme 的本地化字符串。
+        /// </summary>
+        public static string Theme {
+            get {
+                return ResourceManager.GetString("Theme", resourceCulture);
             }
         }
         

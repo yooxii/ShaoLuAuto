@@ -32,10 +32,10 @@ namespace ShaoLu.Viewmodels
             get => _displayText; set => SetProperty(ref _displayText, value);
         }
 
-        public static PopupButton OK = new() { Value = "OK", DisplayText = GetLocalizedString("OK") };
-        public static PopupButton Yes = new() { Value = "Yes", DisplayText = GetLocalizedString("Yes") };
-        public static PopupButton No = new() { Value = "No", DisplayText = GetLocalizedString("No") };
-        public static PopupButton Cancel = new() { Value = "Cancel", DisplayText = GetLocalizedString("Cancel") };
+        public static PopupButton OK = new() { Value = "OK" };
+        public static PopupButton Yes = new() { Value = "Yes" };
+        public static PopupButton No = new() { Value = "No" };
+        public static PopupButton Cancel = new() { Value = "Cancel" };
 
         [JsonIgnore]
         public List<string> DefaultValues { get; set; } = ["OK", "Yes", "No", "Cancel"];

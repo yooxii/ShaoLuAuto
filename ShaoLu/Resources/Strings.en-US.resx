@@ -363,4 +363,13 @@
   <data name="SaveAndBack" xml:space="preserve">
     <value>It has been saved.Do you want to return?</value>
   </data>
+  <data name="MinimizeOnRun" xml:space="preserve">
+    <value>MinimizeOnRun</value>
+  </data>
+  <data name="NoMatchingImage" xml:space="preserve">
+    <value>No matching image found on screen</value>
+  </data>
+  <data name="ExecutionFailed" xml:space="preserve">
+    <value>Execution Failed:</value>
+  </data>
 </root>

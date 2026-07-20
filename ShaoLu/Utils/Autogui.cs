@@ -1,5 +1,6 @@
 ﻿using OpenCvSharp;
 using OpenCvSharp.Extensions;
+using ShaoLu.Services;
 using System;
 using System.Drawing;
 using System.Threading;
@@ -103,7 +104,7 @@ namespace ShaoLu.Utils
 
             if (res.Similarity < threshold)
             {
-                throw new Exception("No matching image found on screen!");
+                throw new Exception(LanguageService.GetLocalizedString("NoMatchingImage"));
             }
             // 超时未找到，返回包含最后一次相似度的默认 Apoint 对象
             return res;

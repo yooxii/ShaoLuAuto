@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using NLog;
 using ShaoLu;
 using ShaoLu.Models;
 using ShaoLu.Services;
@@ -21,9 +22,23 @@ namespace ShaoLu.Viewmodels.AutomationStep
     // 基类
     public abstract class AutomationStepBase : ObservableObject
     {
+        internal readonly Logger _logger = LogManager.GetCurrentClassLogger();
+
         #region 属性
 
         private bool _isNeed = true;
+        private bool _isSave = false;
+        private bool _isError = false;
+        private string _errorMessage;
+        private int _lineNo;
+        private string _name;
+        private string _description;
+        private StepType _type;
+        private bool _isTrue = false;
+        private AutomationStepBase _trueGoto;
+        private AutomationStepBase _falseGoto;
+
+
         public bool IsNeed
         {
             get => _isNeed;
@@ -36,26 +51,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// </summary>
         public Guid Uid => _uid;
 
-        private bool _isSave = false;
-        public bool IsSave
-        {
-            get => _isSave;
-            set => SetProperty(ref _isSave, value);
-        }
+        public bool IsSave { get => _isSave; set => SetProperty(ref _isSave, value); }
 
+        public bool IsError { get => _isError; set => SetProperty(ref _isError, value); }
 
-        private int _lineNo;
+        public string ErrorMessage { get => _errorMessage; set => SetProperty(ref _errorMessage, value); }
+
         /// <summary>
         /// 步骤行号。
         /// 注意：此值应由包含该步骤的集合（如 ObservableCollection）在增删改时统一维护，
         /// 或者在 UI 绑定时通过 Index 计算。此处保留 SetProperty 以支持手动刷新。
         /// </summary>
-        public int LineNo
-        {
-            get => _lineNo; set => SetProperty(ref _lineNo, value);
-        }
+        public int LineNo { get => _lineNo; set => SetProperty(ref _lineNo, value); }
 
-        private string _name;
         /// <summary>
         /// 步骤名称
         /// </summary>
@@ -65,41 +73,28 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set
             {
                 // 简单的防御性编程，防止 Null 导致绑定崩溃
-                if (value == null) throw new ArgumentNullException(nameof(Name));
+                if (value == null) { IsError = true; throw new ArgumentNullException(nameof(Name)); }
                 SetProperty(ref _name, value);
             }
         }
 
-        private string _description;
         /// <summary>
         /// 步骤描述
         /// </summary>
-        public string Description
-        {
-            get => _description;
-            set => SetProperty(ref _description, value);
-        }
+        public string Description { get => _description; set => SetProperty(ref _description, value); }
 
-        private StepType _type;
         /// <summary>
         /// 步骤类型
         /// </summary>
-        public StepType Type
-        {
-            get => _type;
-            set => SetProperty(ref _type, value);
-        }
+        public StepType Type { get => _type; set => SetProperty(ref _type, value); }
 
-        private bool _isTrue = false;
         public bool IsTrue { get => _isTrue; set => SetProperty(ref _isTrue, value); }
 
-        private AutomationStepBase _trueGoto;
+
         /// <summary>
         /// 如果真,去执行某行
         /// </summary>
         public AutomationStepBase TrueGoto { get => _trueGoto; set => SetProperty(ref _trueGoto, value); }
-
-        private AutomationStepBase _falseGoto;
         public AutomationStepBase FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
 
         #endregion
@@ -142,7 +137,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private bool _isDisposed = false;
 
         #region 属性
+
         private string _imagePath;
+        private string _croppedImagePath;
+        private ImageSource _croppedImg;
+
         public string ImagePath
         {
             get => _imagePath;
@@ -154,14 +153,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public double ImgSrcWidth => (ImgSrc?.Width ?? 0);
 
-        private string _croppedImagePath;
         public string CroppedImagePath
         {
             get => _croppedImagePath; set => SetProperty(ref _croppedImagePath, value);
         }
 
-        [JsonIgnore]
-        private ImageSource _croppedImg;
         [JsonIgnore]
         public ImageSource CroppedImg
         {
@@ -185,27 +181,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         #region 图像属性
+
         public Rect _croppedRect;
+        private int _offsetX = 0;
+        private int _offsetY = 0;
+        private double _similarityThreshold = 0.85;
+
         public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
 
         [JsonIgnore]
         public OpenCvSharp.Point Offset => new(OffsetX, OffsetY);
 
-        private int _offsetX = 0;
-        public int OffsetX
-        {
-            get => _offsetX;
-            set => SetProperty(ref _offsetX, value);
-        }
+        public int OffsetX { get => _offsetX; set => SetProperty(ref _offsetX, value); }
 
-        private int _offsetY = 0;
-        public int OffsetY
-        {
-            get => _offsetY;
-            set => SetProperty(ref _offsetY, value);
-        }
+        public int OffsetY { get => _offsetY; set => SetProperty(ref _offsetY, value); }
 
-        private double _similarityThreshold = 0.85;
         public double SimilarityThreshold
         {
             get => _similarityThreshold;
@@ -275,24 +265,26 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
                     bitmap.EndInit();
                     bitmap.Freeze(); // 冻结以提高性能并允许跨线程访问
+                    IsError = false;
                     return bitmap;
                 }
                 catch (Exception ex)
                 {
                     // Handle exceptions (e.g., invalid image format)
-                    System.Diagnostics.Debug.WriteLine($"Error loading image: {ex.Message}");
-                    error_msg1 = LanguageService.GetLocalizedString("Loading_img_Warning", "Error loading image");
-                    error_msg2 = ex.Message;
+                    IsError = true;
+                    ErrorMessage = LanguageService.GetLocalizedString("Loading_img_Warning", "Error loading image");
+                    _logger.Error(ex, ErrorMessage);
                 }
             }
             else
             {
-                error_msg1 = LanguageService.GetLocalizedString("No_img_Warning", "Error loading image");
+                IsError = true;
+                ErrorMessage = LanguageService.GetLocalizedString("No_img_Warning", "Error loading image");
             }
 
             res = null;
-            var Warning_Title = LanguageService.GetLocalizedString("Warning", "Warning");
-            System.Windows.Forms.MessageBox.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            //var Warning_Title = LanguageService.GetLocalizedString("Warning", "Warning");
+            //WindowAsyncPopup.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", PopupButtons.OK, MessageBoxImage.Warning);
             return res;
         }
 
@@ -487,6 +479,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             });
             img?.Dispose();
             IsTrue = res;
+            IsError = false;
 
             return IsTrue;
         }
@@ -536,6 +529,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
             });
             IsTrue = res;
+            IsError = false;
             return res;
         }
     }
@@ -592,6 +586,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var res = await Task.Run(() => { return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout); });
             img?.Dispose();
             IsTrue = !res.IsEmpty;
+            IsError = false;
             return IsTrue;
         }
     }
@@ -623,6 +618,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private PopupButtons _popupButtons = PopupButtons.OK;
         public PopupButtons PopupButtons { get => _popupButtons; set => SetProperty(ref _popupButtons, value); }
 
+        #region 命令
 
         [JsonIgnore]
         public List<string> PopupTypes { get; set; } = ["Information", "Warning", "Error", "Question"];
@@ -646,6 +642,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private RelayCommand delButtonCommand;
         [JsonIgnore]
         public RelayCommand DelButtonCommand => delButtonCommand ??= new RelayCommand(DelButton);
+
+        #endregion
 
         public PopupStep() : base()
         {

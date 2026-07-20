@@ -363,4 +363,13 @@
   <data name="SaveAndBack" xml:space="preserve">
     <value>已经保存了，是否返回？</value>
   </data>
+  <data name="MinimizeOnRun" xml:space="preserve">
+    <value>运行时最小化窗口</value>
+  </data>
+  <data name="NoMatchingImage" xml:space="preserve">
+    <value>屏幕上没有匹配的图像</value>
+  </data>
+  <data name="ExecutionFailed" xml:space="preserve">
+    <value>执行失败：</value>
+  </data>
 </root>

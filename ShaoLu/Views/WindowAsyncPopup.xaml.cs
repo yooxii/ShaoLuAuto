@@ -1,4 +1,5 @@
 ﻿using ShaoLu.Models;
+using ShaoLu.Services;
 using ShaoLu.Viewmodels;
 using System;
 using System.Collections.Generic;
@@ -171,6 +172,8 @@ namespace ShaoLu.Views
             }
             foreach (var button in buttons.Buttons)
             {
+                if (string.IsNullOrEmpty(button.DisplayText) && button.DefaultValues.Contains(button.Value))
+                    button.DisplayText = LanguageService.GetLocalizedString(button.Value);
                 AddButton(button.DisplayText, button.Value, button == buttons.DefaultButton);
             }
         }

@@ -1,14 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using ShaoLu.Models;
+using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace ShaoLu.Viewmodels
@@ -17,6 +16,7 @@ namespace ShaoLu.Viewmodels
     {
         private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private CancellationTokenSource _cts;
+        private readonly StepSettingsModel _stepSettings = SingletonLocator.Settings.Step;
 
         #region 属性
 
@@ -48,8 +48,10 @@ namespace ShaoLu.Viewmodels
 
         // 选中步骤
         private AutomationStepBase _selectedStep;
-
         public AutomationStepBase SelectedStep { get => _selectedStep; set => SetProperty(ref _selectedStep, value); }
+
+        private AutomationStepBase _errorStep;
+        public AutomationStepBase ErrorStep { get => _errorStep; set => SetProperty(ref _errorStep, value); }
 
         public ObservableCollection<AutomationStepBase> SelectedSteps { get; set; } = [];
 
@@ -298,7 +300,8 @@ namespace ShaoLu.Viewmodels
             logger.Info("Start Auto");
             // 初始化自动化引擎
             Autogui.StartAuto();
-            Application.Current.MainWindow.WindowState = WindowState.Minimized;
+            if (_stepSettings.MinimizeOnRun)
+                Application.Current.MainWindow.WindowState = WindowState.Minimized;
 
 
             for (int i = 0; i < AutomationStepBases.Count; i++)
@@ -310,10 +313,14 @@ namespace ShaoLu.Viewmodels
                 }
                 var step = AutomationStepBases[i];
 
+                if (!step.IsNeed)
+                    continue;
+
                 try
                 {
                     SelectedStep = step;
                     await step.RunAsync(token);
+                    step.IsError = false;
                 }
                 catch (OperationCanceledException)
                 {
@@ -324,9 +331,16 @@ namespace ShaoLu.Viewmodels
                 {
                     // 记录单个步骤的错误，防止整个流程崩溃
                     logger.Warn(ex, "Step \"{0}\" execution Failed:", step.Name);
-                    var (_, popupTask) = WindowAsyncPopup.Show($"Step {step.Name} execution failed: {ex.Message}", "Error", PopupButtons.YesCancel, MessageBoxImage.Error);
 
-                    await popupTask;
+                    step.IsError = true;
+                    step.ErrorMessage = ex.Message;
+                    if (_stepSettings.ShowErrorPopup)
+                    {
+                        var (_, popupTask) = WindowAsyncPopup.Show(
+                            $"{LanguageService.GetLocalizedString("Step")}{step.Name}{LanguageService.GetLocalizedString("ExecutionFailed")}{step.ErrorMessage}", "Error",
+                            PopupButtons.YesCancel, MessageBoxImage.Error);
+                        await popupTask;
+                    }
 
                     if (step.FalseGoto is null)
                     {

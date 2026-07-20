@@ -1,12 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
+using ShaoLu.Properties;
 using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Views;
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 
 namespace ShaoLu.Viewmodels
 {
@@ -43,7 +46,32 @@ namespace ShaoLu.Viewmodels
         public void ApplyTo(AppSettingsModel model)
         {
             model.Theme = Theme;
-            model.WindowFont = new FontModel();
+            model.WindowFont = Font;
+        }
+
+
+        [RelayCommand]
+        private void FontSelect()
+        {
+
+            var fontDialog = new FontDialog()
+            {
+                Font = Font?.Font ?? new System.Drawing.Font("Arial", 12)
+            };
+
+            if (fontDialog.ShowDialog() == DialogResult.OK)
+            {
+                System.Drawing.Font selectedFont = fontDialog.Font;
+                Font = new FontModel()
+                {
+                    FontFamily = selectedFont.FontFamily.Name,
+                    FontSize = selectedFont.Size,
+                    FontStyle = selectedFont.Italic ? FontStyles.Italic : FontStyles.Normal,
+                    FontWeight = selectedFont.Bold ? FontWeights.Bold : FontWeights.Normal,
+                    Style = selectedFont.Style,
+                    Unit = selectedFont.Unit,
+                };
+            }
         }
     }
 
@@ -51,18 +79,23 @@ namespace ShaoLu.Viewmodels
     public partial class StepSettingsViewModel : ObservableObject
     {
         private bool _showErrorPopup;
+        private bool _minimizeOnRun;
+
         public bool ShowErrorPopup { get => _showErrorPopup; set => SetProperty(ref _showErrorPopup, value); }
+        public bool MinimizeOnRun { get => _minimizeOnRun; set => SetProperty(ref _minimizeOnRun, value); }
 
 
         public StepSettingsViewModel(StepSettingsModel model)
         {
             ShowErrorPopup = model.ShowErrorPopup;
+            MinimizeOnRun = model.MinimizeOnRun;
         }
 
 
         public void ApplyTo(StepSettingsModel model)
         {
             model.ShowErrorPopup = ShowErrorPopup;
+            model.MinimizeOnRun = MinimizeOnRun;
         }
     }
 
@@ -73,6 +106,8 @@ namespace ShaoLu.Viewmodels
 
         private AppSettings _settings;
 
+        public event Action windowClosed;
+
 
         public SettingsCategory SelectedCategory { get => _selectedCategory; set => SetProperty(ref _selectedCategory, value); }
         public AppSettings Settings { get => _settings; set => SetProperty(ref _settings, value); }
@@ -82,8 +117,6 @@ namespace ShaoLu.Viewmodels
 
         public SettingsWindowViewModel()
         {
-            // 注意：构造函数中调用异步方法，使用 .GetAwaiter().GetResult() 或改为异步初始化
-            // 这里为了简单演示，使用同步阻塞（仅首次加载，通常很快）
             Settings = SingletonLocator.Settings;
             BuildTree();
         }
@@ -132,7 +165,7 @@ namespace ShaoLu.Viewmodels
             var res = await popup;
             if (res == PopupButton.Yes.Value)
             {
-
+                windowClosed?.Invoke();
             }
         }
     }

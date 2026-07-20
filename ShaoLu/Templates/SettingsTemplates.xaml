@@ -32,6 +32,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
                     
@@ -54,7 +55,7 @@
                         <TextBox Grid.Column="1" Text="{Binding Font.FontSize, UpdateSourceTrigger=PropertyChanged}" Margin="0,4"/>
                     </Grid>
 
-                    <Button Grid.Column="3" Content="..."/>
+                    <Button Grid.Column="4" Content="..." Margin="0,4" Command="{Binding FontSelectCommand}"/>
                 </Grid>
             </Grid>
         </StackPanel>
@@ -71,15 +72,17 @@
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc ShowErrorPopup}" VerticalAlignment="Center"/>
-                <CheckBox Grid.Row="0" Grid.Column="1" IsChecked="{Binding ShowErrorPopup}" Margin="0,6,0,0"/>
+                <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowErrorPopup}"/>
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="日志路径：" VerticalAlignment="Center"/>
-                <TextBox Grid.Row="1" Grid.Column="1" Text="" Margin="0,4"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc MinimizeOnRun}" VerticalAlignment="Center"/>
+                <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding MinimizeOnRun}"/>
             </Grid>
         </StackPanel>
     </DataTemplate>

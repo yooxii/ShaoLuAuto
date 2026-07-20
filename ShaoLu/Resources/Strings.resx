@@ -363,4 +363,13 @@
   <data name="SaveAndBack" xml:space="preserve">
     <value>SaveAndBack</value>
   </data>
+  <data name="MinimizeOnRun" xml:space="preserve">
+    <value>MinimizeOnRun</value>
+  </data>
+  <data name="NoMatchingImage" xml:space="preserve">
+    <value>No Matching Image</value>
+  </data>
+  <data name="ExecutionFailed" xml:space="preserve">
+    <value>ExecutionFailed</value>
+  </data>
 </root>

@@ -322,6 +322,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 ExecutionFailed 的本地化字符串。
+        /// </summary>
+        public static string ExecutionFailed {
+            get {
+                return ResourceManager.GetString("ExecutionFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 File 的本地化字符串。
         /// </summary>
         public static string File_Header {
@@ -412,6 +421,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 MinimizeOnRun 的本地化字符串。
+        /// </summary>
+        public static string MinimizeOnRun {
+            get {
+                return ResourceManager.GetString("MinimizeOnRun", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 New 的本地化字符串。
         /// </summary>
         public static string New_Header {
@@ -435,6 +453,15 @@ namespace ShaoLu.Resources {
         public static string No_img_Warning {
             get {
                 return ResourceManager.GetString("No_img_Warning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 No Matching Image 的本地化字符串。
+        /// </summary>
+        public static string NoMatchingImage {
+            get {
+                return ResourceManager.GetString("NoMatchingImage", resourceCulture);
             }
         }
         

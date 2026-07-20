@@ -18,5 +18,6 @@
     public class StepSettingsModel
     {
         public bool ShowErrorPopup { get; set; } = false;
+        public bool MinimizeOnRun { get; set; } = true;
     }
 }

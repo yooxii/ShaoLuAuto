@@ -91,8 +91,27 @@
                                   ContextMenu="{StaticResource DataGridMenu}" SelectionMode="Extended"
                                   SelectedItem="{Binding SelectedStep}"
                                   utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Style.Triggers>
+                                        <!-- 当绑定的 IsError 为 True 时，背景变红 -->
+                                        <DataTrigger Binding="{Binding IsError}" Value="True">
+                                            <Setter Property="Background" Value="#FFFFCCCC"/>
+                                            <!-- 浅红色，避免文字看不清 -->
+                                            <Setter Property="ToolTip" Value="{Binding ErrorMessage}"/>
+                                            <!-- 可选：鼠标悬停显示错误信息 -->
+                                        </DataTrigger>
+
+                                        <!-- 保持选中行的样式优先级高于错误背景（可选） -->
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
                             <DataGrid.Columns>
-                                <DataGridCheckBoxColumn Header="" Binding="{Binding IsNeed}"/>
+                                <DataGridCheckBoxColumn Header="" Binding="{Binding IsNeed,UpdateSourceTrigger=PropertyChanged}"/>
                                 <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
                                 <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
                                 <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>

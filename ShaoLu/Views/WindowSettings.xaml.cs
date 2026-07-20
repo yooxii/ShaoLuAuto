@@ -8,10 +8,13 @@ namespace ShaoLu.Views
     /// </summary>
     public partial class WindowSettings : Window
     {
+        private readonly SettingsWindowViewModel settingsVM = new SettingsWindowViewModel();
         public WindowSettings()
         {
             InitializeComponent();
-            DataContext = new SettingsWindowViewModel();
+            DataContext = settingsVM;
+
+            settingsVM.windowClosed += () => this.Close();
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

@@ -108,6 +108,125 @@
         </StackPanel>
     </DataTemplate>
 
+
+    <DataTemplate x:Key="ClickImagesStepTemplate" DataType="{x:Type AutoVM:ClickImagesStep}">
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <Button Content=" + " Command="{Binding AddImageCommand}" Margin="0,0,10,0"/>
+                <Button Content=" - " Command="{Binding DelImageCommand}" Margin="0,0,10,0"/>
+            </StackPanel>
+            <ListBox ItemsSource="{Binding Images}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel>
+                                <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox x:Name="PathTextBlock" Text="{Binding ImagePath}" VerticalAlignment="Center" 
+                                           MinWidth="150" MaxWidth="250" TextWrapping="NoWrap" IsReadOnly="True" ToolTip="{Binding ImagePath}"/>
+                                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
+                                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,5,0,0">
+                                <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                   Precision="3" Interval="0.001" Width="70"/>
+                                    <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            Minimum="0" Maximum="1" Width="150"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            
+            <StackPanel>
+                <StackPanel>
+                    <Label Content="{lex:Loc Clicks}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding Clicks, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"/>
+                </StackPanel>
+                <StackPanel >
+                    <Label Content="{lex:Loc ClickGap}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding ClickGap, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"
+                    MaxWidth="300"
+                    Precision="3"
+                    Interval="0.01"/>
+                </StackPanel>
+                <StackPanel >
+                    <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
+                    Precision="3" Minimum="0"
+                    Interval="0.01"/>
+                </StackPanel>
+                <StackPanel >
+                    <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
+                    Precision="3" Minimum="0"
+                    Interval="0.1"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="FindImagesStepTemplate" DataType="{x:Type AutoVM:FindImagesStep}">
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <Button Content=" + " Command="{Binding AddImageCommand}" Margin="0,0,10,0"/>
+                <Button Content=" - " Command="{Binding DelImageCommand}" Margin="0,0,10,0"/>
+            </StackPanel>
+            <ListBox ItemsSource="{Binding Images}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <StackPanel>
+                                <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox x:Name="PathTextBlock"
+                               Text="{Binding ImagePath}" 
+                               MinWidth="150"
+                               MaxWidth="250"
+                               TextWrapping="NoWrap"
+                               IsReadOnly="True"
+                               ToolTip="{Binding ImagePath}"/>
+                                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
+                                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,5,0,0">
+                                <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                            Precision="3"
+                            Interval="0.001"
+                            Width="70"/>
+                                    <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                            Minimum="0" 
+                            Maximum="1" 
+                            Width="150"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <StackPanel>
+                <StackPanel>
+                    <Label Content="{lex:Loc FindTimeInterval}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding GapTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
+                </StackPanel>
+                
+                <StackPanel>
+                    <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
     <!-- 输入文字步骤的UI -->
     <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
         <StackPanel Orientation="Vertical">
@@ -227,6 +346,8 @@
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
                      FindImageTemplate="{StaticResource FindImageStepTemplate}"
+                     ClickImagesTemplate="{StaticResource ClickImagesStepTemplate}"
+                     FindImagesTemplate="{StaticResource FindImagesStepTemplate}"
                      TextTemplate="{StaticResource TextStepTemplate}"
                      PopupTemplate="{StaticResource PopupStepTemplate}"/>
 </ResourceDictionary>

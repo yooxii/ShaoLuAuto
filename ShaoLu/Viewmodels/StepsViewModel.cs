@@ -90,6 +90,10 @@ namespace ShaoLu.Viewmodels
         public RelayCommand DownStepCommand => downStepCommand ??= new RelayCommand(DownStep, CanAlertStep);
 
 
+        private RelayCommand selectStepCommand;
+        public RelayCommand SelectStepCommand => selectStepCommand ??= new RelayCommand(SelectStep, CanAlertStep);
+
+
         private RelayCommand copyStepCommand;
         public RelayCommand CopyStepCommand => copyStepCommand ??= new RelayCommand(CopyStep, CanAlertStep);
 
@@ -147,8 +151,10 @@ namespace ShaoLu.Viewmodels
                 imgStep = param switch
                 {
                     "ClickImage" => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
-                    "TypeText" => new TypeTextStep($"TypeText_{AutomationStepBases.Count(t => t.Type == StepType.TypeText) + 1}"),
                     "FindImage" => new FindImageStep($"FindImage_{AutomationStepBases.Count(t => t.Type == StepType.FindImage) + 1}"),
+                    "ClickImages" => new ClickImagesStep($"ClickImages_{AutomationStepBases.Count(t => t.Type == StepType.ClickImages) + 1}"),
+                    "FindImages" => new FindImagesStep($"FindImages_{AutomationStepBases.Count(t => t.Type == StepType.FindImages) + 1}"),
+                    "TypeText" => new TypeTextStep($"TypeText_{AutomationStepBases.Count(t => t.Type == StepType.TypeText) + 1}"),
                     "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
@@ -203,6 +209,16 @@ namespace ShaoLu.Viewmodels
             if (SelectedStep.LineNo >= AutomationStepBases.Count)
                 return;
             AutomationStepBases.Move(SelectedStep.LineNo - 1, SelectedStep.LineNo);
+        }
+
+        private void SelectStep()
+        {
+            if (SelectedStep == null) return;
+            if (SelectedSteps == null || SelectedSteps.Count == 0) return;
+            foreach (var step in SelectedSteps)
+            {
+                step.IsNeed = !step.IsNeed;
+            }
         }
 
         public void InsertSteps(ObservableCollection<AutomationStepBase> steps, int index = -1)
@@ -366,6 +382,10 @@ namespace ShaoLu.Viewmodels
             }
             StopSignal = true;
             Application.Current.MainWindow.WindowState = WindowState.Normal;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Application.Current.MainWindow.Activate();
+            });
             logger.Info("Auto Finished");
         }
 

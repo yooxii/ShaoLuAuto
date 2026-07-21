@@ -71,8 +71,10 @@ namespace ShaoLu.Converters
             {
                 // 请确保这里的映射与你实际的类名一致
                 StepType.ClickImage => typeof(ClickImageStep),
-                StepType.TypeText => typeof(TypeTextStep),
                 StepType.FindImage => typeof(FindImageStep),
+                StepType.ClickImages => typeof(ClickImagesStep),
+                StepType.FindImages => typeof(FindImagesStep),
+                StepType.TypeText => typeof(TypeTextStep),
                 StepType.Popup => typeof(PopupStep),
                 StepType.Empty => typeof(EmptyStep),
                 // 添加其他映射...

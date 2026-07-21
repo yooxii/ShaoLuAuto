@@ -10,6 +10,8 @@ namespace ShaoLu.Converters
         public DataTemplate ClickImageTemplate { get; set; }
         public DataTemplate TextTemplate { get; set; }
         public DataTemplate FindImageTemplate { get; set; }
+        public DataTemplate ClickImagesTemplate { get; set; }
+        public DataTemplate FindImagesTemplate { get; set; }
         public DataTemplate PopupTemplate { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
@@ -21,6 +23,8 @@ namespace ShaoLu.Converters
                     StepType.ClickImage => ClickImageTemplate,
                     StepType.TypeText => TextTemplate,
                     StepType.FindImage => FindImageTemplate,
+                    StepType.ClickImages => ClickImagesTemplate,
+                    StepType.FindImages => FindImagesTemplate,
                     StepType.Popup => PopupTemplate,
                     _ => ClickImageTemplate,
                 };

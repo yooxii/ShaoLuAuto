@@ -143,6 +143,13 @@ namespace ShaoLu
                     {
                         fileServer.UnmarkForDeletion(imageRecognition.CroppedImagePath);
                     }
+                    if (step is ImagesRecognitionBase imagesRecognition)
+                    {
+                        foreach (var image in imagesRecognition.Images)
+                        {
+                            fileServer.UnmarkForDeletion(image.CroppedImagePath);
+                        }
+                    }
                 }
                 StepsFile.SaveStepsToJson(stepsViewModel.AutomationStepBases, filePath);
 
@@ -154,6 +161,12 @@ namespace ShaoLu
         {
             WindowSettings windowSettings = new();
             windowSettings.ShowDialog();
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            WindowAbout windowAbout = new();
+            windowAbout.ShowDialog();
         }
     }
 }

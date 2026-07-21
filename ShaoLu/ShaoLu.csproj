@@ -87,6 +87,9 @@
   <PropertyGroup>
     <SignManifests>false</SignManifests>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>AutoShaoLu.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -161,6 +164,9 @@
     <Compile Include="Views\UserControlSteps.xaml.cs">
       <DependentUpon>UserControlSteps.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\WindowAbout.xaml.cs">
+      <DependentUpon>WindowAbout.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\WindowCropImage.xaml.cs">
       <DependentUpon>WindowCropImage.xaml</DependentUpon>
     </Compile>
@@ -210,6 +216,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\UserControlSteps.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowAbout.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -329,6 +339,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="AutoShaoLu.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,6 +1,7 @@
 ﻿using ShaoLu.Utils;
 using ShaoLu.Viewmodels;
 using System.Windows.Controls;
+using WPFDevelopers.Controls;
 
 namespace ShaoLu.Views
 {
@@ -19,6 +20,15 @@ namespace ShaoLu.Views
         private void Refresh_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             UpdateLayout();
+        }
+
+        private void SplitButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var btn = (SplitButton)sender;
+            if (btn.CommandParameter is string type)
+            {
+                stepsViewModel.AddStepCommand.Execute(type);
+            }
         }
     }
 }

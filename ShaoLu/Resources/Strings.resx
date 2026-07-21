@@ -171,6 +171,9 @@
   <data name="Setting_Header" xml:space="preserve">
     <value>Setting</value>
   </data>
+  <data name="About_Header" xml:space="preserve">
+    <value>About</value>
+  </data>
   <data name="Settings" xml:space="preserve">
     <value>Setting</value>
   </data>
@@ -240,6 +243,9 @@
   <data name="AddImageStep" xml:space="preserve">
     <value>AddImageStep</value>
   </data>
+  <data name="AddImagesStep" xml:space="preserve">
+    <value>AddImagesStep</value>
+  </data>
   <data name="AddTextStep" xml:space="preserve">
     <value>AddTextStep</value>
   </data>
@@ -263,6 +269,9 @@
   </data>
   <data name="AddFindImageStep" xml:space="preserve">
     <value>AddFindImageStep</value>
+  </data>
+  <data name="AddFindImagesStep" xml:space="preserve">
+    <value>AddFindImagesStep</value>
   </data>
   <data name="DelayBetweenKeys" xml:space="preserve">
     <value>DelayBetweenKeys</value>
@@ -371,5 +380,14 @@
   </data>
   <data name="ExecutionFailed" xml:space="preserve">
     <value>ExecutionFailed</value>
+  </data>
+  <data name="ConvertImageSourceToBitmapFail" xml:space="preserve">
+    <value>ConvertImageSourceToBitmapFail</value>
+  </data>
+  <data name="AboutContent" xml:space="preserve">
+    <value>AboutContent</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Email</value>
   </data>
 </root>

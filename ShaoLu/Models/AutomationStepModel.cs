@@ -12,6 +12,8 @@ namespace ShaoLu.Models
         ClickImage,
         TypeText,
         FindImage,
+        ClickImages = 100,
+        FindImages,
         Popup = 1000,
         // 其他步骤类型...
     }

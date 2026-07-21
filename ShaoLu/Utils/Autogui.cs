@@ -2,6 +2,7 @@
 using OpenCvSharp.Extensions;
 using ShaoLu.Services;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -12,6 +13,14 @@ using static ShaoLu.Models.AutoguiModel;
 
 namespace ShaoLu.Utils
 {
+    public class AutoguiImage
+    {
+        public Bitmap Bitmap;
+        public Autogui.Position Position;
+        public OpenCvSharp.Point? PositionOffset;
+        public double Threshold = 0.85;
+
+    }
     public class Autogui
     {
         private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -110,6 +119,55 @@ namespace ShaoLu.Utils
             return res;
         }
 
+        public static List<Apoint> FindImagesOnScreen(List<AutoguiImage> templateImage, double gaptime = 0.2, double timeout = 3, bool signle = false)
+        {
+            if (templateImage == null || templateImage.Count == 0)
+            {
+                throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"));
+            }
+
+            List<Apoint> apoints = [];
+            int gapTimeMs = (int)(gaptime * 1000);
+            int timeoutMs = (int)(timeout * 1000);
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            int i = 0;
+            Bitmap? tempImage = null;
+            while (true)
+            {
+                try
+                {
+                    Apoint res = FindImageOnScreen(templateImage[i].Bitmap, templateImage[i].Threshold, 0, 0);
+                    apoints.Add(res);
+                    if (signle)
+                    {
+                        tempImage?.Dispose();
+                        return apoints;
+                    }
+                    if (apoints.Count >= templateImage.Count)
+                    {
+                        tempImage?.Dispose();
+                        return apoints;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    long elapsedMs = stopwatch.ElapsedMilliseconds;
+                    if (elapsedMs >= timeoutMs)
+                    {
+                        tempImage?.Dispose();
+                        throw ex;
+                    }
+                }
+                Thread.Sleep(gapTimeMs);
+                i++;
+                if (i >= templateImage.Count)
+                {
+                    i = 0;
+                }
+            }
+        }
+
         /// <summary>
         /// 截取全屏
         /// </summary>
@@ -193,7 +251,7 @@ namespace ShaoLu.Utils
             MoveMouseTo(targetX, targetY);
         }
 
-        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, OpenCvSharp.Point? position_offset = null, int clicks = 1, double clickgaptime = 0.1, double threshold = 0.8, double waittime = 0.1, double timeout = 3)
+        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, OpenCvSharp.Point? position_offset = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double waittime = 0.1, double timeout = 3)
         {
             int waitTimeMs = (int)(waittime * 1000);
             int clickGapTimeMs = (int)(clickgaptime * 1000);

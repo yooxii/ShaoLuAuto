@@ -1,6 +1,4 @@
-﻿using WPFDevelopers;
-
-namespace ShaoLu.Models
+﻿namespace ShaoLu.Models
 {
     public class AppSettings
     {

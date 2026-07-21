@@ -171,6 +171,9 @@
   <data name="Setting_Header" xml:space="preserve">
     <value>设置</value>
   </data>
+  <data name="About_Header" xml:space="preserve">
+    <value>关于</value>
+  </data>
   <data name="Settings" xml:space="preserve">
     <value>设置</value>
   </data>
@@ -240,6 +243,9 @@
   <data name="AddImageStep" xml:space="preserve">
     <value>点击图像</value>
   </data>
+  <data name="AddImagesStep" xml:space="preserve">
+    <value>点击图像(多)</value>
+  </data>
   <data name="AddTextStep" xml:space="preserve">
     <value>键入文字</value>
   </data>
@@ -263,6 +269,9 @@
   </data>
   <data name="AddFindImageStep" xml:space="preserve">
     <value>寻找图像</value>
+  </data>
+  <data name="AddFindImagesStep" xml:space="preserve">
+    <value>寻找图像(多)</value>
   </data>
   <data name="DelayBetweenKeys" xml:space="preserve">
     <value>键入文字的间隔时间(s)</value>
@@ -371,5 +380,14 @@
   </data>
   <data name="ExecutionFailed" xml:space="preserve">
     <value>执行失败：</value>
+  </data>
+  <data name="ConvertImageSourceToBitmapFail" xml:space="preserve">
+    <value>将ImageSource转为Bitmap失败</value>
+  </data>
+  <data name="AboutContent" xml:space="preserve">
+    <value>本程序由AcBel ORT制作。如果有任何问题，可以发送邮件到：</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Lucas_Li@acbel.com</value>
   </data>
 </root>

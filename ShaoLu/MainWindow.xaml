@@ -28,6 +28,7 @@
             </MenuItem>
             <MenuItem x:Name="Setting" Header="{lex:Loc}" Click="Setting_Click">
             </MenuItem>
+            <MenuItem x:Name="About" Header="{lex:Loc}" Click="About_Click"/>
             <MenuItem x:Name="Language" Header="{lex:Loc}">
                 <MenuItem x:Name="English" Tag="en-US"  Header="{lex:Loc}" IsChecked="{Binding English}" Click="Language_Click"/>
                 <MenuItem x:Name="SimplifiedChinese" Tag="zh-CN" Header="{lex:Loc}" IsChecked="{Binding Simplified}" Click="Language_Click"/>

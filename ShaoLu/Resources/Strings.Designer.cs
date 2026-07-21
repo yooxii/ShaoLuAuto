@@ -61,11 +61,38 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 About 的本地化字符串。
+        /// </summary>
+        public static string About_Header {
+            get {
+                return ResourceManager.GetString("About_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AboutContent 的本地化字符串。
+        /// </summary>
+        public static string AboutContent {
+            get {
+                return ResourceManager.GetString("AboutContent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Add 的本地化字符串。
         /// </summary>
         public static string Add {
             get {
                 return ResourceManager.GetString("Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AddFindImagesStep 的本地化字符串。
+        /// </summary>
+        public static string AddFindImagesStep {
+            get {
+                return ResourceManager.GetString("AddFindImagesStep", resourceCulture);
             }
         }
         
@@ -84,6 +111,15 @@ namespace ShaoLu.Resources {
         public static string AddIFStep {
             get {
                 return ResourceManager.GetString("AddIFStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AddImagesStep 的本地化字符串。
+        /// </summary>
+        public static string AddImagesStep {
+            get {
+                return ResourceManager.GetString("AddImagesStep", resourceCulture);
             }
         }
         
@@ -232,6 +268,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 ConvertImageSourceToBitmapFail 的本地化字符串。
+        /// </summary>
+        public static string ConvertImageSourceToBitmapFail {
+            get {
+                return ResourceManager.GetString("ConvertImageSourceToBitmapFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Copy 的本地化字符串。
         /// </summary>
         public static string Copy {
@@ -300,6 +345,15 @@ namespace ShaoLu.Resources {
         public static string EditImageTitle {
             get {
                 return ResourceManager.GetString("EditImageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Email 的本地化字符串。
+        /// </summary>
+        public static string Email {
+            get {
+                return ResourceManager.GetString("Email", resourceCulture);
             }
         }
         

@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
-using ShaoLu.Properties;
 using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Views;
@@ -10,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
+using WPFDevelopers;
 
 namespace ShaoLu.Viewmodels
 {
@@ -30,25 +30,24 @@ namespace ShaoLu.Viewmodels
     // ===== App 设置 ViewModel =====
     public partial class AppSettingsViewModel : ObservableObject
     {
-        private string _theme;
+        private bool _themeLight;
         private FontModel _font;
 
-        public string Theme { get => _theme; set => SetProperty(ref _theme, value); }
+        public bool ThemeLight { get => _themeLight; set => SetProperty(ref _themeLight, value); }
         public FontModel Font { get => _font; set => SetProperty(ref _font, value); }
 
         public AppSettingsViewModel(AppSettingsModel model)
         {
-            Theme = model.Theme;
+            ThemeLight = model.ThemeLight;
             Font = model.WindowFont;
         }
 
 
         public void ApplyTo(AppSettingsModel model)
         {
-            model.Theme = Theme;
+            model.ThemeLight = ThemeLight;
             model.WindowFont = Font;
         }
-
 
         [RelayCommand]
         private void FontSelect()
@@ -106,7 +105,7 @@ namespace ShaoLu.Viewmodels
 
         private AppSettings _settings;
 
-        public event Action windowClosed;
+        public event Action WindowClosed;
 
 
         public SettingsCategory SelectedCategory { get => _selectedCategory; set => SetProperty(ref _selectedCategory, value); }
@@ -157,6 +156,7 @@ namespace ShaoLu.Viewmodels
             }
 
             await SettingsService.SaveAsync(Settings);
+            ApplyWindowSettings();
 
             // 可以在这里添加保存成功的提示或关闭窗口逻辑
             string msg = LanguageService.GetLocalizedString("SaveAndBack");
@@ -165,8 +165,15 @@ namespace ShaoLu.Viewmodels
             var res = await popup;
             if (res == PopupButton.Yes.Value)
             {
-                windowClosed?.Invoke();
+                WindowClosed?.Invoke();
             }
+        }
+
+        private void ApplyWindowSettings()
+        {
+            ThemeManager.Instance.SetTheme(Settings.App.ThemeLight ? ThemeType.Light : ThemeType.Dark);
+            System.Windows.Application.Current.MainWindow.FontFamily = new System.Windows.Media.FontFamily(Settings.App.WindowFont.FontFamily);
+            System.Windows.Application.Current.MainWindow.FontSize = Settings.App.WindowFont.FontSize;
         }
     }
 }

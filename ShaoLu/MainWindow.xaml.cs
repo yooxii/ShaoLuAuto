@@ -1,4 +1,5 @@
-﻿using ShaoLu.Services;
+﻿using ShaoLu.Models;
+using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
@@ -17,17 +18,23 @@ namespace ShaoLu
         private readonly Viewmodels.MainViewModel mainViewModel = SingletonLocator.Main;
         private readonly Viewmodels.StepsViewModel stepsViewModel = SingletonLocator.Steps;
         readonly FileServices fileServer = SingletonLocator.FileServices;
+        readonly AppSettings appSettings = SingletonLocator.Settings;
+
         public MainWindow()
         {
             InitializeComponent();
             DataContext = mainViewModel;
 
             Loaded += MainWindow_Loaded;
+
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Check_current_lang();
+
+            FontFamily = new System.Windows.Media.FontFamily(appSettings.App.WindowFont.FontFamily);
+            FontSize = appSettings.App.WindowFont.FontSize;
         }
 
         #region 输入校验

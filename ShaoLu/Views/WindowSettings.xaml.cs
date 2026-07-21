@@ -14,7 +14,7 @@ namespace ShaoLu.Views
             InitializeComponent();
             DataContext = settingsVM;
 
-            settingsVM.windowClosed += () => this.Close();
+            settingsVM.WindowClosed += () => this.Close();
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

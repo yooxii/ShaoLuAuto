@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using NLog;
-using ShaoLu;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -14,8 +13,6 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
-using WPFDevelopers.Controls;
-using WPFLocalizeExtension.Engine;
 
 namespace ShaoLu.Viewmodels.AutomationStep
 {
@@ -251,8 +248,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private ImageSource LoadImage(string imagePath)
         {
-            var error_msg2 = "";
-            string error_msg1;
             ImageSource res;
             if (!string.IsNullOrEmpty(imagePath) && System.IO.File.Exists(imagePath))
             {

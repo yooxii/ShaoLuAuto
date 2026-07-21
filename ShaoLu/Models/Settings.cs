@@ -1,4 +1,6 @@
-﻿namespace ShaoLu.Models
+﻿using WPFDevelopers;
+
+namespace ShaoLu.Models
 {
     public class AppSettings
     {
@@ -8,7 +10,7 @@
 
     public class AppSettingsModel
     {
-        public string Theme { get; set; } = "Light";
+        public bool ThemeLight { get; set; } = true;
         public double WindowWidth { get; set; } = 1000;
         public double WindowHeight { get; set; } = 600;
 

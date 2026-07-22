@@ -68,16 +68,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public Rect _croppedRect;
         private int _offsetX = 0;
         private int _offsetY = 0;
+        private bool _hasOffset = false;
         private double _similarityThreshold = 0.85;
 
         public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
 
         [JsonIgnore]
-        public OpenCvSharp.Point Offset => new(OffsetX, OffsetY);
+        public System.Drawing.Point Offset => new(OffsetX, OffsetY);
 
         public int OffsetX { get => _offsetX; set => SetProperty(ref _offsetX, value); }
 
         public int OffsetY { get => _offsetY; set => SetProperty(ref _offsetY, value); }
+
+        public bool HasOffset { get => _hasOffset; set => SetProperty(ref _hasOffset, value); }
 
         public double SimilarityThreshold
         {
@@ -86,7 +89,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 if (SetProperty(ref _similarityThreshold, value))
                 {
-                    _similarityThreshold = _similarityThreshold < 0 ? 0 : _similarityThreshold > 1 ? 1 : _similarityThreshold;
+                    if (_similarityThreshold < 0)
+                    {
+                        _similarityThreshold = 0;
+                    }
+                    else if (_similarityThreshold > 1)
+                    {
+                        _similarityThreshold = 1;
+                    }
                 }
             }
         }
@@ -121,12 +131,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 windowEditImage.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
-                    windowEditImage.editImageViewModel.ImgSrcWidth = ImgSrcWidth;
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
                     windowEditImage.editImageViewModel.CropRect = CroppedRect;
-                    windowEditImage.editImageViewModel.SetOffset(new Point(OffsetX, OffsetY));
+                    if (HasOffset)
+                        windowEditImage.editImageViewModel.SetOffset(Offset);
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
-                windowEditImage.editImageViewModel.OnImageSaved += (img, rect, offset) => { CroppedImg = img; CroppedRect = rect; OffsetX = offset.X; OffsetY = offset.Y; };
+                windowEditImage.editImageViewModel.OnImageSaved += (img, rect, offset) =>
+                {
+                    CroppedImg = img;
+                    CroppedRect = rect;
+                    OffsetX = (int)offset.X;
+                    OffsetY = (int)offset.Y;
+                    HasOffset = offset != null;
+                };
             }
         }
 

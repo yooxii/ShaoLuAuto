@@ -3,7 +3,6 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 
 namespace ShaoLu.Views
 {
@@ -23,16 +22,16 @@ namespace ShaoLu.Views
         private void CropImage_Click(object sender, RoutedEventArgs e)
         {
             editImageViewModel.ImgDst = EditImage.CurrentAreaBitmap;
+            editImageViewModel.CropRect = EditImage.CurrentRect;
+            editImageViewModel.ThumbVisibility = Visibility.Visible;
+            GetClickPoint();
         }
 
         private void SaveImage_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is EditImageViewModel vm)
             {
-                var croppedImg = editImageViewModel.ImgDst;
-                var croppedRect = EditImage.CurrentRect;
-
-                vm.SaveCroppedImage(croppedImg, croppedRect);
+                vm.SaveCroppedImage();
 
                 WindowAsyncPopup.Show("Save Success!", "Success", PopupButtons.OK, MessageBoxImage.Information);
             }
@@ -43,17 +42,33 @@ namespace ShaoLu.Views
             this.Close();
         }
 
+        private void GetClickPoint()
+        {
+            var vm = this.DataContext as EditImageViewModel;
+            // 1. 获取当前 Canvas 中的位置
+            double currentLeft = Canvas.GetLeft(ClickPointThumb);
+            double currentTop = Canvas.GetTop(ClickPointThumb);
+
+            double thumbSize = ClickPointThumb.Width;
+            double centerX = currentLeft + (thumbSize / 2);
+            double centerY = currentTop + (thumbSize / 2);
+
+            vm.SaveOffset(new Point(centerX, centerY));
+        }
 
         private void ClickPointThumb_DragDelta(object sender, DragDeltaEventArgs e)
         {
-            if (sender is not Thumb thumb) return;
+            if (sender is not Thumb) return;
 
             var vm = this.DataContext as EditImageViewModel;
-            if (vm?.ImgDst == null) return;
+            if (vm?.ImgSrc == null) return;
+
+            double horizontalChange = e.HorizontalChange;
+            double verticalChange = e.VerticalChange;
 
             // 1. 获取当前 Canvas 中的位置
-            double currentLeft = Canvas.GetLeft(thumb);
-            double currentTop = Canvas.GetTop(thumb);
+            double currentLeft = Canvas.GetLeft(ClickPointThumb);
+            double currentTop = Canvas.GetTop(ClickPointThumb);
 
             // 处理初始 NaN 的情况
             if (double.IsNaN(currentLeft)) currentLeft = 0;
@@ -70,15 +85,15 @@ namespace ShaoLu.Views
             // 然后最后计算 Offset 时加上半径。
 
             // 但更通用的“手柄”逻辑是：
-            double newLeft = currentLeft + e.HorizontalChange;
-            double newTop = currentTop + e.VerticalChange;
+            double newLeft = currentLeft + horizontalChange;
+            double newTop = currentTop + verticalChange;
 
             // 3. 边界检查 (基于图片原始像素大小)
             // 注意：ImgDst.Width 是双精度，可能包含小数，建议用 PixelWidth/PixelHeight 如果是 BitmapSource
-            double imgWidth = vm.ImgDst is System.Windows.Media.Imaging.BitmapSource bmp ? bmp.PixelWidth : vm.ImgDst.Width;
-            double imgHeight = vm.ImgDst is System.Windows.Media.Imaging.BitmapSource bmp2 ? bmp2.PixelHeight : vm.ImgDst.Height;
+            double imgWidth = vm.ImgSrc is System.Windows.Media.Imaging.BitmapSource bmp ? bmp.PixelWidth : vm.ImgSrc.Width;
+            double imgHeight = vm.ImgSrc is System.Windows.Media.Imaging.BitmapSource bmp2 ? bmp2.PixelHeight : vm.ImgSrc.Height;
 
-            double thumbSize = editImageViewModel.ThumbSize;
+            double thumbSize = ClickPointThumb.Width;
 
             // 限制 Left
             newLeft = Math.Max(-thumbSize / 2, Math.Min(newLeft, imgWidth - thumbSize / 2));
@@ -86,14 +101,15 @@ namespace ShaoLu.Views
             newTop = Math.Max(-thumbSize / 2, Math.Min(newTop, imgHeight - thumbSize / 2));
 
             // 4. 更新 UI
-            Canvas.SetLeft(thumb, newLeft);
-            Canvas.SetTop(thumb, newTop);
+            Canvas.SetLeft(ClickPointThumb, newLeft);
+            Canvas.SetTop(ClickPointThumb, newTop);
 
             // 5. 更新 ViewModel (计算中心点坐标)
             double centerX = newLeft + (thumbSize / 2);
             double centerY = newTop + (thumbSize / 2);
 
-            vm.SetOffset(new Point(centerX, centerY));
+            vm.SaveOffset(new Point(centerX, centerY));
         }
+
     }
 }

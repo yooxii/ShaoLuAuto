@@ -17,7 +17,7 @@ namespace ShaoLu.Utils
     {
         public Bitmap Bitmap;
         public Autogui.Position Position;
-        public OpenCvSharp.Point? PositionOffset;
+        public System.Drawing.Point? PositionOffset;
         public double Threshold = 0.85;
 
     }
@@ -199,7 +199,7 @@ namespace ShaoLu.Utils
         /// <param name="point">给定的位置区域</param>
         /// <param name="position">锚点位置：0-中心, 1-左上, 2-右上, 3-左下, 4-右下</param>
         /// <param name="position_offset">相对于锚点的像素偏移量</param>
-        public static void MoveMouseTo(Apoint point, Position position = Position.Center, OpenCvSharp.Point? position_offset = null)
+        public static void MoveMouseTo(Apoint point, Position position = Position.Center, System.Drawing.Point? position_offset = null)
         {
             // 1. 防御性检查：如果点无效或为空，直接返回
             if (point == null || point.IsEmpty)
@@ -242,8 +242,8 @@ namespace ShaoLu.Utils
             // 3. 应用偏移量
             if (position_offset.HasValue)
             {
-                targetX += position_offset.Value.X;
-                targetY += position_offset.Value.Y;
+                targetX += (int)position_offset.Value.X;
+                targetY += (int)position_offset.Value.Y;
             }
 
             // 4. 执行移动
@@ -251,7 +251,7 @@ namespace ShaoLu.Utils
             MoveMouseTo(targetX, targetY);
         }
 
-        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, OpenCvSharp.Point? position_offset = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double waittime = 0.1, double timeout = 3)
+        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, System.Drawing.Point? position_offset = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double waittime = 0.1, double timeout = 3)
         {
             int waitTimeMs = (int)(waittime * 1000);
             int clickGapTimeMs = (int)(clickgaptime * 1000);

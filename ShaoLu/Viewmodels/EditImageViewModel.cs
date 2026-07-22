@@ -2,7 +2,6 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace ShaoLu.Viewmodels
 {
@@ -13,23 +12,9 @@ namespace ShaoLu.Viewmodels
         public ImageSource ImgSrc
         {
             get => _imgSrc;
-            set => SetProperty(ref _imgSrc, value);
-        }
-
-        private double _imgSrcWidth;
-        public double ImgSrcWidth
-        {
-            get => _imgSrcWidth;
-            set => SetProperty(ref _imgSrcWidth, value);
-        }
-
-        private ImageSource _imgDst;
-        public ImageSource ImgDst
-        {
-            get => _imgDst;
             set
             {
-                if (SetProperty(ref _imgDst, value))
+                if (SetProperty(ref _imgSrc, value))
                 {
                     if (value is ImageSource img)
                     {
@@ -41,6 +26,13 @@ namespace ShaoLu.Viewmodels
             }
         }
 
+        private ImageSource _imgDst;
+        public ImageSource ImgDst
+        {
+            get => _imgDst;
+            set => SetProperty(ref _imgDst, value);
+        }
+
         private Rect _cropRect;
         public Rect CropRect
         {
@@ -48,23 +40,38 @@ namespace ShaoLu.Viewmodels
             set => SetProperty(ref _cropRect, value);
         }
 
-        public OpenCvSharp.Point ClickOffset => new((int)OffsetX, (int)OffsetY);
+        public Point ClickOffset => new(OffsetX, OffsetY);
 
         private double _offsetX = 0;
         public double OffsetX
         {
             get => _offsetX;
-            set { if (SetProperty(ref _offsetX, value)) { ThumbX = _offsetX - ThumbSize / 2; } }
+            set
+            {
+                if (SetProperty(ref _offsetX, value))
+                {
+                    ThumbX = _offsetX - (ThumbSize / 2) + _cropRect.X;
+                }
+            }
         }
 
         private double _offsetY = 0;
         public double OffsetY
         {
             get => _offsetY;
-            set { if (SetProperty(ref _offsetY, value)) { ThumbY = _offsetY - ThumbSize / 2; } }
+            set
+            {
+                if (SetProperty(ref _offsetY, value))
+                {
+                    ThumbY = _offsetY - ThumbSize / 2 + _cropRect.Y;
+                }
+            }
         }
 
         public double ThumbSize => 20;
+
+        private Visibility _thumbVisibility = Visibility.Hidden;
+        public Visibility ThumbVisibility { get => _thumbVisibility; set => SetProperty(ref _thumbVisibility, value); }
 
         private double _thumbX;
         public double ThumbX { get => _thumbX; set => SetProperty(ref _thumbX, value); }
@@ -72,22 +79,29 @@ namespace ShaoLu.Viewmodels
         private double _thumbY;
         public double ThumbY { get => _thumbY; set => SetProperty(ref _thumbY, value); }
 
-        public event Action<ImageSource, Rect, OpenCvSharp.Point> OnImageSaved;
+        public event Action<ImageSource, Rect, Point> OnImageSaved;
 
-        public void SaveCroppedImage(ImageSource croppedImage, Rect rect)
+        public void SaveCroppedImage()
         {
-            if (croppedImage != null)
+            if (ImgDst != null)
             {
-                OnImageSaved?.Invoke(croppedImage, rect, ClickOffset);
+                OnImageSaved?.Invoke(ImgDst, CropRect, ClickOffset);
             }
         }
 
-        public void SetOffset(Point offset)
+        public void SaveOffset(Point offset)
         {
             if (offset == null) return;
-            if (offset.X < 0 || offset.Y < 0) return;
+            var tmp = offset - CropRect.TopLeft;
+            OffsetX = tmp.X;
+            OffsetY = tmp.Y;
+        }
+
+        public void SetOffset(System.Drawing.Point offset)
+        {
+            if (offset == null) return;
             OffsetX = offset.X;
             OffsetY = offset.Y;
-        } 
+        }
     }
 }

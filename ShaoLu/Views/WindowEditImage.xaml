@@ -11,58 +11,60 @@
         xmlns:local="clr-namespace:ShaoLu.Views"
         xmlns:viewmodels="clr-namespace:ShaoLu.Viewmodels"
         d:DataContext="{d:DesignInstance Type=viewmodels:EditImageViewModel}"
-        Title="{lex:Loc EditImageTitle}" Height="Auto" Width="Auto">
+        Title="{lex:Loc EditImageTitle}" Height="Auto" Width="Auto"
+        MinHeight="200" MinWidth="200">
     <!--xmlns:imgtool="clr-namespace:ImageTool"-->
-    <wd:WDScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <wd:WDScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="5"/>
                     <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
-                <Viewbox Width="{Binding ImgSrcWidth}">
-                    <wd:CropImage x:Name="EditImage" Margin="5" Source="{Binding ImgSrc}"/>
-                </Viewbox>
-                <GroupBox Header="{lex:Loc Preview}" Grid.Row="2">
-                    <Grid>
-                        <Image x:Name="PreviewImage" Source="{Binding ImgDst}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <Canvas HorizontalAlignment="Center"
+                <Grid>
+                    <Viewbox Width="{Binding ImgSrc.Width}">
+                        <wd:CropImage x:Name="EditImage" Margin="5" Source="{Binding ImgSrc}"/>
+                    </Viewbox>
+                    <Canvas HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Width="{Binding ActualWidth, ElementName=PreviewImage}"
-                                Height="{Binding ActualHeight, ElementName=PreviewImage}">
-                            <Thumb x:Name="ClickPointThumb"
-                                   Canvas.Left="{Binding ThumbX}"
-                                   Canvas.Top="{Binding ThumbY}"
-                                   DragDelta="ClickPointThumb_DragDelta"
-                                   Width="{Binding ThumbSize}" Height="{Binding ThumbSize}">
-                                <Thumb.Template>
-                                    <ControlTemplate>
-                                        <Grid>
-                                            <Ellipse Fill="Red" Stroke="White" StrokeThickness="2" Opacity="0.8"/>
-                                            <Path Data="M 0,10 L 20,10 M 10,0 L 10,20" Stroke="White" StrokeThickness="2"/>
-                                        </Grid>
-                                    </ControlTemplate>
-                                </Thumb.Template>
-                            </Thumb>
-                        </Canvas>
-                    </Grid>
+                                Width="{Binding ImgSrc.Width}"
+                                Height="{Binding ImgSrc.Height}">
+                        <Thumb x:Name="ClickPointThumb"
+                                Visibility="{Binding ThumbVisibility}"
+                                Canvas.Left="{Binding ThumbX}"
+                                Canvas.Top="{Binding ThumbY}"
+                                DragDelta="ClickPointThumb_DragDelta"
+                                Width="{Binding ThumbSize}" Height="{Binding ThumbSize}">
+                            <Thumb.Template>
+                                <ControlTemplate>
+                                    <Grid>
+                                        <Ellipse Fill="Red" Stroke="White" StrokeThickness="2" Opacity="0.8"/>
+                                        <Path Data="M 0,10 L 20,10 M 10,0 L 10,20" Stroke="White" StrokeThickness="2"/>
+                                    </Grid>
+                                </ControlTemplate>
+                            </Thumb.Template>
+                        </Thumb>
+                    </Canvas>
+                </Grid>
+                <GroupBox Header="{lex:Loc Preview}" Grid.Row="2">
+                    <Image x:Name="PreviewImage" Source="{Binding ImgDst}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </GroupBox>
             </Grid>
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Button x:Name="CropImage" Margin="5" Content="{lex:Loc Crop}" Click="CropImage_Click"/>
-                <Button x:Name="SaveImage" Margin="5" Grid.Column="1" Content="{lex:Loc Save}" Click="SaveImage_Click"/>
-                <Button x:Name="Back" Margin="5" Grid.Column="2" Content="{lex:Loc Back}" Click="Back_Click"/>
-            </Grid>
+        </wd:WDScrollViewer>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="CropImage" Margin="5" Content="{lex:Loc Crop}" Click="CropImage_Click"/>
+            <Button x:Name="SaveImage" Margin="5" Grid.Column="1" Content="{lex:Loc Save}" Click="SaveImage_Click"/>
+            <Button x:Name="Back" Margin="5" Grid.Column="2" Content="{lex:Loc Back}" Click="Back_Click"/>
         </Grid>
-    </wd:WDScrollViewer>
+    </Grid>
 </Window>

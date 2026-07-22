@@ -1,5 +1,6 @@
 ﻿using ShaoLu.Utils;
 using ShaoLu.Viewmodels;
+using System.Windows;
 using System.Windows.Controls;
 using WPFDevelopers.Controls;
 
@@ -26,6 +27,26 @@ namespace ShaoLu.Views
         {
             var btn = (SplitButton)sender;
             if (btn.CommandParameter is string type)
+            {
+                stepsViewModel.AddStepCommand.Execute(type);
+            }
+        }
+
+        private void MenuItemAddTextStep_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = (MenuItem)sender;
+            AddTextStep.CommandParameter = menuItem.CommandParameter;
+            if (menuItem.CommandParameter is string type)
+            {
+                stepsViewModel.AddStepCommand.Execute(type);
+            }
+        }
+
+        private void MenuItemAddImageStep_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = (MenuItem)sender;
+            AddImageStep.CommandParameter = menuItem.CommandParameter;
+            if (menuItem.CommandParameter is string type)
             {
                 stepsViewModel.AddStepCommand.Execute(type);
             }

@@ -4,14 +4,7 @@ using ShaoLu.Services;
 using ShaoLu.Viewmodels;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
-using WPFLocalizeExtension.Engine;
 
 namespace ShaoLu
 {
@@ -62,7 +55,7 @@ namespace ShaoLu
             Logger.Info("Dispose ImageRecognitionBase...");
             var fileServices = Ioc.Default.GetService<FileServices>();
             var stepsViewModel = Ioc.Default.GetService<StepsViewModel>();
-            foreach(var step in stepsViewModel.AutomationStepBases)
+            foreach (var step in stepsViewModel.AutomationStepBases)
             {
                 if (step is ImageRecognitionBase imageRecognitionStep)
                 {

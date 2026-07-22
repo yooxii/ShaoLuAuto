@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Expression.Drawing.Core;
 using NLog;
 using ShaoLu.Models;
 using ShaoLu.Services;
@@ -8,14 +9,13 @@ using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
 
 namespace ShaoLu.Viewmodels.AutomationStep
 {
@@ -129,479 +129,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
         // 其他公共属性...
     }
 
-    // 图像基类
-    public abstract class ImageRecognitionBase : AutomationStepBase, IDisposable
-    {
-        readonly PathServices pathServices = new();
-        readonly FileServices fileServer = SingletonLocator.FileServices;
-        private bool _isDisposed = false;
-
-        #region 属性
-
-        private string _imagePath;
-        private string _croppedImagePath;
-        private ImageSource _croppedImg;
-
-        public string ImagePath
-        {
-            get => _imagePath;
-            set => SetProperty(ref _imagePath, value);
-        }
-
-        [JsonIgnore]
-        public ImageSource ImgSrc => LoadImage(ImagePath);
-
-        public double ImgSrcWidth => (ImgSrc?.Width ?? 0);
-
-        public string CroppedImagePath
-        {
-            get => _croppedImagePath; set => SetProperty(ref _croppedImagePath, value);
-        }
-
-        [JsonIgnore]
-        public ImageSource CroppedImg
-        {
-            get
-            {
-                if (System.IO.File.Exists(CroppedImagePath))
-                    _croppedImg ??= LoadImage(CroppedImagePath);
-                return _croppedImg;
-            }
-            set
-            {
-                if (SetProperty(ref _croppedImg, value))
-                {
-                    if (value != null)
-                    {
-                        // 当裁剪图更新时，自动保存到磁盘
-                        SaveCroppedImageToDisk(value);
-                    }
-                }
-            }
-        }
-
-        #region 图像属性
-
-        public Rect _croppedRect;
-        private int _offsetX = 0;
-        private int _offsetY = 0;
-        private double _similarityThreshold = 0.85;
-
-        public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
-
-        [JsonIgnore]
-        public OpenCvSharp.Point Offset => new(OffsetX, OffsetY);
-
-        public int OffsetX { get => _offsetX; set => SetProperty(ref _offsetX, value); }
-
-        public int OffsetY { get => _offsetY; set => SetProperty(ref _offsetY, value); }
-
-        public double SimilarityThreshold
-        {
-            get => _similarityThreshold;
-            set
-            {
-                if (SetProperty(ref _similarityThreshold, value))
-                {
-                    _similarityThreshold = _similarityThreshold < 0 ? 0 : _similarityThreshold > 1 ? 1 : _similarityThreshold;
-                }
-            }
-        }
-        #endregion
-
-        #endregion
-
-        #region 命令
-
-        private RelayCommand selectImageCommand;
-        [JsonIgnore]
-        public ICommand SelectImageCommand => selectImageCommand ??= new RelayCommand(SelectImage);
-
-        private void SelectImage()
-        {
-            var title = LanguageService.GetLocalizedString("Select_target_pic", "Open Image File");
-            var filter = LanguageService.GetLocalizedString("Image_File", "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
-            ImagePath = pathServices.OpenPathDialog(title, filter);
-        }
-
-        private RelayCommand eidtImageCommand;
-        [JsonIgnore]
-        public ICommand EditImageCommand => eidtImageCommand ??= new RelayCommand(EditImage);
-
-        private void EditImage()
-        {
-            if (ImgSrc != null)
-            {
-                WindowEditImage windowEditImage = new();
-                windowEditImage.Show();
-                // 延迟赋值，等待 UI 线程完成当前布局和渲染
-                windowEditImage.Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
-                    windowEditImage.editImageViewModel.ImgSrcWidth = ImgSrcWidth;
-                    windowEditImage.editImageViewModel.ImgDst = CroppedImg;
-                    windowEditImage.editImageViewModel.CropRect = CroppedRect;
-                    windowEditImage.editImageViewModel.SetOffset(new Point(OffsetX, OffsetY));
-                }), System.Windows.Threading.DispatcherPriority.Loaded);
-                windowEditImage.editImageViewModel.OnImageSaved += (img, rect, offset) => { CroppedImg = img; CroppedRect = rect; OffsetX = offset.X; OffsetY = offset.Y; };
-            }
-        }
-
-        #endregion
-
-        private ImageSource LoadImage(string imagePath)
-        {
-            ImageSource res;
-            if (!string.IsNullOrEmpty(imagePath) && System.IO.File.Exists(imagePath))
-            {
-                try
-                {
-                    // 添加 CacheOption.OnLoad 以允许文件在加载后被删除或移动（如果需要）
-                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(imagePath);
-                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    bitmap.Freeze(); // 冻结以提高性能并允许跨线程访问
-                    IsError = false;
-                    return bitmap;
-                }
-                catch (Exception ex)
-                {
-                    // Handle exceptions (e.g., invalid image format)
-                    IsError = true;
-                    ErrorMessage = LanguageService.GetLocalizedString("Loading_img_Warning", "Error loading image");
-                    _logger.Error(ex, ErrorMessage);
-                }
-            }
-            else
-            {
-                IsError = true;
-                ErrorMessage = LanguageService.GetLocalizedString("No_img_Warning", "Error loading image");
-            }
-
-            res = null;
-            //var Warning_Title = LanguageService.GetLocalizedString("Warning", "Warning");
-            //WindowAsyncPopup.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", PopupButtons.OK, MessageBoxImage.Warning);
-            return res;
-        }
-
-        #region 文件操作
-
-        /// <summary>
-        /// 将裁剪后的图片保存到原图所在目录，文件名添加 Cropped_ 前缀
-        /// </summary>
-        public void SaveCroppedImageToDisk(ImageSource imageSource)
-        {
-            if (imageSource == null || string.IsNullOrEmpty(ImagePath))
-                return;
-
-            try
-            {
-                var fullpath = GetCroppedImageSavePath(out string extension);
-                // 【关键】如果路径变了，且旧路径存在，标记旧路径为待删除
-                if (!string.IsNullOrEmpty(_croppedImagePath) && _croppedImagePath != fullpath)
-                {
-                    // 只有当这个步骤是“未保存”状态时，我们才清理旧的临时文件
-                    // 如果 IsSave 为 true，说明用户已经正式保存过，旧文件可能是有用的历史版本，暂不删除
-                    if (!IsSave)
-                    {
-                        fileServer.MarkForDeletion(_croppedImagePath);
-                    }
-                }
-
-                // 2. 转换 ImageSource 为 Bitmap 并保存
-                if (imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource)
-                {
-                    var encoder = GetEncoderByExtension(extension);
-                    if (encoder != null)
-                    {
-                        using (var stream = new System.IO.FileStream(fullpath, System.IO.FileMode.Create))
-                        {
-                            encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmapSource));
-                            encoder.Save(stream);
-                            CroppedImagePath = fullpath;
-                        }
-
-                        // 可选：更新 ImagePath 指向新保存的裁剪图？
-                        // 通常自动化步骤中，ImagePath 指向的是“模板图”，而 CroppedImg 是运行时截图或局部图。
-                        // 这里我们只保存文件，不改变 ImagePath 绑定，以免混淆“模板”与“实例”。
-                        _logger.Info("Cropped image saved to: {0}", fullpath);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Failed to save cropped image: ");
-            }
-        }
-
-        private string GetCroppedImageSavePath(out string extension)
-        {
-            extension = null;
-            string fullPath;
-            // 1. 确定保存路径
-            if (string.IsNullOrEmpty(ImagePath)) return null;
-            string directory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ImagePath), "CropedImage");
-            if (!System.IO.Directory.Exists(directory))
-            {
-                System.IO.Directory.CreateDirectory(directory);
-            }
-            string fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(ImagePath);
-            extension = System.IO.Path.GetExtension(ImagePath);
-
-            // 保持与原图相同的格式，或者统一转为 PNG 以保证质量
-            if (string.IsNullOrEmpty(extension)) extension = ".png";
-
-            string newFileName = $"Cropped_{fileNameWithoutExt}_{Uid}{extension}";
-
-            // 确保路径合法，防止路径遍历攻击（虽然 ImagePath 通常来自 OpenFileDialog，但仍需防御）
-            fullPath = System.IO.Path.Combine(directory, newFileName);
-            return fullPath;
-        }
-
-        private System.Windows.Media.Imaging.BitmapEncoder GetEncoderByExtension(string extension)
-        {
-            return extension.ToLower() switch
-            {
-                ".jpg" or ".jpeg" => new System.Windows.Media.Imaging.JpegBitmapEncoder(),
-                ".bmp" => new System.Windows.Media.Imaging.BmpBitmapEncoder(),
-                ".gif" => new System.Windows.Media.Imaging.GifBitmapEncoder(),
-                _ => new System.Windows.Media.Imaging.PngBitmapEncoder(),// PNG 无损，推荐
-            };
-        }
-
-
-        #region IDisposable Implementation
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_isDisposed)
-            {
-                if (disposing)
-                {
-                    // 释放托管资源
-                    // 当步骤被移除时，立即标记其裁剪图为待删除
-                    if (!IsSave)
-                        fileServer.MarkForDeletion(CroppedImagePath);
-
-                    // 如果有其他需要释放的资源（如 Bitmap 对象），在这里释放
-                    _croppedImg = null;
-                }
-
-                _isDisposed = true;
-            }
-        }
-
-        // 保留析构函数作为安全网，但主要逻辑已移至 Dispose
-        ~ImageRecognitionBase()
-        {
-            Dispose(false);
-        }
-
-        #endregion
-
-        #endregion
-    }
-
-    public class ImageRecognition : ImageRecognitionBase
-    {
-        public override AutomationStepBase Clone()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task<bool> RunAsync(CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public abstract partial class ImagesRecognitionBase : AutomationStepBase
-    {
-
-        private ObservableCollection<ImageRecognition> _images = [new ImageRecognition()];
-        public ObservableCollection<ImageRecognition> Images { get => _images; set => SetProperty(ref _images, value); }
-
-        private bool _oneByOne = false;
-        public bool OneByOne { get => _oneByOne; set => SetProperty(ref _oneByOne, value); }
-
-        [RelayCommand]
-        public void AddImage()
-        {
-            if (_images != null)
-                Images.Add(new ImageRecognition());
-        }
-
-        [RelayCommand]
-        public void DelImage()
-        {
-            if (_images != null && _images.Count > 1)
-                Images.RemoveAt(Images.Count - 1);
-        }
-    }
-
-    // 识图步骤
-    public class ClickImageStep : ImageRecognitionBase
-    {
-        private int _clicks = 1;
-        public int Clicks { get => _clicks; set => SetProperty(ref _clicks, value); }
-
-
-        private double _clickGap = 0.1;
-        public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
-
-
-        private double _waitTime = 0;
-        public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
-
-
-        private double _timeout = 3;
-        public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
-
-        public ClickImageStep() : base()
-        {
-            Type = StepType.ClickImage;
-        }
-        public ClickImageStep(string name) : base()
-        {
-            Type = StepType.ClickImage;
-            Name = name;
-        }
-        public ClickImageStep(string name, string description) : base()
-        {
-            Type = StepType.ClickImage;
-            Name = name;
-            Description = description;
-        }
-
-        public override AutomationStepBase Clone()
-        {
-            var res = new ClickImageStep(Name, Description)
-            {
-                Type = Type,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
-                ImagePath = ImagePath,
-                CroppedImg = CroppedImg,
-                CroppedRect = CroppedRect,
-                OffsetX = OffsetX,
-                OffsetY = OffsetY,
-                SimilarityThreshold = SimilarityThreshold,
-                Clicks = Clicks,
-                ClickGap = ClickGap,
-                WaitTime = WaitTime,
-                Timeout = Timeout,
-            };
-            res.SaveCroppedImageToDisk(res.CroppedImg);
-            return res;
-        }
-
-        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
-        {
-            var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for clicking.");
-
-            var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-            var res = await Task.Run(() =>
-            {
-                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offset, SimilarityThreshold, Clicks, ClickGap, WaitTime, Timeout);
-            });
-            IsTrue = res;
-            IsError = false;
-
-            return IsTrue;
-        }
-    }
-
-    public class ClickImagesStep : ImagesRecognitionBase
-    {
-        private int _clicks = 1;
-        public int Clicks { get => _clicks; set => SetProperty(ref _clicks, value); }
-
-
-        private double _clickGap = 0.1;
-        public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
-
-
-        private double _waitTime = 0;
-        public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
-
-
-        private double _timeout = 3;
-        public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
-
-
-        public ClickImagesStep()
-        {
-            Type = StepType.ClickImages;
-        }
-        public ClickImagesStep(string name)
-        {
-            Name = name;
-            Type = StepType.ClickImages;
-        }
-        public ClickImagesStep(string name, string description)
-        {
-            Name = name;
-            Description = description;
-            Type = StepType.ClickImages;
-        }
-
-        public override AutomationStepBase Clone()
-        {
-            var res = new ClickImagesStep(Name, Description)
-            {
-                Type = Type,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
-                IsTrue = IsTrue,
-                OneByOne = OneByOne,
-                Images = Images,
-                Clicks = Clicks,
-                ClickGap = ClickGap,
-                WaitTime = WaitTime,
-                Timeout = Timeout
-            };
-            return res;
-        }
-
-        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
-        {
-            bool res = false;
-            foreach (var image in Images)
-            {
-                var sourceImage = (image.CroppedImg ?? image.ImgSrc) ?? throw new Exception("No image available for clicking.");
-                var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-                res = await Task.Run(() =>
-                {
-                    return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, image.Offset, image.SimilarityThreshold, Clicks, ClickGap, WaitTime, Timeout);
-                });
-            }
-            IsTrue = res;
-            IsError = false;
-
-            return IsTrue;
-        }
-    }
 
     // 输入文字步骤
     public class TypeTextStep : AutomationStepBase
     {
-
         private string _textToType;
+        private double _delayBetweenKeys = 0.01;
+
+        /// <summary>
+        /// 输入内容
+        /// </summary>
         public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
 
-
-        private double _delayBetweenKeys = 0.01;
         public double DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
 
-
+        #region 构造
         public TypeTextStep() : base()
         {
             Type = StepType.TypeText;
@@ -626,6 +168,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 DelayBetweenKeys = DelayBetweenKeys
             };
         }
+        #endregion
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
@@ -639,119 +182,222 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
     }
 
-    // 条件步骤
-    public class FindImageStep : ImageRecognitionBase
+    public class TypeTextMoreStep : AutomationStepBase
     {
+        readonly PathServices pathServices = new();
+        readonly FileServices fileServices = SingletonLocator.FileServices;
 
-        private double _gaptime = 0.1;
-        public double GapTime { get => _gaptime; set => SetProperty(ref _gaptime, value); }
+        private string _filePath;
+        private string _textToType;
+        private double _delayBetweenKeys = 0.01;
+        private string _prefix;
+        private string _infix;
+        private string _suffix;
+        private int _index = 0;
+        private ObservableCollection<string> _contents = [];
+        private ObservableCollection<string> _previewContents = [];
+        private string _delimiter = "\n,\r,\n\r,";
 
 
-        private double _timeout = 3;
-        public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
+        public string FilePath { get => _filePath; set => SetProperty(ref _filePath, value); }
 
-        public FindImageStep() : base()
+        /// <summary>
+        /// 输入内容
+        /// </summary>
+        public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
+
+        public double DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
+
+        public string Prefix { get => _prefix; set => SetProperty(ref _prefix, value); }
+
+        public string Infix { get => _infix; set => SetProperty(ref _infix, value); }
+
+        public string Suffix { get => _suffix; set => SetProperty(ref _suffix, value); }
+
+        public int Index { get => _index; set => SetProperty(ref _index, value); }
+
+        /// <summary>
+        /// 待输入内容
+        /// </summary>
+        public ObservableCollection<string> Contents { get => _contents; set => SetProperty(ref _contents, value); }
+
+        /// <summary>
+        /// 待输入内容的预览
+        /// </summary>
+        public ObservableCollection<string> PreviewContents { get => _previewContents; set => SetProperty(ref _previewContents, value); }
+
+        /// <summary>
+        /// 分割符
+        /// </summary>
+        public string Delimiter { get => _delimiter; set => SetProperty(ref _delimiter, value); }
+
+        #region 构造
+        public TypeTextMoreStep() : base()
         {
-            Type = StepType.FindImage;
+            Type = StepType.TypeTextMore;
         }
-        public FindImageStep(string name) : base()
+        public TypeTextMoreStep(string name) : base()
         {
-            Type = StepType.FindImage;
+            Type = StepType.TypeTextMore;
             Name = name;
         }
-        public FindImageStep(string name, string description) : base()
+        public TypeTextMoreStep(string name, string description) : base()
         {
-            Type = StepType.FindImage;
+            Type = StepType.TypeTextMore;
             Name = name;
             Description = description;
         }
 
         public override AutomationStepBase Clone()
         {
-            var res = new FindImageStep(Name, Description)
+            return new TypeTextMoreStep(Name, Description)
             {
-                Type = Type,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
-                ImagePath = ImagePath,
-                CroppedImg = CroppedImg,
-                CroppedRect = CroppedRect,
-                SimilarityThreshold = SimilarityThreshold,
-                GapTime = GapTime,
-                Timeout = Timeout
+                TextToType = TextToType,
+                DelayBetweenKeys = DelayBetweenKeys
             };
-            res.SaveCroppedImageToDisk(res.CroppedImg);
+        }
+        #endregion
+
+        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
+        {
+            var res = await Task.Run(() =>
+            {
+                return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
+            });
+            IsTrue = res;
+            IsError = false;
             return res;
+        }
+    }
+
+    public partial class TypeTextFromFileStep : AutomationStepBase
+    {
+        readonly PathServices pathServices = new();
+        readonly FileServices fileServices = SingletonLocator.FileServices;
+
+        private string _filePath;
+        private string _textToType;
+        private double _delayBetweenKeys = 0.01;
+        private int _index = 0;
+        private ObservableCollection<string> _contents = [];
+        private ObservableCollection<string> _previewContents = [];
+        private string _delimiter = "\n,\r,\n\r,";
+
+
+        public string FilePath { get => _filePath; set => SetProperty(ref _filePath, value); }
+
+        /// <summary>
+        /// 输入内容
+        /// </summary>
+        public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
+
+        public double DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
+
+        public int Index { get => _index; set => SetProperty(ref _index, value); }
+
+        /// <summary>
+        /// 待输入内容
+        /// </summary>
+        public ObservableCollection<string> Contents { get => _contents; set => SetProperty(ref _contents, value); }
+
+        /// <summary>
+        /// 待输入内容的预览
+        /// </summary>
+        public ObservableCollection<string> PreviewContents { get => _previewContents; set => SetProperty(ref _previewContents, value); }
+
+        /// <summary>
+        /// 分割符
+        /// </summary>
+        public string Delimiter { get => _delimiter; set => SetProperty(ref _delimiter, value); }
+
+
+
+        #region 构造
+        public TypeTextFromFileStep() : base()
+        {
+            Type = StepType.TypeTextFromFile;
+        }
+        public TypeTextFromFileStep(string name) : base()
+        {
+            Type = StepType.TypeTextFromFile;
+            Name = name;
+        }
+        public TypeTextFromFileStep(string name, string description) : base()
+        {
+            Type = StepType.TypeTextFromFile;
+            Name = name;
+            Description = description;
+        }
+
+        public override AutomationStepBase Clone()
+        {
+            return new TypeTextFromFileStep(Name, Description)
+            {
+                TextToType = TextToType,
+                DelayBetweenKeys = DelayBetweenKeys
+            };
+        }
+        #endregion
+
+
+        [RelayCommand]
+        private void OpenFile()
+        {
+            var path = pathServices.OpenPathDialog(LanguageService.GetLocalizedString("OpenFile"), "All File|*.*|Text|*.txt;*.csv|Xlsx|*.xlsx");
+            if (path != null) FilePath = path;
+            LoadFile();
+        }
+
+        public void Increment()
+        {
+
+        }
+
+        private void LoadFile()
+        {
+            string res;
+            if (new List<string> { "txt", "csv", "json" }.Contains(Path.GetExtension(FilePath).ToLower()))
+            {
+                res = fileServices.SmartReadTextFile(FilePath);
+            }
+            //else if (Path.GetExtension(FilePath).ToLower() == "xlsx")
+            //{
+
+            //}
+            else
+            {
+                throw new Exception("No support file type.");
+            }
+            var splits = Delimiter.Split([","], StringSplitOptions.RemoveEmptyEntries);
+            Contents.Clear();
+            PreviewContents.Clear();
+            Contents.AddRange(res.Split(splits, StringSplitOptions.RemoveEmptyEntries).ToList());
+            PreviewContents.AddRange(Contents.Take(Contents.Count > 10 ? 10 : Contents.Count)); //TODO:
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for finding.");
-            var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-            var res = await Task.Run(() => { return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout); });
-            img?.Dispose();
-            IsTrue = !res.IsEmpty;
-            IsError = false;
-            return IsTrue;
-        }
-    }
-
-    public class FindImagesStep : ImagesRecognitionBase
-    {
-        private double _gaptime = 0.1;
-        public double GapTime { get => _gaptime; set => SetProperty(ref _gaptime, value); }
-
-
-        private double _timeout = 3;
-        public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
-
-        public FindImagesStep()
-        {
-            Type = StepType.FindImages;
-        }
-        public FindImagesStep(string name)
-        {
-            Type = StepType.FindImages;
-            Name = name;
-        }
-        public FindImagesStep(string name, string description)
-        {
-            Type = StepType.FindImages;
-            Name = name;
-            Description = description;
-        }
-        public override AutomationStepBase Clone()
-        {
-            var res = new FindImagesStep(Name, Description)
+            if (Contents != null && Contents.Count > 0)
             {
-                Type = Type,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
-                IsTrue = IsTrue,
-                IsSave = IsSave,
-                OneByOne = OneByOne,
-                Images = Images,
-                GapTime = GapTime,
-                Timeout = Timeout
-            };
+                if (Index >= Contents.Count)
+                {
+                    IsTrue = false;
+                    IsError = true;
+                    throw new InvalidOperationException($"{Name}'s Contents is Finished.");
+                }
+                TextToType = Contents[Index];
+                Index++;
+            }
+            var res = await Task.Run(() =>
+            {
+                return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
+            });
+            IsTrue = res;
+            IsError = false;
             return res;
         }
-        public override async Task<bool> RunAsync(CancellationToken cancellationToken = default)
-        {
-            List<AutoguiModel.Apoint> res = [];
-            List<AutoguiImage> autoguiImages = Images.Select(x => new AutoguiImage()
-            {
-                Bitmap = Utils.Autogui.ConvertImageSourceToBitmap(x.CroppedImg ?? x.ImgSrc ?? throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"))),
-                Position = Autogui.Position.LeftTop,
-                PositionOffset = x.Offset,
-                Threshold = x.SimilarityThreshold
-            }).ToList();
-            res = await Task.Run(() => { return Autogui.FindImagesOnScreen(autoguiImages, GapTime, Timeout); });
-            IsTrue = !res[0].IsEmpty;
-            IsError = false;
-            return IsTrue;
-        }
     }
+
 
     // 弹出框步骤
     public class PopupStep : AutomationStepBase
@@ -988,4 +634,5 @@ namespace ShaoLu.Viewmodels.AutomationStep
             return IsTrue;
         }
     }
+
 }

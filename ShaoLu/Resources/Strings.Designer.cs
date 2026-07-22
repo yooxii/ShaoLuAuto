@@ -142,6 +142,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 AddTextFromFileStep 的本地化字符串。
+        /// </summary>
+        public static string AddTextFromFileStep {
+            get {
+                return ResourceManager.GetString("AddTextFromFileStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AddTextMoreStep 的本地化字符串。
+        /// </summary>
+        public static string AddTextMoreStep {
+            get {
+                return ResourceManager.GetString("AddTextMoreStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 AddTextStep 的本地化字符串。
         /// </summary>
         public static string AddTextStep {
@@ -318,6 +336,15 @@ namespace ShaoLu.Resources {
         public static string Delete {
             get {
                 return ResourceManager.GetString("Delete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Delimiter 的本地化字符串。
+        /// </summary>
+        public static string Delimiter {
+            get {
+                return ResourceManager.GetString("Delimiter", resourceCulture);
             }
         }
         
@@ -543,6 +570,15 @@ namespace ShaoLu.Resources {
         public static string Open_Header {
             get {
                 return ResourceManager.GetString("Open_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 OpenFile 的本地化字符串。
+        /// </summary>
+        public static string OpenFile {
+            get {
+                return ResourceManager.GetString("OpenFile", resourceCulture);
             }
         }
         

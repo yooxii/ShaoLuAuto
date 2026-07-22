@@ -385,9 +385,21 @@
     <value>将ImageSource转为Bitmap失败</value>
   </data>
   <data name="AboutContent" xml:space="preserve">
-    <value>本程序由AcBel ORT制作。如果有任何问题，可以发送邮件到：</value>
+    <value>本程序由AcBel ORT制作。如果有问题需要反馈，可发送邮件至：</value>
   </data>
   <data name="Email" xml:space="preserve">
     <value>Lucas_Li@acbel.com</value>
+  </data>
+  <data name="OpenFile" xml:space="preserve">
+    <value>打开文件</value>
+  </data>
+  <data name="AddTextMoreStep" xml:space="preserve">
+    <value>键入文字(多)</value>
+  </data>
+  <data name="AddTextFromFileStep" xml:space="preserve">
+    <value>键入文字(从文件)</value>
+  </data>
+  <data name="Delimiter" xml:space="preserve">
+    <value>分割符</value>
   </data>
 </root>

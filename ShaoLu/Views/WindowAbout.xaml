@@ -22,7 +22,7 @@
             <TextBlock Text="{lex:Loc AppTitle}" TextAlignment="Center" FontSize="20" FontWeight="Bold"/>
             <TextBlock Text=""/>
             <TextBlock Text="{lex:Loc AboutContent}" TextAlignment="Center" FontSize="16"/>
-            <TextBlock Text="{lex:Loc Email}" TextAlignment="Center" FontSize="16"/>
+            <TextBox Text="{lex:Loc Email}" TextAlignment="Center" FontSize="16" BorderThickness="0" IsReadOnly="True"/>
         </StackPanel>
     </Grid>
 </Window>

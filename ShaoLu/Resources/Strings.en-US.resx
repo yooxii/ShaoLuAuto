@@ -385,9 +385,21 @@
     <value>Convert ImageSource To Bitmap Fail.</value>
   </data>
   <data name="AboutContent" xml:space="preserve">
-    <value>This program is produced by AcBel ORT. If you have any questions, you can send an email to:</value>
+    <value>This program is produced by AcBel ORT. If you have any questions, can send an email to:</value>
   </data>
   <data name="Email" xml:space="preserve">
     <value>Lucas_Li@acbel.com</value>
+  </data>
+  <data name="OpenFile" xml:space="preserve">
+    <value>Open File</value>
+  </data>
+  <data name="AddTextMoreStep" xml:space="preserve">
+    <value>Type Text(More)</value>
+  </data>
+  <data name="AddTextFromFileStep" xml:space="preserve">
+    <value>Type Text(FromFile)</value>
+  </data>
+  <data name="Delimiter" xml:space="preserve">
+    <value>Delimiter</value>
   </data>
 </root>

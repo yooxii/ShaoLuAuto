@@ -144,36 +144,38 @@ namespace ShaoLu.Viewmodels
 
         private void AddStep(object parameter)
         {
-            AutomationStepBase imgStep;
+            AutomationStepBase step;
             if (parameter is string param)
             {
                 AutomationStepBases ??= [];
-                imgStep = param switch
+                step = param switch
                 {
                     "ClickImage" => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                     "FindImage" => new FindImageStep($"FindImage_{AutomationStepBases.Count(t => t.Type == StepType.FindImage) + 1}"),
                     "ClickImages" => new ClickImagesStep($"ClickImages_{AutomationStepBases.Count(t => t.Type == StepType.ClickImages) + 1}"),
                     "FindImages" => new FindImagesStep($"FindImages_{AutomationStepBases.Count(t => t.Type == StepType.FindImages) + 1}"),
                     "TypeText" => new TypeTextStep($"TypeText_{AutomationStepBases.Count(t => t.Type == StepType.TypeText) + 1}"),
+                    "TypeTextMore" => new TypeTextMoreStep($"TypeTextMore_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextMore) + 1}"),
+                    "TypeTextFromFile" => new TypeTextFromFileStep($"TypeTextFromFile_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextFromFile) + 1}"),
                     "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
                 if (SelectedStep is AutomationStepBase automationStepBase)
                 {
                     int index = AutomationStepBases.IndexOf(automationStepBase) + 1;
-                    AutomationStepBases.Insert(index, imgStep);
+                    AutomationStepBases.Insert(index, step);
                 }
                 else
                 {
-                    AutomationStepBases.Add(imgStep);
+                    AutomationStepBases.Add(step);
                 }
             }
             else
             {
-                imgStep = new ClickImageStep();
-                AutomationStepBases.Add(imgStep);
+                step = new ClickImageStep();
+                AutomationStepBases.Add(step);
             }
-            SelectedStep = imgStep;
+            SelectedStep = step;
         }
 
 

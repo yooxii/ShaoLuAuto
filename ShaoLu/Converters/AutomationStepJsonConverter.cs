@@ -75,6 +75,8 @@ namespace ShaoLu.Converters
                 StepType.ClickImages => typeof(ClickImagesStep),
                 StepType.FindImages => typeof(FindImagesStep),
                 StepType.TypeText => typeof(TypeTextStep),
+                StepType.TypeTextMore => typeof(TypeTextMoreStep),
+                StepType.TypeTextFromFile => typeof(TypeTextFromFileStep),
                 StepType.Popup => typeof(PopupStep),
                 StepType.Empty => typeof(EmptyStep),
                 // 添加其他映射...

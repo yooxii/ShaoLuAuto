@@ -123,6 +123,8 @@
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
     <Compile Include="Models\FontModel.cs" />
+    <Compile Include="Viewmodels\ImagesRecognition.cs" />
+    <Compile Include="Viewmodels\ImageRecognition.cs" />
     <Compile Include="Viewmodels\PopupButton.cs" />
     <Compile Include="Models\Settings.cs" />
     <Compile Include="Resources\Strings.en-US.Designer.cs">
@@ -294,6 +296,9 @@
     <PackageReference Include="CommunityToolkit.Mvvm">
       <Version>8.4.2</Version>
     </PackageReference>
+    <PackageReference Include="EPPlus">
+      <Version>8.6.2</Version>
+    </PackageReference>
     <PackageReference Include="InputSimulator">
       <Version>1.0.4</Version>
     </PackageReference>
@@ -320,6 +325,9 @@
     </PackageReference>
     <PackageReference Include="System.Text.Json">
       <Version>10.0.9</Version>
+    </PackageReference>
+    <PackageReference Include="UTF.Unknown">
+      <Version>2.6.0</Version>
     </PackageReference>
     <PackageReference Include="WPFDevelopers">
       <Version>0.1.0</Version>

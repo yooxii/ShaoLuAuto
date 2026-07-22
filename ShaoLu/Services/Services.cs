@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using UtfUnknown;
 
 namespace ShaoLu.Services
 {
@@ -86,5 +88,41 @@ namespace ShaoLu.Services
             }
             ReadyToDeleteFiles.Clear();
         }
+
+        public string SmartReadTextFile(string filePath)
+        {
+            byte[] bytes = File.ReadAllBytes(filePath);
+            if (bytes.Length == 0) return string.Empty;
+
+            // 1. 优先检查 BOM（最准确）
+            if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+                return Encoding.UTF8.GetString(bytes);
+            if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+                return Encoding.Unicode.GetString(bytes); // UTF-16 LE
+            if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
+                return Encoding.BigEndianUnicode.GetString(bytes); // UTF-16 BE
+
+            // 2. 无 BOM 时，使用 UtfUnknown 进行启发式检测
+            var result = CharsetDetector.DetectFromBytes(bytes);
+
+            // 置信度阈值建议设为 0.5，比 Ude 的 0.3 更严格，减少误判
+            if (result.Detected != null && result.Detected.Confidence > 0.5)
+            {
+                try
+                {
+                    // UtfUnknown 返回的 Charset 名称与 .NET Encoding 兼容
+                    return Encoding.GetEncoding(result.Detected.EncodingName).GetString(bytes);
+                }
+                catch
+                {
+                    throw new Exception("");
+                }
+            }
+            else
+            {
+                throw new Exception("");
+            }
+        }
+
     }
 }

@@ -28,6 +28,8 @@
                     <MenuItem Header="{lex:Loc AddImagesStep}" Command="{Binding AddStepCommand}" CommandParameter="ClickImages"/>
                     <MenuItem Header="{lex:Loc AddFindImagesStep}" Command="{Binding AddStepCommand}" CommandParameter="FindImages"/>
                     <MenuItem Header="{lex:Loc AddTextStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeText"/>
+                    <MenuItem Header="{lex:Loc AddTextMoreStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeTextMore"/>
+                    <MenuItem Header="{lex:Loc AddTextFromFileStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeTextFromFile"/>
                     <MenuItem Header="{lex:Loc AddPopupStep}" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
                 </MenuItem>
                 <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
@@ -70,13 +72,17 @@
                         <Button Content="{lex:Loc Delete}" Margin="3" Command="{Binding DelStepCommand}"/>
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Step}">
-                        <wd:SplitButton Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
-                            <MenuItem Header="{lex:Loc AddImageStep}" Command="{Binding AddStepCommand}" CommandParameter="ClickImage"/>
-                            <MenuItem Header="{lex:Loc AddFindImageStep}" Command="{Binding AddStepCommand}" CommandParameter="FindImage"/>
-                            <MenuItem Header="{lex:Loc AddImagesStep}" Command="{Binding AddStepCommand}" CommandParameter="ClickImages"/>
-                            <MenuItem Header="{lex:Loc AddFindImagesStep}" Command="{Binding AddStepCommand}" CommandParameter="FindImages"/>
+                        <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                            <MenuItem Header="{lex:Loc AddImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImage"/>
+                            <MenuItem Header="{lex:Loc AddFindImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FindImage"/>
+                            <MenuItem Header="{lex:Loc AddImagesStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImages"/>
+                            <MenuItem Header="{lex:Loc AddFindImagesStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FindImages"/>
                         </wd:SplitButton>
-                        <Button Content="{lex:Loc AddTextStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="TypeText"/>
+                        <wd:SplitButton x:Name="AddTextStep" Content="{lex:Loc AddTextStep}" CommandParameter="TypeText" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                            <MenuItem Header="{lex:Loc AddTextStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeText"/>
+                            <MenuItem Header="{lex:Loc AddTextMoreStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeTextMore"/>
+                            <MenuItem Header="{lex:Loc AddTextFromFileStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeTextFromFile"/>
+                        </wd:SplitButton>
                         <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
                     </ToolBar>
                 </ToolBarTray>

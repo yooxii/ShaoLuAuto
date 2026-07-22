@@ -390,4 +390,16 @@
   <data name="Email" xml:space="preserve">
     <value>Email</value>
   </data>
+  <data name="OpenFile" xml:space="preserve">
+    <value>OpenFile</value>
+  </data>
+  <data name="AddTextMoreStep" xml:space="preserve">
+    <value>AddTextMoreStep</value>
+  </data>
+  <data name="AddTextFromFileStep" xml:space="preserve">
+    <value>AddTextFromFileStep</value>
+  </data>
+  <data name="Delimiter" xml:space="preserve">
+    <value>Delimiter</value>
+  </data>
 </root>

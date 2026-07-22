@@ -232,8 +232,7 @@
         <StackPanel Orientation="Vertical">
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" 
-                     MinWidth="150"/>
+                <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
@@ -242,6 +241,61 @@
         </StackPanel>
     </DataTemplate>
 
+    <DataTemplate x:Key="TextStepMoreTemplate" DataType="{x:Type AutoVM:TypeTextMoreStep}">
+        <StackPanel Orientation="Vertical">
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.01"/>
+            </StackPanel>
+
+            <!--<StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
+                    <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}"/>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding PreviewContents}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding .}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>-->
+        </StackPanel>
+    </DataTemplate>
+    
+    <DataTemplate x:Key="TextStepFromFileTemplate" DataType="{x:Type AutoVM:TypeTextFromFileStep}">
+        <StackPanel Orientation="Vertical">
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.01"/>
+            </StackPanel>
+
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                    <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}"/>
+                    <Label Content="{lex:Loc Delimiter}" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding Delimiter}"/>
+                </StackPanel>
+                <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
+                <ListBox ItemsSource="{Binding PreviewContents}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding .}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
 
     <DataTemplate x:Key="PopupStepTemplate" DataType="{x:Type AutoVM:PopupStep}">
         <StackPanel>
@@ -348,6 +402,8 @@
                      FindImageTemplate="{StaticResource FindImageStepTemplate}"
                      ClickImagesTemplate="{StaticResource ClickImagesStepTemplate}"
                      FindImagesTemplate="{StaticResource FindImagesStepTemplate}"
-                     TextTemplate="{StaticResource TextStepTemplate}"
+                     TypeTextTemplate="{StaticResource TextStepTemplate}"
+                     TypeTextMoreTemplate="{StaticResource TextStepMoreTemplate}"
+                     TypeTextFromFileTemplate="{StaticResource TextStepFromFileTemplate}"
                      PopupTemplate="{StaticResource PopupStepTemplate}"/>
 </ResourceDictionary>

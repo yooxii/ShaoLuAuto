@@ -405,4 +405,31 @@
   <data name="Contents" xml:space="preserve">
     <value>内容</value>
   </data>
+  <data name="Reset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="Hidden" xml:space="preserve">
+    <value>隐藏</value>
+  </data>
+  <data name="AddClickPoint" xml:space="preserve">
+    <value>增加点击位置</value>
+  </data>
+  <data name="AllVisibale" xml:space="preserve">
+    <value>全部可见</value>
+  </data>
+  <data name="AllDelete" xml:space="preserve">
+    <value>全部删除</value>
+  </data>
+  <data name="AllHidden" xml:space="preserve">
+    <value>全部隐藏</value>
+  </data>
+  <data name="NoCropImage" xml:space="preserve">
+    <value>请先裁剪图片！</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>保存成功！</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>成功</value>
+  </data>
 </root>

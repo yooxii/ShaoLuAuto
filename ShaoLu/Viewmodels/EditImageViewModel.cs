@@ -1,24 +1,25 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data.Common;
+using System.Linq;
+using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Media;
 using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Viewmodels
 {
-    public class EditImageViewModel : ObservableObject
+    public partial class EditImageViewModel : ObservableObject
     {
 
         private ImageSource _imgSrc;
         private ImageSource _imgDst;
         private Rect _cropRect;
-        private ObservableCollection<Point> clickOffsets = [];
-        private double _offsetX = 0;
-        private double _offsetY = 0;
-        private Visibility _thumbVisibility = Visibility.Hidden;
-        private double _thumbX;
-        private double _thumbY;
+        private double _startX = 0;
+        private double _startY = 0;
 
 
         public ImageSource ImgSrc
@@ -31,8 +32,8 @@ namespace ShaoLu.Viewmodels
                     if (value is ImageSource img)
                     {
                         // 初始化为图片中心
-                        OffsetX = img.Width / 2.0;
-                        OffsetY = img.Height / 2.0;
+                        StartX = img.Width / 2.0;
+                        StartY = img.Height / 2.0;
                     }
                 }
             }
@@ -50,75 +51,158 @@ namespace ShaoLu.Viewmodels
             set => SetProperty(ref _cropRect, value);
         }
 
-        public Point ClickOffset => new(OffsetX, OffsetY);
-
-        public double OffsetX
+        public double StartX
         {
-            get => _offsetX;
+            get => _startX;
             set
             {
-                if (SetProperty(ref _offsetX, value))
-                {
-                    ThumbX = _offsetX - (ThumbSize / 2) + _cropRect.X;
-                }
+                SetProperty(ref _startX, value);
             }
         }
 
-        public double OffsetY
+        public double StartY
         {
-            get => _offsetY;
+            get => _startY;
             set
             {
-                if (SetProperty(ref _offsetY, value))
-                {
-                    ThumbY = _offsetY - ThumbSize / 2 + _cropRect.Y;
-                }
+                SetProperty(ref _startY, value);
             }
         }
 
         public double ThumbSize => 20;
 
-        public Visibility ThumbVisibility { get => _thumbVisibility; set => SetProperty(ref _thumbVisibility, value); }
+        public ObservableCollection<ClickThumb> Thumbs { get; set; } = [];
 
-        public double ThumbX { get => _thumbX; set => SetProperty(ref _thumbX, value); }
+        public EditImageViewModel()
+        {
+            Thumbs.CollectionChanged += (s, e) =>
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+                {
+                    foreach (var item in e.NewItems)
+                    {
+                        if (item is ClickThumb thumb)
+                        {
+                            thumb.ThumbNo = Thumbs.Count;
+                        }
+                    }
+                }
+            };
+        }
 
-        public double ThumbY { get => _thumbY; set => SetProperty(ref _thumbY, value); }
-
-        public ObservableCollection<Point> ClickOffsets { get => clickOffsets; set => SetProperty(ref clickOffsets, value); }
 
 
-        public event Action<ImageSource, Rect, Point> OnImageSaved;
+        public event Action<ImageSource, Rect, List<ClickThumb>> OnImageSaved;
+
+        public void SetThumbs(List<ClickThumb> clickThumbs)
+        {
+            Thumbs.Clear();
+            clickThumbs.ForEach(thumb => Thumbs.Add(thumb));
+        }
 
         public void SaveCroppedImage()
         {
-            if (ImgDst != null)
+            if (ImgDst != null && Thumbs.Count > 0)
             {
-                OnImageSaved?.Invoke(ImgDst, CropRect, ClickOffset);
+                OnImageSaved?.Invoke(ImgDst, CropRect, Thumbs.ToList());
             }
         }
 
-        public void SaveOffset(Point offset)
+        [RelayCommand]
+        private void AddThumb()
         {
-            if (offset == null) return;
-            var tmp = offset - CropRect.TopLeft;
-            OffsetX = tmp.X;
-            OffsetY = tmp.Y;
+            double x = StartX;
+            double y = StartY;
+            if (Thumbs.Count > 0)
+            {
+                var lastThumb = Thumbs.Last();
+                x = lastThumb.ThumbX + lastThumb.ThumbSize + 10;
+                y = lastThumb.ThumbY + lastThumb.ThumbSize + 10;
+            }
+            Thumbs.Add(new ClickThumb(x, y, ThumbSize, Visibility.Visible));
         }
 
-        public void SetOffset(Point offset)
+        [RelayCommand]
+        private void ClearThumbs()
         {
-            if (offset == null) return;
-            OffsetX = offset.X;
-            OffsetY = offset.Y;
+            Thumbs.Clear();
+        }
+
+        [RelayCommand]
+        private void AllThumbVisibility(string visible)
+        {
+            foreach (var thumb in Thumbs)
+                thumb.ThumbVisibility = visible == "1" ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        public void DeleteThumb(ClickThumb thumb)
+        {
+            Thumbs.Remove(thumb);
+        }
+
+        public void ResetThumb(ClickThumb thumb)
+        {
+            thumb.ThumbX = StartX;
+            thumb.ThumbY = StartY;
+            thumb.ThumbSize = ThumbSize;
+        }
+
+        public void ChangeThumbVisibility(ClickThumb thumb)
+        {
+            thumb.ThumbVisibility = thumb.ThumbVisibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
         }
     }
 
-    public class EditThumb : ObservableObject
+    public class ClickThumb : ObservableObject
     {
+        private int _thumbNo;
+        private string _thumbCoordinates;
         private double _thumbX;
         private double _thumbY;
+        private Visibility _thumbVisibility = Visibility.Visible;
+        private double _thumbSize = 20;
 
-        public double ThumbX { get => _thumbX; set => _thumbX = value; }
-        public double ThumbY { get => _thumbY; set => _thumbY = value; }
+
+        public int ThumbNo { get => _thumbNo; set => SetProperty(ref _thumbNo, value); }
+        public string ThumbCoordinates { get => _thumbCoordinates; set => SetProperty(ref _thumbCoordinates, value); }
+        public double ThumbX
+        {
+            get => _thumbX;
+            set
+            {
+                if (SetProperty(ref _thumbX, value))
+                {
+                    ThumbCoordinates = $"{(int)ThumbX},{(int)ThumbY}";
+                }
+            }
+        }
+        public double ThumbY
+        {
+            get => _thumbY;
+            set
+            {
+                if (SetProperty(ref _thumbY, value))
+                {
+                    ThumbCoordinates = $"{(int)ThumbX},{(int)ThumbY}";
+                }
+            }
+        }
+        [JsonIgnore]
+        public Point ClickPoint => new(ThumbX, ThumbY);
+        public Visibility ThumbVisibility { get => _thumbVisibility; set => SetProperty(ref _thumbVisibility, value); }
+        public double ThumbSize { get => _thumbSize; set => SetProperty(ref _thumbSize, value); }
+
+        public ClickThumb()
+        {
+
+        }
+
+        public ClickThumb(double x, double y, double size, Visibility visibility)
+        {
+            ThumbX = x;
+            ThumbY = y;
+            ThumbSize = size;
+            ThumbVisibility = visibility;
+        }
     }
 }

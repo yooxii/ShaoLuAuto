@@ -19,7 +19,6 @@ namespace ShaoLu.Utils
     {
         public Bitmap Bitmap;
         public Autogui.Position Position;
-        public Point PositionOffset;
         public double Threshold = 0.85;
 
     }
@@ -199,13 +198,13 @@ namespace ShaoLu.Utils
         /// <summary>
         /// 将鼠标移动到指定的Apoint位置。
         /// </summary>
-        /// <param name="point">给定的位置区域</param>
+        /// <param name="rect">给定的位置区域</param>
         /// <param name="position">锚点位置：0-中心, 1-左上, 2-右上, 3-左下, 4-右下</param>
-        /// <param name="position_offset">相对于锚点的像素偏移量</param>
-        public static void MoveMouseTo(AutoRect point, Position position = Position.Center, Point? position_offset = null)
+        /// <param name="clickoffset">相对于锚点的像素偏移量</param>
+        public static void MoveMouseTo(AutoRect rect, Position position = Position.Center, Point? clickoffset = null)
         {
             // 1. 防御性检查：如果点无效或为空，直接返回
-            if (point == null || point.IsEmpty)
+            if (rect == null || rect.IsEmpty)
             {
                 return;
             }
@@ -217,36 +216,36 @@ namespace ShaoLu.Utils
             switch (position)
             {
                 case Position.Center:
-                    targetX = point.Center.X;
-                    targetY = point.Center.Y;
+                    targetX = rect.Center.X;
+                    targetY = rect.Center.Y;
                     break;
                 case Position.LeftTop:
-                    targetX = point.LeftTop.X;
-                    targetY = point.LeftTop.Y;
+                    targetX = rect.LeftTop.X;
+                    targetY = rect.LeftTop.Y;
                     break;
                 case Position.RightTop:
-                    targetX = point.RightTop.X;
-                    targetY = point.RightTop.Y;
+                    targetX = rect.RightTop.X;
+                    targetY = rect.RightTop.Y;
                     break;
                 case Position.LeftDown:
-                    targetX = point.LeftDown.X;
-                    targetY = point.LeftDown.Y;
+                    targetX = rect.LeftDown.X;
+                    targetY = rect.LeftDown.Y;
                     break;
                 case Position.RightDown:
-                    targetX = point.RightDown.X;
-                    targetY = point.RightDown.Y;
+                    targetX = rect.RightDown.X;
+                    targetY = rect.RightDown.Y;
                     break;
                 default:
-                    targetX = point.Center.X;
-                    targetY = point.Center.Y;
+                    targetX = rect.Center.X;
+                    targetY = rect.Center.Y;
                     break;
             }
 
             // 3. 应用偏移量
-            if (position_offset?.IsEmpty ?? false)
+            if (!(clickoffset?.IsEmpty ?? true))
             {
-                targetX += position_offset.X;
-                targetY += position_offset.Y;
+                targetX += clickoffset.X;
+                targetY += clickoffset.Y;
             }
 
             // 4. 执行移动
@@ -254,8 +253,9 @@ namespace ShaoLu.Utils
             MoveMouseTo(targetX, targetY);
         }
 
-        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, Point? position_offset = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double waittime = 0.1, double timeout = 3)
+        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, List<Point>? clickposition = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3)
         {
+            int nextclickTimeMs = (int)(nextclicktime * 1000);
             int waitTimeMs = (int)(waittime * 1000);
             int clickGapTimeMs = (int)(clickgaptime * 1000);
             int timeoutMs = (int)(timeout * 1000);
@@ -267,14 +267,18 @@ namespace ShaoLu.Utils
 
             while (true)
             {
-                AutoRect point = FindImageOnScreen(templateImage, threshold, 0.2, 0.4);
-                if (!point.IsEmpty)
+                AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.2, 0.4);
+                if (!rect.IsEmpty && clickposition != null)
                 {
-                    MoveMouseTo(point, position, position_offset);
-                    for (int i = 0; i < clicks; i++)
+                    foreach (Point p in clickposition)
                     {
-                        sim.Mouse.LeftButtonClick();
-                        Thread.Sleep(clickGapTimeMs); // 每次点击后等待
+                        MoveMouseTo(rect, position, p);
+                        for (int i = 0; i < clicks; i++)
+                        {
+                            sim.Mouse.LeftButtonClick();
+                            Thread.Sleep(clickGapTimeMs); // 点击间隔
+                        }
+                        Thread.Sleep(nextclickTimeMs); // 等待下一次点击
                     }
                     return true;
                 }

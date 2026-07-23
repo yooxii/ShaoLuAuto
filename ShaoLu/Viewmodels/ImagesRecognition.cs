@@ -51,15 +51,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
     public class ClickImagesStep : ImagesRecognitionBase
     {
         private int _clicks = 1;
-        public int Clicks { get => _clicks; set => SetProperty(ref _clicks, value); }
-
-
         private double _clickGap = 0.1;
-        public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
-
-
+        private double _nextClickTime = 0.2;
         private double _timeout = 3;
+
+
+        public int Clicks { get => _clicks; set => SetProperty(ref _clicks, value); }
+        public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
         public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
+        public double NextClickTime { get => _nextClickTime; set => SetProperty(ref _nextClickTime, value); }
 
 
         public ClickImagesStep()
@@ -106,7 +106,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 res = await Task.Run(() =>
                 {
                     Thread.Sleep((int)WaitTime * 1000);
-                    return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, image.Offset, image.SimilarityThreshold, Clicks, ClickGap, 0, Timeout);
+                    return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, image.ClickPoints, image.SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
                 });
             }
             IsTrue = res;
@@ -164,7 +164,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 Bitmap = Utils.Autogui.ConvertImageSourceToBitmap(x.CroppedImg ?? x.ImgSrc ?? throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"))),
                 Position = Autogui.Position.LeftTop,
-                PositionOffset = x.Offset,
                 Threshold = x.SimilarityThreshold
             }).ToList();
             res = await Task.Run(() =>

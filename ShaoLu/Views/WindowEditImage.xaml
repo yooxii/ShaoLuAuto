@@ -12,14 +12,23 @@
         xmlns:viewmodels="clr-namespace:ShaoLu.Viewmodels"
         d:DataContext="{d:DesignInstance Type=viewmodels:EditImageViewModel}"
         Title="{lex:Loc EditImageTitle}" Height="Auto" Width="Auto"
-        MinHeight="200" MinWidth="200">
+        MinHeight="200" MinWidth="300">
     <!--xmlns:imgtool="clr-namespace:ImageTool"-->
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <wd:WDScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <StackPanel Orientation="Horizontal" Grid.Row="0">
+            <Menu>
+                <MenuItem Header="{lex:Loc AddClickPoint}" Command="{Binding AddThumbCommand}"/>
+                <MenuItem Header="{lex:Loc AllVisibale}" Command="{Binding AllThumbVisibilityCommand}" CommandParameter="1"/>
+                <MenuItem Header="{lex:Loc AllHidden}" Command="{Binding AllThumbVisibilityCommand}" CommandParameter="0"/>
+                <MenuItem Header="{lex:Loc AllDelete}" Command="{Binding ClearThumbsCommand}"/>
+            </Menu>
+        </StackPanel>
+        <wd:WDScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -27,13 +36,62 @@
                     <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
                 <Grid>
-                    <Viewbox Width="{Binding ImgSrc.Width}">
+                    <Viewbox Width="{Binding ImgSrc.Width}" Height="{Binding ImgSrc.Height}">
                         <wd:CropImage x:Name="EditImage" Margin="5" Source="{Binding ImgSrc}"/>
                     </Viewbox>
-                    <Canvas HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Width="{Binding ImgSrc.Width}"
-                                Height="{Binding ImgSrc.Height}">
+                    <ItemsControl ItemsSource="{Binding Thumbs}">
+                        
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <!-- 必须绑定到数据源中的 Left/Top 属性 -->
+                                <Setter Property="Canvas.Left" Value="{Binding ThumbX}" />
+                                <Setter Property="Canvas.Top" Value="{Binding ThumbY}" />
+                                <!-- 确保容器不会干扰布局 -->
+                                <Setter Property="HorizontalAlignment" Value="Left" />
+                                <Setter Property="VerticalAlignment" Value="Top" />
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                        
+                        <!-- 1. 定义每个 Thumb 的模板 -->
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Thumb Visibility="{Binding ThumbVisibility}"
+                                        DragDelta="ClickPointThumb_DragDelta"
+                                        Width="{Binding ThumbSize}"
+                                        Height="{Binding ThumbSize}"
+                                       ToolTip="{Binding ThumbCoordinates}">
+                                    <Thumb.ContextMenu>
+                                        <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                            <MenuItem Header="{lex:Loc Reset}" Click="ClickPointThumb_Reset" />
+                                            <MenuItem Header="{lex:Loc Delete}" Click="ClickPointThumb_Delete" />
+                                            <MenuItem Header="{lex:Loc Hidden}" Click="ClickPointThumb_ChangeVisibility" />
+                                        </ContextMenu>
+                                    </Thumb.ContextMenu>
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Grid>
+                                                <Ellipse Fill="Red" Stroke="White" StrokeThickness="2" Opacity="0.8"/>
+                                                <Path Data="M 0,10 L 20,10 M 10,0 L 10,20" Stroke="White" StrokeThickness="2"/>
+                                                <Border Background="#AA000000" CornerRadius="5"  HorizontalAlignment="Right"  VerticalAlignment="Top"
+                                                        Margin="-5,-5,0,0" Padding="2,1,2,1" BorderBrush="White" BorderThickness="1">
+                                                    <TextBlock Text="{Binding ThumbNo}" Foreground="White" FontSize="10" FontWeight="Bold"
+                                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                </Border>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+
+                        <!-- 2. 指定使用 Canvas 作为布局面板 -->
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas Width="{Binding ActualWidth, ElementName=EditImage}" Height="{Binding ActualHeight, ElementName=EditImage}"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <!--<Canvas>
                         <Thumb x:Name="ClickPointThumb"
                                 Visibility="{Binding ThumbVisibility}"
                                 Canvas.Left="{Binding ThumbX}"
@@ -49,14 +107,14 @@
                                 </ControlTemplate>
                             </Thumb.Template>
                         </Thumb>
-                    </Canvas>
+                    </Canvas>-->
                 </Grid>
                 <GroupBox Header="{lex:Loc Preview}" Grid.Row="2">
                     <Image x:Name="PreviewImage" Source="{Binding ImgDst}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </GroupBox>
             </Grid>
         </wd:WDScrollViewer>
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>

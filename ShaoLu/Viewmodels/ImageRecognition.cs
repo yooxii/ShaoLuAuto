@@ -5,6 +5,7 @@ using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +27,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _imagePath;
         private string _croppedImagePath;
         private ImageSource _croppedImg;
+
+        public Rect _croppedRect;
+        private double _similarityThreshold = 0.85;
+        private List<ClickThumb> _clickThumbs = [];
 
         public string ImagePath
         {
@@ -65,28 +70,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
-        #region 图像属性
-
-        public Rect _croppedRect;
-        private int _offsetX = 0;
-        private int _offsetY = 0;
-        private bool _hasOffset = false;
-        private double _similarityThreshold = 0.85;
-        private List<Point> _clickOffest = [];
-
         public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
 
 
+        public List<ClickThumb> ClickThumbs { get => _clickThumbs; set => _clickThumbs = value; }
+
         [JsonIgnore]
-        public Point Offset => new(OffsetX, OffsetY);
-
-        public List<Point> ClickOffest { get => _clickOffest; set => _clickOffest = value; }
-
-        public int OffsetX { get => _offsetX; set => SetProperty(ref _offsetX, value); }
-
-        public int OffsetY { get => _offsetY; set => SetProperty(ref _offsetY, value); }
-
-        public bool HasOffset { get => _hasOffset; set => SetProperty(ref _hasOffset, value); }
+        public List<Point> ClickPoints => ClickThumbs.Select(x => x.ClickPoint - CroppedRect.TopLeft + new Point(x.ThumbSize / 2)).ToList();
 
         public double SimilarityThreshold
         {
@@ -106,8 +96,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 }
             }
         }
-
-        #endregion
 
         #endregion
 
@@ -134,16 +122,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
                     windowEditImage.editImageViewModel.CropRect = CroppedRect;
-                    if (HasOffset)
-                        windowEditImage.editImageViewModel.SetOffset(Offset);
+                    windowEditImage.editImageViewModel.SetThumbs(ClickThumbs);
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
-                windowEditImage.editImageViewModel.OnImageSaved += (img, rect, offset) =>
+                windowEditImage.editImageViewModel.OnImageSaved += (img, rect, clickthumbs) =>
                 {
                     CroppedImg = img;
                     CroppedRect = rect;
-                    OffsetX = offset.X;
-                    OffsetY = offset.Y;
-                    HasOffset = !offset.IsEmpty;
+                    ClickThumbs = clickthumbs;
                 };
             }
         }
@@ -316,15 +301,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
     public class ClickImageStep : ImageRecognitionBase
     {
         private int _clicks = 1;
-        public int Clicks { get => _clicks; set => SetProperty(ref _clicks, value); }
-
-
         private double _clickGap = 0.1;
-        public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
-
-
+        private double _nextClickTime = 0.2;
         private double _timeout = 3;
+
+
+        public int Clicks { get => _clicks; set => SetProperty(ref _clicks, value); }
+        public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
         public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
+        public double NextClickTime { get => _nextClickTime; set => SetProperty(ref _nextClickTime, value); }
 
         public ClickImageStep() : base()
         {
@@ -352,8 +337,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ImagePath = ImagePath,
                 CroppedImg = CroppedImg,
                 CroppedRect = CroppedRect,
-                OffsetX = OffsetX,
-                OffsetY = OffsetY,
+                ClickThumbs = ClickThumbs,
                 SimilarityThreshold = SimilarityThreshold,
                 Clicks = Clicks,
                 ClickGap = ClickGap,
@@ -372,7 +356,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var res = await Task.Run(() =>
             {
                 Thread.Sleep((int)WaitTime * 1000);
-                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offset, SimilarityThreshold, Clicks, ClickGap, 0, Timeout);
+                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, ClickPoints, SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
             });
             IsTrue = res;
             IsError = false;

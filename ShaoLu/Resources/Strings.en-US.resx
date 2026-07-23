@@ -405,4 +405,31 @@
   <data name="Contents" xml:space="preserve">
     <value>Contents</value>
   </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Hidden" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="AddClickPoint" xml:space="preserve">
+    <value>Add Click Point</value>
+  </data>
+  <data name="AllVisibale" xml:space="preserve">
+    <value>All Visibale</value>
+  </data>
+  <data name="AllDelete" xml:space="preserve">
+    <value>All Delete</value>
+  </data>
+  <data name="AllHidden" xml:space="preserve">
+    <value>All Hidden</value>
+  </data>
+  <data name="NoCropImage" xml:space="preserve">
+    <value>Please Crop Image First!</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Save success!</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Success</value>
+  </data>
 </root>

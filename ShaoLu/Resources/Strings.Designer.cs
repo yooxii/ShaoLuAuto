@@ -88,6 +88,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 AddClickPoint 的本地化字符串。
+        /// </summary>
+        public static string AddClickPoint {
+            get {
+                return ResourceManager.GetString("AddClickPoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 AddFindImagesStep 的本地化字符串。
         /// </summary>
         public static string AddFindImagesStep {
@@ -165,6 +174,33 @@ namespace ShaoLu.Resources {
         public static string AddTextStep {
             get {
                 return ResourceManager.GetString("AddTextStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AllDelete 的本地化字符串。
+        /// </summary>
+        public static string AllDelete {
+            get {
+                return ResourceManager.GetString("AllDelete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AllHidden 的本地化字符串。
+        /// </summary>
+        public static string AllHidden {
+            get {
+                return ResourceManager.GetString("AllHidden", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AllVisibale 的本地化字符串。
+        /// </summary>
+        public static string AllVisibale {
+            get {
+                return ResourceManager.GetString("AllVisibale", resourceCulture);
             }
         }
         
@@ -484,6 +520,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Hidden 的本地化字符串。
+        /// </summary>
+        public static string Hidden {
+            get {
+                return ResourceManager.GetString("Hidden", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Image File 的本地化字符串。
         /// </summary>
         public static string Image_File {
@@ -543,6 +588,15 @@ namespace ShaoLu.Resources {
         public static string No_img_Warning {
             get {
                 return ResourceManager.GetString("No_img_Warning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 NoCropImage 的本地化字符串。
+        /// </summary>
+        public static string NoCropImage {
+            get {
+                return ResourceManager.GetString("NoCropImage", resourceCulture);
             }
         }
         
@@ -664,6 +718,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Reset 的本地化字符串。
+        /// </summary>
+        public static string Reset {
+            get {
+                return ResourceManager.GetString("Reset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Save 的本地化字符串。
         /// </summary>
         public static string Save {
@@ -678,6 +741,15 @@ namespace ShaoLu.Resources {
         public static string SaveAndBack {
             get {
                 return ResourceManager.GetString("SaveAndBack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Saved 的本地化字符串。
+        /// </summary>
+        public static string Saved {
+            get {
+                return ResourceManager.GetString("Saved", resourceCulture);
             }
         }
         
@@ -831,6 +903,15 @@ namespace ShaoLu.Resources {
         public static string StepType_TypeText {
             get {
                 return ResourceManager.GetString("StepType_TypeText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Success 的本地化字符串。
+        /// </summary>
+        public static string Success {
+            get {
+                return ResourceManager.GetString("Success", resourceCulture);
             }
         }
         

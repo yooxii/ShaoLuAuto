@@ -14,6 +14,18 @@
         {
         }
 
+        public Point(int size)
+        {
+            X = size;
+            Y = size;
+        }
+
+        public Point(double size)
+        {
+            X = (int)size;
+            Y = (int)size;
+        }
+
         public Point(OpenCvSharp.Point p)
         {
             X = p.X;

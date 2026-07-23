@@ -20,7 +20,7 @@ namespace ShaoLu.Models
         // 其他步骤类型...
     }
 
-    public class AutomationStepBaseModel
+    public class AutoPoint
     {
     }
 }

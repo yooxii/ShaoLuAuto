@@ -96,7 +96,13 @@
                         Width="150"/>
                 </StackPanel>
             </StackPanel>
-            
+
+
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+
             <StackPanel>
                 <Label Content="{lex:Loc FindTimeInterval}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding GapTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
@@ -214,6 +220,10 @@
                 </ListBox.ItemTemplate>
             </ListBox>
             <StackPanel>
+                <StackPanel VerticalAlignment="Center">
+                    <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+                </StackPanel>
                 <StackPanel>
                     <Label Content="{lex:Loc FindTimeInterval}" VerticalAlignment="Center"/>
                     <wd:NumericBox Value="{Binding GapTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
@@ -231,12 +241,16 @@
     <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
         <StackPanel Orientation="Vertical">
             <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.01"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
         </StackPanel>
     </DataTemplate>
@@ -244,6 +258,10 @@
     <DataTemplate x:Key="TextStepMoreTemplate" DataType="{x:Type AutoVM:TypeTextMoreStep}">
         <StackPanel Orientation="Vertical">
             <StackPanel VerticalAlignment="Center">
+                <StackPanel VerticalAlignment="Center">
+                    <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+                </StackPanel>
                 <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
             </StackPanel>
@@ -271,19 +289,20 @@
     <DataTemplate x:Key="TextStepFromFileTemplate" DataType="{x:Type AutoVM:TypeTextFromFileStep}">
         <StackPanel Orientation="Vertical">
             <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
+                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.01"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
 
-            <StackPanel VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+            <StackPanel VerticalAlignment="Center" Margin="0,5,0,0">
+                <StackPanel HorizontalAlignment="Stretch">
+                    <Label Content="{lex:Loc Contents}"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Stretch">
                     <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}"/>
-                    <Label Content="{lex:Loc Delimiter}" VerticalAlignment="Center"/>
-                    <TextBox Text="{Binding Delimiter}"/>
                 </StackPanel>
                 <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
                 <ListBox ItemsSource="{Binding PreviewContents}">

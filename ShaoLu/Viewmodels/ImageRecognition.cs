@@ -1,19 +1,21 @@
-﻿using ShaoLu.Models;
+﻿using CommunityToolkit.Mvvm.Input;
+using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
+using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Viewmodels.AutomationStep
 {
     // 图像基类
-    public abstract class ImageRecognitionBase : AutomationStepBase, IDisposable
+    public abstract partial class ImageRecognitionBase : AutomationStepBase, IDisposable
     {
         readonly PathServices pathServices = new();
         readonly FileServices fileServer = SingletonLocator.FileServices;
@@ -70,11 +72,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private int _offsetY = 0;
         private bool _hasOffset = false;
         private double _similarityThreshold = 0.85;
+        private List<Point> _clickOffest = [];
 
         public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
 
+
         [JsonIgnore]
-        public System.Drawing.Point Offset => new(OffsetX, OffsetY);
+        public Point Offset => new(OffsetX, OffsetY);
+
+        public List<Point> ClickOffest { get => _clickOffest; set => _clickOffest = value; }
 
         public int OffsetX { get => _offsetX; set => SetProperty(ref _offsetX, value); }
 
@@ -100,16 +106,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 }
             }
         }
+
         #endregion
 
         #endregion
 
         #region 命令
 
-        private RelayCommand selectImageCommand;
-        [JsonIgnore]
-        public ICommand SelectImageCommand => selectImageCommand ??= new RelayCommand(SelectImage);
-
+        [RelayCommand]
         private void SelectImage()
         {
             var title = LanguageService.GetLocalizedString("Select_target_pic", "Open Image File");
@@ -117,10 +121,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             ImagePath = pathServices.OpenPathDialog(title, filter);
         }
 
-        private RelayCommand eidtImageCommand;
-        [JsonIgnore]
-        public ICommand EditImageCommand => eidtImageCommand ??= new RelayCommand(EditImage);
-
+        [RelayCommand]
         private void EditImage()
         {
             if (ImgSrc != null)
@@ -140,9 +141,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     CroppedImg = img;
                     CroppedRect = rect;
-                    OffsetX = (int)offset.X;
-                    OffsetY = (int)offset.Y;
-                    HasOffset = offset != null;
+                    OffsetX = offset.X;
+                    OffsetY = offset.Y;
+                    HasOffset = !offset.IsEmpty;
                 };
             }
         }
@@ -322,10 +323,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
 
 
-        private double _waitTime = 0;
-        public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
-
-
         private double _timeout = 3;
         public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
 
@@ -374,7 +371,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
             var res = await Task.Run(() =>
             {
-                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offset, SimilarityThreshold, Clicks, ClickGap, WaitTime, Timeout);
+                Thread.Sleep((int)WaitTime * 1000);
+                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, Offset, SimilarityThreshold, Clicks, ClickGap, 0, Timeout);
             });
             IsTrue = res;
             IsError = false;
@@ -421,6 +419,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 CroppedImg = CroppedImg,
                 CroppedRect = CroppedRect,
                 SimilarityThreshold = SimilarityThreshold,
+                WaitTime = WaitTime,
                 GapTime = GapTime,
                 Timeout = Timeout
             };
@@ -432,7 +431,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for finding.");
             var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-            var res = await Task.Run(() => { return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout); });
+            var res = await Task.Run(() =>
+            {
+                Thread.Sleep((int)WaitTime * 1000);
+                return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout);
+            });
             img?.Dispose();
             IsTrue = !res.IsEmpty;
             IsError = false;

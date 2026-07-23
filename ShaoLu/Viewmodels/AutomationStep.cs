@@ -37,6 +37,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private bool _isTrue = false;
         private AutomationStepBase _trueGoto;
         private AutomationStepBase _falseGoto;
+        private double _waitTime = 0.1;
 
 
         public bool IsNeed
@@ -97,6 +98,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public AutomationStepBase TrueGoto { get => _trueGoto; set => SetProperty(ref _trueGoto, value); }
         public AutomationStepBase FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
 
+        public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
+
         #endregion
 
         /// <summary>
@@ -134,7 +137,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
     public class TypeTextStep : AutomationStepBase
     {
         private string _textToType;
-        private double _delayBetweenKeys = 0.01;
+        private double _delayBetweenKeys = 0.05;
 
         /// <summary>
         /// 输入内容
@@ -165,7 +168,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             return new TypeTextStep(Name, Description)
             {
                 TextToType = TextToType,
-                DelayBetweenKeys = DelayBetweenKeys
+                DelayBetweenKeys = DelayBetweenKeys,
+                WaitTime = WaitTime,
             };
         }
         #endregion
@@ -174,7 +178,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             var res = await Task.Run(() =>
             {
-                return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
+                Thread.Sleep((int)WaitTime * 1000);
+                if (DelayBetweenKeys < 0.01)
+                {
+                    return Autogui.TypeTextSafe(TextToType);
+                }
+                else
+                {
+                    return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
+                }
             });
             IsTrue = res;
             IsError = false;
@@ -260,9 +272,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
+            Thread.Sleep((int)WaitTime * 1000);
             var res = await Task.Run(() =>
             {
-                return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
+                return Autogui.TypeTextSafe(TextToType, (int)(DelayBetweenKeys * 1000));
             });
             IsTrue = res;
             IsError = false;
@@ -281,7 +294,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private int _index = 0;
         private ObservableCollection<string> _contents = [];
         private ObservableCollection<string> _previewContents = [];
-        private string _delimiter = "\n,\r,\n\r,";
+        private string[] _delimiter = ["\n", "\r", "\n\r", "\t", ",", ";", "|"];
 
 
         public string FilePath { get => _filePath; set => SetProperty(ref _filePath, value); }
@@ -308,7 +321,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>
         /// 分割符
         /// </summary>
-        public string Delimiter { get => _delimiter; set => SetProperty(ref _delimiter, value); }
+        [JsonIgnore]
+        public string[] Delimiter { get => _delimiter; set => SetProperty(ref _delimiter, value); }
 
 
 
@@ -333,8 +347,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             return new TypeTextFromFileStep(Name, Description)
             {
+                FilePath = FilePath,
                 TextToType = TextToType,
-                DelayBetweenKeys = DelayBetweenKeys
+                DelayBetweenKeys = DelayBetweenKeys,
+                Contents = Contents,
+                PreviewContents = PreviewContents,
             };
         }
         #endregion
@@ -356,7 +373,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private void LoadFile()
         {
             string res;
-            if (new List<string> { "txt", "csv", "json" }.Contains(Path.GetExtension(FilePath).ToLower()))
+            if (new List<string> { ".txt", ".csv", ".json" }.Contains(Path.GetExtension(FilePath).ToLower()))
             {
                 res = fileServices.SmartReadTextFile(FilePath);
             }
@@ -368,10 +385,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 throw new Exception("No support file type.");
             }
-            var splits = Delimiter.Split([","], StringSplitOptions.RemoveEmptyEntries);
             Contents.Clear();
             PreviewContents.Clear();
-            Contents.AddRange(res.Split(splits, StringSplitOptions.RemoveEmptyEntries).ToList());
+            Contents.AddRange(res.Split(Delimiter, StringSplitOptions.RemoveEmptyEntries).ToList());
             PreviewContents.AddRange(Contents.Take(Contents.Count > 10 ? 10 : Contents.Count)); //TODO:
         }
 
@@ -390,7 +406,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
             var res = await Task.Run(() =>
             {
-                return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
+                Thread.Sleep((int)WaitTime * 1000);
+                return Autogui.TypeTextSafe(TextToType, (int)(DelayBetweenKeys * 1000));
             });
             IsTrue = res;
             IsError = false;
@@ -480,7 +497,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Title = Title,
                 PopupText = PopupText,
                 PopupFont = PopupFont,
-                PopupType = PopupType
+                PopupType = PopupType,
             };
         }
 
@@ -518,9 +535,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     }
                 }))
                 {
-                    // WaitAsync 是 .NET 6+ 的方法。在 .NET Framework 4.8 中，我们需要手动处理
-                    // 这里使用 Task.WhenAny 来模拟
-
                     var cancelTask = new TaskCompletionSource<bool>();
                     using (cancellationToken.Register(() => cancelTask.TrySetResult(true)))
                     {
@@ -626,11 +640,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override AutomationStepBase Clone()
         {
-            return new EmptyStep(Name, Description);
+            return new EmptyStep(Name, Description)
+            {
+                WaitTime = WaitTime,
+            };
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
+            Thread.Sleep((int)WaitTime * 1000);
             return IsTrue;
         }
     }

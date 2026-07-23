@@ -58,10 +58,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public double ClickGap { get => _clickGap; set => SetProperty(ref _clickGap, value); }
 
 
-        private double _waitTime = 0;
-        public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
-
-
         private double _timeout = 3;
         public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
 
@@ -109,7 +105,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
                 res = await Task.Run(() =>
                 {
-                    return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, image.Offset, image.SimilarityThreshold, Clicks, ClickGap, WaitTime, Timeout);
+                    Thread.Sleep((int)WaitTime * 1000);
+                    return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, image.Offset, image.SimilarityThreshold, Clicks, ClickGap, 0, Timeout);
                 });
             }
             IsTrue = res;
@@ -154,6 +151,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 IsSave = IsSave,
                 OneByOne = OneByOne,
                 Images = Images,
+                WaitTime = WaitTime,
                 GapTime = GapTime,
                 Timeout = Timeout
             };
@@ -161,7 +159,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
         public override async Task<bool> RunAsync(CancellationToken cancellationToken = default)
         {
-            List<AutoguiModel.Apoint> res = [];
+            List<AutoguiModel.AutoRect> res = [];
             List<AutoguiImage> autoguiImages = Images.Select(x => new AutoguiImage()
             {
                 Bitmap = Utils.Autogui.ConvertImageSourceToBitmap(x.CroppedImg ?? x.ImgSrc ?? throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"))),
@@ -169,7 +167,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 PositionOffset = x.Offset,
                 Threshold = x.SimilarityThreshold
             }).ToList();
-            res = await Task.Run(() => { return Autogui.FindImagesOnScreen(autoguiImages, GapTime, Timeout); });
+            res = await Task.Run(() =>
+            {
+                Thread.Sleep((int)WaitTime * 1000);
+                return Autogui.FindImagesOnScreen(autoguiImages, GapTime, Timeout);
+            });
             IsTrue = !res[0].IsEmpty;
             IsError = false;
             return IsTrue;

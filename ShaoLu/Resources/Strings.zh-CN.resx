@@ -402,4 +402,7 @@
   <data name="Delimiter" xml:space="preserve">
     <value>分割符</value>
   </data>
+  <data name="Contents" xml:space="preserve">
+    <value>内容</value>
+  </data>
 </root>

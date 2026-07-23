@@ -10,6 +10,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using WindowsInput;
 using static ShaoLu.Models.AutoguiModel;
+using Clipboard = System.Windows.Clipboard;
+using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Utils
 {
@@ -17,10 +19,11 @@ namespace ShaoLu.Utils
     {
         public Bitmap Bitmap;
         public Autogui.Position Position;
-        public System.Drawing.Point? PositionOffset;
+        public Point PositionOffset;
         public double Threshold = 0.85;
 
     }
+
     public class Autogui
     {
         private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -54,7 +57,7 @@ namespace ShaoLu.Utils
         /// <param name="gaptime"> 若没有找到，重复的间隔时间，(s) </param>
         /// <param name="timeout"> 若没有找到，超时时间，(s) </param>
         /// <returns>匹配结果，包含坐标和相似度</returns>
-        public static Apoint FindImageOnScreen(Bitmap templateImage, double threshold = 0.8, double gaptime = 0.2, double timeout = 3)
+        public static AutoRect FindImageOnScreen(Bitmap templateImage, double threshold = 0.8, double gaptime = 0.2, double timeout = 3)
         {
             if (templateImage == null)
             {
@@ -66,7 +69,7 @@ namespace ShaoLu.Utils
 
             // 使用 Stopwatch 进行精确计时
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            Apoint res = new();
+            AutoRect res = new();
 
             // 将模板转换为 Mat（只需转换一次，避免在循环中重复转换）
             using var templateMat = BitmapConverter.ToMat(templateImage);
@@ -93,7 +96,7 @@ namespace ShaoLu.Utils
                     int centerX = maxLoc.X + templateMat.Width / 2;
                     int centerY = maxLoc.Y + templateMat.Height / 2;
 
-                    res.Center = new OpenCvSharp.Point(centerX, centerY);
+                    res.Center = new Point(centerX, centerY);
                     res.LeftTop = maxLoc;
                     res.Similarity = maxVal;
                     return res; // 找到目标，直接返回
@@ -119,14 +122,14 @@ namespace ShaoLu.Utils
             return res;
         }
 
-        public static List<Apoint> FindImagesOnScreen(List<AutoguiImage> templateImage, double gaptime = 0.2, double timeout = 3, bool signle = false)
+        public static List<AutoRect> FindImagesOnScreen(List<AutoguiImage> templateImage, double gaptime = 0.2, double timeout = 3, bool signle = false)
         {
             if (templateImage == null || templateImage.Count == 0)
             {
                 throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"));
             }
 
-            List<Apoint> apoints = [];
+            List<AutoRect> apoints = [];
             int gapTimeMs = (int)(gaptime * 1000);
             int timeoutMs = (int)(timeout * 1000);
 
@@ -137,7 +140,7 @@ namespace ShaoLu.Utils
             {
                 try
                 {
-                    Apoint res = FindImageOnScreen(templateImage[i].Bitmap, templateImage[i].Threshold, 0, 0);
+                    AutoRect res = FindImageOnScreen(templateImage[i].Bitmap, templateImage[i].Threshold, 0, 0);
                     apoints.Add(res);
                     if (signle)
                     {
@@ -199,7 +202,7 @@ namespace ShaoLu.Utils
         /// <param name="point">给定的位置区域</param>
         /// <param name="position">锚点位置：0-中心, 1-左上, 2-右上, 3-左下, 4-右下</param>
         /// <param name="position_offset">相对于锚点的像素偏移量</param>
-        public static void MoveMouseTo(Apoint point, Position position = Position.Center, System.Drawing.Point? position_offset = null)
+        public static void MoveMouseTo(AutoRect point, Position position = Position.Center, Point? position_offset = null)
         {
             // 1. 防御性检查：如果点无效或为空，直接返回
             if (point == null || point.IsEmpty)
@@ -240,10 +243,10 @@ namespace ShaoLu.Utils
             }
 
             // 3. 应用偏移量
-            if (position_offset.HasValue)
+            if (position_offset?.IsEmpty ?? false)
             {
-                targetX += (int)position_offset.Value.X;
-                targetY += (int)position_offset.Value.Y;
+                targetX += position_offset.X;
+                targetY += position_offset.Y;
             }
 
             // 4. 执行移动
@@ -251,7 +254,7 @@ namespace ShaoLu.Utils
             MoveMouseTo(targetX, targetY);
         }
 
-        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, System.Drawing.Point? position_offset = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double waittime = 0.1, double timeout = 3)
+        public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, Point? position_offset = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double waittime = 0.1, double timeout = 3)
         {
             int waitTimeMs = (int)(waittime * 1000);
             int clickGapTimeMs = (int)(clickgaptime * 1000);
@@ -264,7 +267,7 @@ namespace ShaoLu.Utils
 
             while (true)
             {
-                Apoint point = FindImageOnScreen(templateImage, threshold, 0.2, 0.4);
+                AutoRect point = FindImageOnScreen(templateImage, threshold, 0.2, 0.4);
                 if (!point.IsEmpty)
                 {
                     MoveMouseTo(point, position, position_offset);
@@ -344,6 +347,74 @@ namespace ShaoLu.Utils
                 Thread.Sleep(delayBetweenKeys);
             }
             return true;
+        }
+
+        private static bool ExecuteClipboardOperation(string text, int delayBeforePaste)
+        {
+            string? originalClipboard = null;
+            try
+            {
+                // 1. 备份当前剪贴板内容 (使用 WPF 的 Clipboard)
+                if (Clipboard.ContainsText())
+                {
+                    originalClipboard = Clipboard.GetText();
+                }
+
+                // 2. 设置剪贴板
+                Clipboard.SetText(text);
+
+                // 3. 等待剪贴板更新
+                Thread.Sleep(delayBeforePaste);
+
+                // 4. 模拟 Ctrl+V
+                sim.Keyboard.KeyDown(WindowsInput.Native.VirtualKeyCode.CONTROL);
+                sim.Keyboard.KeyPress(WindowsInput.Native.VirtualKeyCode.VK_V);
+                sim.Keyboard.KeyUp(WindowsInput.Native.VirtualKeyCode.CONTROL);
+
+                return true;
+            }
+            finally
+            {
+                // 5. 恢复剪贴板
+                if (originalClipboard != null)
+                {
+                    try
+                    {
+                        Clipboard.SetText(originalClipboard);
+                    }
+                    catch { /* 忽略恢复失败的错误 */ }
+                }
+            }
+        }
+
+        public static bool TypeTextSafe(string text, int delayBeforePaste = 50)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                throw new Exception("TypeText is Null.");
+            }
+
+            try
+            {
+                // 关键：确保在 STA 线程（通常是 UI 线程）上执行剪贴板操作
+                if (App.Current.Dispatcher.CheckAccess())
+                {
+                    return ExecuteClipboardOperation(text, delayBeforePaste);
+                }
+                else
+                {
+                    // 如果在后台线程，同步Invoke到UI线程
+                    // 注意：InvokeAsync 是异步的，这里需要等待结果，所以用 Invoke
+                    var result = App.Current.Dispatcher.Invoke(() =>
+                        ExecuteClipboardOperation(text, delayBeforePaste));
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Failed to type text via clipboard.");
+                return false;
+            }
         }
 
         #endregion

@@ -3,6 +3,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Views
 {

@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
+using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Viewmodels
 {
@@ -9,6 +11,16 @@ namespace ShaoLu.Viewmodels
     {
 
         private ImageSource _imgSrc;
+        private ImageSource _imgDst;
+        private Rect _cropRect;
+        private ObservableCollection<Point> clickOffsets = [];
+        private double _offsetX = 0;
+        private double _offsetY = 0;
+        private Visibility _thumbVisibility = Visibility.Hidden;
+        private double _thumbX;
+        private double _thumbY;
+
+
         public ImageSource ImgSrc
         {
             get => _imgSrc;
@@ -26,14 +38,12 @@ namespace ShaoLu.Viewmodels
             }
         }
 
-        private ImageSource _imgDst;
         public ImageSource ImgDst
         {
             get => _imgDst;
             set => SetProperty(ref _imgDst, value);
         }
 
-        private Rect _cropRect;
         public Rect CropRect
         {
             get => _cropRect;
@@ -42,7 +52,6 @@ namespace ShaoLu.Viewmodels
 
         public Point ClickOffset => new(OffsetX, OffsetY);
 
-        private double _offsetX = 0;
         public double OffsetX
         {
             get => _offsetX;
@@ -55,7 +64,6 @@ namespace ShaoLu.Viewmodels
             }
         }
 
-        private double _offsetY = 0;
         public double OffsetY
         {
             get => _offsetY;
@@ -70,14 +78,14 @@ namespace ShaoLu.Viewmodels
 
         public double ThumbSize => 20;
 
-        private Visibility _thumbVisibility = Visibility.Hidden;
         public Visibility ThumbVisibility { get => _thumbVisibility; set => SetProperty(ref _thumbVisibility, value); }
 
-        private double _thumbX;
         public double ThumbX { get => _thumbX; set => SetProperty(ref _thumbX, value); }
 
-        private double _thumbY;
         public double ThumbY { get => _thumbY; set => SetProperty(ref _thumbY, value); }
+
+        public ObservableCollection<Point> ClickOffsets { get => clickOffsets; set => SetProperty(ref clickOffsets, value); }
+
 
         public event Action<ImageSource, Rect, Point> OnImageSaved;
 
@@ -97,11 +105,20 @@ namespace ShaoLu.Viewmodels
             OffsetY = tmp.Y;
         }
 
-        public void SetOffset(System.Drawing.Point offset)
+        public void SetOffset(Point offset)
         {
             if (offset == null) return;
             OffsetX = offset.X;
             OffsetY = offset.Y;
         }
+    }
+
+    public class EditThumb : ObservableObject
+    {
+        private double _thumbX;
+        private double _thumbY;
+
+        public double ThumbX { get => _thumbX; set => _thumbX = value; }
+        public double ThumbY { get => _thumbY; set => _thumbY = value; }
     }
 }

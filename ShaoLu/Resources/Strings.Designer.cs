@@ -286,6 +286,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Contents 的本地化字符串。
+        /// </summary>
+        public static string Contents {
+            get {
+                return ResourceManager.GetString("Contents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 ConvertImageSourceToBitmapFail 的本地化字符串。
         /// </summary>
         public static string ConvertImageSourceToBitmapFail {

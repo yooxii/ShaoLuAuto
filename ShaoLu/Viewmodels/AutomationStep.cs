@@ -196,7 +196,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
     public class TypeTextMoreStep : AutomationStepBase
     {
-        readonly PathServices pathServices = new();
         readonly FileServices fileServices = SingletonLocator.FileServices;
 
         private string _filePath;
@@ -285,7 +284,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
     public partial class TypeTextFromFileStep : AutomationStepBase
     {
-        readonly PathServices pathServices = new();
         readonly FileServices fileServices = SingletonLocator.FileServices;
 
         private string _filePath;
@@ -360,7 +358,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [RelayCommand]
         private void OpenFile()
         {
-            var path = pathServices.OpenPathDialog(LanguageService.GetLocalizedString("OpenFile"), "All File|*.*|Text|*.txt;*.csv|Xlsx|*.xlsx");
+            var path = PathServices.OpenPathDialog(LanguageService.GetLocalizedString("OpenFile"), "All File|*.*|Text|*.txt;*.csv|Xlsx|*.xlsx");
             if (path != null) FilePath = path;
             LoadFile();
         }

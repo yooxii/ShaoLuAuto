@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using ShaoLu.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +24,6 @@ namespace ShaoLu.Views
     /// </summary>
     public partial class WindowCropImage : Window
     {
-        private readonly Services.PathServices fileServices = new();
         public WindowCropImage()
         {
             InitializeComponent();
@@ -35,7 +35,7 @@ namespace ShaoLu.Views
 
         private void OnImportClickHandler(object sender, RoutedEventArgs e)
         {
-            var filePath = fileServices.OpenPathDialog("打开图片", "图像文件(*.jpg;*.jpeg;*.png;)|*.jpg;*.jpeg;*.png;");
+            var filePath = PathServices.OpenPathDialog("打开图片", "图像文件(*.jpg;*.jpeg;*.png;)|*.jpg;*.jpeg;*.png;");
             var fileInfo = new FileInfo(filePath);
             var fileSize = fileInfo.Length;
             var mb = ConvertBytesToMB(fileSize);

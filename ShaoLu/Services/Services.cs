@@ -9,7 +9,7 @@ namespace ShaoLu.Services
 {
     public class PathServices
     {
-        public string OpenPathDialog(string title = "Open File", string filter = "All File|*.*", string initPath = null, bool isDir = false)
+        public static string OpenPathDialog(string title = "Open File", string filter = "All File|*.*", string initPath = null, bool isDir = false)
         {
             OpenFileDialog dialog = new()
             {
@@ -21,7 +21,7 @@ namespace ShaoLu.Services
             return result == true ? isDir ? Path.GetDirectoryName(dialog.FileName) : dialog.FileName : null;
         }
 
-        public string SavePathDialog(string title = "Open File", string filter = "All File|*.*", string saveName = "", string initPath = null)
+        public static string SavePathDialog(string title = "Open File", string filter = "All File|*.*", string saveName = "", string initPath = null)
         {
             SaveFileDialog dialog = new()
             {
@@ -32,6 +32,39 @@ namespace ShaoLu.Services
             };
             bool? result = dialog.ShowDialog();
             return result == true ? dialog.FileName : null;
+        }
+
+        public static string GetRelativePath(string absolutePath, string relativeTo)
+        {
+            string[] absoluteDirs = absolutePath.Split(['\\', '/']);
+            string[] relativeDirs = relativeTo.Split(['\\', '/']);
+
+            int length = Math.Min(absoluteDirs.Length, relativeDirs.Length);
+            int lastCommonRoot = -1;
+            for (int i = 0; i < length; i++)
+            {
+                if (absoluteDirs[i] == relativeDirs[i])
+                    lastCommonRoot = i;
+                else
+                    break;
+            }
+
+            if (lastCommonRoot == -1)
+                throw new ArgumentException("Paths do not have a common base");
+
+            StringBuilder sb = new();
+            for(int i = lastCommonRoot + 1; i < absoluteDirs.Length; i++)
+            {
+                if (absoluteDirs[i].Length > 0)
+                    sb.Append("..\\");
+            }
+            for (int i = lastCommonRoot + 1; i < relativeDirs.Length; i++)
+            {
+                sb.Append(relativeDirs[i]);
+                if (i < relativeDirs.Length - 1)
+                    sb.Append("\\");
+            }
+            return sb.ToString();
         }
     }
 

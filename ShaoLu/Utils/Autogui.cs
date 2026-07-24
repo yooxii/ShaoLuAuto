@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using WindowsInput;
-using static ShaoLu.Models.AutoguiModel;
+using ShaoLu.Models;
 using Clipboard = System.Windows.Clipboard;
 using Point = ShaoLu.Models.Point;
 

@@ -72,7 +72,7 @@
                                             <Grid>
                                                 <Ellipse Fill="Red" Stroke="White" StrokeThickness="2" Opacity="0.8"/>
                                                 <Path Data="M 0,10 L 20,10 M 10,0 L 10,20" Stroke="White" StrokeThickness="2"/>
-                                                <Border Background="#AA000000" CornerRadius="5"  HorizontalAlignment="Right"  VerticalAlignment="Top"
+                                                <Border Background="#99000000" CornerRadius="5"  HorizontalAlignment="Right"  VerticalAlignment="Top"
                                                         Margin="-5,-5,0,0" Padding="2,1,2,1" BorderBrush="White" BorderThickness="1">
                                                     <TextBlock Text="{Binding ThumbNo}" Foreground="White" FontSize="10" FontWeight="Bold"
                                                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
@@ -91,23 +91,6 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
-                    <!--<Canvas>
-                        <Thumb x:Name="ClickPointThumb"
-                                Visibility="{Binding ThumbVisibility}"
-                                Canvas.Left="{Binding ThumbX}"
-                                Canvas.Top="{Binding ThumbY}"
-                                DragDelta="ClickPointThumb_DragDelta"
-                                Width="{Binding ThumbSize}" Height="{Binding ThumbSize}">
-                            <Thumb.Template>
-                                <ControlTemplate>
-                                    <Grid>
-                                        <Ellipse Fill="Red" Stroke="White" StrokeThickness="2" Opacity="0.8"/>
-                                        <Path Data="M 0,10 L 20,10 M 10,0 L 10,20" Stroke="White" StrokeThickness="2"/>
-                                    </Grid>
-                                </ControlTemplate>
-                            </Thumb.Template>
-                        </Thumb>
-                    </Canvas>-->
                 </Grid>
                 <GroupBox Header="{lex:Loc Preview}" Grid.Row="2">
                     <Image x:Name="PreviewImage" Source="{Binding ImgDst}" HorizontalAlignment="Center" VerticalAlignment="Center"/>

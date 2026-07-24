@@ -3,6 +3,7 @@ using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -120,10 +121,10 @@ namespace ShaoLu
 
         private void Open_Click(object sender, RoutedEventArgs e)
         {
-            Services.PathServices fileServices = new();
-            var filePath = fileServices.OpenPathDialog("打开文件", "步骤文件|*.json");
+            var filePath = PathServices.OpenPathDialog("打开文件", "步骤文件|*.json");
             if (filePath != null)
             {
+                mainViewModel.StepFileDir = Path.GetDirectoryName(filePath);
                 var AutomationStepBases = StepsFile.LoadStepsFromJson(filePath);
                 stepsViewModel.AutomationStepBases.Clear();
                 stepsViewModel.InsertSteps(AutomationStepBases);
@@ -132,8 +133,7 @@ namespace ShaoLu
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            Services.PathServices fileServices = new();
-            var filePath = fileServices.SavePathDialog("保存文件", "步骤文件|*.json");
+            var filePath = PathServices.SavePathDialog("保存文件", "步骤文件|*.json");
             if (filePath != null)
             {
                 foreach (var step in stepsViewModel.AutomationStepBases)

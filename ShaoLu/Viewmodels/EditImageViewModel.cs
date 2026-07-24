@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data.Common;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Windows;
@@ -97,7 +96,7 @@ namespace ShaoLu.Viewmodels
         public void SetThumbs(List<ClickThumb> clickThumbs)
         {
             Thumbs.Clear();
-            clickThumbs.ForEach(thumb => Thumbs.Add(thumb));
+            clickThumbs.ForEach(Thumbs.Add);
         }
 
         public void SaveCroppedImage()
@@ -172,7 +171,7 @@ namespace ShaoLu.Viewmodels
             {
                 if (SetProperty(ref _thumbX, value))
                 {
-                    ThumbCoordinates = $"{(int)ThumbX},{(int)ThumbY}";
+                    ThumbCoordinates = $"Absolute position:{ClickPoint.X},{ClickPoint.Y}";
                 }
             }
         }
@@ -183,12 +182,12 @@ namespace ShaoLu.Viewmodels
             {
                 if (SetProperty(ref _thumbY, value))
                 {
-                    ThumbCoordinates = $"{(int)ThumbX},{(int)ThumbY}";
+                    ThumbCoordinates = $"Absolute position:{ClickPoint.X},{ClickPoint.Y}";
                 }
             }
         }
         [JsonIgnore]
-        public Point ClickPoint => new(ThumbX, ThumbY);
+        public Point ClickPoint => new(ThumbX + ThumbSize / 2, ThumbY + ThumbSize / 2);
         public Visibility ThumbVisibility { get => _thumbVisibility; set => SetProperty(ref _thumbVisibility, value); }
         public double ThumbSize { get => _thumbSize; set => SetProperty(ref _thumbSize, value); }
 

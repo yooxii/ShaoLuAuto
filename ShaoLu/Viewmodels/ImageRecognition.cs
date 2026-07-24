@@ -5,12 +5,14 @@ using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Viewmodels.AutomationStep
@@ -18,34 +20,87 @@ namespace ShaoLu.Viewmodels.AutomationStep
     // 图像基类
     public abstract partial class ImageRecognitionBase : AutomationStepBase, IDisposable
     {
-        readonly PathServices pathServices = new();
+        readonly MainViewModel mainVM = SingletonLocator.Main;
         readonly FileServices fileServer = SingletonLocator.FileServices;
         private bool _isDisposed = false;
 
         #region 属性
 
-        private string _imagePath;
-        private string _croppedImagePath;
-        private ImageSource _croppedImg;
 
-        public Rect _croppedRect;
-        private double _similarityThreshold = 0.85;
-        private List<ClickThumb> _clickThumbs = [];
+        #region 路径
+
+        private string _imagePath;
+        private string _imageFromRootPath;
+        private string _imageFromStepPath;
+        private string _croppedImagePath;
+        private string _croppedImageFromRootPath;
+        private string _croppedImageFromStepPath;
 
         public string ImagePath
         {
             get => _imagePath;
-            set => SetProperty(ref _imagePath, value);
+            set
+            {
+                if (SetProperty(ref _imagePath, value))
+                {
+                    if (Directory.Exists(mainVM.RootDir))
+                        ImageFromRootPath = PathServices.GetRelativePath(mainVM.RootDir, _imagePath);
+                    if (Directory.Exists(mainVM.StepFileDir))
+                    {
+                        ImageFromStepPath = PathServices.GetRelativePath(mainVM.StepFileDir, _imagePath);
+                    }
+                }
+            }
         }
-
-        [JsonIgnore]
-        public ImageSource ImgSrc => LoadImage(ImagePath);
-
-        public double ImgSrcWidth => (ImgSrc?.Width ?? 0);
-
+        public string ImageFromRootPath { get => _imageFromRootPath; set => _imageFromRootPath = value; }
+        public string ImageFromStepPath { get => _imageFromStepPath; set => _imageFromStepPath = value; }
         public string CroppedImagePath
         {
-            get => _croppedImagePath; set => SetProperty(ref _croppedImagePath, value);
+            get => _croppedImagePath;
+            set
+            {
+                if (SetProperty(ref _croppedImagePath, value))
+                {
+                    if (Directory.Exists(mainVM.RootDir))
+                        CroppedImageFromRootPath = PathServices.GetRelativePath(mainVM.RootDir, _croppedImagePath);
+                    if (Directory.Exists(mainVM.StepFileDir))
+                    {
+                        CroppedImageFromStepPath = PathServices.GetRelativePath(mainVM.StepFileDir, _croppedImagePath);
+                    }
+                }
+            }
+        }
+        public string CroppedImageFromRootPath { get => _croppedImageFromRootPath; set => _croppedImageFromRootPath = value; }
+        public string CroppedImageFromStepPath { get => _croppedImageFromStepPath; set => _croppedImageFromStepPath = value; }
+
+        [JsonIgnore]
+        public string FullCropedImageFromStepPath => System.IO.Path.Combine(mainVM.StepFileDir, CroppedImageFromStepPath);
+        [JsonIgnore]
+        public string FullImageFromStepPath => System.IO.Path.Combine(mainVM.StepFileDir, ImageFromStepPath);
+
+        #endregion
+
+
+        private ImageSource _croppedImg;
+        private Rect _croppedRect;
+        private double _similarityThreshold = 0.85;
+        private List<ClickThumb> _clickThumbs = [];
+
+
+        [JsonIgnore]
+        public ImageSource ImgSrc
+        {
+            get
+            {
+                if (!File.Exists(ImagePath))
+                {
+                    if (File.Exists(ImageFromRootPath))
+                        ImagePath = System.IO.Path.GetFullPath(ImageFromRootPath);
+                    else if(File.Exists(FullImageFromStepPath))
+                        ImagePath = System.IO.Path.GetFullPath(FullImageFromStepPath);
+                }
+                return LoadImage(ImagePath, ImageFromRootPath, FullImageFromStepPath);
+            }
         }
 
         [JsonIgnore]
@@ -53,8 +108,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             get
             {
-                if (System.IO.File.Exists(CroppedImagePath))
-                    _croppedImg ??= LoadImage(CroppedImagePath);
+                if (!File.Exists(ImagePath))
+                {
+                    if (File.Exists(ImageFromRootPath))
+                        ImagePath = System.IO.Path.GetFullPath(ImageFromRootPath);
+                    else if (File.Exists(FullImageFromStepPath))
+                        ImagePath = System.IO.Path.GetFullPath(FullImageFromStepPath);
+                }
+                _croppedImg ??= LoadImage(CroppedImagePath, CroppedImageFromRootPath, FullCropedImageFromStepPath);
                 return _croppedImg;
             }
             set
@@ -76,7 +137,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public List<ClickThumb> ClickThumbs { get => _clickThumbs; set => _clickThumbs = value; }
 
         [JsonIgnore]
-        public List<Point> ClickPoints => ClickThumbs.Select(x => x.ClickPoint - CroppedRect.TopLeft + new Point(x.ThumbSize / 2)).ToList();
+        public List<Point> ClickPoints => ClickThumbs.Select(x => x.ClickPoint - CroppedRect.TopLeft).ToList();
 
         public double SimilarityThreshold
         {
@@ -97,6 +158,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+
         #endregion
 
         #region 命令
@@ -106,7 +168,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             var title = LanguageService.GetLocalizedString("Select_target_pic", "Open Image File");
             var filter = LanguageService.GetLocalizedString("Image_File", "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
-            ImagePath = pathServices.OpenPathDialog(title, filter);
+            ImagePath = PathServices.OpenPathDialog(title, filter);
         }
 
         [RelayCommand]
@@ -122,7 +184,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
                     windowEditImage.editImageViewModel.CropRect = CroppedRect;
-                    windowEditImage.editImageViewModel.SetThumbs(ClickThumbs);
+                    if (ClickThumbs != null && ClickThumbs.Count > 0)
+                        windowEditImage.editImageViewModel.SetThumbs(ClickThumbs);
                 }), System.Windows.Threading.DispatcherPriority.Loaded);
                 windowEditImage.editImageViewModel.OnImageSaved += (img, rect, clickthumbs) =>
                 {
@@ -135,41 +198,37 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         #endregion
 
-        private ImageSource LoadImage(string imagePath)
+        private ImageSource LoadImage(params string[] paths)
         {
-            ImageSource res;
-            if (!string.IsNullOrEmpty(imagePath) && System.IO.File.Exists(imagePath))
+            foreach (var path in paths)
             {
                 try
                 {
-                    // 添加 CacheOption.OnLoad 以允许文件在加载后被删除或移动（如果需要）
-                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(imagePath);
-                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    bitmap.Freeze(); // 冻结以提高性能并允许跨线程访问
-                    IsError = false;
-                    return bitmap;
+                    if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                    {
+                        // 添加 CacheOption.OnLoad 以允许文件在加载后被删除或移动（如果需要）
+                        var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.UriSource = new Uri(path);
+                        bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                        bitmap.EndInit();
+                        bitmap.Freeze(); // 冻结以提高性能并允许跨线程访问
+                        IsError = false;
+                        return bitmap;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    // Handle exceptions (e.g., invalid image format)
                     IsError = true;
                     ErrorMessage = LanguageService.GetLocalizedString("Loading_img_Warning", "Error loading image");
                     _logger.Error(ex, ErrorMessage);
+                    throw ex;
                 }
             }
-            else
-            {
-                IsError = true;
-                ErrorMessage = LanguageService.GetLocalizedString("No_img_Warning", "Error loading image");
-            }
 
-            res = null;
-            //var Warning_Title = LanguageService.GetLocalizedString("Warning", "Warning");
-            //WindowAsyncPopup.Show($"{error_msg1}: {error_msg2}", $"{Warning_Title}", PopupButtons.OK, MessageBoxImage.Warning);
-            return res;
+            IsError = true;
+            ErrorMessage = LanguageService.GetLocalizedString("No_img_Warning", "Error loading image");
+            return null;
         }
 
         #region 文件操作

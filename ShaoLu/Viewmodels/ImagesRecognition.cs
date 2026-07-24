@@ -159,7 +159,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
         public override async Task<bool> RunAsync(CancellationToken cancellationToken = default)
         {
-            List<AutoguiModel.AutoRect> res = [];
+            List<AutoRect> res = [];
             List<AutoguiImage> autoguiImages = Images.Select(x => new AutoguiImage()
             {
                 Bitmap = Utils.Autogui.ConvertImageSourceToBitmap(x.CroppedImg ?? x.ImgSrc ?? throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"))),

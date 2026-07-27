@@ -187,7 +187,10 @@
     <value>Warning</value>
   </data>
   <data name="No_img_Warning" xml:space="preserve">
-    <value>No pictures selected</value>
+    <value>No picture selected</value>
+  </data>
+  <data name="No_Cropimage_Warning" xml:space="preserve">
+    <value>No Croped picture</value>
   </data>
   <data name="Edit" xml:space="preserve">
     <value>Edit</value>
@@ -431,5 +434,8 @@
   </data>
   <data name="Success" xml:space="preserve">
     <value>Success</value>
+  </data>
+  <data name="StepFile" xml:space="preserve">
+    <value>Step File</value>
   </data>
 </root>

@@ -583,7 +583,16 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
-        ///   查找类似 No pictures selected 的本地化字符串。
+        ///   查找类似 No Croped picture 的本地化字符串。
+        /// </summary>
+        public static string No_Cropimage_Warning {
+            get {
+                return ResourceManager.GetString("No_Cropimage_Warning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 No picture selected 的本地化字符串。
         /// </summary>
         public static string No_img_Warning {
             get {
@@ -840,6 +849,15 @@ namespace ShaoLu.Resources {
         public static string StepFalseGoto {
             get {
                 return ResourceManager.GetString("StepFalseGoto", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 StepFile 的本地化字符串。
+        /// </summary>
+        public static string StepFile {
+            get {
+                return ResourceManager.GetString("StepFile", resourceCulture);
             }
         }
         

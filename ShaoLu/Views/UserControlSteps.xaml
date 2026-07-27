@@ -18,7 +18,6 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
-            <conv:SelectedStepConverter x:Key="SelectedStepConverter"/>
             <utils:SingletonLocator x:Key="VMLocator" />
 
             <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Steps, Source={StaticResource VMLocator}}">
@@ -95,45 +94,37 @@
                     <ColumnDefinition Width="Auto" MinWidth="255"/>
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="auto"/>
-                        </Grid.RowDefinitions>
-                        <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}"
-                                  ContextMenu="{StaticResource DataGridMenu}" SelectionMode="Extended"
-                                  SelectedItem="{Binding SelectedStep}"
-                                  utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}">
-                            <DataGrid.RowStyle>
-                                <Style TargetType="DataGridRow">
-                                    <Style.Triggers>
-                                        <!-- 当绑定的 IsError 为 True 时，背景变红 -->
-                                        <DataTrigger Binding="{Binding IsError}" Value="True">
-                                            <Setter Property="Background" Value="#FFFFCCCC"/>
-                                            <!-- 浅红色，避免文字看不清 -->
-                                            <Setter Property="ToolTip" Value="{Binding ErrorMessage}"/>
-                                            <!-- 可选：鼠标悬停显示错误信息 -->
-                                        </DataTrigger>
-
-                                        <!-- 保持选中行的样式优先级高于错误背景（可选） -->
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </DataGrid.RowStyle>
-                            <DataGrid.Columns>
-                                <DataGridCheckBoxColumn Header="" Binding="{Binding IsNeed,UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
-                                <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>
-                                <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" Width="*" CanUserSort="False"/>
-                                <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGoto, Converter={StaticResource SelectedStepConverter},Mode=TwoWay}" Width="*" CanUserSort="False"/>
-                                <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGoto, Converter={StaticResource SelectedStepConverter},Mode=TwoWay}" Width="*" CanUserSort="False"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Grid>
+                    <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}"
+                              ContextMenu="{StaticResource DataGridMenu}"
+                              SelectionMode="Extended" SelectedItem="{Binding SelectedStep}"
+                              utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Setters>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                </Style.Setters>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsError}" Value="True">
+                                        <Setter Property="Background" Value="#FFFFCCCC"/>
+                                        <Setter Property="ToolTip" Value="{Binding ErrorMessage}"/>
+                                    </DataTrigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="BorderBrush" Value="Black"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="" Binding="{Binding IsNeed,UpdateSourceTrigger=PropertyChanged}"/>
+                            <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" Width="*" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGoto, UpdateSourceTrigger=LostFocus}" Width="*" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGoto, UpdateSourceTrigger=LostFocus}" Width="*" CanUserSort="False"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </GroupBox>
                 <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
                 <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2">

@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Expression.Drawing.Core;
 using NLog;
+using OfficeOpenXml;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -35,8 +36,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _description;
         private StepType _type;
         private bool _isTrue = false;
-        private AutomationStepBase _trueGoto;
-        private AutomationStepBase _falseGoto;
+        private int _trueGoto;
+        private int _falseGoto;
         private double _waitTime = 0.1;
 
 
@@ -95,8 +96,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>
         /// 如果真,去执行某行
         /// </summary>
-        public AutomationStepBase TrueGoto { get => _trueGoto; set => SetProperty(ref _trueGoto, value); }
-        public AutomationStepBase FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
+        public int TrueGoto { get => _trueGoto; set => SetProperty(ref _trueGoto, value); }
+        public int FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
 
         public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
 
@@ -196,9 +197,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
     public class TypeTextMoreStep : AutomationStepBase
     {
-        readonly FileServices fileServices = SingletonLocator.FileServices;
-
-        private string _filePath;
         private string _textToType;
         private double _delayBetweenKeys = 0.01;
         private string _prefix;
@@ -209,8 +207,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private ObservableCollection<string> _previewContents = [];
         private string _delimiter = "\n,\r,\n\r,";
 
-
-        public string FilePath { get => _filePath; set => SetProperty(ref _filePath, value); }
 
         /// <summary>
         /// 输入内容
@@ -358,7 +354,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [RelayCommand]
         private void OpenFile()
         {
-            var path = PathServices.OpenPathDialog(LanguageService.GetLocalizedString("OpenFile"), "All File|*.*|Text|*.txt;*.csv|Xlsx|*.xlsx");
+            var path = PathServices.OpenPathDialog(LanguageService.GetLocalizedString("OpenFile"), "Text|*.txt;*.csv|Xlsx|*.xlsx");
             if (path != null) FilePath = path;
             LoadFile();
         }
@@ -370,23 +366,28 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void LoadFile()
         {
-            string res;
-            if (new List<string> { ".txt", ".csv", ".json" }.Contains(Path.GetExtension(FilePath).ToLower()))
+            if (new List<string> { ".txt", ".csv" }.Contains(Path.GetExtension(FilePath).ToLower()))
             {
-                res = fileServices.SmartReadTextFile(FilePath);
+                string res = fileServices.SmartReadTextFile(FilePath);
+                Contents.Clear();
+                Contents.AddRange(res.Split(Delimiter, StringSplitOptions.RemoveEmptyEntries).ToList());
             }
-            //else if (Path.GetExtension(FilePath).ToLower() == "xlsx")
-            //{
+            else if (Path.GetExtension(FilePath).ToLower() == ".xlsx")
+            {
+                FileInfo fileInfo = new(FilePath);
+                using ExcelPackage package = new(fileInfo);
+                ExcelWorksheet ws = package.Workbook.Worksheets[0];
 
-            //}
+                Contents.Clear();
+                for (int r = 1; r <= ws.Dimension.End.Row; r++)
+                {
+                    Contents.Add(ws.Cells[r, 1].Text);
+                }
+            }
             else
             {
                 throw new Exception("No support file type.");
             }
-            Contents.Clear();
-            PreviewContents.Clear();
-            Contents.AddRange(res.Split(Delimiter, StringSplitOptions.RemoveEmptyEntries).ToList());
-            PreviewContents.AddRange(Contents.Take(Contents.Count > 10 ? 10 : Contents.Count)); //TODO:
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)

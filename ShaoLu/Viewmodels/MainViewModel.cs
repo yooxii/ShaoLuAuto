@@ -22,10 +22,12 @@ namespace ShaoLu.Viewmodels
 
 
         private string _rootPath = Directory.GetCurrentDirectory();
+        private string _tempPath = Path.GetTempPath();
         private string _stepFilePath;
         private string _imageFilePath;
 
         public string RootDir { get => _rootPath; set => _rootPath = value; }
+        public string TempDir { get => _tempPath; set => _tempPath = value; }
         public string StepFileDir { get => _stepFilePath; set => _stepFilePath = value; }
         public string ImageFilePath { get => _imageFilePath; set => _imageFilePath = value; }
 

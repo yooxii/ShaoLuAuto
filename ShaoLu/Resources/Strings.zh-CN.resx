@@ -189,6 +189,9 @@
   <data name="No_img_Warning" xml:space="preserve">
     <value>未选择图片</value>
   </data>
+  <data name="No_Cropimage_Warning" xml:space="preserve">
+    <value>没有裁剪后图片</value>
+  </data>
   <data name="Edit" xml:space="preserve">
     <value>编辑</value>
   </data>
@@ -431,5 +434,8 @@
   </data>
   <data name="Success" xml:space="preserve">
     <value>成功</value>
+  </data>
+  <data name="StepFile" xml:space="preserve">
+    <value>步骤文件</value>
   </data>
 </root>

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using OfficeOpenXml;
 using ShaoLu.Services;
 using ShaoLu.Viewmodels;
 using ShaoLu.Viewmodels.AutomationStep;
@@ -42,6 +43,8 @@ namespace ShaoLu
                 // 3. 构建并配置 Ioc 容器
                 Ioc.Default.ConfigureServices(services.BuildServiceProvider());
                 Logger.Info("Ioc container configured.");
+
+                ExcelPackage.License.SetNonCommercialPersonal("ORT");
             }
             catch (Exception ex)
             {

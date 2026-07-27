@@ -308,87 +308,91 @@ namespace ShaoLu.Viewmodels
         /// </summary>
         public async void Run()
         {
-            // 重置停止信号
-            StopSignal = false;
-
-            _cts = new CancellationTokenSource();
-            var token = _cts.Token;
-
-
-            logger.Info("Start Auto");
-            // 初始化自动化引擎
-            Autogui.StartAuto();
-            if (_stepSettings.MinimizeOnRun)
-                Application.Current.MainWindow.WindowState = WindowState.Minimized;
-
-
-            for (int i = 0; i < AutomationStepBases.Count; i++)
+            try
             {
-                // 在每个步骤开始前再次检查停止信号，提高响应速度
-                if (StopSignal || token.IsCancellationRequested)
-                {
-                    break;
-                }
-                var step = AutomationStepBases[i];
+                // 重置停止信号
+                StopSignal = false;
 
-                if (!step.IsNeed)
-                    continue;
+                _cts = new CancellationTokenSource();
+                var token = _cts.Token;
 
-                try
-                {
-                    SelectedStep = step;
-                    await step.RunAsync(token);
-                    step.IsError = false;
-                }
-                catch (OperationCanceledException)
-                {
-                    logger.Info("Operation Canceled");
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    // 记录单个步骤的错误，防止整个流程崩溃
-                    logger.Warn(ex, "Step \"{0}\" execution Failed:", step.Name);
 
-                    step.IsError = true;
-                    step.ErrorMessage = ex.Message;
-                    if (_stepSettings.ShowErrorPopup)
+                logger.Info("Start Auto");
+                // 初始化自动化引擎
+                Autogui.StartAuto();
+                if (_stepSettings.MinimizeOnRun)
+                    Application.Current.MainWindow.WindowState = WindowState.Minimized;
+
+
+                for (int i = 0; i < AutomationStepBases.Count; i++)
+                {
+                    // 在每个步骤开始前再次检查停止信号，提高响应速度
+                    if (StopSignal || token.IsCancellationRequested)
                     {
-                        var (_, popupTask) = WindowAsyncPopup.Show(
-                            $"{LanguageService.GetLocalizedString("Step")}{step.Name}{LanguageService.GetLocalizedString("ExecutionFailed")}{step.ErrorMessage}", "Error",
-                            PopupButtons.YesCancel, MessageBoxImage.Error);
-                        await popupTask;
-                    }
-
-                    if (step.FalseGoto is null)
-                    {
-                        StopSignal = true;
                         break;
+                    }
+                    var step = AutomationStepBases[i];
+
+                    if (!step.IsNeed)
+                        continue;
+
+                    try
+                    {
+                        SelectedStep = step;
+                        await step.RunAsync(token);
+                        step.IsError = false;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        logger.Info("Operation Canceled");
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录单个步骤的错误，防止整个流程崩溃
+                        logger.Warn(ex, "Step \"{0}\" execution Failed:", step.Name);
+
+                        step.IsError = true;
+                        step.ErrorMessage = ex.Message;
+                        if (_stepSettings.ShowErrorPopup)
+                        {
+                            var (_, popupTask) = WindowAsyncPopup.Show(
+                                $"{LanguageService.GetLocalizedString("Step")}{step.Name}{LanguageService.GetLocalizedString("ExecutionFailed")}{step.ErrorMessage}", "Error",
+                                PopupButtons.YesCancel, MessageBoxImage.Error);
+                            await popupTask;
+                        }
+
+                        if (step.FalseGoto <= 0)
+                        {
+                            StopSignal = true;
+                            break;
+                        }
+                        else
+                        {
+                            step.IsTrue = false;
+                        }
+                    }
+                    if (step.IsTrue)
+                    {
+                        i = step.TrueGoto - 1 - 1;
                     }
                     else
                     {
-                        step.IsTrue = false;
+                        i = step.FalseGoto - 1 - 1;
                     }
                 }
-                if (step.IsTrue)
+                StopSignal = true;
+                Application.Current.MainWindow.WindowState = WindowState.Normal;
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    // 跳转到指定步骤
-                    if (step.TrueGoto is not null)
-                        i = step.TrueGoto.LineNo - 1 - 1;
-                }
-                else
-                {
-                    if (step.FalseGoto is not null)
-                        i = step.FalseGoto.LineNo - 1 - 1;
-                }
+                    Application.Current.MainWindow.Activate();
+                });
+                logger.Info("Auto Finished");
             }
-            StopSignal = true;
-            Application.Current.MainWindow.WindowState = WindowState.Normal;
-            Application.Current.Dispatcher.Invoke(() =>
+            catch (Exception ex)
             {
-                Application.Current.MainWindow.Activate();
-            });
-            logger.Info("Auto Finished");
+                logger.Error(ex, "Run Error: ");
+            }
         }
 
         #endregion

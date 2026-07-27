@@ -3,11 +3,13 @@ using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 
 namespace ShaoLu
 {
@@ -21,6 +23,35 @@ namespace ShaoLu
         readonly FileServices fileServer = SingletonLocator.FileServices;
         readonly AppSettings appSettings = SingletonLocator.Settings;
 
+        private const int HOTKEY_ID = 9000; // 自定义唯一ID
+        private HwndSource _source;
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            _source = PresentationSource.FromVisual(this) as HwndSource;
+            _source?.AddHook(WndProc);
+
+            // 注册全局热键：例如 Ctrl + Alt + S
+            NativeMethods.RegisterHotKey(
+                new WindowInteropHelper(this).Handle,
+                HOTKEY_ID, NativeMethods.MOD_ALT,
+                (uint)KeyInterop.VirtualKeyFromKey(Key.F10)
+            );
+        }
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == NativeMethods.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
+            {
+                // 触发停止线程的逻辑
+                stepsViewModel.StopCommand.Execute(null);
+                handled = true;
+            }
+            return IntPtr.Zero;
+        }
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -28,6 +59,13 @@ namespace ShaoLu
 
             Loaded += MainWindow_Loaded;
 
+        }
+        protected override void OnClosed(EventArgs e)
+        {
+            // 窗口关闭时务必注销热键，防止资源泄漏
+            _source?.RemoveHook(WndProc);
+            NativeMethods.UnregisterHotKey(new WindowInteropHelper(this).Handle, HOTKEY_ID);
+            base.OnClosed(e);
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -121,7 +159,7 @@ namespace ShaoLu
 
         private void Open_Click(object sender, RoutedEventArgs e)
         {
-            var filePath = PathServices.OpenPathDialog("打开文件", "步骤文件|*.json");
+            var filePath = PathServices.OpenPathDialog(LanguageService.GetLocalizedString("OpenFile"), $"{LanguageService.GetLocalizedString("StepFile")}|*.json");
             if (filePath != null)
             {
                 mainViewModel.StepFileDir = Path.GetDirectoryName(filePath);
@@ -133,7 +171,7 @@ namespace ShaoLu
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            var filePath = PathServices.SavePathDialog("保存文件", "步骤文件|*.json");
+            var filePath = PathServices.SavePathDialog(LanguageService.GetLocalizedString("OpenFile"), $"{LanguageService.GetLocalizedString("StepFile")}|*.json");
             if (filePath != null)
             {
                 foreach (var step in stepsViewModel.AutomationStepBases)

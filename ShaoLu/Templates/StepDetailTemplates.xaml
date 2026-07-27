@@ -305,7 +305,7 @@
                     <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}"/>
                 </StackPanel>
                 <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
-                <ListBox ItemsSource="{Binding PreviewContents}">
+                <ListBox ItemsSource="{Binding Contents}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding .}"/>

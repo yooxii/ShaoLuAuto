@@ -50,7 +50,7 @@ namespace ShaoLu.Services
             }
 
             if (lastCommonRoot == -1)
-                throw new ArgumentException("Paths do not have a common base");
+                return relativeTo;
 
             StringBuilder sb = new();
             for(int i = lastCommonRoot + 1; i < absoluteDirs.Length; i++)
@@ -65,6 +65,17 @@ namespace ShaoLu.Services
                     sb.Append("\\");
             }
             return sb.ToString();
+        }
+
+        public static bool StringsIsNullOrEmpty(params string[] strs)
+        {
+            if (strs == null) return true;
+            if (strs.Length == 0) return true;
+            for (int i = 0; i < strs.Length; i++)
+            {
+                if (string.IsNullOrEmpty(strs[i])) return true;
+            }
+            return false;
         }
     }
 

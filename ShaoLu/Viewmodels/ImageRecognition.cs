@@ -12,7 +12,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Viewmodels.AutomationStep
@@ -74,9 +73,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public string CroppedImageFromStepPath { get => _croppedImageFromStepPath; set => _croppedImageFromStepPath = value; }
 
         [JsonIgnore]
-        public string FullCropedImageFromStepPath => System.IO.Path.Combine(mainVM.StepFileDir, CroppedImageFromStepPath);
+        public string FullCropedImageFromStepPath => PathServices.StringsIsNullOrEmpty(mainVM.StepFileDir, CroppedImageFromStepPath) ? null: Path.Combine(mainVM.StepFileDir, CroppedImageFromStepPath);
         [JsonIgnore]
-        public string FullImageFromStepPath => System.IO.Path.Combine(mainVM.StepFileDir, ImageFromStepPath);
+        public string FullImageFromStepPath => PathServices.StringsIsNullOrEmpty(mainVM.StepFileDir, ImageFromStepPath) ? null : Path.Combine(mainVM.StepFileDir, ImageFromStepPath);
 
         #endregion
 
@@ -95,11 +94,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 if (!File.Exists(ImagePath))
                 {
                     if (File.Exists(ImageFromRootPath))
-                        ImagePath = System.IO.Path.GetFullPath(ImageFromRootPath);
-                    else if(File.Exists(FullImageFromStepPath))
-                        ImagePath = System.IO.Path.GetFullPath(FullImageFromStepPath);
+                        ImagePath = Path.GetFullPath(ImageFromRootPath);
+                    else if (File.Exists(FullImageFromStepPath))
+                        ImagePath = Path.GetFullPath(FullImageFromStepPath);
                 }
-                return LoadImage(ImagePath, ImageFromRootPath, FullImageFromStepPath);
+                var img = LoadImage(ImagePath, ImageFromRootPath, FullImageFromStepPath);
+                if (img == null)
+                {
+                    IsError = true;
+                    ErrorMessage = LanguageService.GetLocalizedString("No_img_Warning", "No picture selected");
+                }
+                return img;
             }
         }
 
@@ -111,11 +116,16 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 if (!File.Exists(ImagePath))
                 {
                     if (File.Exists(ImageFromRootPath))
-                        ImagePath = System.IO.Path.GetFullPath(ImageFromRootPath);
+                        ImagePath = Path.GetFullPath(ImageFromRootPath);
                     else if (File.Exists(FullImageFromStepPath))
-                        ImagePath = System.IO.Path.GetFullPath(FullImageFromStepPath);
+                        ImagePath = Path.GetFullPath(FullImageFromStepPath);
                 }
                 _croppedImg ??= LoadImage(CroppedImagePath, CroppedImageFromRootPath, FullCropedImageFromStepPath);
+                if (_croppedImg == null)
+                {
+                    IsError = true;
+                    ErrorMessage = LanguageService.GetLocalizedString("No_Cropimage_Warning", "No Croped picture");
+                }
                 return _croppedImg;
             }
             set
@@ -226,8 +236,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 }
             }
 
-            IsError = true;
-            ErrorMessage = LanguageService.GetLocalizedString("No_img_Warning", "Error loading image");
             return null;
         }
 
@@ -243,7 +251,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
             try
             {
-                var fullpath = GetCroppedImageSavePath(out string extension);
+                var fullpath = GetCroppedImageSavePath(ImagePath, out string extension);
                 // 【关键】如果路径变了，且旧路径存在，标记旧路径为待删除
                 if (!string.IsNullOrEmpty(_croppedImagePath) && _croppedImagePath != fullpath)
                 {
@@ -281,19 +289,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
-        private string GetCroppedImageSavePath(out string extension)
+        private string GetCroppedImageSavePath(string imagePath, out string extension)
         {
             extension = null;
             string fullPath;
             // 1. 确定保存路径
-            if (string.IsNullOrEmpty(ImagePath)) return null;
-            string directory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ImagePath), "CropedImage");
+            if (string.IsNullOrEmpty(imagePath)) return null;
+            string directory = Path.Combine(Path.GetDirectoryName(imagePath), "CropedImage");
             if (!System.IO.Directory.Exists(directory))
             {
                 System.IO.Directory.CreateDirectory(directory);
             }
-            string fileNameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(ImagePath);
-            extension = System.IO.Path.GetExtension(ImagePath);
+            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(imagePath);
+            extension = Path.GetExtension(imagePath);
 
             // 保持与原图相同的格式，或者统一转为 PNG 以保证质量
             if (string.IsNullOrEmpty(extension)) extension = ".png";
@@ -301,7 +309,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             string newFileName = $"Cropped_{fileNameWithoutExt}_{Uid}{extension}";
 
             // 确保路径合法，防止路径遍历攻击（虽然 ImagePath 通常来自 OpenFileDialog，但仍需防御）
-            fullPath = System.IO.Path.Combine(directory, newFileName);
+            fullPath = Path.Combine(directory, newFileName);
             return fullPath;
         }
 

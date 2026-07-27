@@ -1,4 +1,8 @@
-﻿namespace ShaoLu.Models
+﻿using ShaoLu.Services;
+using System.Text.Json.Serialization;
+using System.Windows.Input;
+
+namespace ShaoLu.Models
 {
     public class AppSettings
     {
@@ -19,5 +23,15 @@
     {
         public bool ShowErrorPopup { get; set; } = false;
         public bool MinimizeOnRun { get; set; } = true;
+
+
+        public HotKeySetting StartHotKey { get; set; } = new HotKeySetting { Modifiers = ModifierKeys.Control | ModifierKeys.Alt, Key = Key.F9 };
+        public HotKeySetting StopHotKey { get; set; } = new HotKeySetting { Modifiers = ModifierKeys.Control | ModifierKeys.Alt, Key = Key.F10 };
+    }
+
+    public class HotKeySetting
+    {
+        public ModifierKeys Modifiers { get; set; } // 修饰键
+        public Key Key { get; set; } // 主键
     }
 }

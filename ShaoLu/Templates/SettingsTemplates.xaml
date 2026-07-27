@@ -74,6 +74,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc ShowErrorPopup}" VerticalAlignment="Center"/>
@@ -81,6 +83,25 @@
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc MinimizeOnRun}" VerticalAlignment="Center"/>
                 <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding MinimizeOnRun}"/>
+
+                <!--<TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc StartKey}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                    <CheckBox Content="Ctrl" Margin="0,0,5,0"/>
+                    <CheckBox Content="Shift" Margin="0,0,5,0"/>
+                    <CheckBox Content="Alt" Margin="0,0,5,0"/>
+                    --><!-- 用于直接按键录入的 TextBox --><!--
+                    <TextBox Width="100" PreviewKeyDown="TxtKey_PreviewKeyDown" 
+                     IsReadOnly="True" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="{lex:Loc StotKey}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,5">
+                    <CheckBox Content="Ctrl" Margin="0,0,5,0"/>
+                    <CheckBox Content="Shift" Margin="0,0,5,0"/>
+                    <CheckBox Content="Alt" Margin="0,0,5,0"/>
+                    <TextBox Width="100" PreviewKeyDown="TxtKey_PreviewKeyDown" 
+                     IsReadOnly="True" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                </StackPanel>-->
             </Grid>
         </StackPanel>
     </DataTemplate>

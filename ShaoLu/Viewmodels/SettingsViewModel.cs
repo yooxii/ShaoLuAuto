@@ -5,10 +5,12 @@ using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Views;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Input;
 using WPFDevelopers;
 
 namespace ShaoLu.Viewmodels
@@ -79,15 +81,21 @@ namespace ShaoLu.Viewmodels
     {
         private bool _showErrorPopup;
         private bool _minimizeOnRun;
+        private HotKeySetting _startHotKey;
+        private HotKeySetting _stopHotKey;
 
         public bool ShowErrorPopup { get => _showErrorPopup; set => SetProperty(ref _showErrorPopup, value); }
         public bool MinimizeOnRun { get => _minimizeOnRun; set => SetProperty(ref _minimizeOnRun, value); }
+        public HotKeySetting StartHotKey { get => _startHotKey; set => SetProperty(ref _startHotKey, value); }
+        public HotKeySetting StopHotKey { get => _stopHotKey; set => SetProperty(ref _stopHotKey, value); }
 
 
         public StepSettingsViewModel(StepSettingsModel model)
         {
             ShowErrorPopup = model.ShowErrorPopup;
             MinimizeOnRun = model.MinimizeOnRun;
+            StartHotKey = model.StartHotKey;
+            StopHotKey = model.StopHotKey;
         }
 
 
@@ -95,6 +103,8 @@ namespace ShaoLu.Viewmodels
         {
             model.ShowErrorPopup = ShowErrorPopup;
             model.MinimizeOnRun = MinimizeOnRun;
+            model.StartHotKey = StartHotKey;
+            model.StopHotKey = StopHotKey;
         }
     }
 

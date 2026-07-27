@@ -92,11 +92,17 @@ namespace ShaoLu.Viewmodels
 
 
         public event Action<ImageSource, Rect, List<ClickThumb>> OnImageSaved;
+        public event Action<Rect> OnCropRectChanged;
 
         public void SetThumbs(List<ClickThumb> clickThumbs)
         {
             Thumbs.Clear();
             clickThumbs.ForEach(Thumbs.Add);
+        }
+
+        public void SetCropRect(Rect rect)
+        {
+            OnCropRectChanged?.Invoke(rect);
         }
 
         public void SaveCroppedImage()

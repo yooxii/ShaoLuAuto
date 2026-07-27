@@ -5,6 +5,7 @@ using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,7 +24,8 @@ namespace ShaoLu
         readonly FileServices fileServer = SingletonLocator.FileServices;
         readonly AppSettings appSettings = SingletonLocator.Settings;
 
-        private const int HOTKEY_ID = 9000; // 自定义唯一ID
+        private const int HOTKEY_START_ID = 9001;
+        private const int HOTKEY_STOP_ID = 9002;
         private HwndSource _source;
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -32,21 +34,40 @@ namespace ShaoLu
             _source = PresentationSource.FromVisual(this) as HwndSource;
             _source?.AddHook(WndProc);
 
-            // 注册全局热键：例如 Ctrl + Alt + S
-            NativeMethods.RegisterHotKey(
-                new WindowInteropHelper(this).Handle,
-                HOTKEY_ID, NativeMethods.MOD_ALT,
-                (uint)KeyInterop.VirtualKeyFromKey(Key.F10)
-            );
+            var handle = new WindowInteropHelper(this).Handle;
+
+            // 1. 先注销所有旧热键
+            NativeMethods.UnregisterHotKey(handle, HOTKEY_START_ID);
+            NativeMethods.UnregisterHotKey(handle, HOTKEY_STOP_ID);
+
+            // 2. 注册“开始”热键
+            NativeMethods.RegisterHotKey(handle, HOTKEY_START_ID,
+                (uint)appSettings.Step.StartHotKey.Modifiers,
+                (uint)KeyInterop.VirtualKeyFromKey(appSettings.Step.StartHotKey.Key));
+
+            // 3. 注册“停止”热键
+            NativeMethods.RegisterHotKey(handle, HOTKEY_STOP_ID,
+                (uint)appSettings.Step.StopHotKey.Modifiers,
+                (uint)KeyInterop.VirtualKeyFromKey(appSettings.Step.StopHotKey.Key));
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (msg == NativeMethods.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
+            if (msg == NativeMethods.WM_HOTKEY)
             {
-                // 触发停止线程的逻辑
-                stepsViewModel.StopCommand.Execute(null);
-                handled = true;
+                int hotkeyId = wParam.ToInt32();
+
+                if (hotkeyId == HOTKEY_START_ID)
+                {
+                    if (stepsViewModel.RunCommand.CanExecute(null))
+                        stepsViewModel.RunCommand.Execute(null); // 触发开始逻辑
+                    handled = true;
+                }
+                else if (hotkeyId == HOTKEY_STOP_ID)
+                {
+                    stepsViewModel.StopCommand.Execute(null);  // 触发停止逻辑
+                    handled = true;
+                }
             }
             return IntPtr.Zero;
         }
@@ -64,7 +85,7 @@ namespace ShaoLu
         {
             // 窗口关闭时务必注销热键，防止资源泄漏
             _source?.RemoveHook(WndProc);
-            NativeMethods.UnregisterHotKey(new WindowInteropHelper(this).Handle, HOTKEY_ID);
+            NativeMethods.UnregisterHotKey(new WindowInteropHelper(this).Handle, HOTKEY_STOP_ID);
             base.OnClosed(e);
         }
 

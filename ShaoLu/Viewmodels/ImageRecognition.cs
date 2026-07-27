@@ -193,7 +193,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
-                    windowEditImage.editImageViewModel.CropRect = CroppedRect;
+                    if (CroppedRect != null)
+                        windowEditImage.editImageViewModel.SetCropRect(CroppedRect);
                     if (ClickThumbs != null && ClickThumbs.Count > 0)
                         windowEditImage.editImageViewModel.SetThumbs(ClickThumbs);
                 }), System.Windows.Threading.DispatcherPriority.Loaded);

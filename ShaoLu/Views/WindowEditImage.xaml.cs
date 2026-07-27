@@ -19,6 +19,10 @@ namespace ShaoLu.Views
         {
             InitializeComponent();
             DataContext = editImageViewModel;
+            editImageViewModel.OnCropRectChanged += (rect) =>
+            { 
+                EditImage.SetCropRect(rect);
+            };
         }
 
         private void CropImage_Click(object sender, RoutedEventArgs e)

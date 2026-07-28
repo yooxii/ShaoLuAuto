@@ -300,6 +300,9 @@
     <PackageReference Include="EPPlus">
       <Version>8.6.3</Version>
     </PackageReference>
+    <PackageReference Include="FreeSql.Provider.Sqlite">
+      <Version>3.5.310</Version>
+    </PackageReference>
     <PackageReference Include="InputSimulator">
       <Version>1.0.4</Version>
     </PackageReference>

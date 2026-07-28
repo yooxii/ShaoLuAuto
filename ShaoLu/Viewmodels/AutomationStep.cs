@@ -139,6 +139,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
     {
         private string _textToType;
         private double _delayBetweenKeys = 0.05;
+        private bool _enableLog = false;
 
         /// <summary>
         /// 输入内容
@@ -146,6 +147,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
 
         public double DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
+
+        /// <summary>
+        /// 是否记录执行日志
+        /// </summary>
+        public bool EnableLog { get => _enableLog; set => SetProperty(ref _enableLog, value); }
 
         #region 构造
         public TypeTextStep() : base()
@@ -191,6 +197,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
             });
             IsTrue = res;
             IsError = false;
+
+            if (res && EnableLog)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
+                Services.ExecutionLogService.Log(Uid, fileName, Name, TextToType);
+            }
+
             return res;
         }
     }
@@ -206,6 +219,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private bool _infix_gen = false;
         private bool _suffix_gen = false;
         private bool _reloadText = false;
+        private bool _enableLog = false;
         private string _prefix_;
         private string _infix_;
         private string _suffix_;
@@ -261,6 +275,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public bool Suffix_gen { get => _suffix_gen; set => SetProperty(ref _suffix_gen, value); }
 
         public bool ReloadText { get => _reloadText; set => SetProperty(ref _reloadText, value); }
+
+        /// <summary>
+        /// 是否记录执行日志
+        /// </summary>
+        public bool EnableLog { get => _enableLog; set => SetProperty(ref _enableLog, value); }
 
         #region 构造
         public TypeTextMoreStep() : base()
@@ -332,6 +351,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 else
                     return Autogui.TypeTextSafe(TextToType);
             });
+
+            if (res && EnableLog)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
+                Services.ExecutionLogService.Log(Uid, fileName, Name, TextToType);
+            }
+
             Increment();
             IsTrue = res;
             IsError = false;
@@ -347,6 +373,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _textToType;
         private double _delayBetweenKeys = 0.01;
         private bool _reloadIndex = false;
+        private bool _enableLog = false;
         private int _index = 0;
         private ObservableCollection<string> _contents = [];
         private string[] _delimiter = ["\n", "\r", "\n\r", "\t", ",", ";", "|"];
@@ -374,6 +401,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public string[] Delimiter { get => _delimiter; set => SetProperty(ref _delimiter, value); }
         public bool ReloadIndex { get => _reloadIndex; set => SetProperty(ref _reloadIndex, value); }
+
+        /// <summary>
+        /// 是否记录执行日志
+        /// </summary>
+        public bool EnableLog { get => _enableLog; set => SetProperty(ref _enableLog, value); }
 
 
 
@@ -477,6 +509,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
             });
             IsTrue = res;
             IsError = false;
+
+            if (res && EnableLog)
+            {
+                string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
+                Services.ExecutionLogService.Log(Uid, fileName, Name, TextToType);
+            }
+
             return res;
         }
     }

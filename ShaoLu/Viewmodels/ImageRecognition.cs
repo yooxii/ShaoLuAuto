@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Viewmodels.AutomationStep
@@ -25,57 +26,42 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         #region 属性
 
-
         #region 路径
 
         private string _imagePath;
-        private string _imageFromRootPath;
-        private string _imageFromStepPath;
-        private string _croppedImagePath;
-        private string _croppedImageFromRootPath;
-        private string _croppedImageFromStepPath;
+        private string _croppedImageName;
 
+        /// <summary>
+        /// 原图绝对路径（用户选取的外部图片）
+        /// </summary>
         public string ImagePath
         {
             get => _imagePath;
-            set
-            {
-                if (SetProperty(ref _imagePath, value))
-                {
-                    if (Directory.Exists(mainVM.RootDir))
-                        ImageFromRootPath = PathServices.GetRelativePath(mainVM.RootDir, _imagePath);
-                    if (Directory.Exists(mainVM.StepFileDir))
-                    {
-                        ImageFromStepPath = PathServices.GetRelativePath(mainVM.StepFileDir, _imagePath);
-                    }
-                }
-            }
+            set => SetProperty(ref _imagePath, value);
         }
-        public string ImageFromRootPath { get => _imageFromRootPath; set => _imageFromRootPath = value; }
-        public string ImageFromStepPath { get => _imageFromStepPath; set => _imageFromStepPath = value; }
-        public string CroppedImagePath
-        {
-            get => _croppedImagePath;
-            set
-            {
-                if (SetProperty(ref _croppedImagePath, value))
-                {
-                    if (Directory.Exists(mainVM.RootDir))
-                        CroppedImageFromRootPath = PathServices.GetRelativePath(mainVM.RootDir, _croppedImagePath);
-                    if (Directory.Exists(mainVM.StepFileDir))
-                    {
-                        CroppedImageFromStepPath = PathServices.GetRelativePath(mainVM.StepFileDir, _croppedImagePath);
-                    }
-                }
-            }
-        }
-        public string CroppedImageFromRootPath { get => _croppedImageFromRootPath; set => _croppedImageFromRootPath = value; }
-        public string CroppedImageFromStepPath { get => _croppedImageFromStepPath; set => _croppedImageFromStepPath = value; }
 
+        /// <summary>
+        /// 裁剪图在包内的相对路径，如 "images/{Uid}.png"
+        /// </summary>
+        public string CroppedImageName
+        {
+            get => _croppedImageName;
+            set => SetProperty(ref _croppedImageName, value);
+        }
+
+        /// <summary>
+        /// 运行时从工作目录解析的裁剪图完整路径
+        /// </summary>
         [JsonIgnore]
-        public string FullCropedImageFromStepPath => PathServices.StringsIsNullOrEmpty(mainVM.StepFileDir, CroppedImageFromStepPath) ? null: Path.Combine(mainVM.StepFileDir, CroppedImageFromStepPath);
-        [JsonIgnore]
-        public string FullImageFromStepPath => PathServices.StringsIsNullOrEmpty(mainVM.StepFileDir, ImageFromStepPath) ? null : Path.Combine(mainVM.StepFileDir, ImageFromStepPath);
+        public string CroppedImageFullPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(CroppedImageName) || string.IsNullOrEmpty(mainVM.StepImageWorkDir))
+                    return null;
+                return Path.Combine(mainVM.StepImageWorkDir, CroppedImageName);
+            }
+        }
 
         #endregion
 
@@ -91,14 +77,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             get
             {
-                if (!File.Exists(ImagePath))
-                {
-                    if (File.Exists(ImageFromRootPath))
-                        ImagePath = Path.GetFullPath(ImageFromRootPath);
-                    else if (File.Exists(FullImageFromStepPath))
-                        ImagePath = Path.GetFullPath(FullImageFromStepPath);
-                }
-                var img = LoadImage(ImagePath, ImageFromRootPath, FullImageFromStepPath);
+                var img = LoadImage(ImagePath);
                 if (img == null)
                 {
                     IsError = true;
@@ -113,14 +92,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             get
             {
-                if (!File.Exists(ImagePath))
-                {
-                    if (File.Exists(ImageFromRootPath))
-                        ImagePath = Path.GetFullPath(ImageFromRootPath);
-                    else if (File.Exists(FullImageFromStepPath))
-                        ImagePath = Path.GetFullPath(FullImageFromStepPath);
-                }
-                _croppedImg ??= LoadImage(CroppedImagePath, CroppedImageFromRootPath, FullCropedImageFromStepPath);
+                _croppedImg ??= LoadImage(CroppedImageFullPath);
                 if (_croppedImg == null)
                 {
                     IsError = true;
@@ -244,85 +216,66 @@ namespace ShaoLu.Viewmodels.AutomationStep
         #region 文件操作
 
         /// <summary>
-        /// 将裁剪后的图片保存到原图所在目录，文件名添加 Cropped_ 前缀
+        /// 将裁剪后的图片保存到工作目录 images/{Uid}.png
         /// </summary>
         public void SaveCroppedImageToDisk(ImageSource imageSource)
         {
-            if (imageSource == null || string.IsNullOrEmpty(ImagePath))
+            if (imageSource == null)
                 return;
 
             try
             {
-                var fullpath = GetCroppedImageSavePath(ImagePath, out string extension);
-                // 【关键】如果路径变了，且旧路径存在，标记旧路径为待删除
-                if (!string.IsNullOrEmpty(_croppedImagePath) && _croppedImagePath != fullpath)
+                string workDir = mainVM.StepImageWorkDir;
+                if (string.IsNullOrEmpty(workDir))
                 {
-                    // 只有当这个步骤是“未保存”状态时，我们才清理旧的临时文件
-                    // 如果 IsSave 为 true，说明用户已经正式保存过，旧文件可能是有用的历史版本，暂不删除
-                    if (!IsSave)
-                    {
-                        fileServer.MarkForDeletion(_croppedImagePath);
-                    }
+                    // 若尚未设置工作目录，使用临时目录
+                    workDir = Path.Combine(Path.GetTempPath(), "AutoShaoLu", "images");
+                    mainVM.StepImageWorkDir = workDir;
                 }
 
-                // 2. 转换 ImageSource 为 Bitmap 并保存
-                if (imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource)
+                string imagesDir = Path.Combine(workDir, "images");
+                if (!Directory.Exists(imagesDir))
+                    Directory.CreateDirectory(imagesDir);
+
+                string extension = ".png";
+                if (!string.IsNullOrEmpty(ImagePath))
+                {
+                    var ext = Path.GetExtension(ImagePath)?.ToLower();
+                    if (!string.IsNullOrEmpty(ext)) extension = ext;
+                }
+
+                string fileName = $"{Uid}{extension}";
+                string fullPath = Path.Combine(imagesDir, fileName);
+
+                if (imageSource is BitmapSource bitmapSource)
                 {
                     var encoder = GetEncoderByExtension(extension);
                     if (encoder != null)
                     {
-                        using (var stream = new System.IO.FileStream(fullpath, System.IO.FileMode.Create))
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
                         {
-                            encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmapSource));
+                            encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
                             encoder.Save(stream);
-                            CroppedImagePath = fullpath;
                         }
-
-                        // 可选：更新 ImagePath 指向新保存的裁剪图？
-                        // 通常自动化步骤中，ImagePath 指向的是“模板图”，而 CroppedImg 是运行时截图或局部图。
-                        // 这里我们只保存文件，不改变 ImagePath 绑定，以免混淆“模板”与“实例”。
-                        _logger.Info("Cropped image saved to: {0}", fullpath);
+                        CroppedImageName = $"images/{fileName}";
+                        _logger.Info("Cropped image saved to: {0}", fullPath);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failed to save cropped image: ");
+                _logger.Error(ex, "Failed to save cropped image");
             }
         }
 
-        private string GetCroppedImageSavePath(string imagePath, out string extension)
-        {
-            extension = null;
-            string fullPath;
-            // 1. 确定保存路径
-            if (string.IsNullOrEmpty(imagePath)) return null;
-            string directory = Path.Combine(Path.GetDirectoryName(imagePath), "CropedImage");
-            if (!System.IO.Directory.Exists(directory))
-            {
-                System.IO.Directory.CreateDirectory(directory);
-            }
-            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(imagePath);
-            extension = Path.GetExtension(imagePath);
-
-            // 保持与原图相同的格式，或者统一转为 PNG 以保证质量
-            if (string.IsNullOrEmpty(extension)) extension = ".png";
-
-            string newFileName = $"Cropped_{fileNameWithoutExt}_{Uid}{extension}";
-
-            // 确保路径合法，防止路径遍历攻击（虽然 ImagePath 通常来自 OpenFileDialog，但仍需防御）
-            fullPath = Path.Combine(directory, newFileName);
-            return fullPath;
-        }
-
-        private System.Windows.Media.Imaging.BitmapEncoder GetEncoderByExtension(string extension)
+        private BitmapEncoder GetEncoderByExtension(string extension)
         {
             return extension.ToLower() switch
             {
-                ".jpg" or ".jpeg" => new System.Windows.Media.Imaging.JpegBitmapEncoder(),
-                ".bmp" => new System.Windows.Media.Imaging.BmpBitmapEncoder(),
-                ".gif" => new System.Windows.Media.Imaging.GifBitmapEncoder(),
-                _ => new System.Windows.Media.Imaging.PngBitmapEncoder(),// PNG 无损，推荐
+                ".jpg" or ".jpeg" => new JpegBitmapEncoder(),
+                ".bmp" => new BmpBitmapEncoder(),
+                ".gif" => new GifBitmapEncoder(),
+                _ => new PngBitmapEncoder(),
             };
         }
 
@@ -341,12 +294,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 if (disposing)
                 {
-                    // 释放托管资源
-                    // 当步骤被移除时，立即标记其裁剪图为待删除
-                    if (!IsSave)
-                        fileServer.MarkForDeletion(CroppedImagePath);
-
-                    // 如果有其他需要释放的资源（如 Bitmap 对象），在这里释放
                     _croppedImg = null;
                 }
 
@@ -354,7 +301,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
-        // 保留析构函数作为安全网，但主要逻辑已移至 Dispose
         ~ImageRecognitionBase()
         {
             Dispose(false);

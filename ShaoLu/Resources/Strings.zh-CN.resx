@@ -456,4 +456,49 @@
   <data name="NoClickPoint" xml:space="preserve">
     <value>请创建点击位置</value>
   </data>
+  <data name="SaveFile" xml:space="preserve">
+    <value>保存文件</value>
+  </data>
+  <data name="EnableLog" xml:space="preserve">
+    <value>记录执行日志</value>
+  </data>
+  <data name="ExecutionLog" xml:space="preserve">
+    <value>执行日志</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="StepFileName" xml:space="preserve">
+    <value>步骤文件</value>
+  </data>
+  <data name="StepName" xml:space="preserve">
+    <value>步骤名称</value>
+  </data>
+  <data name="InputText" xml:space="preserve">
+    <value>输入内容</value>
+  </data>
+  <data name="ExecutedAt" xml:space="preserve">
+    <value>执行时间</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="PrevPage" xml:space="preserve">
+    <value>上一页</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>下一页</value>
+  </data>
+  <data name="TotalRecords" xml:space="preserve">
+    <value>总记录数</value>
+  </data>
+  <data name="DateFrom" xml:space="preserve">
+    <value>起始日期</value>
+  </data>
+  <data name="DateTo" xml:space="preserve">
+    <value>结束日期</value>
+  </data>
 </root>

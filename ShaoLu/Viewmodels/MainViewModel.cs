@@ -24,11 +24,22 @@ namespace ShaoLu.Viewmodels
         private string _rootPath = Directory.GetCurrentDirectory();
         private string _tempPath = Path.GetTempPath();
         private string _stepFilePath;
+        private string _stepImageWorkDir;
         private string _imageFilePath;
 
         public string RootDir { get => _rootPath; set => _rootPath = value; }
         public string TempDir { get => _tempPath; set => _tempPath = value; }
-        public string StepFileDir { get => _stepFilePath; set => _stepFilePath = value; }
+
+        /// <summary>
+        /// 当前打开/保存的 .autostep 文件完整路径
+        /// </summary>
+        public string StepFilePath { get => _stepFilePath; set => SetProperty(ref _stepFilePath, value); }
+
+        /// <summary>
+        /// 当前步骤包的图片解压工作目录
+        /// </summary>
+        public string StepImageWorkDir { get => _stepImageWorkDir; set => SetProperty(ref _stepImageWorkDir, value); }
+
         public string ImageFilePath { get => _imageFilePath; set => _imageFilePath = value; }
 
 

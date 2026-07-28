@@ -4,9 +4,9 @@
   <PropertyGroup>
     <LangVersion>preview</LangVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>\\bnt56\品保部\ORT實驗資料\21. ORT Programs\6. AutoShaoLu\Publish\</PublishUrl>
+    <PublishUrl>D:\22400616\</PublishUrl>
     <Install>true</Install>
-    <InstallFrom>Unc</InstallFrom>
+    <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateMode>Background</UpdateMode>
     <UpdateInterval>7</UpdateInterval>
@@ -18,7 +18,7 @@
     <ProductName>AutoShaoLu%28自動化燒録%29</ProductName>
     <PublisherName>ORT</PublisherName>
     <ApplicationRevision>1</ApplicationRevision>
-    <ApplicationVersion>0.2.0.%2a</ApplicationVersion>
+    <ApplicationVersion>0.3.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -94,10 +94,15 @@
   <PropertyGroup>
     <ApplicationIcon>AutoShaoLu.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>ShaoLu.App</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -130,6 +135,7 @@
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
     <Compile Include="Models\FontModel.cs" />
+    <Compile Include="Models\StepExecutionLog.cs" />
     <Compile Include="Utils\NativeMethods.cs" />
     <Compile Include="Viewmodels\ImagesRecognition.cs" />
     <Compile Include="Viewmodels\ImageRecognition.cs" />
@@ -156,6 +162,7 @@
       <DependentUpon>Strings.zh-CN.resx</DependentUpon>
     </Compile>
     <Compile Include="Services\IConfigurationService.cs" />
+    <Compile Include="Services\ExecutionLogService.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\Services.cs" />
     <Compile Include="Services\LanguageService.cs" />
@@ -168,6 +175,7 @@
     <Compile Include="Utils\SingletonLocator.cs" />
     <Compile Include="Viewmodels\AutomationStep.cs" />
     <Compile Include="Viewmodels\EditImageViewModel.cs" />
+    <Compile Include="Viewmodels\ExecutionLogViewModel.cs" />
     <Compile Include="Viewmodels\MainViewModel.cs" />
     <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />
@@ -185,6 +193,9 @@
     </Compile>
     <Compile Include="Views\WindowSettings.xaml.cs">
       <DependentUpon>WindowSettings.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowExecutionLog.xaml.cs">
+      <DependentUpon>WindowExecutionLog.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -239,6 +250,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowExecutionLog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -350,7 +365,17 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="AutoShaoLu.ico" />
+    <Resource Include="AutoShaoLu.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <FileAssociation Include=".autostep">
+      <Visible>False</Visible>
+      <Description>AutoShaoLu的步骤文件</Description>
+      <Progid>autostep</Progid>
+      <DefaultIcon>AutoShaoLu.ico</DefaultIcon>
+    </FileAssociation>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

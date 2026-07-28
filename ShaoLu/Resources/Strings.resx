@@ -456,4 +456,49 @@
   <data name="NoClickPoint" xml:space="preserve">
     <value>NoClickPoint</value>
   </data>
+  <data name="SaveFile" xml:space="preserve">
+    <value>Save File</value>
+  </data>
+  <data name="EnableLog" xml:space="preserve">
+    <value>Enable Execution Log</value>
+  </data>
+  <data name="ExecutionLog" xml:space="preserve">
+    <value>Execution Log</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="StepFileName" xml:space="preserve">
+    <value>Step File</value>
+  </data>
+  <data name="StepName" xml:space="preserve">
+    <value>Step Name</value>
+  </data>
+  <data name="InputText" xml:space="preserve">
+    <value>Input Text</value>
+  </data>
+  <data name="ExecutedAt" xml:space="preserve">
+    <value>Executed At</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="PrevPage" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="TotalRecords" xml:space="preserve">
+    <value>Total Records</value>
+  </data>
+  <data name="DateFrom" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="DateTo" xml:space="preserve">
+    <value>To</value>
+  </data>
 </root>

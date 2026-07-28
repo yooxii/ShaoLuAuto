@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -26,13 +28,145 @@ namespace ShaoLu.Utils
             PropertyNameCaseInsensitive = true,
             ReadCommentHandling = JsonCommentHandling.Skip,
             AllowTrailingCommas = true,
-            // 注意：如果 AutomationStepBase 有派生类，必须在此注册自定义 Converter
             Converters = { new AutomationStepBaseJsonConverter() }
         };
+
+        #region AutoStep 压缩包格式
+
+        /// <summary>
+        /// 将步骤保存为 .autostep 压缩包（zip 格式）
+        /// 包含 steps.json 和 images/ 目录下的裁剪图片
+        /// </summary>
+        public static void SaveAsAutoStepPackage(ObservableCollection<AutomationStepBase> steps, string packagePath)
+        {
+            if (steps == null)
+                throw new ArgumentNullException(nameof(steps), "步骤列表不能为空");
+            if (string.IsNullOrWhiteSpace(packagePath))
+                throw new ArgumentException("文件路径不能为空", nameof(packagePath));
+
+            string directory = Path.GetDirectoryName(packagePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+
+            // 如果文件已存在，先删除
+            if (File.Exists(packagePath))
+                File.Delete(packagePath);
+
+            using (var zipStream = new FileStream(packagePath, FileMode.Create))
+            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
+            {
+                // 1. 写入 steps.json
+                var jsonEntry = archive.CreateEntry("steps.json", CompressionLevel.Optimal);
+                using (var entryStream = jsonEntry.Open())
+                {
+                    string jsonString = JsonSerializer.Serialize(steps, _writeOptions);
+                    byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+                    entryStream.Write(jsonBytes, 0, jsonBytes.Length);
+                }
+
+                // 2. 收集并写入裁剪图片
+                foreach (var step in steps)
+                {
+                    CollectAndWriteImages(step, archive);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 从 .autostep 压缩包加载步骤
+        /// </summary>
+        public static ObservableCollection<AutomationStepBase> LoadFromAutoStepPackage(string packagePath)
+        {
+            if (string.IsNullOrWhiteSpace(packagePath))
+                throw new ArgumentException("文件路径不能为空", nameof(packagePath));
+            if (!File.Exists(packagePath))
+                throw new FileNotFoundException($"文件未找到: {packagePath}", packagePath);
+
+            // 解压到工作目录: {packagePath所在目录}/{文件名WithoutExt}_images/
+            string dir = Path.GetDirectoryName(packagePath);
+            string nameWithoutExt = Path.GetFileNameWithoutExtension(packagePath);
+            string workDir = Path.Combine(dir, $"{nameWithoutExt}_images");
+
+            // 清理旧的工作目录
+            if (Directory.Exists(workDir))
+                Directory.Delete(workDir, true);
+            Directory.CreateDirectory(workDir);
+
+            // 解压 zip 到工作目录
+            ZipFile.ExtractToDirectory(packagePath, workDir);
+
+            // 读取 steps.json
+            string jsonPath = Path.Combine(workDir, "steps.json");
+            if (!File.Exists(jsonPath))
+                throw new InvalidOperationException($"压缩包 '{packagePath}' 中未找到 steps.json。");
+
+            ObservableCollection<AutomationStepBase> steps;
+            using (var stream = new FileStream(jsonPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                steps = JsonSerializer.Deserialize<ObservableCollection<AutomationStepBase>>(stream, _readOptions);
+            }
+
+            if (steps == null)
+                throw new InvalidOperationException($"压缩包 '{packagePath}' 中的 steps.json 内容为空或格式无效。");
+
+            // 设置工作目录
+            var mainVM = SingletonLocator.Main;
+            mainVM.StepImageWorkDir = workDir;
+            mainVM.StepFilePath = packagePath;
+
+            return steps;
+        }
+
+        /// <summary>
+        /// 获取 .autostep 包的解压工作目录路径
+        /// </summary>
+        public static string GetWorkDirPath(string packagePath)
+        {
+            string dir = Path.GetDirectoryName(packagePath);
+            string nameWithoutExt = Path.GetFileNameWithoutExtension(packagePath);
+            return Path.Combine(dir, $"{nameWithoutExt}_images");
+        }
+
+        private static void CollectAndWriteImages(AutomationStepBase step, ZipArchive archive)
+        {
+            if (step is ImageRecognitionBase imageStep)
+            {
+                WriteCroppedImageToArchive(imageStep.CroppedImageFullPath, imageStep.CroppedImageName, archive);
+            }
+            else if (step is ImagesRecognitionBase imagesStep)
+            {
+                foreach (var image in imagesStep.Images)
+                {
+                    WriteCroppedImageToArchive(image.CroppedImageFullPath, image.CroppedImageName, archive);
+                }
+            }
+        }
+
+        private static void WriteCroppedImageToArchive(string fullPath, string entryName, ZipArchive archive)
+        {
+            if (string.IsNullOrEmpty(fullPath) || string.IsNullOrEmpty(entryName))
+                return;
+            if (!File.Exists(fullPath))
+                return;
+
+            // 使用正斜杠作为 zip 内路径分隔符
+            string normalizedEntryName = entryName.Replace('\\', '/');
+            var entry = archive.CreateEntry(normalizedEntryName, CompressionLevel.Optimal);
+            using (var entryStream = entry.Open())
+            using (var fileStream = File.OpenRead(fullPath))
+            {
+                fileStream.CopyTo(entryStream);
+            }
+        }
+
+        #endregion
+
+        #region JSON 格式（兼容旧版）
 
         /// <summary>
         /// 将 AutomationStepBase 及其派生类列表保存为 JSON 文件
         /// </summary>
+        [Obsolete("建议使用 SaveAsAutoStepPackage")]
         public static void SaveStepsToJson(ObservableCollection<AutomationStepBase> steps, string filePath)
         {
             if (steps == null)
@@ -41,15 +175,12 @@ namespace ShaoLu.Utils
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentException("文件路径不能为空", nameof(filePath));
 
-            // 确保目录存在
             string directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            // 直接序列化并写入，让可能的 IOException, UnauthorizedAccessException, JsonException 自然抛出
-            // 调用方应在 ViewModel 或全局异常处理器中捕获这些异常
             string jsonString = JsonSerializer.Serialize(steps, _writeOptions);
             File.WriteAllText(filePath, jsonString, Encoding.UTF8);
         }
@@ -57,6 +188,7 @@ namespace ShaoLu.Utils
         /// <summary>
         /// 从 JSON 文件加载自动化步骤列表
         /// </summary>
+        [Obsolete("建议使用 LoadFromAutoStepPackage")]
         public static ObservableCollection<AutomationStepBase> LoadStepsFromJson(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -65,19 +197,19 @@ namespace ShaoLu.Utils
             if (!File.Exists(filePath))
                 throw new FileNotFoundException($"文件未找到: {filePath}", filePath);
 
-            // 直接反序列化，让可能的 IOException, UnauthorizedAccessException, JsonException 自然抛出
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 var steps = JsonSerializer.Deserialize<ObservableCollection<AutomationStepBase>>(stream, _readOptions);
 
                 if (steps == null)
                 {
-                    // 仅在结果为 null 时抛出明确的业务/格式错误
                     throw new InvalidOperationException($"文件 '{filePath}' 内容为空或格式无效，无法反序列化为步骤列表。");
                 }
 
                 return steps;
             }
         }
+
+        #endregion
     }
 }

@@ -4,6 +4,7 @@ using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -21,7 +22,6 @@ namespace ShaoLu
     {
         private readonly Viewmodels.MainViewModel mainViewModel = SingletonLocator.Main;
         private readonly Viewmodels.StepsViewModel stepsViewModel = SingletonLocator.Steps;
-        readonly FileServices fileServer = SingletonLocator.FileServices;
         readonly AppSettings appSettings = SingletonLocator.Settings;
 
         private const int HOTKEY_START_ID = 9001;
@@ -180,39 +180,49 @@ namespace ShaoLu
 
         private void Open_Click(object sender, RoutedEventArgs e)
         {
-            var filePath = PathServices.OpenPathDialog(LanguageService.GetLocalizedString("OpenFile"), $"{LanguageService.GetLocalizedString("StepFile")}|*.json");
+            var filePath = PathServices.OpenPathDialog(
+                LanguageService.GetLocalizedString("OpenFile"),
+                $"AutoStep Files|*.autostep|{LanguageService.GetLocalizedString("StepFile")}|*.json");
             if (filePath != null)
             {
-                mainViewModel.StepFileDir = Path.GetDirectoryName(filePath);
-                var AutomationStepBases = StepsFile.LoadStepsFromJson(filePath);
+                var ext = Path.GetExtension(filePath).ToLower();
+                ObservableCollection<AutomationStepBase> loadedSteps;
+
+                if (ext == ".autostep")
+                {
+                    loadedSteps = StepsFile.LoadFromAutoStepPackage(filePath);
+                }
+                else
+                {
+                    // 兼容旧版 JSON 格式
+                    loadedSteps = StepsFile.LoadStepsFromJson(filePath);
+                    mainViewModel.StepFilePath = filePath;
+                    mainViewModel.StepImageWorkDir = Path.GetDirectoryName(filePath);
+                }
+
                 stepsViewModel.AutomationStepBases.Clear();
-                stepsViewModel.InsertSteps(AutomationStepBases);
+                stepsViewModel.InsertSteps(loadedSteps);
             }
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            var filePath = PathServices.SavePathDialog(LanguageService.GetLocalizedString("OpenFile"), $"{LanguageService.GetLocalizedString("StepFile")}|*.json");
+            var filePath = PathServices.SavePathDialog(
+                LanguageService.GetLocalizedString("SaveFile"),
+                "AutoStep Files|*.autostep",
+                saveName: "NewSteps.autostep");
             if (filePath != null)
             {
                 foreach (var step in stepsViewModel.AutomationStepBases)
                 {
                     step.IsSave = true;
-                    if (step is ImageRecognitionBase imageRecognition)
-                    {
-                        fileServer.UnmarkForDeletion(imageRecognition.CroppedImagePath);
-                    }
-                    if (step is ImagesRecognitionBase imagesRecognition)
-                    {
-                        foreach (var image in imagesRecognition.Images)
-                        {
-                            fileServer.UnmarkForDeletion(image.CroppedImagePath);
-                        }
-                    }
                 }
-                StepsFile.SaveStepsToJson(stepsViewModel.AutomationStepBases, filePath);
 
-                fileServer.CommitPendingDeletions();
+                StepsFile.SaveAsAutoStepPackage(stepsViewModel.AutomationStepBases, filePath);
+
+                // 更新当前文件路径和工作目录
+                mainViewModel.StepFilePath = filePath;
+                mainViewModel.StepImageWorkDir = StepsFile.GetWorkDirPath(filePath);
             }
         }
 
@@ -226,6 +236,12 @@ namespace ShaoLu
         {
             WindowAbout windowAbout = new();
             windowAbout.ShowDialog();
+        }
+
+        private void ExecutionLog_Click(object sender, RoutedEventArgs e)
+        {
+            WindowExecutionLog window = new();
+            window.Show();
         }
     }
 }

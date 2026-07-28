@@ -59,5 +59,15 @@ namespace ShaoLu.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   查找 System.Byte[] 类型的本地化资源。
+        /// </summary>
+        public static byte[] AutoShaoLu {
+            get {
+                object obj = ResourceManager.GetObject("AutoShaoLu", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

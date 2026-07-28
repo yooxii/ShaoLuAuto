@@ -81,7 +81,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
 
         private ImageSource _croppedImg;
-        private Rect _croppedRect;
+        private Rect _croppedRect = Rect.Empty;
         private double _similarityThreshold = 0.85;
         private List<ClickThumb> _clickThumbs = [];
 
@@ -193,7 +193,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
-                    if (CroppedRect != null)
+                    if (CroppedRect != null && !CroppedRect.IsEmpty)
                         windowEditImage.editImageViewModel.SetCropRect(CroppedRect);
                     if (ClickThumbs != null && ClickThumbs.Count > 0)
                         windowEditImage.editImageViewModel.SetThumbs(ClickThumbs);
@@ -203,6 +203,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     CroppedImg = img;
                     CroppedRect = rect;
                     ClickThumbs = clickthumbs;
+                    IsError = false;
                 };
             }
         }

@@ -1,10 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ShaoLu.Services;
+using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using Point = ShaoLu.Models.Point;
@@ -90,7 +93,6 @@ namespace ShaoLu.Viewmodels
         }
 
 
-
         public event Action<ImageSource, Rect, List<ClickThumb>> OnImageSaved;
         public event Action<Rect> OnCropRectChanged;
 
@@ -105,11 +107,24 @@ namespace ShaoLu.Viewmodels
             OnCropRectChanged?.Invoke(rect);
         }
 
-        public void SaveCroppedImage()
+        public async Task<bool> SaveCroppedImage()
         {
-            if (ImgDst != null && Thumbs.Count > 0)
+            if (ImgDst == null)
+            {
+                var (_, task) = WindowAsyncPopup.Show(LanguageService.GetLocalizedString("NoCropImage"), "Error", PopupButtons.OK, MessageBoxImage.Error);
+                await task;
+                return false;
+            }
+            else if (Thumbs.Count <= 0)
+            {
+                var (_, task) = WindowAsyncPopup.Show(LanguageService.GetLocalizedString("NoClickPoint"), "Error", PopupButtons.OK, MessageBoxImage.Error);
+                await task;
+                return false;
+            }
+            else
             {
                 OnImageSaved?.Invoke(ImgDst, CropRect, Thumbs.ToList());
+                return true;
             }
         }
 

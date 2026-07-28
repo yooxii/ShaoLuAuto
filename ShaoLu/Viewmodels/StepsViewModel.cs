@@ -303,6 +303,29 @@ namespace ShaoLu.Viewmodels
             return AutomationStepBases != null && AutomationStepBases.Count > 0 && !_isRunning;
         }
 
+        private void PreRun()
+        {
+            // 重置停止信号
+            StopSignal = false;
+            // 初始化自动化引擎
+            Autogui.StartAuto();
+            if (_stepSettings.MinimizeOnRun)
+                Application.Current.MainWindow.WindowState = WindowState.Minimized;
+            foreach (var step in AutomationStepBases)
+            {
+                if (step is TypeTextMoreStep textMoreStep)
+                {
+                    if (textMoreStep.ReloadText)
+                        textMoreStep.Reload();
+                }
+                else if (step is TypeTextFromFileStep textFromFileStep)
+                {
+                    if (textFromFileStep.ReloadIndex)
+                        textFromFileStep.Index = 0;
+                }
+            }
+        }
+
         /// <summary>
         /// 启动自动化运行，将耗时任务移至后台线程
         /// </summary>
@@ -310,24 +333,17 @@ namespace ShaoLu.Viewmodels
         {
             try
             {
-                // 重置停止信号
-                StopSignal = false;
-
+                PreRun();
                 _cts = new CancellationTokenSource();
                 var token = _cts.Token;
 
-
                 logger.Info("Start Auto");
-                // 初始化自动化引擎
-                Autogui.StartAuto();
-                if (_stepSettings.MinimizeOnRun)
-                    Application.Current.MainWindow.WindowState = WindowState.Minimized;
 
 
                 for (int i = 0; i < AutomationStepBases.Count; i++)
                 {
                     // 在每个步骤开始前再次检查停止信号，提高响应速度
-                    if (StopSignal || token.IsCancellationRequested)
+                    if (StopSignal || token.IsCancellationRequested || i < 0)
                     {
                         break;
                     }

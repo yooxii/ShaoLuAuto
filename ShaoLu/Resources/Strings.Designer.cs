@@ -214,6 +214,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 AutoGen 的本地化字符串。
+        /// </summary>
+        public static string AutoGen {
+            get {
+                return ResourceManager.GetString("AutoGen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Back 的本地化字符串。
         /// </summary>
         public static string Back {
@@ -538,6 +547,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Infix 的本地化字符串。
+        /// </summary>
+        public static string Infix {
+            get {
+                return ResourceManager.GetString("Infix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Language 的本地化字符串。
         /// </summary>
         public static string Language_Header {
@@ -597,6 +615,15 @@ namespace ShaoLu.Resources {
         public static string No_img_Warning {
             get {
                 return ResourceManager.GetString("No_img_Warning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 NoClickPoint 的本地化字符串。
+        /// </summary>
+        public static string NoClickPoint {
+            get {
+                return ResourceManager.GetString("NoClickPoint", resourceCulture);
             }
         }
         
@@ -691,6 +718,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Prefix 的本地化字符串。
+        /// </summary>
+        public static string Prefix {
+            get {
+                return ResourceManager.GetString("Prefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Preview 的本地化字符串。
         /// </summary>
         public static string Preview {
@@ -723,6 +759,15 @@ namespace ShaoLu.Resources {
         public static string Refresh {
             get {
                 return ResourceManager.GetString("Refresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ReloadIndex 的本地化字符串。
+        /// </summary>
+        public static string ReloadIndex {
+            get {
+                return ResourceManager.GetString("ReloadIndex", resourceCulture);
             }
         }
         
@@ -930,6 +975,15 @@ namespace ShaoLu.Resources {
         public static string Success {
             get {
                 return ResourceManager.GetString("Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Suffix 的本地化字符串。
+        /// </summary>
+        public static string Suffix {
+            get {
+                return ResourceManager.GetString("Suffix", resourceCulture);
             }
         }
         

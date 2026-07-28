@@ -202,10 +202,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _prefix;
         private string _infix;
         private string _suffix;
-        private int _index = 0;
-        private ObservableCollection<string> _contents = [];
-        private ObservableCollection<string> _previewContents = [];
-        private string _delimiter = "\n,\r,\n\r,";
+        private bool _prefix_gen = false;
+        private bool _infix_gen = false;
+        private bool _suffix_gen = false;
+        private bool _reloadText = false;
+        private string _prefix_;
+        private string _infix_;
+        private string _suffix_;
 
 
         /// <summary>
@@ -215,28 +218,49 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public double DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
 
-        public string Prefix { get => _prefix; set => SetProperty(ref _prefix, value); }
+        public string Prefix
+        {
+            get => _prefix; set
+            {
+                if (SetProperty(ref _prefix, value))
+                {
+                    _prefix_ = value;
+                    TextToType = _prefix_ + _infix_ + _suffix_;
+                }
+            }
+        }
 
-        public string Infix { get => _infix; set => SetProperty(ref _infix, value); }
+        public string Infix
+        {
+            get => _infix; set
+            {
+                if (SetProperty(ref _infix, value))
+                {
+                    _infix_ = value;
+                    TextToType = _prefix_ + _infix_ + _suffix_;
+                }
+            }
+        }
 
-        public string Suffix { get => _suffix; set => SetProperty(ref _suffix, value); }
+        public string Suffix
+        {
+            get => _suffix; set
+            {
+                if (SetProperty(ref _suffix, value))
+                {
+                    _suffix_ = value;
+                    TextToType = _prefix_ + _infix_ + _suffix_;
+                }
+            }
+        }
 
-        public int Index { get => _index; set => SetProperty(ref _index, value); }
+        public bool Prefix_gen { get => _prefix_gen; set => SetProperty(ref _prefix_gen, value); }
 
-        /// <summary>
-        /// 待输入内容
-        /// </summary>
-        public ObservableCollection<string> Contents { get => _contents; set => SetProperty(ref _contents, value); }
+        public bool Infix_gen { get => _infix_gen; set => SetProperty(ref _infix_gen, value); }
 
-        /// <summary>
-        /// 待输入内容的预览
-        /// </summary>
-        public ObservableCollection<string> PreviewContents { get => _previewContents; set => SetProperty(ref _previewContents, value); }
+        public bool Suffix_gen { get => _suffix_gen; set => SetProperty(ref _suffix_gen, value); }
 
-        /// <summary>
-        /// 分割符
-        /// </summary>
-        public string Delimiter { get => _delimiter; set => SetProperty(ref _delimiter, value); }
+        public bool ReloadText { get => _reloadText; set => SetProperty(ref _reloadText, value); }
 
         #region 构造
         public TypeTextMoreStep() : base()
@@ -259,19 +283,56 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             return new TypeTextMoreStep(Name, Description)
             {
+                Prefix = Prefix,
+                Infix = Infix,
+                Suffix = Suffix,
+                ReloadText = ReloadText,
+                Prefix_gen = Prefix_gen,
+                Infix_gen = Infix_gen,
+                Suffix_gen = Suffix_gen,
+                WaitTime = WaitTime,
                 TextToType = TextToType,
                 DelayBetweenKeys = DelayBetweenKeys
             };
         }
         #endregion
 
+        private void Increment()
+        {
+            if (Prefix_gen)
+            {
+                _prefix_ = Autogui.IncrementString(_prefix_);
+            }
+            if (Infix_gen)
+            {
+                _infix_ = Autogui.IncrementString(_infix_);
+            }
+            if (Suffix_gen)
+            {
+                _suffix_ = Autogui.IncrementString(_suffix_);
+            }
+            TextToType = _prefix_ + _infix_ + _suffix_;
+        }
+
+        public void Reload()
+        {
+            _prefix_ = _prefix;
+            _infix_ = _infix;
+            _suffix_ = _suffix;
+            TextToType = _prefix_ + _infix_ + _suffix_;
+        }
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
             Thread.Sleep((int)WaitTime * 1000);
             var res = await Task.Run(() =>
             {
-                return Autogui.TypeTextSafe(TextToType, (int)(DelayBetweenKeys * 1000));
+                if (DelayBetweenKeys >= 0.01)
+                    return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
+                else
+                    return Autogui.TypeTextSafe(TextToType);
             });
+            Increment();
             IsTrue = res;
             IsError = false;
             return res;
@@ -285,9 +346,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _filePath;
         private string _textToType;
         private double _delayBetweenKeys = 0.01;
+        private bool _reloadIndex = false;
         private int _index = 0;
         private ObservableCollection<string> _contents = [];
-        private ObservableCollection<string> _previewContents = [];
         private string[] _delimiter = ["\n", "\r", "\n\r", "\t", ",", ";", "|"];
 
 
@@ -308,15 +369,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public ObservableCollection<string> Contents { get => _contents; set => SetProperty(ref _contents, value); }
 
         /// <summary>
-        /// 待输入内容的预览
-        /// </summary>
-        public ObservableCollection<string> PreviewContents { get => _previewContents; set => SetProperty(ref _previewContents, value); }
-
-        /// <summary>
         /// 分割符
         /// </summary>
         [JsonIgnore]
         public string[] Delimiter { get => _delimiter; set => SetProperty(ref _delimiter, value); }
+        public bool ReloadIndex { get => _reloadIndex; set => SetProperty(ref _reloadIndex, value); }
 
 
 
@@ -345,7 +402,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TextToType = TextToType,
                 DelayBetweenKeys = DelayBetweenKeys,
                 Contents = Contents,
-                PreviewContents = PreviewContents,
+                ReloadIndex = ReloadIndex,
             };
         }
         #endregion
@@ -359,13 +416,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
             LoadFile();
         }
 
-        public void Increment()
+        [RelayCommand]
+        private void AddContent()
         {
+            Contents.Add("");
+        }
 
+        [RelayCommand]
+        private void DelContent()
+        {
+            if (Contents.Count > 0)
+                Contents.RemoveAt(Contents.Count - 1);
         }
 
         private void LoadFile()
         {
+            if (FilePath == null) return;
             if (new List<string> { ".txt", ".csv" }.Contains(Path.GetExtension(FilePath).ToLower()))
             {
                 string res = fileServices.SmartReadTextFile(FilePath);
@@ -398,6 +464,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     IsTrue = false;
                     IsError = true;
+                    Index = 0;
                     throw new InvalidOperationException($"{Name}'s Contents is Finished.");
                 }
                 TextToType = Contents[Index];

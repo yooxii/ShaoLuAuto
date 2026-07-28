@@ -1,6 +1,7 @@
 ﻿using ShaoLu.Services;
 using ShaoLu.Viewmodels;
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -31,7 +32,7 @@ namespace ShaoLu.Views
             editImageViewModel.CropRect = EditImage.CurrentRect;
         }
 
-        private void SaveImage_Click(object sender, RoutedEventArgs e)
+        private async void SaveImage_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is EditImageViewModel vm)
             {
@@ -40,9 +41,9 @@ namespace ShaoLu.Views
                     WindowAsyncPopup.Show(LanguageService.GetLocalizedString("NoCropImage"), "Error", PopupButtons.OK, MessageBoxImage.Error);
                     return;
                 }
-                vm.SaveCroppedImage();
-
-                WindowAsyncPopup.Show(LanguageService.GetLocalizedString("Saved"), LanguageService.GetLocalizedString("Success"), PopupButtons.OK, MessageBoxImage.Information);
+                var res = await vm.SaveCroppedImage();
+                if (res)
+                    WindowAsyncPopup.Show(LanguageService.GetLocalizedString("Saved"), LanguageService.GetLocalizedString("Success"), PopupButtons.OK, MessageBoxImage.Information);
             }
         }
 

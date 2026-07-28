@@ -438,4 +438,22 @@
   <data name="StepFile" xml:space="preserve">
     <value>StepFile</value>
   </data>
+  <data name="ReloadIndex" xml:space="preserve">
+    <value>ReloadIndex</value>
+  </data>
+  <data name="AutoGen" xml:space="preserve">
+    <value>AutoGen</value>
+  </data>
+  <data name="Prefix" xml:space="preserve">
+    <value>Prefix</value>
+  </data>
+  <data name="Infix" xml:space="preserve">
+    <value>Infix</value>
+  </data>
+  <data name="Suffix" xml:space="preserve">
+    <value>Suffix</value>
+  </data>
+  <data name="NoClickPoint" xml:space="preserve">
+    <value>NoClickPoint</value>
+  </data>
 </root>

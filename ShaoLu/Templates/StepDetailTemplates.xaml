@@ -258,31 +258,43 @@
     <DataTemplate x:Key="TextStepMoreTemplate" DataType="{x:Type AutoVM:TypeTextMoreStep}">
         <StackPanel Orientation="Vertical">
             <StackPanel VerticalAlignment="Center">
-                <StackPanel VerticalAlignment="Center">
-                    <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+                <Label Content="{lex:Loc Prefix}" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding Prefix, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
+                    <CheckBox IsChecked="{Binding Prefix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" HorizontalAlignment="Left"/>
                 </StackPanel>
-                <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
             </StackPanel>
+            
             <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.01"/>
+                <Label Content="{lex:Loc Infix}" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding Infix, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
+                    <CheckBox IsChecked="{Binding Infix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" HorizontalAlignment="Left"/>
+                </StackPanel>
             </StackPanel>
 
-            <!--<StackPanel VerticalAlignment="Center">
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc Suffix}" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal">
-                    <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
-                    <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}"/>
+                    <TextBox Text="{Binding Suffix, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
+                    <CheckBox IsChecked="{Binding Suffix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" HorizontalAlignment="Left"/>
                 </StackPanel>
-                <ListBox ItemsSource="{Binding PreviewContents}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBox Text="{Binding .}"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </StackPanel>-->
+            </StackPanel>
+
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+            
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+
+            <StackPanel VerticalAlignment="Center">
+                <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding TextToType}"/>
+            </StackPanel>
         </StackPanel>
     </DataTemplate>
     
@@ -296,23 +308,31 @@
                 <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding DelayBetweenKeys}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
-
-            <StackPanel VerticalAlignment="Center" Margin="0,5,0,0">
-                <StackPanel HorizontalAlignment="Stretch">
-                    <Label Content="{lex:Loc Contents}"/>
-                </StackPanel>
-                <StackPanel HorizontalAlignment="Stretch">
-                    <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}"/>
-                </StackPanel>
-                <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
-                <ListBox ItemsSource="{Binding Contents}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBox Text="{Binding .}"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+            <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Margin="0,5,0,5">
+                <CheckBox IsChecked="{Binding ReloadIndex}" Content="{lex:Loc ReloadIndex}" HorizontalAlignment="Left"/>
             </StackPanel>
+
+            <GroupBox Header="{lex:Loc Contents}">
+                <StackPanel VerticalAlignment="Center" Margin="0,5,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}" Margin="0,0,5,3"/>
+                        <Button Content=" + " Command="{Binding AddContentCommand}" Margin="0,0,5,3"/>
+                        <Button Content=" - " Command="{Binding DelContentCommand}" Margin="0,0,5,3"/>
+                    </StackPanel>
+                    <ListBox ItemsSource="{Binding Contents}" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding .}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel Orientation="Vertical" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                    </ListBox>
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
     </DataTemplate>
 

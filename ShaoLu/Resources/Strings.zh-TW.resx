@@ -438,4 +438,22 @@
   <data name="StepFile" xml:space="preserve">
     <value>步驟文件</value>
   </data>
+  <data name="ReloadIndex" xml:space="preserve">
+    <value>新一輪重置計數</value>
+  </data>
+  <data name="AutoGen" xml:space="preserve">
+    <value>自增</value>
+  </data>
+  <data name="Prefix" xml:space="preserve">
+    <value>前綴</value>
+  </data>
+  <data name="Infix" xml:space="preserve">
+    <value>中綴</value>
+  </data>
+  <data name="Suffix" xml:space="preserve">
+    <value>後綴</value>
+  </data>
+  <data name="NoClickPoint" xml:space="preserve">
+    <value>請創建點擊位置</value>
+  </data>
 </root>

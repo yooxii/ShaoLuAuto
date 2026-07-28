@@ -267,25 +267,31 @@ namespace ShaoLu.Utils
 
             while (true)
             {
-                AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.2, 0.4);
-                if (!rect.IsEmpty && clickposition != null)
-                {
-                    foreach (Point p in clickposition)
-                    {
-                        MoveMouseTo(rect, position, p);
-                        for (int i = 0; i < clicks; i++)
-                        {
-                            sim.Mouse.LeftButtonClick();
-                            Thread.Sleep(clickGapTimeMs); // 点击间隔
-                        }
-                        Thread.Sleep(nextclickTimeMs); // 等待下一次点击
-                    }
-                    return true;
-                }
-
                 if (stopwatch.ElapsedMilliseconds >= timeoutMs)
                 {
-                    return false; // 超时退出
+                    throw new Exception(LanguageService.GetLocalizedString("NoMatchingImage"));
+                }
+                try
+                {
+                    AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.1, 0.2);
+                    if (!rect.IsEmpty && clickposition != null)
+                    {
+                        foreach (Point p in clickposition)
+                        {
+                            MoveMouseTo(rect, position, p);
+                            for (int i = 0; i < clicks; i++)
+                            {
+                                sim.Mouse.LeftButtonClick();
+                                Thread.Sleep(clickGapTimeMs); // 点击间隔
+                            }
+                            Thread.Sleep(nextclickTimeMs); // 等待下一次点击
+                        }
+                        return true;
+                    }
+                }
+                catch
+                {
+                    continue;
                 }
             }
         }
@@ -336,6 +342,148 @@ namespace ShaoLu.Utils
         #endregion
 
         #region 文字类
+
+        public static string IncrementString(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return "1";
+
+            // 1. 从末尾提取连续的数字或字母后缀
+            int suffixStart = input.Length;
+            while (suffixStart > 0 && (char.IsDigit(input[suffixStart - 1]) || char.IsLetter(input[suffixStart - 1])))
+            {
+                suffixStart--;
+            }
+
+            string prefix = input.Substring(0, suffixStart);
+            string suffix = input.Substring(suffixStart);
+
+            // 2. 如果后缀为空，直接追加 "1"
+            if (string.IsNullOrEmpty(suffix))
+                return input + "1";
+
+            // 3. 判断后缀类型并分别处理
+            if (char.IsDigit(suffix[0]))
+            {
+                // 数字后缀：加1后强制保持原始位数，溢出截取末尾
+                if (long.TryParse(suffix, out long number))
+                {
+                    number++;
+                    string result = number.ToString();
+                    if (result.Length > suffix.Length)
+                    {
+                        result = result.Substring(result.Length - suffix.Length);
+                    }
+                    return prefix + result;
+                }
+                // 解析失败，回退为字母处理
+                return IncrementAlpha(suffix, prefix);
+            }
+            else
+            {
+                // 字母后缀：固定位数循环递增，Z→A 不进位扩展
+                return IncrementAlphaFixed(suffix, prefix);
+            }
+        }
+
+        private static string IncrementAlpha(string suffix, string prefix)
+        {
+            char[] chars = suffix.ToCharArray();
+            int i = chars.Length - 1;
+
+            while (i >= 0)
+            {
+                char c = chars[i];
+
+                if (char.IsLower(c))
+                {
+                    if (c < 'z')
+                    {
+                        chars[i] = (char)(c + 1);
+                        return prefix + new string(chars);
+                    }
+                    else
+                    {
+                        chars[i] = 'a';
+                        i--;
+                    }
+                }
+                else if (char.IsUpper(c))
+                {
+                    if (c < 'Z')
+                    {
+                        chars[i] = (char)(c + 1);
+                        return prefix + new string(chars);
+                    }
+                    else
+                    {
+                        chars[i] = 'A';
+                        i--;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // 所有位都进位了，在最前面补一位（字母进位不受"位数不变"约束）
+            if (i < 0)
+            {
+                char baseChar = char.IsUpper(suffix[0]) ? 'A' : 'a';
+                return prefix + baseChar + new string(chars);
+            }
+
+            return prefix + new string(chars);
+        }
+
+        private static string IncrementAlphaFixed(string suffix, string prefix)
+        {
+            char[] chars = suffix.ToCharArray();
+            int i = chars.Length - 1;
+
+            // 从最后一位开始向前进位
+            while (i >= 0)
+            {
+                char c = chars[i];
+
+                if (char.IsLower(c))
+                {
+                    if (c < 'z')
+                    {
+                        chars[i] = (char)(c + 1);
+                        return prefix + new string(chars);
+                    }
+                    else // 'z' 回绕为 'a'，继续向前进位
+                    {
+                        chars[i] = 'a';
+                        i--;
+                    }
+                }
+                else if (char.IsUpper(c))
+                {
+                    if (c < 'Z')
+                    {
+                        chars[i] = (char)(c + 1);
+                        return prefix + new string(chars);
+                    }
+                    else // 'Z' 回绕为 'A'，继续向前进位
+                    {
+                        chars[i] = 'A';
+                        i--;
+                    }
+                }
+                else
+                {
+                    // 非字母字符，停止进位
+                    break;
+                }
+            }
+
+            // 所有位都回绕了（如 "ZZ" → "AA"），位数不变
+            // 直接返回回绕后的结果，不再补位
+            return prefix + new string(chars);
+        }
 
         public static bool TypeText(string text, int delayBetweenKeys = 0)
         {

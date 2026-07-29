@@ -39,7 +39,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private int _trueGoto;
         private int _falseGoto;
         private double _waitTime = 0.1;
-
+        private StepErrorType _errorType = StepErrorType.None;
 
         public bool IsNeed
         {
@@ -100,6 +100,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public int FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
 
         public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
+
+        /// <summary>
+        /// 步骤错误类型
+        /// </summary>
+        public StepErrorType ErrorType { get => _errorType; set => SetProperty(ref _errorType, value); }
+
+        // 自引用次数上限（序列化，可在 UI 配置）
+        private int _selfReferenceLimit = 10;
+        public int SelfReferenceLimit { get => _selfReferenceLimit; set => SetProperty(ref _selfReferenceLimit, value); }
+
+        // 运行时自引用计数器（不序列化）
+        [JsonIgnore]
+        public int SelfReferenceCount { get; set; }
 
         #endregion
 
@@ -177,15 +190,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TextToType = TextToType,
                 DelayBetweenKeys = DelayBetweenKeys,
                 WaitTime = WaitTime,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
+                IsNeed = IsNeed,
+                EnableLog = EnableLog,
             };
         }
         #endregion
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
+            await Task.Delay((int)WaitTime * 1000, cancellationToken);
             var res = await Task.Run(() =>
             {
-                Thread.Sleep((int)WaitTime * 1000);
                 if (DelayBetweenKeys < 0.01)
                 {
                     return Autogui.TypeTextSafe(TextToType);
@@ -197,6 +214,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             });
             IsTrue = res;
             IsError = false;
+            ErrorType = StepErrorType.None;
 
             if (res && EnableLog)
             {
@@ -311,7 +329,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Suffix_gen = Suffix_gen,
                 WaitTime = WaitTime,
                 TextToType = TextToType,
-                DelayBetweenKeys = DelayBetweenKeys
+                DelayBetweenKeys = DelayBetweenKeys,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
+                IsNeed = IsNeed,
+                EnableLog = EnableLog,
             };
         }
         #endregion
@@ -343,7 +365,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            Thread.Sleep((int)WaitTime * 1000);
+            await Task.Delay((int)WaitTime * 1000, cancellationToken);
             var res = await Task.Run(() =>
             {
                 if (DelayBetweenKeys >= 0.01)
@@ -361,13 +383,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
             Increment();
             IsTrue = res;
             IsError = false;
+            ErrorType = StepErrorType.None;
             return res;
         }
     }
 
     public partial class TypeTextFromFileStep : AutomationStepBase
     {
-        readonly FileServices fileServices = SingletonLocator.FileServices;
+        private FileServices _fileServices;
+        private FileServices FileServices => _fileServices ?? (_fileServices = SingletonLocator.FileServices);
 
         private string _filePath;
         private string _textToType;
@@ -433,8 +457,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FilePath = FilePath,
                 TextToType = TextToType,
                 DelayBetweenKeys = DelayBetweenKeys,
-                Contents = Contents,
+                Contents = new ObservableCollection<string>(Contents),
                 ReloadIndex = ReloadIndex,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
+                IsNeed = IsNeed,
+                Index = Index,
+                EnableLog = EnableLog,
             };
         }
         #endregion
@@ -466,7 +495,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             if (FilePath == null) return;
             if (new List<string> { ".txt", ".csv" }.Contains(Path.GetExtension(FilePath).ToLower()))
             {
-                string res = fileServices.SmartReadTextFile(FilePath);
+                string res = FileServices.SmartReadTextFile(FilePath);
                 Contents.Clear();
                 Contents.AddRange(res.Split(Delimiter, StringSplitOptions.RemoveEmptyEntries).ToList());
             }
@@ -496,19 +525,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     IsTrue = false;
                     IsError = true;
+                    ErrorType = StepErrorType.IndexOutOfRange;
                     Index = 0;
                     throw new InvalidOperationException($"{Name}'s Contents is Finished.");
                 }
                 TextToType = Contents[Index];
                 Index++;
             }
+            await Task.Delay((int)WaitTime * 1000, cancellationToken);
             var res = await Task.Run(() =>
             {
-                Thread.Sleep((int)WaitTime * 1000);
                 return Autogui.TypeTextSafe(TextToType, (int)(DelayBetweenKeys * 1000));
             });
             IsTrue = res;
             IsError = false;
+            ErrorType = StepErrorType.None;
 
             if (res && EnableLog)
             {
@@ -601,8 +632,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGoto = FalseGoto,
                 Title = Title,
                 PopupText = PopupText,
-                PopupFont = PopupFont,
+                PopupFont = PopupFont?.Clone(),
                 PopupType = PopupType,
+                PopupButtons = new PopupButtons(PopupButtons),
+                WaitTime = WaitTime,
+                IsNeed = IsNeed,
             };
         }
 
@@ -748,12 +782,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
             return new EmptyStep(Name, Description)
             {
                 WaitTime = WaitTime,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
+                IsNeed = IsNeed,
             };
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            Thread.Sleep((int)WaitTime * 1000);
+            await Task.Delay((int)WaitTime * 1000, cancellationToken);
             return IsTrue;
         }
     }

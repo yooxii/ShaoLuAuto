@@ -220,7 +220,7 @@
     <value>Please select a step</value>
   </data>
   <data name="StepName" xml:space="preserve">
-    <value>Name</value>
+    <value>Step Name</value>
   </data>
   <data name="StepType" xml:space="preserve">
     <value>Type</value>
@@ -468,14 +468,8 @@
   <data name="Search" xml:space="preserve">
     <value>Search</value>
   </data>
-  <data name="Reset" xml:space="preserve">
-    <value>Reset</value>
-  </data>
   <data name="StepFileName" xml:space="preserve">
     <value>Step File</value>
-  </data>
-  <data name="StepName" xml:space="preserve">
-    <value>Step Name</value>
   </data>
   <data name="InputText" xml:space="preserve">
     <value>Input Text</value>
@@ -500,5 +494,188 @@
   </data>
   <data name="DateTo" xml:space="preserve">
     <value>To</value>
+  </data>
+  <data name="LogRetentionDays" xml:space="preserve">
+    <value>Log Retention Days</value>
+  </data>
+  <data name="ConfirmBeforeRun" xml:space="preserve">
+    <value>Confirm Before Run</value>
+  </data>
+  <data name="DefaultSelfReferenceLimit" xml:space="preserve">
+    <value>Self-Reference Limit</value>
+  </data>
+  <data name="DefaultStepParams" xml:space="preserve">
+    <value>Default Parameters for New Steps</value>
+  </data>
+  <data name="DefaultSimilarityThreshold" xml:space="preserve">
+    <value>Default Similarity Threshold</value>
+  </data>
+  <data name="DefaultWaitTime" xml:space="preserve">
+    <value>Default Wait Time</value>
+  </data>
+  <data name="DefaultTimeout" xml:space="preserve">
+    <value>Default Timeout</value>
+  </data>
+  <data name="DefaultClicks" xml:space="preserve">
+    <value>Default Clicks</value>
+  </data>
+  <data name="LoginTitle" xml:space="preserve">
+    <value>User Login</value>
+  </data>
+  <data name="Login_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Login_Button" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Login_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Login_NoAccount" xml:space="preserve">
+    <value>No account?</value>
+  </data>
+  <data name="Login_RegisterNow" xml:space="preserve">
+    <value>Register now</value>
+  </data>
+  <data name="RegisterTitle" xml:space="preserve">
+    <value>User Registration</value>
+  </data>
+  <data name="Register_ConfirmPassword" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
+  <data name="Register_NeedAdminApproval" xml:space="preserve">
+    <value>Admin approval required</value>
+  </data>
+  <data name="Register_AdminUsername" xml:space="preserve">
+    <value>Admin username</value>
+  </data>
+  <data name="Register_AdminPassword" xml:space="preserve">
+    <value>Admin password</value>
+  </data>
+  <data name="Register_FirstAdminHint" xml:space="preserve">
+    <value>The first registered user will automatically become admin</value>
+  </data>
+  <data name="Register_HasAccount" xml:space="preserve">
+    <value>Already have an account?</value>
+  </data>
+  <data name="Register_BackToLogin" xml:space="preserve">
+    <value>Back to login</value>
+  </data>
+  <data name="Register_Button" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="Register_Success" xml:space="preserve">
+    <value>Registration successful, please login</value>
+  </data>
+  <data name="Error_EmptyUsername" xml:space="preserve">
+    <value>Please enter username</value>
+  </data>
+  <data name="Error_EmptyPassword" xml:space="preserve">
+    <value>Please enter password</value>
+  </data>
+  <data name="Error_LoginFailed" xml:space="preserve">
+    <value>Username or password incorrect</value>
+  </data>
+  <data name="Error_PasswordMismatch" xml:space="preserve">
+    <value>Passwords do not match</value>
+  </data>
+  <data name="Error_PasswordTooShort" xml:space="preserve">
+    <value>Password must be at least 3 characters</value>
+  </data>
+  <data name="Error_EmptyAdminUsername" xml:space="preserve">
+    <value>Please enter admin username</value>
+  </data>
+  <data name="Error_EmptyAdminPassword" xml:space="preserve">
+    <value>Please enter admin password</value>
+  </data>
+  <data name="Error_RegisterFailedAdmin" xml:space="preserve">
+    <value>Registration failed: username exists or admin approval incorrect</value>
+  </data>
+  <data name="Error_RegisterFailed" xml:space="preserve">
+    <value>Registration failed: username already exists</value>
+  </data>
+  <data name="UserManagementTitle" xml:space="preserve">
+    <value>User Management</value>
+  </data>
+  <data name="UserList" xml:space="preserve">
+    <value>User List</value>
+  </data>
+  <data name="UsernameHeader" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="RoleHeader" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="CreatedAtHeader" xml:space="preserve">
+    <value>Created At</value>
+  </data>
+  <data name="AddUser" xml:space="preserve">
+    <value>Add User</value>
+  </data>
+  <data name="AddUserButton" xml:space="preserve">
+    <value>Add User</value>
+  </data>
+  <data name="ChangePasswordTitle" xml:space="preserve">
+    <value>Change Password</value>
+  </data>
+  <data name="SelectedUser" xml:space="preserve">
+    <value>Selected User</value>
+  </data>
+  <data name="OldPassword" xml:space="preserve">
+    <value>Old Password</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>New Password</value>
+  </data>
+  <data name="ChangePasswordButton" xml:space="preserve">
+    <value>Change Password</value>
+  </data>
+  <data name="DeleteUserButton" xml:space="preserve">
+    <value>Delete Selected User</value>
+  </data>
+  <data name="AdminRole" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+  <data name="UserRole" xml:space="preserve">
+    <value>Standard User</value>
+  </data>
+  <data name="Msg_UserAdded" xml:space="preserve">
+    <value>User '{0}' added successfully</value>
+  </data>
+  <data name="Msg_UserAddFailed" xml:space="preserve">
+    <value>User '{0}' already exists or add failed</value>
+  </data>
+  <data name="Msg_SelectUserFirst" xml:space="preserve">
+    <value>Please select a user to delete first</value>
+  </data>
+  <data name="Msg_CannotDeleteSelf" xml:space="preserve">
+    <value>Cannot delete the currently logged-in user</value>
+  </data>
+  <data name="Msg_ConfirmDeleteUser" xml:space="preserve">
+    <value>Are you sure you want to delete user '{0}'?</value>
+  </data>
+  <data name="ConfirmDeleteTitle" xml:space="preserve">
+    <value>Confirm Delete</value>
+  </data>
+  <data name="Msg_ConfirmDeleteSteps" xml:space="preserve">
+    <value>Are you sure you want to delete the selected steps?</value>
+  </data>
+  <data name="DeleteStepTitle" xml:space="preserve">
+    <value>Delete Steps</value>
+  </data>
+  <data name="Msg_ConfirmRun" xml:space="preserve">
+    <value>Are you sure you want to start running?</value>
+  </data>
+  <data name="Msg_SelfReferenceLimit" xml:space="preserve">
+    <value>Step "{0}" self-reference limit reached ({1} times), skipping execution</value>
+  </data>
+  <data name="Menu_Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Menu_Logout" xml:space="preserve">
+    <value>Logout ({0})</value>
   </data>
 </root>

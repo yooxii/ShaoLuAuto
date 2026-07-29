@@ -34,14 +34,17 @@ namespace ShaoLu.Viewmodels
     {
         private bool _themeLight;
         private FontModel _font;
+        private int _logRetentionDays;
 
         public bool ThemeLight { get => _themeLight; set => SetProperty(ref _themeLight, value); }
         public FontModel Font { get => _font; set => SetProperty(ref _font, value); }
+        public int LogRetentionDays { get => _logRetentionDays; set => SetProperty(ref _logRetentionDays, value); }
 
         public AppSettingsViewModel(AppSettingsModel model)
         {
             ThemeLight = model.ThemeLight;
             Font = model.WindowFont;
+            LogRetentionDays = model.LogRetentionDays;
         }
 
 
@@ -49,6 +52,7 @@ namespace ShaoLu.Viewmodels
         {
             model.ThemeLight = ThemeLight;
             model.WindowFont = Font;
+            model.LogRetentionDays = LogRetentionDays;
         }
 
         [RelayCommand]
@@ -81,11 +85,23 @@ namespace ShaoLu.Viewmodels
     {
         private bool _showErrorPopup;
         private bool _minimizeOnRun;
+        private bool _confirmBeforeRun;
+        private int _defaultSelfReferenceLimit;
+        private double _defaultSimilarityThreshold;
+        private double _defaultWaitTime;
+        private double _defaultTimeout;
+        private int _defaultClicks;
         private HotKeySetting _startHotKey;
         private HotKeySetting _stopHotKey;
 
         public bool ShowErrorPopup { get => _showErrorPopup; set => SetProperty(ref _showErrorPopup, value); }
         public bool MinimizeOnRun { get => _minimizeOnRun; set => SetProperty(ref _minimizeOnRun, value); }
+        public bool ConfirmBeforeRun { get => _confirmBeforeRun; set => SetProperty(ref _confirmBeforeRun, value); }
+        public int DefaultSelfReferenceLimit { get => _defaultSelfReferenceLimit; set => SetProperty(ref _defaultSelfReferenceLimit, value); }
+        public double DefaultSimilarityThreshold { get => _defaultSimilarityThreshold; set => SetProperty(ref _defaultSimilarityThreshold, value); }
+        public double DefaultWaitTime { get => _defaultWaitTime; set => SetProperty(ref _defaultWaitTime, value); }
+        public double DefaultTimeout { get => _defaultTimeout; set => SetProperty(ref _defaultTimeout, value); }
+        public int DefaultClicks { get => _defaultClicks; set => SetProperty(ref _defaultClicks, value); }
         public HotKeySetting StartHotKey { get => _startHotKey; set => SetProperty(ref _startHotKey, value); }
         public HotKeySetting StopHotKey { get => _stopHotKey; set => SetProperty(ref _stopHotKey, value); }
 
@@ -94,6 +110,12 @@ namespace ShaoLu.Viewmodels
         {
             ShowErrorPopup = model.ShowErrorPopup;
             MinimizeOnRun = model.MinimizeOnRun;
+            ConfirmBeforeRun = model.ConfirmBeforeRun;
+            DefaultSelfReferenceLimit = model.DefaultSelfReferenceLimit;
+            DefaultSimilarityThreshold = model.DefaultSimilarityThreshold;
+            DefaultWaitTime = model.DefaultWaitTime;
+            DefaultTimeout = model.DefaultTimeout;
+            DefaultClicks = model.DefaultClicks;
             StartHotKey = model.StartHotKey;
             StopHotKey = model.StopHotKey;
         }
@@ -103,6 +125,12 @@ namespace ShaoLu.Viewmodels
         {
             model.ShowErrorPopup = ShowErrorPopup;
             model.MinimizeOnRun = MinimizeOnRun;
+            model.ConfirmBeforeRun = ConfirmBeforeRun;
+            model.DefaultSelfReferenceLimit = DefaultSelfReferenceLimit;
+            model.DefaultSimilarityThreshold = DefaultSimilarityThreshold;
+            model.DefaultWaitTime = DefaultWaitTime;
+            model.DefaultTimeout = DefaultTimeout;
+            model.DefaultClicks = DefaultClicks;
             model.StartHotKey = StartHotKey;
             model.StopHotKey = StopHotKey;
         }

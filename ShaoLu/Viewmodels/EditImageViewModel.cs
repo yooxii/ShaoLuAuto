@@ -115,17 +115,9 @@ namespace ShaoLu.Viewmodels
                 await task;
                 return false;
             }
-            else if (Thumbs.Count <= 0)
-            {
-                var (_, task) = WindowAsyncPopup.Show(LanguageService.GetLocalizedString("NoClickPoint"), "Error", PopupButtons.OK, MessageBoxImage.Error);
-                await task;
-                return false;
-            }
-            else
-            {
-                OnImageSaved?.Invoke(ImgDst, CropRect, Thumbs.ToList());
-                return true;
-            }
+
+            OnImageSaved?.Invoke(ImgDst, CropRect, Thumbs.ToList());
+            return true;
         }
 
         [RelayCommand]
@@ -223,6 +215,18 @@ namespace ShaoLu.Viewmodels
             ThumbY = y;
             ThumbSize = size;
             ThumbVisibility = visibility;
+        }
+
+        public ClickThumb Clone()
+        {
+            return new ClickThumb()
+            {
+                ThumbNo = ThumbNo,
+                ThumbX = ThumbX,
+                ThumbY = ThumbY,
+                ThumbSize = ThumbSize,
+                ThumbVisibility = ThumbVisibility,
+            };
         }
     }
 }

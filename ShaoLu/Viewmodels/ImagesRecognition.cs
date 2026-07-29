@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace ShaoLu.Viewmodels.AutomationStep
 {
@@ -15,7 +16,26 @@ namespace ShaoLu.Viewmodels.AutomationStep
     {
         public override AutomationStepBase Clone()
         {
-            throw new NotImplementedException();
+            var clonedImg = (CroppedImg as BitmapSource)?.Clone();
+            var res = new ImageRecognition()
+            {
+                Name = Name,
+                Description = Description,
+                Type = Type,
+                IsNeed = IsNeed,
+                TrueGoto = TrueGoto,
+                FalseGoto = FalseGoto,
+                WaitTime = WaitTime,
+                ImagePath = ImagePath,
+                CroppedImageName = CroppedImageName,
+                CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
+                ClickThumbs = ClickThumbs?.Select(t => t.Clone()).ToList(),
+                SimilarityThreshold = SimilarityThreshold,
+                CroppedImg = clonedImg,
+            };
+            if (clonedImg != null)
+                res.SaveCroppedImageToDisk(clonedImg);
+            return res;
         }
 
         public override Task<bool> RunAsync(CancellationToken cancellationToken = default)
@@ -86,8 +106,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TrueGoto = TrueGoto,
                 FalseGoto = FalseGoto,
                 IsTrue = IsTrue,
+                IsNeed = IsNeed,
                 OneByOne = OneByOne,
-                Images = Images,
+                Images = new(Images?.Select(img => (ImageRecognition)img.Clone()).ToList()),
                 Clicks = Clicks,
                 ClickGap = ClickGap,
                 WaitTime = WaitTime,
@@ -103,14 +124,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 var sourceImage = (image.CroppedImg ?? image.ImgSrc) ?? throw new Exception("No image available for clicking.");
                 var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-                res = await Task.Run(() =>
+                res = await Task.Run(async () =>
                 {
-                    Thread.Sleep((int)WaitTime * 1000);
+                    await Task.Delay((int)WaitTime * 1000, cancellationToken);
                     return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, image.ClickPoints, image.SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
                 });
             }
             IsTrue = res;
             IsError = false;
+            ErrorType = StepErrorType.None;
 
             return IsTrue;
         }
@@ -149,8 +171,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGoto = FalseGoto,
                 IsTrue = IsTrue,
                 IsSave = IsSave,
+                IsNeed = IsNeed,
                 OneByOne = OneByOne,
-                Images = Images,
+                Images = new(Images?.Select(img => (ImageRecognition)img.Clone()).ToList()),
                 WaitTime = WaitTime,
                 GapTime = GapTime,
                 Timeout = Timeout
@@ -166,13 +189,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Position = Autogui.Position.LeftTop,
                 Threshold = x.SimilarityThreshold
             }).ToList();
-            res = await Task.Run(() =>
+            res = await Task.Run(async () =>
             {
-                Thread.Sleep((int)WaitTime * 1000);
+                await Task.Delay((int)WaitTime * 1000, cancellationToken);
                 return Autogui.FindImagesOnScreen(autoguiImages, GapTime, Timeout);
             });
             IsTrue = !res[0].IsEmpty;
             IsError = false;
+            ErrorType = StepErrorType.None;
             return IsTrue;
         }
     }

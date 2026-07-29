@@ -32,10 +32,10 @@ namespace ShaoLu.Viewmodels
             get => _displayText; set => SetProperty(ref _displayText, value);
         }
 
-        public static PopupButton OK = new() { Value = "OK" };
-        public static PopupButton Yes = new() { Value = "Yes" };
-        public static PopupButton No = new() { Value = "No" };
-        public static PopupButton Cancel = new() { Value = "Cancel" };
+        public static readonly PopupButton OK = new() { Value = "OK" };
+        public static readonly PopupButton Yes = new() { Value = "Yes" };
+        public static readonly PopupButton No = new() { Value = "No" };
+        public static readonly PopupButton Cancel = new() { Value = "Cancel" };
 
         [JsonIgnore]
         public List<string> DefaultValues { get; set; } = ["OK", "Yes", "No", "Cancel"];
@@ -49,13 +49,13 @@ namespace ShaoLu.Viewmodels
         public ObservableCollection<PopupButton> Buttons { get; set; } = [];
         public PopupButton DefaultButton { get => _defaultButton; set => SetProperty(ref _defaultButton, value); }
 
-        public static PopupButtons OK = new([PopupButton.OK]);
-        public static PopupButtons Yes = new([PopupButton.Yes]);
-        public static PopupButtons No = new([PopupButton.No]);
-        public static PopupButtons Cancel = new([PopupButton.Cancel]);
-        public static PopupButtons YesNo = new([PopupButton.Yes, PopupButton.No]);
-        public static PopupButtons YesCancel = new([PopupButton.Yes, PopupButton.Cancel]);
-        public static PopupButtons YesNoCancel = new([PopupButton.Yes, PopupButton.No, PopupButton.Cancel]);
+        public static readonly PopupButtons OK = new([PopupButton.OK]);
+        public static readonly PopupButtons Yes = new([PopupButton.Yes]);
+        public static readonly PopupButtons No = new([PopupButton.No]);
+        public static readonly PopupButtons Cancel = new([PopupButton.Cancel]);
+        public static readonly PopupButtons YesNo = new([PopupButton.Yes, PopupButton.No]);
+        public static readonly PopupButtons YesCancel = new([PopupButton.Yes, PopupButton.Cancel]);
+        public static readonly PopupButtons YesNoCancel = new([PopupButton.Yes, PopupButton.No, PopupButton.Cancel]);
 
         public PopupButtons() { }
         public PopupButtons(PopupButtons buttons)

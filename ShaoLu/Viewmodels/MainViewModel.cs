@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using ShaoLu.Services;
+using ShaoLu.Utils;
 using System.IO;
 
 namespace ShaoLu.Viewmodels
@@ -26,6 +28,30 @@ namespace ShaoLu.Viewmodels
         private string _stepFilePath;
         private string _stepImageWorkDir;
         private string _imageFilePath;
+        private bool _isLoggedIn;
+
+        /// <summary>
+        /// 是否已登录（拥有编辑权限）
+        /// </summary>
+        public bool IsLoggedIn
+        {
+            get => _isLoggedIn;
+            set => SetProperty(ref _isLoggedIn, value);
+        }
+
+        /// <summary>
+        /// 当前登录用户名（未登录时为空）
+        /// </summary>
+        public string CurrentUsername => SingletonLocator.UserService.CurrentUser?.Username;
+
+        /// <summary>
+        /// 刷新登录状态（登录/注销后调用）
+        /// </summary>
+        public void RefreshLoginState()
+        {
+            IsLoggedIn = SingletonLocator.UserService.CurrentUser != null;
+            OnPropertyChanged(nameof(CurrentUsername));
+        }
 
         public string RootDir { get => _rootPath; set => _rootPath = value; }
         public string TempDir { get => _tempPath; set => _tempPath = value; }

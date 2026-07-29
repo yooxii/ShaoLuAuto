@@ -52,23 +52,21 @@ namespace ShaoLu.Utils
             if (File.Exists(packagePath))
                 File.Delete(packagePath);
 
-            using (var zipStream = new FileStream(packagePath, FileMode.Create))
-            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
+            using var zipStream = new FileStream(packagePath, FileMode.Create);
+            using var archive = new ZipArchive(zipStream, ZipArchiveMode.Create);
+            // 1. 写入 steps.json
+            var jsonEntry = archive.CreateEntry("steps.json", CompressionLevel.Optimal);
+            using (var entryStream = jsonEntry.Open())
             {
-                // 1. 写入 steps.json
-                var jsonEntry = archive.CreateEntry("steps.json", CompressionLevel.Optimal);
-                using (var entryStream = jsonEntry.Open())
-                {
-                    string jsonString = JsonSerializer.Serialize(steps, _writeOptions);
-                    byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
-                    entryStream.Write(jsonBytes, 0, jsonBytes.Length);
-                }
+                string jsonString = JsonSerializer.Serialize(steps, _writeOptions);
+                byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+                entryStream.Write(jsonBytes, 0, jsonBytes.Length);
+            }
 
-                // 2. 收集并写入裁剪图片
-                foreach (var step in steps)
-                {
-                    CollectAndWriteImages(step, archive);
-                }
+            // 2. 收集并写入裁剪图片
+            foreach (var step in steps)
+            {
+                CollectAndWriteImages(step, archive);
             }
         }
 
@@ -131,13 +129,17 @@ namespace ShaoLu.Utils
         {
             if (step is ImageRecognitionBase imageStep)
             {
-                WriteCroppedImageToArchive(imageStep.CroppedImageFullPath, imageStep.CroppedImageName, archive);
+                if (!string.IsNullOrEmpty(imageStep.CroppedImageFullPath) && !string.IsNullOrEmpty(imageStep.CroppedImageName))
+                    WriteCroppedImageToArchive(imageStep.CroppedImageFullPath, imageStep.CroppedImageName, archive);
             }
             else if (step is ImagesRecognitionBase imagesStep)
             {
+                if (imagesStep.Images == null) return;
                 foreach (var image in imagesStep.Images)
                 {
-                    WriteCroppedImageToArchive(image.CroppedImageFullPath, image.CroppedImageName, archive);
+                    if (image == null) continue;
+                    if (!string.IsNullOrEmpty(image.CroppedImageFullPath) && !string.IsNullOrEmpty(image.CroppedImageName))
+                        WriteCroppedImageToArchive(image.CroppedImageFullPath, image.CroppedImageName, archive);
                 }
             }
         }

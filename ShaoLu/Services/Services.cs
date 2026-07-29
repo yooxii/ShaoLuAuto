@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -81,6 +82,7 @@ namespace ShaoLu.Services
 
     public class FileServices
     {
+        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
         public List<string> ReadyToDeleteFiles = [];
 
 
@@ -115,22 +117,26 @@ namespace ShaoLu.Services
 
         public void CommitPendingDeletions()
         {
-            foreach (var filePath in ReadyToDeleteFiles) // ToList 避免枚举时修改集合
+            if (ReadyToDeleteFiles.Count == 0) return;
+
+            _logger.Info("Committing {0} pending file deletion(s)", ReadyToDeleteFiles.Count);
+            foreach (var filePath in ReadyToDeleteFiles)
             {
                 try
                 {
                     if (File.Exists(filePath))
                     {
                         File.Delete(filePath);
-                        System.Diagnostics.Debug.WriteLine($"[Clean] Deleted: {filePath}");
+                        _logger.Info("Deleted file: {0}", filePath);
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Clean] Failed to delete {filePath}: {ex.Message}");
+                    _logger.Warn(ex, "Failed to delete file: {0}", filePath);
                 }
             }
             ReadyToDeleteFiles.Clear();
+            _logger.Info("Pending deletions committed");
         }
 
         public string SmartReadTextFile(string filePath)

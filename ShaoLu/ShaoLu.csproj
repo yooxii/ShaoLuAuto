@@ -131,10 +131,12 @@
     <Compile Include="Controls\MultiCropImage.cs" />
     <Compile Include="Converters\AutomationStepJsonConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
+    <Compile Include="Converters\BoolToInverseBoolConverter.cs" />
     <Compile Include="Converters\SettingsTemplateSelector.cs" />
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
     <Compile Include="Models\FontModel.cs" />
+    <Compile Include="Models\User.cs" />
     <Compile Include="Models\StepExecutionLog.cs" />
     <Compile Include="Utils\NativeMethods.cs" />
     <Compile Include="Viewmodels\ImagesRecognition.cs" />
@@ -164,6 +166,8 @@
     <Compile Include="Services\IConfigurationService.cs" />
     <Compile Include="Services\ExecutionLogService.cs" />
     <Compile Include="Services\SettingsService.cs" />
+    <Compile Include="Services\IUserService.cs" />
+    <Compile Include="Services\UserService.cs" />
     <Compile Include="Services\Services.cs" />
     <Compile Include="Services\LanguageService.cs" />
     <Compile Include="Tools\ResxGenerator.cs" />
@@ -177,6 +181,8 @@
     <Compile Include="Viewmodels\EditImageViewModel.cs" />
     <Compile Include="Viewmodels\ExecutionLogViewModel.cs" />
     <Compile Include="Viewmodels\MainViewModel.cs" />
+    <Compile Include="Viewmodels\LoginViewModel.cs" />
+    <Compile Include="Viewmodels\UserManagementViewModel.cs" />
     <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />
     <Compile Include="Views\UserControlSteps.xaml.cs">
@@ -196,6 +202,12 @@
     </Compile>
     <Compile Include="Views\WindowExecutionLog.xaml.cs">
       <DependentUpon>WindowExecutionLog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowLogin.xaml.cs">
+      <DependentUpon>WindowLogin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowUserManagement.xaml.cs">
+      <DependentUpon>WindowUserManagement.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -254,6 +266,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowExecutionLog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowLogin.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowUserManagement.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

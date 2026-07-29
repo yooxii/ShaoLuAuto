@@ -20,6 +20,24 @@ namespace ShaoLu.Models
         // 其他步骤类型...
     }
 
+    public enum StepErrorType
+    {
+        None,
+        ImageNotFound,
+        ImageLoadFailed,
+        ImageMatchFailed,
+        TextEmpty,
+        FileNotFound,
+        FileReadError,
+        ExecutionTimeout,
+        SelfReferenceLimit,
+        CancelledByUser,
+        PopupError,
+        ConversionError,
+        IndexOutOfRange,
+        Unknown
+    }
+
     public class AutoPoint
     {
     }

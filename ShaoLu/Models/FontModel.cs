@@ -17,6 +17,23 @@ namespace ShaoLu.Models
         public string FontBorderColor { get; set; }
         public string FontBorderWidth { get; set; }
 
+        public FontModel Clone()
+        {
+            return new FontModel()
+            {
+                FontSize = FontSize,
+                FontFamily = FontFamily,
+                FontWeight = FontWeight,
+                FontStyle = FontStyle,
+                Style = Style,
+                Unit = Unit,
+                FontColor = FontColor,
+                FontBackgroundColor = FontBackgroundColor,
+                FontBorderColor = FontBorderColor,
+                FontBorderWidth = FontBorderWidth,
+            };
+        }
+
         public FontModel()
         {
             FontSize = (float)SystemFonts.MessageFontSize;

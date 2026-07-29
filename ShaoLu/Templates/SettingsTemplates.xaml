@@ -19,6 +19,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc Theme}" VerticalAlignment="Center"/>
@@ -55,6 +56,13 @@
 
                     <Button Grid.Column="4" Content="..." Margin="0,4" Command="{Binding FontSelectCommand}"/>
                 </Grid>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc LogRetentionDays}" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
+                    <wd:NumericBox Value="{Binding LogRetentionDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                   Minimum="0" Maximum="3650" Width="80"/>
+                    <TextBlock Text="天（0 = 永不清理）" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                </StackPanel>
             </Grid>
         </StackPanel>
     </DataTemplate>
@@ -65,10 +73,20 @@
             <TextBlock Text="Step 设置" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="160"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="10"/>
                     <RowDefinition Height="Auto"/>
@@ -84,24 +102,40 @@
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc MinimizeOnRun}" VerticalAlignment="Center"/>
                 <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding MinimizeOnRun}"/>
 
-                <!--<TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc StartKey}" VerticalAlignment="Center"/>
-                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
-                    <CheckBox Content="Ctrl" Margin="0,0,5,0"/>
-                    <CheckBox Content="Shift" Margin="0,0,5,0"/>
-                    <CheckBox Content="Alt" Margin="0,0,5,0"/>
-                    --><!-- 用于直接按键录入的 TextBox --><!--
-                    <TextBox Width="100" PreviewKeyDown="TxtKey_PreviewKeyDown" 
-                     IsReadOnly="True" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc ConfirmBeforeRun}" VerticalAlignment="Center"/>
+                <CheckBox Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ConfirmBeforeRun}"/>
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="{lex:Loc DefaultSelfReferenceLimit}" VerticalAlignment="Center"/>
+                <wd:NumericBox Grid.Row="6" Grid.Column="1" Value="{Binding DefaultSelfReferenceLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                               Minimum="1" Maximum="9999" Width="80" HorizontalAlignment="Left"/>
+
+                <TextBlock Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Text="{lex:Loc DefaultStepParams}" 
+                           FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="{lex:Loc DefaultSimilarityThreshold}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="10" Grid.Column="1" Orientation="Horizontal">
+                    <wd:NumericBox Value="{Binding DefaultSimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                   Precision="3" Interval="0.05" Minimum="0" Maximum="1" Width="80"/>
+                    <TextBlock Text="(0~1)" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
                 </StackPanel>
 
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="{lex:Loc StotKey}" VerticalAlignment="Center"/>
-                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,5">
-                    <CheckBox Content="Ctrl" Margin="0,0,5,0"/>
-                    <CheckBox Content="Shift" Margin="0,0,5,0"/>
-                    <CheckBox Content="Alt" Margin="0,0,5,0"/>
-                    <TextBox Width="100" PreviewKeyDown="TxtKey_PreviewKeyDown" 
-                     IsReadOnly="True" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
-                </StackPanel>-->
+                <TextBlock Grid.Row="12" Grid.Column="0" Text="{lex:Loc DefaultWaitTime}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="12" Grid.Column="1" Orientation="Horizontal">
+                    <wd:NumericBox Value="{Binding DefaultWaitTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                   Precision="3" Interval="0.1" Minimum="0" Width="80"/>
+                    <TextBlock Text="秒" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="14" Grid.Column="0" Text="{lex:Loc DefaultTimeout}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="14" Grid.Column="1" Orientation="Horizontal">
+                    <wd:NumericBox Value="{Binding DefaultTimeout, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                   Precision="3" Interval="0.5" Minimum="0" Width="80"/>
+                    <TextBlock Text="秒" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="16" Grid.Column="0" Text="{lex:Loc DefaultClicks}" VerticalAlignment="Center"/>
+                <wd:NumericBox Grid.Row="16" Grid.Column="1" Value="{Binding DefaultClicks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                               Minimum="1" Maximum="999" Width="80" HorizontalAlignment="Left"/>
             </Grid>
         </StackPanel>
     </DataTemplate>

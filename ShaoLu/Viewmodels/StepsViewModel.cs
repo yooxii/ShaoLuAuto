@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.ComponentModel;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -6,6 +7,7 @@ using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows;
@@ -142,8 +144,31 @@ namespace ShaoLu.Viewmodels
             return !_isRunning;
         }
 
+        /// <summary>
+        /// 确保用户已登录，未登录时弹出登录窗口
+        /// </summary>
+        /// <returns>登录成功返回true，取消或失败返回false</returns>
+        private bool EnsureLoggedIn()
+        {
+            if (SingletonLocator.UserService.CurrentUser != null)
+                return true;
+
+            var loginVm = Ioc.Default.GetRequiredService<LoginViewModel>();
+            var loginWindow = new WindowLogin(loginVm);
+            loginWindow.Owner = Application.Current.MainWindow;
+            var result = loginWindow.ShowDialog();
+
+            if (result == true)
+            {
+                SingletonLocator.Main.RefreshLoginState();
+            }
+            return result == true;
+        }
+
         private void AddStep(object parameter)
         {
+            if (!EnsureLoggedIn()) return;
+
             AutomationStepBase step;
             if (parameter is string param)
             {
@@ -160,6 +185,7 @@ namespace ShaoLu.Viewmodels
                     "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
+                ApplyDefaultSettings(step);
                 if (SelectedStep is AutomationStepBase automationStepBase)
                 {
                     int index = AutomationStepBases.IndexOf(automationStepBase) + 1;
@@ -173,30 +199,64 @@ namespace ShaoLu.Viewmodels
             else
             {
                 step = new ClickImageStep();
+                ApplyDefaultSettings(step);
                 AutomationStepBases.Add(step);
             }
             SelectedStep = step;
         }
 
+        /// <summary>
+        /// 将设置中的默认参数应用到新建步骤
+        /// </summary>
+        private void ApplyDefaultSettings(AutomationStepBase step)
+        {
+            step.SelfReferenceLimit = _stepSettings.DefaultSelfReferenceLimit;
+            step.WaitTime = _stepSettings.DefaultWaitTime;
+
+            if (step is ImageRecognitionBase imageStep)
+            {
+                imageStep.SimilarityThreshold = _stepSettings.DefaultSimilarityThreshold;
+            }
+            if (step is ClickImageStep clickStep)
+            {
+                clickStep.Clicks = _stepSettings.DefaultClicks;
+                clickStep.Timeout = _stepSettings.DefaultTimeout;
+            }
+            else if (step is FindImageStep findStep)
+            {
+                findStep.Timeout = _stepSettings.DefaultTimeout;
+            }
+        }
+
 
         private async void DelStep()
         {
-            var (_, popup) = WindowAsyncPopup.Show("确定删除所选步骤吗？", "删除步骤", PopupButtons.YesNo, MessageBoxImage.Warning);
-            var res = await popup;
-            if (res == PopupButton.Yes.Value)
+            if (!EnsureLoggedIn()) return;
+
+            try
             {
-                if (SelectedSteps.Count > 0)
+                var (_, popup) = WindowAsyncPopup.Show(LanguageService.GetLocalizedString("Msg_ConfirmDeleteSteps"), LanguageService.GetLocalizedString("DeleteStepTitle"), PopupButtons.YesNo, MessageBoxImage.Warning);
+                var res = await popup;
+                if (res == PopupButton.Yes.Value)
                 {
-                    for (int i = SelectedSteps.Count - 1; i >= 0; i--)
+                    if (SelectedSteps.Count > 0)
                     {
-                        AutomationStepBases.Remove(SelectedSteps[i]);
+                        for (int i = SelectedSteps.Count - 1; i >= 0; i--)
+                        {
+                            AutomationStepBases.Remove(SelectedSteps[i]);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "DelStep error: ");
             }
         }
 
         private void UpStep()
         {
+            if (!EnsureLoggedIn()) return;
             if (SelectedStep == null)
                 return;
             if (SelectedStep.LineNo <= 1)
@@ -206,6 +266,7 @@ namespace ShaoLu.Viewmodels
 
         private void DownStep()
         {
+            if (!EnsureLoggedIn()) return;
             if (SelectedStep == null)
                 return;
             if (SelectedStep.LineNo >= AutomationStepBases.Count)
@@ -215,6 +276,7 @@ namespace ShaoLu.Viewmodels
 
         private void SelectStep()
         {
+            if (!EnsureLoggedIn()) return;
             if (SelectedStep == null) return;
             if (SelectedSteps == null || SelectedSteps.Count == 0) return;
             foreach (var step in SelectedSteps)
@@ -258,6 +320,8 @@ namespace ShaoLu.Viewmodels
 
         private void CopyStep()
         {
+            if (!EnsureLoggedIn()) return;
+
             PasteSteps.Clear();
             // 使用 LINQ 调用每个步骤的 Clone 方法
             var clonedSteps = SelectedSteps.Select(step => step.Clone()).ToList();
@@ -277,6 +341,8 @@ namespace ShaoLu.Viewmodels
 
         private void PasteStep()
         {
+            if (!EnsureLoggedIn()) return;
+
             if (SelectedStep != null)
             {
                 InsertSteps(PasteSteps, SelectedStep.LineNo - 1);
@@ -313,6 +379,9 @@ namespace ShaoLu.Viewmodels
                 Application.Current.MainWindow.WindowState = WindowState.Minimized;
             foreach (var step in AutomationStepBases)
             {
+                // 重置自引用计数器
+                step.SelfReferenceCount = 0;
+                step.ErrorType = StepErrorType.None;
                 if (step is TypeTextMoreStep textMoreStep)
                 {
                     if (textMoreStep.ReloadText)
@@ -333,17 +402,28 @@ namespace ShaoLu.Viewmodels
         {
             try
             {
+                // 运行前确认
+                if (_stepSettings.ConfirmBeforeRun)
+                {
+                    var (_, confirmTask) = WindowAsyncPopup.Show(
+                        LanguageService.GetLocalizedString("Msg_ConfirmRun"), LanguageService.GetLocalizedString("Question"),
+                        PopupButtons.YesNo, MessageBoxImage.Question);
+                    var confirmResult = await confirmTask;
+                    if (confirmResult != PopupButton.Yes.Value)
+                        return;
+                }
+
                 PreRun();
                 _cts = new CancellationTokenSource();
                 var token = _cts.Token;
 
                 logger.Info("Start Auto");
 
-
                 for (int i = 0; i < AutomationStepBases.Count; i++)
                 {
-                    // 在每个步骤开始前再次检查停止信号，提高响应速度
-                    if (StopSignal || token.IsCancellationRequested || i < 0)
+                    // 在每个步骤开始前检查停止信号和取消标志
+                    token.ThrowIfCancellationRequested();
+                    if (StopSignal || i < 0)
                     {
                         break;
                     }
@@ -357,10 +437,12 @@ namespace ShaoLu.Viewmodels
                         SelectedStep = step;
                         await step.RunAsync(token);
                         step.IsError = false;
+                        step.ErrorType = StepErrorType.None;
                     }
                     catch (OperationCanceledException)
                     {
                         logger.Info("Operation Canceled");
+                        step.ErrorType = StepErrorType.CancelledByUser;
                         break;
                     }
                     catch (Exception ex)
@@ -370,6 +452,7 @@ namespace ShaoLu.Viewmodels
 
                         step.IsError = true;
                         step.ErrorMessage = ex.Message;
+                        step.ErrorType = InferErrorType(ex);
                         if (_stepSettings.ShowErrorPopup)
                         {
                             var (_, popupTask) = WindowAsyncPopup.Show(
@@ -388,14 +471,40 @@ namespace ShaoLu.Viewmodels
                             step.IsTrue = false;
                         }
                     }
-                    if (step.IsTrue)
+
+                    // 确定下一个执行索引
+                    int targetGoto = step.IsTrue ? step.TrueGoto : step.FalseGoto;
+
+                    if (targetGoto > 0) // 有跳转目标
                     {
-                        i = step.TrueGoto - 1 - 1;
+                        int nextIndex = targetGoto - 1; // 转为 0-based
+
+                        // 自引用检测
+                        if (nextIndex == i) // 指向自身
+                        {
+                            step.SelfReferenceCount++;
+                            if (step.SelfReferenceCount >= step.SelfReferenceLimit)
+                            {
+                                step.IsError = true;
+                                step.ErrorType = StepErrorType.SelfReferenceLimit;
+                                step.ErrorMessage = string.Format(LanguageService.GetLocalizedString("Msg_SelfReferenceLimit"), step.Name, step.SelfReferenceLimit);
+                                step.SelfReferenceCount = 0;
+                                // 不跳转，继续下一步
+                            }
+                            else
+                            {
+                                i = nextIndex - 1; // -1 因为 for 循环会 i++
+                            }
+                        }
+                        else
+                        {
+                            step.SelfReferenceCount = 0; // 非自引用时重置
+                            // 边界检查
+                            if (nextIndex >= 0 && nextIndex < AutomationStepBases.Count)
+                                i = nextIndex - 1;
+                        }
                     }
-                    else
-                    {
-                        i = step.FalseGoto - 1 - 1;
-                    }
+                    // targetGoto == 0 时不修改 i，for 循环 i++ 自然进入下一步
                 }
                 StopSignal = true;
                 Application.Current.MainWindow.WindowState = WindowState.Normal;
@@ -405,10 +514,31 @@ namespace ShaoLu.Viewmodels
                 });
                 logger.Info("Auto Finished");
             }
+            catch (OperationCanceledException)
+            {
+                logger.Info("Operation Canceled");
+                StopSignal = true;
+            }
             catch (Exception ex)
             {
                 logger.Error(ex, "Run Error: ");
             }
+        }
+
+        /// <summary>
+        /// 根据异常类型推断 ErrorType
+        /// </summary>
+        private static StepErrorType InferErrorType(Exception ex)
+        {
+            return ex switch
+            {
+                FileNotFoundException => StepErrorType.FileNotFound,
+                OperationCanceledException => StepErrorType.CancelledByUser,
+                IndexOutOfRangeException => StepErrorType.IndexOutOfRange,
+                InvalidOperationException => StepErrorType.Unknown,
+                TimeoutException => StepErrorType.ExecutionTimeout,
+                _ => StepErrorType.Unknown
+            };
         }
 
         #endregion

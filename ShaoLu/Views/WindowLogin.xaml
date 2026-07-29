@@ -1,0 +1,190 @@
+<Window x:Class="ShaoLu.Views.WindowLogin"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        xmlns:vm="clr-namespace:ShaoLu.Viewmodels"
+        xmlns:conv="clr-namespace:ShaoLu.Converters"
+        d:DataContext="{d:DesignInstance Type=vm:LoginViewModel}"
+        mc:Ignorable="d"
+        Title="{lex:Loc LoginTitle}" 
+        Width="380"
+        SizeToContent="Height"
+        MinHeight="280"
+        MaxHeight="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="True">
+    <Window.Resources>
+        <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
+    <Border Background="White" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8" Padding="24">
+        <Grid>
+            <!-- 右上角关闭按钮 -->
+            <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,-14,-14,0" Width="28" Height="28"
+                    FontSize="14" Foreground="#999999"
+                    Background="Transparent" BorderThickness="0" Cursor="Hand"
+                    Click="CloseButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="14">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F0F0F0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
+            <Grid>
+                <!-- 登录面板 -->
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRegisterMode}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="{lex:Loc LoginTitle}" FontSize="20" FontWeight="Bold"
+                               HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Text="{lex:Loc Login_Username}" Margin="0,0,0,4" FontSize="13"/>
+                        <TextBox x:Name="UsernameBox" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="30" FontSize="13" Padding="4,4"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Text="{lex:Loc Login_Password}" Margin="0,0,0,4" FontSize="13"/>
+                        <PasswordBox x:Name="PasswordBox" Height="30" FontSize="13" Padding="4,4"
+                                     PasswordChanged="PasswordBox_PasswordChanged"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="Red"
+                               FontSize="12" Margin="0,0,0,10"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}"/>
+
+                    <Button Content="{lex:Loc Login_Button}" Command="{Binding LoginCommand}"
+                            Height="36" FontSize="14" Margin="0,4,0,0"
+                            Click="LoginButton_Click"/>
+
+                    <Button Content="{lex:Loc Login_Cancel}" Command="{Binding CancelCommand}"
+                            Height="32" FontSize="13" Margin="0,8,0,0"
+                            Background="#F5F5F5" BorderBrush="#DDDDDD" Foreground="#666666"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                        <TextBlock Text="{lex:Loc Login_NoAccount}" FontSize="12" Foreground="#666666" VerticalAlignment="Center"/>
+                        <TextBlock FontSize="12" VerticalAlignment="Center">
+                            <Hyperlink Command="{Binding SwitchToRegisterCommand}" TextDecorations="None" Foreground="#1890FF">
+                                <Run Text="{lex:Loc Login_RegisterNow}"/>
+                            </Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 注册面板 -->
+                <StackPanel Visibility="{Binding IsRegisterMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="{lex:Loc RegisterTitle}" FontSize="20" FontWeight="Bold"
+                               HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Text="{lex:Loc Login_Username}" Margin="0,0,0,4" FontSize="13"/>
+                        <TextBox x:Name="RegisterUsernameBox" Text="{Binding RegisterUsername, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="30" FontSize="13" Padding="4,4"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Text="{lex:Loc Login_Password}" Margin="0,0,0,4" FontSize="13"/>
+                        <PasswordBox x:Name="RegisterPasswordBox" Height="30" FontSize="13" Padding="4,4"
+                                     PasswordChanged="RegisterPasswordBox_PasswordChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,0,10">
+                        <TextBlock Text="{lex:Loc Register_ConfirmPassword}" Margin="0,0,0,4" FontSize="13"/>
+                        <PasswordBox x:Name="RegisterConfirmPasswordBox" Height="30" FontSize="13" Padding="4,4"
+                                     PasswordChanged="RegisterConfirmPasswordBox_PasswordChanged"/>
+                    </StackPanel>
+
+                    <!-- 管理员审批区域（仅当系统已有管理员时显示） -->
+                    <StackPanel Visibility="{Binding NeedAdminApproval, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,0,0,10">
+                        <Separator Margin="0,4,0,10"/>
+                        <TextBlock Text="{lex:Loc Register_NeedAdminApproval}" FontSize="12" Foreground="#666666" Margin="0,0,0,8"/>
+
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Text="{lex:Loc Register_AdminUsername}" Margin="0,0,0,4" FontSize="13"/>
+                            <TextBox Text="{Binding AdminUsername, UpdateSourceTrigger=PropertyChanged}"
+                                     Height="30" FontSize="13" Padding="4,4"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,0">
+                            <TextBlock Text="{lex:Loc Register_AdminPassword}" Margin="0,0,0,4" FontSize="13"/>
+                            <PasswordBox x:Name="AdminPasswordBox" Height="30" FontSize="13" Padding="4,4"
+                                         PasswordChanged="AdminPasswordBox_PasswordChanged"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- 首次注册提示（系统无管理员时显示） -->
+                    <TextBlock Text="{lex:Loc Register_FirstAdminHint}" FontSize="12" Foreground="#1890FF"
+                               Margin="0,0,0,10" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding NeedAdminApproval}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <!-- 注册错误消息 -->
+                    <TextBlock Text="{Binding RegisterErrorMessage}" Foreground="Red"
+                               FontSize="12" Margin="0,0,0,10"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding RegisterErrorMessage, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}"/>
+
+                    <!-- 注册成功消息 -->
+                    <TextBlock Text="{Binding RegisterSuccessMessage}" Foreground="Green"
+                               FontSize="12" Margin="0,0,0,10"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding RegisterSuccessMessage, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}"/>
+
+                    <Button Content="{lex:Loc Register_Button}" Command="{Binding RegisterCommand}"
+                            Height="36" FontSize="14" Margin="0,4,0,0"/>
+
+                    <Button Content="{lex:Loc Login_Cancel}" Command="{Binding CancelCommand}"
+                            Height="32" FontSize="13" Margin="0,8,0,0"
+                            Background="#F5F5F5" BorderBrush="#DDDDDD" Foreground="#666666"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                        <TextBlock Text="{lex:Loc Register_HasAccount}" FontSize="12" Foreground="#666666" VerticalAlignment="Center"/>
+                        <TextBlock FontSize="12" VerticalAlignment="Center">
+                            <Hyperlink Command="{Binding SwitchToLoginCommand}" TextDecorations="None" Foreground="#1890FF">
+                                <Run Text="{lex:Loc Register_BackToLogin}"/>
+                            </Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>

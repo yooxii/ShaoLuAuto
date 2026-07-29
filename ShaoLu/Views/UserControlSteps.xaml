@@ -18,6 +18,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <conv:BoolToInverseBoolConverter x:Key="BoolToInverseBoolConverter"/>
             <utils:SingletonLocator x:Key="VMLocator" />
 
             <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Steps, Source={StaticResource VMLocator}}">
@@ -61,7 +62,7 @@
                         <Button Content="{lex:Loc BtnRun_Content}" Margin="3" Command="{Binding RunCommand}"/>
                         <Button Content="{lex:Loc BtnStop_Content}" Margin="3" Command="{Binding StopCommand}"/>
                     </ToolBar>
-                    <ToolBar Header="{lex:Loc Edit}">
+                    <ToolBar Header="{lex:Loc Edit}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
                         <Button Content="{lex:Loc Refresh}" Margin="3" Click="Refresh_Click"/>
                         <Button Content="{lex:Loc Up}" Margin="3" Command="{Binding UpStepCommand}"/>
                         <Button Content="{lex:Loc Down}" Margin="3" Command="{Binding DownStepCommand}"/>
@@ -70,19 +71,22 @@
                         <Button Content="{lex:Loc Paste}" Margin="3" Command="{Binding PasteStepCommand}"/>
                         <Button Content="{lex:Loc Delete}" Margin="3" Command="{Binding DelStepCommand}"/>
                     </ToolBar>
-                    <ToolBar Header="{lex:Loc Step}">
-                        <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                    <ToolBar Header="{lex:Loc Step}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
+                        <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
+                                       >
                             <MenuItem Header="{lex:Loc AddImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImage"/>
                             <MenuItem Header="{lex:Loc AddFindImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FindImage"/>
                             <MenuItem Header="{lex:Loc AddImagesStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImages"/>
                             <MenuItem Header="{lex:Loc AddFindImagesStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FindImages"/>
                         </wd:SplitButton>
-                        <wd:SplitButton x:Name="AddTextStep" Content="{lex:Loc AddTextStep}" CommandParameter="TypeText" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                        <wd:SplitButton x:Name="AddTextStep" Content="{lex:Loc AddTextStep}" CommandParameter="TypeText" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
+                                       >
                             <MenuItem Header="{lex:Loc AddTextStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeText"/>
                             <MenuItem Header="{lex:Loc AddTextMoreStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeTextMore"/>
                             <MenuItem Header="{lex:Loc AddTextFromFileStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeTextFromFile"/>
                         </wd:SplitButton>
-                        <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
+                        <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"
+                               />
                     </ToolBar>
                 </ToolBarTray>
             </ToolBarPanel>
@@ -97,7 +101,8 @@
                     <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}"
                               ContextMenu="{StaticResource DataGridMenu}"
                               SelectionMode="Extended" SelectedItem="{Binding SelectedStep}"
-                              utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}">
+                              utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}"
+                              IsReadOnly="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}, Converter={StaticResource BoolToInverseBoolConverter}}">
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow">
                                 <Style.Setters>
@@ -127,7 +132,8 @@
                     </DataGrid>
                 </GroupBox>
                 <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
-                <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2">
+                <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2"
+                          IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
                     <!-- 当 SelectedStep 为 null 时，可以显示提示文本 -->
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch">
                         <Grid>

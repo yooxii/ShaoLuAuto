@@ -3,6 +3,7 @@ using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -95,6 +96,8 @@ namespace ShaoLu
 
             FontFamily = new System.Windows.Media.FontFamily(appSettings.App.WindowFont.FontFamily);
             FontSize = appSettings.App.WindowFont.FontSize;
+
+            UpdateLoginStateUI();
         }
 
         #region 输入校验
@@ -175,6 +178,7 @@ namespace ShaoLu
 
         private void New_Click(object sender, RoutedEventArgs e)
         {
+            if (!EnsureLoggedIn()) return;
             stepsViewModel.AutomationStepBases.Clear();
         }
 
@@ -207,6 +211,8 @@ namespace ShaoLu
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
+            if (!EnsureLoggedIn()) return;
+
             var filePath = PathServices.SavePathDialog(
                 LanguageService.GetLocalizedString("SaveFile"),
                 "AutoStep Files|*.autostep",
@@ -242,6 +248,68 @@ namespace ShaoLu
         {
             WindowExecutionLog window = new();
             window.Show();
+        }
+
+        private void UserManagement_Click(object sender, RoutedEventArgs e)
+        {
+            if (!EnsureLoggedIn()) return;
+
+            var userManagementVm = Ioc.Default.GetRequiredService<ShaoLu.Viewmodels.UserManagementViewModel>();
+            var window = new WindowUserManagement(userManagementVm);
+            window.Owner = this;
+            window.ShowDialog();
+        }
+
+        private void LoginLogout_Click(object sender, RoutedEventArgs e)
+        {
+            if (SingletonLocator.UserService.CurrentUser != null)
+            {
+                // 已登录 → 注销
+                SingletonLocator.UserService.Logout();
+                mainViewModel.RefreshLoginState();
+                UpdateLoginStateUI();
+            }
+            else
+            {
+                // 未登录 → 弹出登录窗口
+                EnsureLoggedIn();
+            }
+        }
+
+        /// <summary>
+        /// 更新登录/注销菜单项的显示文本
+        /// </summary>
+        private void UpdateLoginStateUI()
+        {
+            if (SingletonLocator.UserService.CurrentUser != null)
+            {
+                LoginLogout.Header = string.Format(LanguageService.GetLocalizedString("Menu_Logout"), SingletonLocator.UserService.CurrentUser.Username);
+            }
+            else
+            {
+                LoginLogout.Header = LanguageService.GetLocalizedString("Menu_Login");
+            }
+        }
+
+        /// <summary>
+        /// 确保用户已登录，未登录时弹出登录窗口
+        /// </summary>
+        private bool EnsureLoggedIn()
+        {
+            if (SingletonLocator.UserService.CurrentUser != null)
+                return true;
+
+            var loginVm = Ioc.Default.GetRequiredService<Viewmodels.LoginViewModel>();
+            var loginWindow = new Views.WindowLogin(loginVm);
+            loginWindow.Owner = this;
+            var result = loginWindow.ShowDialog();
+
+            if (result == true)
+            {
+                mainViewModel.RefreshLoginState();
+                UpdateLoginStateUI();
+            }
+            return result == true;
         }
     }
 }

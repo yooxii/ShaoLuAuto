@@ -220,7 +220,7 @@
     <value>请选择一个步骤</value>
   </data>
   <data name="StepName" xml:space="preserve">
-    <value>名称</value>
+    <value>步骤名称</value>
   </data>
   <data name="StepType" xml:space="preserve">
     <value>类型</value>
@@ -468,14 +468,8 @@
   <data name="Search" xml:space="preserve">
     <value>搜索</value>
   </data>
-  <data name="Reset" xml:space="preserve">
-    <value>重置</value>
-  </data>
   <data name="StepFileName" xml:space="preserve">
     <value>步骤文件</value>
-  </data>
-  <data name="StepName" xml:space="preserve">
-    <value>步骤名称</value>
   </data>
   <data name="InputText" xml:space="preserve">
     <value>输入内容</value>
@@ -500,5 +494,188 @@
   </data>
   <data name="DateTo" xml:space="preserve">
     <value>结束日期</value>
+  </data>
+  <data name="LogRetentionDays" xml:space="preserve">
+    <value>日志保留天数</value>
+  </data>
+  <data name="ConfirmBeforeRun" xml:space="preserve">
+    <value>运行前确认</value>
+  </data>
+  <data name="DefaultSelfReferenceLimit" xml:space="preserve">
+    <value>自引用上限</value>
+  </data>
+  <data name="DefaultStepParams" xml:space="preserve">
+    <value>新建步骤默认参数</value>
+  </data>
+  <data name="DefaultSimilarityThreshold" xml:space="preserve">
+    <value>默认相似度阈值</value>
+  </data>
+  <data name="DefaultWaitTime" xml:space="preserve">
+    <value>默认等待时间</value>
+  </data>
+  <data name="DefaultTimeout" xml:space="preserve">
+    <value>默认超时时间</value>
+  </data>
+  <data name="DefaultClicks" xml:space="preserve">
+    <value>默认点击次数</value>
+  </data>
+  <data name="LoginTitle" xml:space="preserve">
+    <value>管理员登录</value>
+  </data>
+  <data name="Login_Username" xml:space="preserve">
+    <value>用户名</value>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="Login_Button" xml:space="preserve">
+    <value>登 录</value>
+  </data>
+  <data name="Login_Cancel" xml:space="preserve">
+    <value>取 消</value>
+  </data>
+  <data name="Login_NoAccount" xml:space="preserve">
+    <value>没有账号？</value>
+  </data>
+  <data name="Login_RegisterNow" xml:space="preserve">
+    <value>立即注册</value>
+  </data>
+  <data name="RegisterTitle" xml:space="preserve">
+    <value>用户注册</value>
+  </data>
+  <data name="Register_ConfirmPassword" xml:space="preserve">
+    <value>确认密码</value>
+  </data>
+  <data name="Register_NeedAdminApproval" xml:space="preserve">
+    <value>需要管理员审批</value>
+  </data>
+  <data name="Register_AdminUsername" xml:space="preserve">
+    <value>管理员用户名</value>
+  </data>
+  <data name="Register_AdminPassword" xml:space="preserve">
+    <value>管理员密码</value>
+  </data>
+  <data name="Register_FirstAdminHint" xml:space="preserve">
+    <value>首个注册的用户将自动成为管理员</value>
+  </data>
+  <data name="Register_HasAccount" xml:space="preserve">
+    <value>已有账号？</value>
+  </data>
+  <data name="Register_BackToLogin" xml:space="preserve">
+    <value>返回登录</value>
+  </data>
+  <data name="Register_Button" xml:space="preserve">
+    <value>注 册</value>
+  </data>
+  <data name="Register_Success" xml:space="preserve">
+    <value>注册成功，请登录</value>
+  </data>
+  <data name="Error_EmptyUsername" xml:space="preserve">
+    <value>请输入用户名</value>
+  </data>
+  <data name="Error_EmptyPassword" xml:space="preserve">
+    <value>请输入密码</value>
+  </data>
+  <data name="Error_LoginFailed" xml:space="preserve">
+    <value>用户名或密码错误</value>
+  </data>
+  <data name="Error_PasswordMismatch" xml:space="preserve">
+    <value>两次输入的密码不一致</value>
+  </data>
+  <data name="Error_PasswordTooShort" xml:space="preserve">
+    <value>密码长度至少3位</value>
+  </data>
+  <data name="Error_EmptyAdminUsername" xml:space="preserve">
+    <value>请输入审批管理员用户名</value>
+  </data>
+  <data name="Error_EmptyAdminPassword" xml:space="preserve">
+    <value>请输入审批管理员密码</value>
+  </data>
+  <data name="Error_RegisterFailedAdmin" xml:space="preserve">
+    <value>注册失败：用户名已存在或管理员审批信息不正确</value>
+  </data>
+  <data name="Error_RegisterFailed" xml:space="preserve">
+    <value>注册失败：用户名已存在</value>
+  </data>
+  <data name="UserManagementTitle" xml:space="preserve">
+    <value>用户管理</value>
+  </data>
+  <data name="UserList" xml:space="preserve">
+    <value>用户列表</value>
+  </data>
+  <data name="UsernameHeader" xml:space="preserve">
+    <value>用户名</value>
+  </data>
+  <data name="RoleHeader" xml:space="preserve">
+    <value>角色</value>
+  </data>
+  <data name="CreatedAtHeader" xml:space="preserve">
+    <value>创建时间</value>
+  </data>
+  <data name="AddUser" xml:space="preserve">
+    <value>添加用户</value>
+  </data>
+  <data name="AddUserButton" xml:space="preserve">
+    <value>添加用户</value>
+  </data>
+  <data name="ChangePasswordTitle" xml:space="preserve">
+    <value>修改密码</value>
+  </data>
+  <data name="SelectedUser" xml:space="preserve">
+    <value>选中用户</value>
+  </data>
+  <data name="OldPassword" xml:space="preserve">
+    <value>旧密码</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>新密码</value>
+  </data>
+  <data name="ChangePasswordButton" xml:space="preserve">
+    <value>修改密码</value>
+  </data>
+  <data name="DeleteUserButton" xml:space="preserve">
+    <value>删除选中用户</value>
+  </data>
+  <data name="AdminRole" xml:space="preserve">
+    <value>管理员 (Admin)</value>
+  </data>
+  <data name="UserRole" xml:space="preserve">
+    <value>普通用户 (User)</value>
+  </data>
+  <data name="Msg_UserAdded" xml:space="preserve">
+    <value>用户 '{0}' 添加成功</value>
+  </data>
+  <data name="Msg_UserAddFailed" xml:space="preserve">
+    <value>用户 '{0}' 已存在或添加失败</value>
+  </data>
+  <data name="Msg_SelectUserFirst" xml:space="preserve">
+    <value>请先选择要删除的用户</value>
+  </data>
+  <data name="Msg_CannotDeleteSelf" xml:space="preserve">
+    <value>不能删除当前登录的用户</value>
+  </data>
+  <data name="Msg_ConfirmDeleteUser" xml:space="preserve">
+    <value>确定要删除用户 '{0}' 吗？</value>
+  </data>
+  <data name="ConfirmDeleteTitle" xml:space="preserve">
+    <value>确认删除</value>
+  </data>
+  <data name="Msg_ConfirmDeleteSteps" xml:space="preserve">
+    <value>确定删除所选步骤吗？</value>
+  </data>
+  <data name="DeleteStepTitle" xml:space="preserve">
+    <value>删除步骤</value>
+  </data>
+  <data name="Msg_ConfirmRun" xml:space="preserve">
+    <value>确定要开始运行吗？</value>
+  </data>
+  <data name="Msg_SelfReferenceLimit" xml:space="preserve">
+    <value>步骤 "{0}" 自引用达到上限 ({1} 次)，跳过执行</value>
+  </data>
+  <data name="Menu_Login" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <data name="Menu_Logout" xml:space="preserve">
+    <value>注销 ({0})</value>
   </data>
 </root>

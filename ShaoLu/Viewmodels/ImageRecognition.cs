@@ -160,16 +160,18 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 WindowEditImage windowEditImage = new();
                 windowEditImage.Show();
-                // 延迟赋值，等待 UI 线程完成当前布局和渲染
+                // 使用 Background 优先级，确保 CropImage 控件完成内部布局和渲染后再设置裁剪框
                 windowEditImage.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     windowEditImage.editImageViewModel.ImgSrc = ImgSrc;
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
+                    // 强制更新布局，确保 CropImage 的 Source 变更已触发 DrawImage
+                    windowEditImage.UpdateLayout();
                     if (CroppedRect != null && !CroppedRect.IsEmpty)
                         windowEditImage.editImageViewModel.SetCropRect(CroppedRect);
                     if (ClickThumbs != null && ClickThumbs.Count > 0)
                         windowEditImage.editImageViewModel.SetThumbs(ClickThumbs);
-                }), System.Windows.Threading.DispatcherPriority.Loaded);
+                }), System.Windows.Threading.DispatcherPriority.Background);
                 windowEditImage.editImageViewModel.OnImageSaved += (img, rect, clickthumbs) =>
                 {
                     CroppedImg = img;
@@ -206,7 +208,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     IsError = true;
                     ErrorMessage = LanguageService.GetLocalizedString("Loading_img_Warning", "Error loading image");
                     _logger.Error(ex, ErrorMessage);
-                    throw ex;
                 }
             }
 
@@ -344,22 +345,25 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override AutomationStepBase Clone()
         {
+            var clonedImg = (CroppedImg as BitmapSource)?.Clone();
             var res = new ClickImageStep(Name, Description)
             {
                 Type = Type,
                 TrueGoto = TrueGoto,
                 FalseGoto = FalseGoto,
+                IsNeed = IsNeed,
                 ImagePath = ImagePath,
-                CroppedImg = CroppedImg,
-                CroppedRect = CroppedRect,
-                ClickThumbs = ClickThumbs,
+                CroppedImg = clonedImg,
+                CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
+                ClickThumbs = ClickThumbs?.Select(t => t.Clone()).ToList(),
                 SimilarityThreshold = SimilarityThreshold,
                 Clicks = Clicks,
                 ClickGap = ClickGap,
                 WaitTime = WaitTime,
                 Timeout = Timeout,
             };
-            res.SaveCroppedImageToDisk(res.CroppedImg);
+            if (clonedImg != null)
+                res.SaveCroppedImageToDisk(clonedImg);
             return res;
         }
 
@@ -368,13 +372,25 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for clicking.");
 
             var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-            var res = await Task.Run(() =>
+
+            // 如果没有设置点击点，使用图像中心点作为默认点击位置
+            var clickPoints = ClickPoints;
+            if (clickPoints == null || clickPoints.Count == 0)
             {
-                Thread.Sleep((int)WaitTime * 1000);
-                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, ClickPoints, SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
+                var center = new Point(
+                    (int)(sourceImage.Width / 2),
+                    (int)(sourceImage.Height / 2));
+                clickPoints = new List<Point> { center };
+            }
+
+            var res = await Task.Run(async () =>
+            {
+                await Task.Delay((int)WaitTime * 1000, cancellationToken);
+                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
             });
             IsTrue = res;
             IsError = false;
+            ErrorType = StepErrorType.None;
 
             return IsTrue;
         }
@@ -409,20 +425,24 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override AutomationStepBase Clone()
         {
+            var clonedImg = (CroppedImg as BitmapSource)?.Clone();
             var res = new FindImageStep(Name, Description)
             {
                 Type = Type,
                 TrueGoto = TrueGoto,
                 FalseGoto = FalseGoto,
+                IsNeed = IsNeed,
                 ImagePath = ImagePath,
-                CroppedImg = CroppedImg,
-                CroppedRect = CroppedRect,
+                CroppedImg = clonedImg,
+                CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
+                ClickThumbs = ClickThumbs?.Select(t => t.Clone()).ToList(),
                 SimilarityThreshold = SimilarityThreshold,
                 WaitTime = WaitTime,
                 GapTime = GapTime,
                 Timeout = Timeout
             };
-            res.SaveCroppedImageToDisk(res.CroppedImg);
+            if (clonedImg != null)
+                res.SaveCroppedImageToDisk(clonedImg);
             return res;
         }
 
@@ -430,14 +450,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for finding.");
             var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-            var res = await Task.Run(() =>
+            var res = await Task.Run(async () =>
             {
-                Thread.Sleep((int)WaitTime * 1000);
+                await Task.Delay((int)WaitTime * 1000, cancellationToken);
                 return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout);
             });
             img?.Dispose();
             IsTrue = !res.IsEmpty;
             IsError = false;
+            ErrorType = StepErrorType.None;
             return IsTrue;
         }
     }

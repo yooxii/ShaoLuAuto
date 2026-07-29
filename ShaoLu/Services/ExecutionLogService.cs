@@ -153,5 +153,25 @@ namespace ShaoLu.Services
                 .OrderBy(x => x)
                 .ToList();
         }
+
+        /// <summary>
+        /// 清理超过保留天数的旧日志（retentionDays <= 0 时不执行）
+        /// </summary>
+        public static void CleanupOldLogs(int retentionDays)
+        {
+            if (retentionDays <= 0) return;
+
+            try
+            {
+                var cutoff = DateTime.Now.AddDays(-retentionDays);
+                Fsql.Delete<StepExecutionLog>()
+                    .Where(x => x.ExecutedAt < cutoff)
+                    .ExecuteAffrows();
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "Failed to cleanup old execution logs");
+            }
+        }
     }
 }

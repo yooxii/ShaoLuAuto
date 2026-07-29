@@ -38,13 +38,24 @@ namespace ShaoLu
                 services.AddSingleton<FileServices>();
 
                 // 如果有其他服务 (如 IUserService)，也在这里注册
-                // services.AddSingleton<IUserService, UserService>();
+                services.AddSingleton<IUserService, UserService>();
+                services.AddTransient<LoginViewModel>();
+                services.AddTransient<UserManagementViewModel>();
 
                 // 3. 构建并配置 Ioc 容器
                 Ioc.Default.ConfigureServices(services.BuildServiceProvider());
                 Logger.Info("Ioc container configured.");
 
                 ExcelPackage.License.SetNonCommercialPersonal("ORT");
+
+                // 5. 根据设置清理过期执行日志
+                ExecutionLogService.CleanupOldLogs(ShaoLu.Utils.SingletonLocator.Settings.App.LogRetentionDays);
+
+                // 4. 直接显示主窗口（登录改为编辑时触发）
+                Logger.Info("Showing MainWindow directly.");
+                var mainWindow = new MainWindow();
+                MainWindow = mainWindow;
+                mainWindow.Show();
             }
             catch (Exception ex)
             {

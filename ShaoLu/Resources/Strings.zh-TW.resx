@@ -501,4 +501,187 @@
   <data name="DateTo" xml:space="preserve">
     <value>結束日期</value>
   </data>
+  <data name="LogRetentionDays" xml:space="preserve">
+    <value>日誌保留天數</value>
+  </data>
+  <data name="ConfirmBeforeRun" xml:space="preserve">
+    <value>運行前確認</value>
+  </data>
+  <data name="DefaultSelfReferenceLimit" xml:space="preserve">
+    <value>自引用上限</value>
+  </data>
+  <data name="DefaultStepParams" xml:space="preserve">
+    <value>新建步驟預設參數</value>
+  </data>
+  <data name="DefaultSimilarityThreshold" xml:space="preserve">
+    <value>預設相似度閾值</value>
+  </data>
+  <data name="DefaultWaitTime" xml:space="preserve">
+    <value>預設等待時間</value>
+  </data>
+  <data name="DefaultTimeout" xml:space="preserve">
+    <value>預設逾時時間</value>
+  </data>
+  <data name="DefaultClicks" xml:space="preserve">
+    <value>預設點擊次數</value>
+  </data>
+  <data name="LoginTitle" xml:space="preserve">
+    <value>使用者登錄</value>
+  </data>
+  <data name="Login_Username" xml:space="preserve">
+    <value>使用者名稱</value>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>密碼</value>
+  </data>
+  <data name="Login_Button" xml:space="preserve">
+    <value>登 錄</value>
+  </data>
+  <data name="Login_Cancel" xml:space="preserve">
+    <value>取 消</value>
+  </data>
+  <data name="Login_NoAccount" xml:space="preserve">
+    <value>沒有帳號？</value>
+  </data>
+  <data name="Login_RegisterNow" xml:space="preserve">
+    <value>立即註冊</value>
+  </data>
+  <data name="RegisterTitle" xml:space="preserve">
+    <value>使用者註冊</value>
+  </data>
+  <data name="Register_ConfirmPassword" xml:space="preserve">
+    <value>確認密碼</value>
+  </data>
+  <data name="Register_NeedAdminApproval" xml:space="preserve">
+    <value>需要管理員審批</value>
+  </data>
+  <data name="Register_AdminUsername" xml:space="preserve">
+    <value>管理員使用者名稱</value>
+  </data>
+  <data name="Register_AdminPassword" xml:space="preserve">
+    <value>管理員密碼</value>
+  </data>
+  <data name="Register_FirstAdminHint" xml:space="preserve">
+    <value>首個註冊的使用者將自動成為管理員</value>
+  </data>
+  <data name="Register_HasAccount" xml:space="preserve">
+    <value>已有帳號？</value>
+  </data>
+  <data name="Register_BackToLogin" xml:space="preserve">
+    <value>返回登錄</value>
+  </data>
+  <data name="Register_Button" xml:space="preserve">
+    <value>註 冊</value>
+  </data>
+  <data name="Register_Success" xml:space="preserve">
+    <value>註冊成功，請登錄</value>
+  </data>
+  <data name="Error_EmptyUsername" xml:space="preserve">
+    <value>請輸入使用者名稱</value>
+  </data>
+  <data name="Error_EmptyPassword" xml:space="preserve">
+    <value>請輸入密碼</value>
+  </data>
+  <data name="Error_LoginFailed" xml:space="preserve">
+    <value>使用者名稱或密碼錯誤</value>
+  </data>
+  <data name="Error_PasswordMismatch" xml:space="preserve">
+    <value>兩次輸入的密碼不一致</value>
+  </data>
+  <data name="Error_PasswordTooShort" xml:space="preserve">
+    <value>密碼長度至少3位</value>
+  </data>
+  <data name="Error_EmptyAdminUsername" xml:space="preserve">
+    <value>請輸入審批管理員使用者名稱</value>
+  </data>
+  <data name="Error_EmptyAdminPassword" xml:space="preserve">
+    <value>請輸入審批管理員密碼</value>
+  </data>
+  <data name="Error_RegisterFailedAdmin" xml:space="preserve">
+    <value>註冊失敗：使用者名稱已存在或管理員審批資訊不正確</value>
+  </data>
+  <data name="Error_RegisterFailed" xml:space="preserve">
+    <value>註冊失敗：使用者名稱已存在</value>
+  </data>
+  <data name="UserManagementTitle" xml:space="preserve">
+    <value>使用者管理</value>
+  </data>
+  <data name="UserList" xml:space="preserve">
+    <value>使用者列表</value>
+  </data>
+  <data name="UsernameHeader" xml:space="preserve">
+    <value>使用者名稱</value>
+  </data>
+  <data name="RoleHeader" xml:space="preserve">
+    <value>角色</value>
+  </data>
+  <data name="CreatedAtHeader" xml:space="preserve">
+    <value>建立時間</value>
+  </data>
+  <data name="AddUser" xml:space="preserve">
+    <value>新增使用者</value>
+  </data>
+  <data name="AddUserButton" xml:space="preserve">
+    <value>新增使用者</value>
+  </data>
+  <data name="ChangePasswordTitle" xml:space="preserve">
+    <value>修改密碼</value>
+  </data>
+  <data name="SelectedUser" xml:space="preserve">
+    <value>選中使用者</value>
+  </data>
+  <data name="OldPassword" xml:space="preserve">
+    <value>舊密碼</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>新密碼</value>
+  </data>
+  <data name="ChangePasswordButton" xml:space="preserve">
+    <value>修改密碼</value>
+  </data>
+  <data name="DeleteUserButton" xml:space="preserve">
+    <value>刪除選中使用者</value>
+  </data>
+  <data name="AdminRole" xml:space="preserve">
+    <value>管理員 (Admin)</value>
+  </data>
+  <data name="UserRole" xml:space="preserve">
+    <value>普通使用者 (User)</value>
+  </data>
+  <data name="Msg_UserAdded" xml:space="preserve">
+    <value>使用者 '{0}' 新增成功</value>
+  </data>
+  <data name="Msg_UserAddFailed" xml:space="preserve">
+    <value>使用者 '{0}' 已存在或新增失敗</value>
+  </data>
+  <data name="Msg_SelectUserFirst" xml:space="preserve">
+    <value>請先選擇要刪除的使用者</value>
+  </data>
+  <data name="Msg_CannotDeleteSelf" xml:space="preserve">
+    <value>不能刪除當前登錄的使用者</value>
+  </data>
+  <data name="Msg_ConfirmDeleteUser" xml:space="preserve">
+    <value>確定要刪除使用者 '{0}' 嗎？</value>
+  </data>
+  <data name="ConfirmDeleteTitle" xml:space="preserve">
+    <value>確認刪除</value>
+  </data>
+  <data name="Msg_ConfirmDeleteSteps" xml:space="preserve">
+    <value>確定刪除所選步驟嗎？</value>
+  </data>
+  <data name="DeleteStepTitle" xml:space="preserve">
+    <value>刪除步驟</value>
+  </data>
+  <data name="Msg_ConfirmRun" xml:space="preserve">
+    <value>確定要開始運行嗎？</value>
+  </data>
+  <data name="Msg_SelfReferenceLimit" xml:space="preserve">
+    <value>步驟 "{0}" 自引用達到上限 ({1} 次)，跳過執行</value>
+  </data>
+  <data name="Menu_Login" xml:space="preserve">
+    <value>登錄</value>
+  </data>
+  <data name="Menu_Logout" xml:space="preserve">
+    <value>登出 ({0})</value>
+  </data>
 </root>

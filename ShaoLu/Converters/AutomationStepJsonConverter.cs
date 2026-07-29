@@ -79,6 +79,7 @@ namespace ShaoLu.Converters
                 StepType.TypeTextFromFile => typeof(TypeTextFromFileStep),
                 StepType.Popup => typeof(PopupStep),
                 StepType.Empty => typeof(EmptyStep),
+                StepType.TextOCR => typeof(TextOCRStep),
                 // 添加其他映射...
                 _ => throw new JsonException($"No mapping found for StepType: {stepType}"),
             };

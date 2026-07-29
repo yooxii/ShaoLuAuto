@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace ShaoLu.Viewmodels.AutomationStep
 {
@@ -114,6 +115,63 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public int SelfReferenceCount { get; set; }
 
+        #region 条件判断
+
+        private ConditionMode _conditionMode = ConditionMode.Default;
+        /// <summary>
+        /// 条件判断模式
+        /// </summary>
+        public ConditionMode ConditionMode { get => _conditionMode; set => SetProperty(ref _conditionMode, value); }
+
+        private ObservableCollection<StepCondition> _conditions = [];
+        /// <summary>
+        /// 自定义条件规则行列表
+        /// </summary>
+        public ObservableCollection<StepCondition> Conditions { get => _conditions; set => SetProperty(ref _conditions, value); }
+
+        [JsonIgnore]
+        private ICommand addConditionCommand;
+        [JsonIgnore]
+        public ICommand AddConditionCommand => addConditionCommand ??= new RelayCommand(AddCondition);
+
+        [JsonIgnore]
+        private ICommand removeConditionCommand;
+        [JsonIgnore]
+        public ICommand RemoveConditionCommand => removeConditionCommand ??= new RelayCommand(RemoveCondition);
+
+        private void AddCondition()
+        {
+            Conditions.Add(new StepCondition());
+        }
+
+        private void RemoveCondition()
+        {
+            if (Conditions.Count > 0)
+                Conditions.RemoveAt(Conditions.Count - 1);
+        }
+
+        #endregion
+
+        #region 日志
+
+        private bool _enableLog = false;
+        /// <summary>
+        /// 是否记录执行日志
+        /// </summary>
+        public bool EnableLog { get => _enableLog; set => SetProperty(ref _enableLog, value); }
+
+        #endregion
+
+        #region 执行结果
+
+        /// <summary>
+        /// 最近一次执行结果（运行时，不序列化）
+        /// </summary>
+        [JsonIgnore]
+        public StepExecutionResult LastResult { get; set; }
+
+        #endregion
+
         #endregion
 
         /// <summary>
@@ -152,7 +210,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
     {
         private string _textToType;
         private double _delayBetweenKeys = 0.05;
-        private bool _enableLog = false;
 
         /// <summary>
         /// 输入内容
@@ -160,11 +217,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
 
         public double DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
-
-        /// <summary>
-        /// 是否记录执行日志
-        /// </summary>
-        public bool EnableLog { get => _enableLog; set => SetProperty(ref _enableLog, value); }
 
         #region 构造
         public TypeTextStep() : base()
@@ -237,7 +289,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private bool _infix_gen = false;
         private bool _suffix_gen = false;
         private bool _reloadText = false;
-        private bool _enableLog = false;
         private string _prefix_;
         private string _infix_;
         private string _suffix_;
@@ -293,11 +344,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public bool Suffix_gen { get => _suffix_gen; set => SetProperty(ref _suffix_gen, value); }
 
         public bool ReloadText { get => _reloadText; set => SetProperty(ref _reloadText, value); }
-
-        /// <summary>
-        /// 是否记录执行日志
-        /// </summary>
-        public bool EnableLog { get => _enableLog; set => SetProperty(ref _enableLog, value); }
 
         #region 构造
         public TypeTextMoreStep() : base()
@@ -397,7 +443,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _textToType;
         private double _delayBetweenKeys = 0.01;
         private bool _reloadIndex = false;
-        private bool _enableLog = false;
         private int _index = 0;
         private ObservableCollection<string> _contents = [];
         private string[] _delimiter = ["\n", "\r", "\n\r", "\t", ",", ";", "|"];
@@ -425,11 +470,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public string[] Delimiter { get => _delimiter; set => SetProperty(ref _delimiter, value); }
         public bool ReloadIndex { get => _reloadIndex; set => SetProperty(ref _reloadIndex, value); }
-
-        /// <summary>
-        /// 是否记录执行日志
-        /// </summary>
-        public bool EnableLog { get => _enableLog; set => SetProperty(ref _enableLog, value); }
 
 
 

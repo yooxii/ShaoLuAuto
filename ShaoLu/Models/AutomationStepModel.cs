@@ -16,6 +16,7 @@ namespace ShaoLu.Models
         FindImages,
         TypeTextMore,
         TypeTextFromFile,
+        TextOCR = 200,
         Popup = 1000,
         // 其他步骤类型...
     }
@@ -35,6 +36,7 @@ namespace ShaoLu.Models
         PopupError,
         ConversionError,
         IndexOutOfRange,
+        OCRError,
         Unknown
     }
 

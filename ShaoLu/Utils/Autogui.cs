@@ -255,6 +255,15 @@ namespace ShaoLu.Utils
 
         public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, List<Point>? clickposition = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3)
         {
+            var rect = ClickImageOnScreenEx(templateImage, position, clickposition, threshold, clicks, clickgaptime, nextclicktime, waittime, timeout);
+            return !rect.IsEmpty;
+        }
+
+        /// <summary>
+        /// 在屏幕上查找并点击图像，返回匹配结果（包含相似度和位置）
+        /// </summary>
+        public static AutoRect ClickImageOnScreenEx(Bitmap templateImage, Position position = 0, List<Point>? clickposition = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3)
+        {
             int nextclickTimeMs = (int)(nextclicktime * 1000);
             int waitTimeMs = (int)(waittime * 1000);
             int clickGapTimeMs = (int)(clickgaptime * 1000);
@@ -286,7 +295,7 @@ namespace ShaoLu.Utils
                             }
                             Thread.Sleep(nextclickTimeMs); // 等待下一次点击
                         }
-                        return true;
+                        return rect;
                     }
                 }
                 catch

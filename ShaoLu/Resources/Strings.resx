@@ -684,4 +684,31 @@
   <data name="Menu_Logout" xml:space="preserve">
     <value>Logout ({0})</value>
   </data>
+  <data name="AddTextOCRStep" xml:space="preserve">
+    <value>TextOCR</value>
+  </data>
+  <data name="ConditionPanel" xml:space="preserve">
+    <value>Condition</value>
+  </data>
+  <data name="ConditionMode" xml:space="preserve">
+    <value>Mode</value>
+  </data>
+  <data name="OCR_Region" xml:space="preserve">
+    <value>OCR Region</value>
+  </data>
+  <data name="OCR_SelectRegion" xml:space="preserve">
+    <value>Select Region</value>
+  </data>
+  <data name="OCR_SelectRegionHint" xml:space="preserve">
+    <value>Drag to select OCR region, press ESC to cancel</value>
+  </data>
+  <data name="OCR_Test" xml:space="preserve">
+    <value>Test OCR</value>
+  </data>
+  <data name="OCR_NoRegion" xml:space="preserve">
+    <value>No region selected</value>
+  </data>
+  <data name="OCR_NoResult" xml:space="preserve">
+    <value>No text recognized</value>
+  </data>
 </root>

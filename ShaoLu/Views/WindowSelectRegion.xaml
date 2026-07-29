@@ -1,0 +1,43 @@
+<Window x:Class="ShaoLu.Views.WindowSelectRegion"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        Title="{lex:Loc OCR_SelectRegion}" 
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="#01000000"
+        WindowState="Maximized"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Cursor="Cross"
+        KeyDown="Window_KeyDown">
+    <Canvas x:Name="SelectionCanvas" 
+            MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
+            MouseMove="Canvas_MouseMove"
+            MouseLeftButtonUp="Canvas_MouseLeftButtonUp">
+        <!-- 选择矩形 -->
+        <Rectangle x:Name="SelectionRect" 
+                   Stroke="Red" 
+                   StrokeThickness="2" 
+                   StrokeDashArray="4 2"
+                   Fill="#33FF0000"
+                   Visibility="Collapsed"/>
+        <!-- 尺寸提示 -->
+        <Border x:Name="SizeTip" 
+                Background="#CC000000" 
+                CornerRadius="3" 
+                Padding="5,2" 
+                Visibility="Collapsed">
+            <TextBlock x:Name="SizeTipText" Foreground="White" FontSize="12"/>
+        </Border>
+        <!-- 操作提示 -->
+        <TextBlock x:Name="HintText"
+                   Text="{lex:Loc OCR_SelectRegionHint}"
+                   Foreground="White" 
+                   FontSize="16"
+                   HorizontalAlignment="Center"
+                   Canvas.Left="10" Canvas.Top="10"/>
+    </Canvas>
+</Window>

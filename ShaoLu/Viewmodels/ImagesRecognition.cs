@@ -120,19 +120,33 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
             bool res = false;
+            double lastSimilarity = -1;
+            Models.Point lastClickPos = null;
+
             foreach (var image in Images)
             {
                 var sourceImage = (image.CroppedImg ?? image.ImgSrc) ?? throw new Exception("No image available for clicking.");
                 var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-                res = await Task.Run(async () =>
+                var rect = await Task.Run(async () =>
                 {
                     await Task.Delay((int)WaitTime * 1000, cancellationToken);
-                    return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, image.ClickPoints, image.SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
+                    return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, image.ClickPoints, image.SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
                 });
+                res = !rect.IsEmpty;
+                lastSimilarity = rect.Similarity;
+                lastClickPos = rect.IsEmpty ? null : rect.Center;
             }
             IsTrue = res;
             IsError = false;
             ErrorType = StepErrorType.None;
+
+            // 填充执行结果
+            LastResult = new StepExecutionResult
+            {
+                IsTrue = IsTrue,
+                Similarity = lastSimilarity,
+                ClickPosition = lastClickPos,
+            };
 
             return IsTrue;
         }
@@ -197,6 +211,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = !res[0].IsEmpty;
             IsError = false;
             ErrorType = StepErrorType.None;
+
+            // 填充执行结果
+            LastResult = new StepExecutionResult
+            {
+                IsTrue = IsTrue,
+                Similarity = res[0].Similarity,
+                ClickPosition = res[0].IsEmpty ? null : res[0].Center,
+            };
+
             return IsTrue;
         }
     }

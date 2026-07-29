@@ -383,14 +383,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 clickPoints = new List<Point> { center };
             }
 
-            var res = await Task.Run(async () =>
+            var rect = await Task.Run(async () =>
             {
                 await Task.Delay((int)WaitTime * 1000, cancellationToken);
-                return Autogui.ClickImageOnScreen(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
+                return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
             });
-            IsTrue = res;
+            IsTrue = !rect.IsEmpty;
             IsError = false;
             ErrorType = StepErrorType.None;
+
+            // 填充执行结果
+            LastResult = new StepExecutionResult
+            {
+                IsTrue = IsTrue,
+                Similarity = rect.Similarity,
+                ClickPosition = rect.IsEmpty ? null : rect.Center,
+            };
 
             return IsTrue;
         }
@@ -459,6 +467,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = !res.IsEmpty;
             IsError = false;
             ErrorType = StepErrorType.None;
+
+            // 填充执行结果
+            LastResult = new StepExecutionResult
+            {
+                IsTrue = IsTrue,
+                Similarity = res.Similarity,
+                ClickPosition = res.IsEmpty ? null : res.Center,
+            };
+
             return IsTrue;
         }
     }

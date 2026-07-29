@@ -7,6 +7,7 @@ using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -19,6 +20,7 @@ namespace ShaoLu.Viewmodels
         private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private CancellationTokenSource _cts;
         private readonly StepSettingsModel _stepSettings = SingletonLocator.Settings.Step;
+        private readonly StepExecutionContext _executionContext = new();
 
         #region 属性
 
@@ -183,6 +185,7 @@ namespace ShaoLu.Viewmodels
                     "TypeTextMore" => new TypeTextMoreStep($"TypeTextMore_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextMore) + 1}"),
                     "TypeTextFromFile" => new TypeTextFromFileStep($"TypeTextFromFile_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextFromFile) + 1}"),
                     "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
+                    "TextOCR" => new TextOCRStep($"TextOCR_{AutomationStepBases.Count(t => t.Type == StepType.TextOCR) + 1}"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
                 ApplyDefaultSettings(step);
@@ -375,6 +378,8 @@ namespace ShaoLu.Viewmodels
             StopSignal = false;
             // 初始化自动化引擎
             Autogui.StartAuto();
+            // 清空执行上下文
+            _executionContext.Clear();
             if (_stepSettings.MinimizeOnRun)
                 Application.Current.MainWindow.WindowState = WindowState.Minimized;
             foreach (var step in AutomationStepBases)
@@ -382,6 +387,7 @@ namespace ShaoLu.Viewmodels
                 // 重置自引用计数器
                 step.SelfReferenceCount = 0;
                 step.ErrorType = StepErrorType.None;
+                step.LastResult = null;
                 if (step is TypeTextMoreStep textMoreStep)
                 {
                     if (textMoreStep.ReloadText)
@@ -435,9 +441,42 @@ namespace ShaoLu.Viewmodels
                     try
                     {
                         SelectedStep = step;
+
+                        // 计时执行
+                        var sw = Stopwatch.StartNew();
                         await step.RunAsync(token);
+                        sw.Stop();
+
                         step.IsError = false;
                         step.ErrorType = StepErrorType.None;
+
+                        // 构建执行结果
+                        var result = step.LastResult ?? new StepExecutionResult();
+                        result.ExecutionTimeMs = sw.Elapsed.TotalMilliseconds;
+                        result.IsTrue = step.IsTrue;
+                        result.ExecutedAt = DateTime.Now;
+                        step.LastResult = result;
+
+                        // 存入执行上下文
+                        _executionContext.SetResult(step.LineNo, result);
+
+                        // 自定义条件判断
+                        if (step.ConditionMode == ConditionMode.Custom && step.Conditions.Count > 0)
+                        {
+                            step.IsTrue = ConditionEvaluator.Evaluate(step.Conditions, _executionContext, result);
+                        }
+
+                        // 通用日志记录
+                        if (step.EnableLog)
+                        {
+                            string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
+                            string logContent = $"[Result:{step.IsTrue}] [Time:{result.ExecutionTimeMs:F0}ms]";
+                            if (result.Similarity >= 0)
+                                logContent += $" [Similarity:{result.Similarity:F3}]";
+                            if (!string.IsNullOrEmpty(result.OCRText))
+                                logContent += $" [OCR:{result.OCRText}]";
+                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent);
+                        }
                     }
                     catch (OperationCanceledException)
                     {

@@ -4,7 +4,11 @@
                     xmlns:AutoVM="clr-namespace:ShaoLu.Viewmodels.AutomationStep"
                     xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
                     xmlns:lex="http://wpflocalizeextension.codeplex.com"
-                    xmlns:conv="clr-namespace:ShaoLu.Converters">
+                    xmlns:conv="clr-namespace:ShaoLu.Converters"
+                    xmlns:models="clr-namespace:ShaoLu.Models"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <conv:ConditionModeToVisibilityConverter x:Key="ConditionModeToVisibility"/>
 
     <!-- 识图步骤的UI -->
     <DataTemplate x:Key="ClickImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
@@ -446,6 +450,95 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 通用条件判断面板 -->
+    <DataTemplate x:Key="ConditionPanelTemplate">
+        <GroupBox Header="{lex:Loc ConditionPanel}" Margin="0,10,0,0">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,3">
+                    <Label Content="{lex:Loc ConditionMode}" VerticalAlignment="Center"/>
+                    <ComboBox SelectedItem="{Binding ConditionMode}" MinWidth="120">
+                        <models:ConditionMode>Default</models:ConditionMode>
+                        <models:ConditionMode>Custom</models:ConditionMode>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Visibility="{Binding ConditionMode, Converter={StaticResource ConditionModeToVisibility}}">
+                    <ItemsControl ItemsSource="{Binding Conditions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:StepCondition}">
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <ComboBox SelectedItem="{Binding Variable}" MinWidth="100" Margin="0,0,3,0">
+                                        <models:ConditionVariable>ConstantTrue</models:ConditionVariable>
+                                        <models:ConditionVariable>ConstantFalse</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_IsTrue</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_Similarity</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_ExecutionTimeMs</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_ClickX</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_ClickY</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_OCRText</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_IsTrue</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_Similarity</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_ExecutionTimeMs</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_ClickX</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_ClickY</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_OCRText</models:ConditionVariable>
+                                    </ComboBox>
+                                    <wd:NumericBox Value="{Binding StepLineNo}" MinWidth="40" Minimum="0" Margin="0,0,3,0"/>
+                                    <ComboBox SelectedItem="{Binding Operator}" MinWidth="60" Margin="0,0,3,0">
+                                        <models:ConditionOperator>Equal</models:ConditionOperator>
+                                        <models:ConditionOperator>NotEqual</models:ConditionOperator>
+                                        <models:ConditionOperator>GreaterThan</models:ConditionOperator>
+                                        <models:ConditionOperator>LessThan</models:ConditionOperator>
+                                        <models:ConditionOperator>GreaterOrEqual</models:ConditionOperator>
+                                        <models:ConditionOperator>LessOrEqual</models:ConditionOperator>
+                                        <models:ConditionOperator>Contains</models:ConditionOperator>
+                                        <models:ConditionOperator>NotContains</models:ConditionOperator>
+                                        <models:ConditionOperator>IsEmpty</models:ConditionOperator>
+                                        <models:ConditionOperator>IsNotEmpty</models:ConditionOperator>
+                                    </ComboBox>
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}" MinWidth="60" Margin="0,0,3,0"/>
+                                    <ComboBox SelectedItem="{Binding Connector}" MinWidth="45" Margin="0,0,3,0">
+                                        <models:LogicConnector>And</models:LogicConnector>
+                                        <models:LogicConnector>Or</models:LogicConnector>
+                                    </ComboBox>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                        <Button Content=" + " Command="{Binding AddConditionCommand}" Margin="0,0,5,0"/>
+                        <Button Content=" - " Command="{Binding RemoveConditionCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,5,0,0"/>
+            </StackPanel>
+        </GroupBox>
+    </DataTemplate>
+
+    <!-- TextOCR 步骤的UI -->
+    <DataTemplate x:Key="TextOCRStepTemplate" DataType="{x:Type AutoVM:TextOCRStep}">
+        <StackPanel Orientation="Vertical">
+            <StackPanel Margin="0,5,0,0">
+                <Label Content="{lex:Loc OCR_Region}" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" 
+                             IsReadOnly="True" MinWidth="200" VerticalAlignment="Center"/>
+                    <Button Content="{lex:Loc OCR_SelectRegion}" Command="{Binding SelectRegionCommand}" Margin="5,0,0,0"/>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Margin="0,5,0,0">
+                <Button Content="{lex:Loc OCR_Test}" Command="{Binding TestOCRCommand}" HorizontalAlignment="Left"/>
+                <TextBox Text="{Binding OCRResultPreview, Mode=OneWay}" 
+                         IsReadOnly="True" MinHeight="40" TextWrapping="Wrap" 
+                         Margin="0,5,0,0" VerticalScrollBarVisibility="Auto"/>
+            </StackPanel>
+            <StackPanel Margin="0,5,0,0">
+                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
                      FindImageTemplate="{StaticResource FindImageStepTemplate}"
@@ -454,5 +547,6 @@
                      TypeTextTemplate="{StaticResource TextStepTemplate}"
                      TypeTextMoreTemplate="{StaticResource TextStepMoreTemplate}"
                      TypeTextFromFileTemplate="{StaticResource TextStepFromFileTemplate}"
-                     PopupTemplate="{StaticResource PopupStepTemplate}"/>
+                     PopupTemplate="{StaticResource PopupStepTemplate}"
+                     TextOCRTemplate="{StaticResource TextOCRStepTemplate}"/>
 </ResourceDictionary>

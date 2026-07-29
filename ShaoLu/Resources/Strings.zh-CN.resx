@@ -678,4 +678,31 @@
   <data name="Menu_Logout" xml:space="preserve">
     <value>注销 ({0})</value>
   </data>
+  <data name="AddTextOCRStep" xml:space="preserve">
+    <value>文字识别(OCR)</value>
+  </data>
+  <data name="ConditionPanel" xml:space="preserve">
+    <value>条件判断</value>
+  </data>
+  <data name="ConditionMode" xml:space="preserve">
+    <value>模式</value>
+  </data>
+  <data name="OCR_Region" xml:space="preserve">
+    <value>OCR 区域</value>
+  </data>
+  <data name="OCR_SelectRegion" xml:space="preserve">
+    <value>选择区域</value>
+  </data>
+  <data name="OCR_SelectRegionHint" xml:space="preserve">
+    <value>拖拽框选 OCR 区域，按 ESC 取消</value>
+  </data>
+  <data name="OCR_Test" xml:space="preserve">
+    <value>测试 OCR</value>
+  </data>
+  <data name="OCR_NoRegion" xml:space="preserve">
+    <value>未选择区域</value>
+  </data>
+  <data name="OCR_NoResult" xml:space="preserve">
+    <value>未识别到文本</value>
+  </data>
 </root>

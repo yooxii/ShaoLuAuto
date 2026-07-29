@@ -16,6 +16,7 @@ namespace ShaoLu.Converters
         public DataTemplate TypeTextMoreTemplate { get; set; }
         public DataTemplate TypeTextFromFileTemplate { get; set; }
         public DataTemplate PopupTemplate { get; set; }
+        public DataTemplate TextOCRTemplate { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
@@ -32,6 +33,7 @@ namespace ShaoLu.Converters
                     StepType.TypeTextMore => TypeTextMoreTemplate,
                     StepType.TypeTextFromFile => TypeTextFromFileTemplate,
                     StepType.Popup => PopupTemplate,
+                    StepType.TextOCR => TextOCRTemplate,
                     _ => ClickImageTemplate,
                 };
             }

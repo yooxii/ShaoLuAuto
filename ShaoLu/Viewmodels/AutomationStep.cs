@@ -530,6 +530,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Contents.RemoveAt(Contents.Count - 1);
         }
 
+        [RelayCommand]
+        public void ResetIndex()
+        {
+            Index = 0;
+        }
+
         private void LoadFile()
         {
             if (FilePath == null) return;
@@ -557,6 +563,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
             if (Contents != null && Contents.Count > 0)
@@ -575,7 +582,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
             await Task.Delay((int)WaitTime * 1000, cancellationToken);
             var res = await Task.Run(() =>
             {
-                return Autogui.TypeTextSafe(TextToType, (int)(DelayBetweenKeys * 1000));
+                if (DelayBetweenKeys <= 0.01)
+                    return Autogui.TypeTextSafe(TextToType, (int)(DelayBetweenKeys * 1000));
+                else
+                    return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
             });
             IsTrue = res;
             IsError = false;

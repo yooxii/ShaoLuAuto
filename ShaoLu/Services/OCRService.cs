@@ -1,16 +1,18 @@
-using PaddleOCRSharp;
+using TesseractOCR;
+using TesseractOCR.Enums;
 using System;
 using System.Drawing;
+using System.IO;
 
 namespace ShaoLu.Services
 {
     /// <summary>
-    /// OCR 服务封装，基于 PaddleOCRSharp
+    /// OCR 服务封装，基于 TesseractOCR
     /// </summary>
     public class OCRService
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        private static PaddleOCREngine _ocr;
+        private static Engine _ocr;
         private static readonly object _lock = new object();
 
         /// <summary>
@@ -26,15 +28,13 @@ namespace ShaoLu.Services
                     {
                         try
                         {
-                            // 使用默认配置（中英文混合识别）
-                            OCRModelConfig config = null; // null 使用默认模型
-                            OCRParameter parameter = new OCRParameter();
-                            _ocr = new PaddleOCREngine(config, parameter);
-                            logger.Info("PaddleOCR initialized successfully");
+                            string tessDataPath = Path.Combine(AppContext.BaseDirectory, "tessdata");
+                            _ocr = new Engine(tessDataPath, "chi_sim+eng", EngineMode.Default);
+                            logger.Info("Tesseract OCR initialized successfully, tessdata: {0}", tessDataPath);
                         }
                         catch (Exception ex)
                         {
-                            logger.Error(ex, "Failed to initialize PaddleOCR");
+                            logger.Error(ex, "Failed to initialize Tesseract OCR");
                             throw;
                         }
                     }
@@ -46,7 +46,7 @@ namespace ShaoLu.Services
         /// 对 Bitmap 执行 OCR 识别，返回识别文本
         /// </summary>
         /// <param name="bmp">要识别的图像</param>
-        /// <returns>识别到的文本，多行用换行符分隔</returns>
+        /// <returns>识别到的文本</returns>
         public static string Recognize(Bitmap bmp)
         {
             if (bmp == null)
@@ -56,18 +56,16 @@ namespace ShaoLu.Services
 
             try
             {
-                OCRResult result = _ocr.DetectText(bmp);
-                if (result == null || result.TextBlocks == null || result.TextBlocks.Count == 0)
-                    return string.Empty;
-
-                // 将所有文本块合并
-                var texts = new System.Text.StringBuilder();
-                for (int i = 0; i < result.TextBlocks.Count; i++)
+                using (var ms = new MemoryStream())
                 {
-                    if (i > 0) texts.AppendLine();
-                    texts.Append(result.TextBlocks[i].Text);
+                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    byte[] imgBytes = ms.ToArray();
+                    using (var pix = TesseractOCR.Pix.Image.LoadFromMemory(imgBytes))
+                    using (var page = _ocr.Process(pix))
+                    {
+                        return page.Text?.Trim() ?? string.Empty;
+                    }
                 }
-                return texts.ToString();
             }
             catch (Exception ex)
             {

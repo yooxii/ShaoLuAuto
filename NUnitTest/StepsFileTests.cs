@@ -182,27 +182,27 @@ namespace NUnitTest
         public void SaveStepsToJson_NullSteps_ThrowsArgumentNullException()
         {
             string filePath = Path.Combine(_testDir, "null_steps.json");
-            Assert.Throws<ArgumentNullException>(() => StepsFile.SaveStepsToJson(null, filePath));
+            Assert.Throws<ArgumentNullException>((TestDelegate)(() => StepsFile.SaveStepsToJson(null, filePath)));
         }
 
         [Test]
         public void SaveStepsToJson_EmptyPath_ThrowsArgumentException()
         {
             var steps = new ObservableCollection<AutomationStepBase>();
-            Assert.Throws<ArgumentException>(() => StepsFile.SaveStepsToJson(steps, ""));
+            Assert.Throws<ArgumentException>((TestDelegate)(() => StepsFile.SaveStepsToJson(steps, "")));
         }
 
         [Test]
         public void LoadStepsFromJson_NonExistentFile_ThrowsFileNotFoundException()
         {
             string filePath = Path.Combine(_testDir, "nonexistent.json");
-            Assert.Throws<FileNotFoundException>(() => StepsFile.LoadStepsFromJson(filePath));
+            Assert.Throws<FileNotFoundException>((TestDelegate)(() => StepsFile.LoadStepsFromJson(filePath)));
         }
 
         [Test]
         public void LoadStepsFromJson_EmptyPath_ThrowsArgumentException()
         {
-            Assert.Throws<ArgumentException>(() => StepsFile.LoadStepsFromJson(""));
+            Assert.Throws<ArgumentException>((TestDelegate)(() => StepsFile.LoadStepsFromJson("")));
         }
 
 #pragma warning restore CS0618
@@ -215,27 +215,27 @@ namespace NUnitTest
         public void SaveAsAutoStepPackage_NullSteps_ThrowsArgumentNullException()
         {
             string path = Path.Combine(_testDir, "test.autostep");
-            Assert.Throws<ArgumentNullException>(() => StepsFile.SaveAsAutoStepPackage(null, path));
+            Assert.Throws<ArgumentNullException>((TestDelegate)(() => StepsFile.SaveAsAutoStepPackage(null, path)));
         }
 
         [Test]
         public void SaveAsAutoStepPackage_EmptyPath_ThrowsArgumentException()
         {
             var steps = new ObservableCollection<AutomationStepBase>();
-            Assert.Throws<ArgumentException>(() => StepsFile.SaveAsAutoStepPackage(steps, ""));
+            Assert.Throws<ArgumentException>((TestDelegate)(() => StepsFile.SaveAsAutoStepPackage(steps, "")));
         }
 
         [Test]
         public void LoadFromAutoStepPackage_EmptyPath_ThrowsArgumentException()
         {
-            Assert.Throws<ArgumentException>(() => StepsFile.LoadFromAutoStepPackage(""));
+            Assert.Throws<ArgumentException>((TestDelegate)(() => StepsFile.LoadFromAutoStepPackage("")));
         }
 
         [Test]
         public void LoadFromAutoStepPackage_NonExistentFile_ThrowsFileNotFoundException()
         {
             string path = Path.Combine(_testDir, "nonexistent.autostep");
-            Assert.Throws<FileNotFoundException>(() => StepsFile.LoadFromAutoStepPackage(path));
+            Assert.Throws<FileNotFoundException>((TestDelegate)(() => StepsFile.LoadFromAutoStepPackage(path)));
         }
 
         #endregion

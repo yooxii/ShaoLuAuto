@@ -140,8 +140,8 @@ namespace NUnitTest
             [Test]
             public void ConvertBack_ThrowsNotImplementedException()
             {
-                Assert.Throws<NotImplementedException>(() =>
-                    _converter.ConvertBack(Visibility.Visible, typeof(object), null, Culture));
+                Assert.Throws<NotImplementedException>((TestDelegate)(() =>
+                    _converter.ConvertBack(Visibility.Visible, typeof(object), null, Culture)));
             }
         }
 
@@ -191,8 +191,8 @@ namespace NUnitTest
             [Test]
             public void ConvertBack_ThrowsNotImplementedException()
             {
-                Assert.Throws<NotImplementedException>(() =>
-                    _converter.ConvertBack(Visibility.Visible, typeof(ConditionMode), null, Culture));
+                Assert.Throws<NotImplementedException>((TestDelegate)(() =>
+                    _converter.ConvertBack(Visibility.Visible, typeof(ConditionMode), null, Culture)));
             }
         }
 
@@ -291,8 +291,8 @@ namespace NUnitTest
             [Test]
             public void ConvertBack_ThrowsNotImplementedException()
             {
-                Assert.Throws<NotImplementedException>(() =>
-                    _converter.ConvertBack("test", typeof(ConditionOperator), null, Culture));
+                Assert.Throws<NotImplementedException>((TestDelegate)(() =>
+                    _converter.ConvertBack("test", typeof(ConditionOperator), null, Culture)));
             }
 
             [Test]

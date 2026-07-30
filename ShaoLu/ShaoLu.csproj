@@ -18,7 +18,7 @@
     <ProductName>AutoShaoLu%28自動化燒録%29</ProductName>
     <PublisherName>ORT</PublisherName>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>0.4.0.%2a</ApplicationVersion>
+    <ApplicationVersion>0.5.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -51,7 +51,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -122,6 +122,9 @@
     <Reference Include="WPFDevelopers, Version=0.1.0.0, Culture=neutral, PublicKeyToken=aacc48a71bd48519, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Reference\WPFDevelopers.dll</HintPath>
+    </Reference>
+    <Reference Include="TesseractOCR">
+      <HintPath>$(NuGetPackageRoot)tesseractocr\5.5.2\lib\netstandard2.0\TesseractOCR.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -379,10 +382,7 @@
     <PackageReference Include="OpenCvSharp4.runtime.win.slim">
       <Version>4.13.0.20260627</Version>
     </PackageReference>
-    <PackageReference Include="Paddle.Runtime.win_x64" Version="3.4.0" />
-    <PackageReference Include="PaddleOCRSharp">
-      <Version>6.2.0</Version>
-    </PackageReference>
+    <PackageReference Include="TesseractOCR" Version="5.5.2" ExcludeAssets="compile;runtime" />
     <PackageReference Include="System.Drawing.Common">
       <Version>10.0.10</Version>
     </PackageReference>
@@ -415,6 +415,11 @@
     <Resource Include="AutoShaoLu.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="tessdata\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <FileAssociation Include=".autostep">

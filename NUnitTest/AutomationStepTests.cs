@@ -111,7 +111,7 @@ namespace NUnitTest
             public void Name_NullValue_ThrowsArgumentNullException()
             {
                 var step = new TypeTextStep();
-                Assert.Throws<ArgumentNullException>(() => step.Name = null);
+                Assert.Throws<ArgumentNullException>((TestDelegate)(() => step.Name = null));
             }
         }
 
@@ -340,7 +340,7 @@ namespace NUnitTest
             public void RemoveConditionCommand_OnEmpty_DoesNotThrow()
             {
                 var step = new TypeTextStep();
-                Assert.DoesNotThrow(() => step.RemoveConditionCommand.Execute(null));
+                Assert.DoesNotThrow((TestDelegate)(() => step.RemoveConditionCommand.Execute(null)));
                 Assert.That(step.Conditions.Count, Is.EqualTo(0));
             }
 

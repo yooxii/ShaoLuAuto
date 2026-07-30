@@ -16,7 +16,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
     /// </summary>
     public class TextOCRStep : AutomationStepBase
     {
-        private Rect _ocrRegion = Rect.Empty;
+        private Rect _ocrRegion = new();
         private string _ocrResultPreview;
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             await Task.Delay((int)(WaitTime * 1000), cancellationToken);
 
-            if (OCRRegion.IsEmpty || OCRRegion.Width <= 0 || OCRRegion.Height <= 0)
+            if (OCRRegion == null || OCRRegion.IsEmpty || OCRRegion.Width <= 0 || OCRRegion.Height <= 0)
             {
                 IsError = true;
                 ErrorType = StepErrorType.OCRError;

@@ -11,7 +11,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Point = ShaoLu.Models.Point;
@@ -68,7 +67,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
 
         private ImageSource _croppedImg;
-        private Rect _croppedRect = Rect.Empty;
+        private Rect _croppedRect = new();
         private double _similarityThreshold = 0.85;
         private List<ClickThumb> _clickThumbs = [];
 
@@ -168,7 +167,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     windowEditImage.editImageViewModel.ImgDst = CroppedImg;
                     // 强制更新布局，确保 CropImage 的 Source 变更已触发 DrawImage
                     windowEditImage.UpdateLayout();
-                    if (CroppedRect != null && !CroppedRect.IsEmpty)
+                    if (CroppedRect != null && (CroppedRect.Width != 0 || CroppedRect.Height != 0))
                         windowEditImage.editImageViewModel.SetCropRect(CroppedRect);
                     // 同步 CropRect 到 ViewModel，防止未裁剪直接保存时置空
                     windowEditImage.editImageViewModel.CropRect = CroppedRect;
@@ -436,7 +435,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// </summary>
         public bool EnableOCR { get => _enableOCR; set => SetProperty(ref _enableOCR, value); }
 
-        private Rect _ocrRect = Rect.Empty;
+        private Rect _ocrRect = new();
         /// <summary>
         /// OCR 识别区域（相对于原图像素坐标，在编辑窗口中设置）
         /// </summary>
@@ -461,7 +460,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             get
             {
-                if (OCRRect.IsEmpty)
+                if (OCRRect == null || OCRRect.IsEmpty || OCRRect.Width == 0 || OCRRect.Height == 0)
                     return LanguageService.GetLocalizedString("OCR_NoRegion", "未选择区域");
                 return $"X:{OCRRect.X:F0}, Y:{OCRRect.Y:F0}, W:{OCRRect.Width:F0}, H:{OCRRect.Height:F0}";
             }

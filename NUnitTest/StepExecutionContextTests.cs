@@ -86,7 +86,7 @@ namespace NUnitTest
         [Test]
         public void Clear_OnEmptyContext_DoesNotThrow()
         {
-            Assert.DoesNotThrow(() => _context.Clear());
+            Assert.DoesNotThrow((TestDelegate)(() => _context.Clear()));
         }
 
         #endregion

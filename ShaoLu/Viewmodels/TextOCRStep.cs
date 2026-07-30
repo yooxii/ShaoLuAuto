@@ -135,7 +135,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(
                     Utils.SingletonLocator.Main.StepFilePath ?? "unsaved");
-                ExecutionLogService.Log(Uid, fileName, Name, text ?? string.Empty);
+                ExecutionLogService.Log(Uid, fileName, Name, text ?? string.Empty, text);
             }
 
             return IsTrue;

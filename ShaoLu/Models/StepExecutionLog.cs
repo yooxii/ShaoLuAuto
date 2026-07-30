@@ -33,6 +33,12 @@ namespace ShaoLu.Models
         public string InputText { get; set; }
 
         /// <summary>
+        /// OCR 识别结果（若有）
+        /// </summary>
+        [Column(StringLength = -1)]
+        public string OCRText { get; set; }
+
+        /// <summary>
         /// 执行时间
         /// </summary>
         public DateTime ExecutedAt { get; set; }

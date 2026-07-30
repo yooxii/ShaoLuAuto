@@ -771,4 +771,7 @@
   <data name="FindImage_OCR_Hint" xml:space="preserve">
     <value>FindImage_OCR_Hint</value>
   </data>
+  <data name="OCRText" xml:space="preserve">
+    <value>OCR Result</value>
+  </data>
 </root>

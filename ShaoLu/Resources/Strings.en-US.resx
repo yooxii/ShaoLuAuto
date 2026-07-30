@@ -771,4 +771,7 @@
   <data name="FindImage_OCR_Hint" xml:space="preserve">
     <value>Use 'Set OCR Region' in the Edit window menu to define the recognition area</value>
   </data>
+  <data name="OCRText" xml:space="preserve">
+    <value>OCR Result</value>
+  </data>
 </root>

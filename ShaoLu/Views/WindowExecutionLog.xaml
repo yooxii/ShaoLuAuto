@@ -72,6 +72,9 @@
                 <DataGridTextColumn Header="{lex:Loc InputText}" 
                                     Binding="{Binding InputText}" 
                                     Width="*" SortMemberPath="InputText"/>
+                <DataGridTextColumn Header="{lex:Loc OCRText}" 
+                                    Binding="{Binding OCRText}" 
+                                    Width="150" SortMemberPath="OCRText"/>
             </DataGrid.Columns>
         </DataGrid>
 

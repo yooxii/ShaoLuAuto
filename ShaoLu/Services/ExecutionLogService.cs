@@ -33,7 +33,7 @@ namespace ShaoLu.Services
         /// <summary>
         /// 记录一条执行日志
         /// </summary>
-        public static void Log(Guid stepUid, string stepFileName, string stepName, string inputText)
+        public static void Log(Guid stepUid, string stepFileName, string stepName, string inputText, string ocrText = null)
         {
             try
             {
@@ -43,6 +43,7 @@ namespace ShaoLu.Services
                     StepFileName = stepFileName ?? "unsaved",
                     StepName = stepName ?? string.Empty,
                     InputText = inputText ?? string.Empty,
+                    OCRText = ocrText,
                     ExecutedAt = DateTime.Now
                 };
                 Fsql.Insert(log).ExecuteAffrows();

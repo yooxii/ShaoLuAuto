@@ -777,4 +777,7 @@
   <data name="FindImage_OCR_Hint" xml:space="preserve">
     <value>通過「編輯」視窗中的菜單「設置OCR區域」來指定識別範圍</value>
   </data>
+  <data name="OCRText" xml:space="preserve">
+    <value>OCR結果</value>
+  </data>
 </root>

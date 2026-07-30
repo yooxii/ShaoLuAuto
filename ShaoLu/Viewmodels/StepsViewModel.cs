@@ -475,7 +475,7 @@ namespace ShaoLu.Viewmodels
                                 logContent += $" [Similarity:{result.Similarity:F3}]";
                             if (!string.IsNullOrEmpty(result.OCRText))
                                 logContent += $" [OCR:{result.OCRText}]";
-                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent);
+                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText);
                         }
                     }
                     catch (OperationCanceledException)

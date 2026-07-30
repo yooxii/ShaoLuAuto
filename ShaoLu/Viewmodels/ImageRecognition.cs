@@ -170,6 +170,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     windowEditImage.UpdateLayout();
                     if (CroppedRect != null && !CroppedRect.IsEmpty)
                         windowEditImage.editImageViewModel.SetCropRect(CroppedRect);
+                    // 同步 CropRect 到 ViewModel，防止未裁剪直接保存时置空
+                    windowEditImage.editImageViewModel.CropRect = CroppedRect;
                     if (ClickThumbs != null && ClickThumbs.Count > 0)
                         windowEditImage.editImageViewModel.SetThumbs(ClickThumbs);
                     // 传递 OCR 矩形
@@ -557,7 +559,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 string fileName = System.IO.Path.GetFileNameWithoutExtension(
                     Utils.SingletonLocator.Main.StepFilePath ?? "unsaved");
                 string logContent = ocrText ?? (IsTrue ? "Found" : "Not Found");
-                Services.ExecutionLogService.Log(Uid, fileName, Name, logContent);
+                Services.ExecutionLogService.Log(Uid, fileName, Name, logContent, ocrText);
             }
 
             return IsTrue;

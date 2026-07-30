@@ -7,8 +7,10 @@
         xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Height="200" Width="400"
-        MinHeight="200" MinWidth="300" Topmost="True">
+        SizeToContent="WidthAndHeight"
+        MinHeight="180" MinWidth="300" 
+        MaxWidth="600" MaxHeight="500"
+        Topmost="True">
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -26,12 +28,16 @@
                Margin="0,0,15,10" 
                VerticalAlignment="Top"/>
 
-        <!-- 消息文本 -->
-        <TextBlock x:Name="MessageText" 
-                   Grid.Row="0" Grid.Column="1" 
-                   TextWrapping="Wrap" 
-                   VerticalAlignment="Center"
-                   FontSize="14"/>
+        <!-- 消息文本（可滚动） -->
+        <ScrollViewer Grid.Row="0" Grid.Column="1" 
+                      VerticalScrollBarVisibility="Auto" 
+                      MaxHeight="350"
+                      VerticalAlignment="Center">
+            <TextBlock x:Name="MessageText" 
+                       TextWrapping="Wrap" 
+                       FontSize="14"
+                       Margin="0,0,10,0"/>
+        </ScrollViewer>
 
         <!-- 按钮区域 -->
         <StackPanel x:Name="ButtonPanel" 

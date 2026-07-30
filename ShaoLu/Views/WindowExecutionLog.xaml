@@ -9,6 +9,9 @@
         mc:Ignorable="d"
         Title="{lex:Loc ExecutionLog}" Height="550" Width="900"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -17,34 +20,43 @@
         </Grid.RowDefinitions>
 
         <!-- 搜索/筛选栏 -->
-        <WrapPanel Grid.Row="0" Margin="0,0,0,10" VerticalAlignment="Center">
-            <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
-                     MinWidth="160" Margin="0,0,8,5" VerticalContentAlignment="Center">
-                <TextBox.InputBindings>
-                    <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
-                </TextBox.InputBindings>
-            </TextBox>
-
-            <ComboBox ItemsSource="{Binding FileNames}" 
-                      SelectedItem="{Binding SelectedFileName}"
-                      MinWidth="120" Margin="0,0,8,5" VerticalContentAlignment="Center"
-                      IsEditable="False">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-
-            <DatePicker SelectedDate="{Binding DateFrom}" MinWidth="110" Margin="0,0,4,5"/>
-            <TextBlock Text="~" VerticalAlignment="Center" Margin="0,0,4,5"/>
-            <DatePicker SelectedDate="{Binding DateTo}" MinWidth="110" Margin="0,0,8,5"/>
-
-            <Button Content="{lex:Loc Search}" Command="{Binding SearchCommand}" 
-                    MinWidth="60" Margin="0,0,5,5" Padding="8,3"/>
-            <Button Content="{lex:Loc Reset}" Command="{Binding ResetCommand}" 
-                    MinWidth="60" Margin="0,0,0,5" Padding="8,3"/>
-        </WrapPanel>
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <!-- 主搜索行 -->
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="{lex:Loc Search}" Command="{Binding SearchCommand}" 
+                        MinWidth="60" Margin="8,0,0,0" Padding="12,5"/>
+                <ToggleButton DockPanel.Dock="Right" Content="{lex:Loc Filter}" 
+                              IsChecked="{Binding IsFilterExpanded}" 
+                              MinWidth="60" Margin="8,0,0,0" Padding="12,5"/>
+                <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                         VerticalContentAlignment="Center" Padding="8,5">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
+                    </TextBox.InputBindings>
+                </TextBox>
+            </DockPanel>
+            <!-- 可折叠筛选区域 -->
+            <Expander IsExpanded="{Binding IsFilterExpanded}" Margin="0,5,0,0"
+                      Visibility="{Binding IsFilterExpanded, Converter={StaticResource BoolToVis}}">
+                <WrapPanel Margin="0,5,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,12,5">
+                        <TextBlock Text="{lex:Loc StepFileName}" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="Gray"/>
+                        <ComboBox ItemsSource="{Binding FileNames}" 
+                                  SelectedItem="{Binding SelectedFileName}"
+                                  MinWidth="120" VerticalContentAlignment="Center"
+                                  IsEditable="False"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,12,5">
+                        <TextBlock Text="{lex:Loc ExecutedAt}" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="Gray"/>
+                        <DatePicker SelectedDate="{Binding DateFrom}" MinWidth="110"/>
+                        <TextBlock Text="~" VerticalAlignment="Center" Margin="5,0"/>
+                        <DatePicker SelectedDate="{Binding DateTo}" MinWidth="110"/>
+                    </StackPanel>
+                    <Button Content="{lex:Loc Reset}" Command="{Binding ResetCommand}" 
+                            MinWidth="60" Padding="8,3"/>
+                </WrapPanel>
+            </Expander>
+        </StackPanel>
 
         <!-- 数据表格 -->
         <DataGrid Grid.Row="1" 
@@ -52,6 +64,7 @@
                   AutoGenerateColumns="False" 
                   IsReadOnly="True"
                   CanUserSortColumns="True"
+                  HorizontalScrollBarVisibility="Auto"
                   SelectionMode="Single"
                   GridLinesVisibility="Horizontal"
                   AlternatingRowBackground="#F5F5F5"
@@ -59,22 +72,22 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="{lex:Loc ExecutedAt}" 
                                     Binding="{Binding ExecutedAt, StringFormat=yyyy-MM-dd HH:mm:ss}" 
-                                    Width="150" SortMemberPath="ExecutedAt"/>
+                                    Width="auto" SortMemberPath="ExecutedAt"/>
                 <DataGridTextColumn Header="{lex:Loc StepFileName}" 
                                     Binding="{Binding StepFileName}" 
-                                    Width="120" SortMemberPath="StepFileName"/>
+                                    Width="auto" SortMemberPath="StepFileName"/>
                 <DataGridTextColumn Header="{lex:Loc StepName}" 
                                     Binding="{Binding StepName}" 
-                                    Width="120" SortMemberPath="StepName"/>
+                                    Width="auto" SortMemberPath="StepName"/>
                 <DataGridTextColumn Header="UID" 
                                     Binding="{Binding StepUid}" 
-                                    Width="80" SortMemberPath="StepUid"/>
+                                    Width="auto" SortMemberPath="StepUid"/>
                 <DataGridTextColumn Header="{lex:Loc InputText}" 
                                     Binding="{Binding InputText}" 
-                                    Width="*" SortMemberPath="InputText"/>
+                                    Width="auto" SortMemberPath="InputText"/>
                 <DataGridTextColumn Header="{lex:Loc OCRText}" 
                                     Binding="{Binding OCRText}" 
-                                    Width="150" SortMemberPath="OCRText"/>
+                                    Width="auto" SortMemberPath="OCRText"/>
             </DataGrid.Columns>
         </DataGrid>
 

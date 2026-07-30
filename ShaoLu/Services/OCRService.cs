@@ -15,6 +15,38 @@ namespace ShaoLu.Services
         private static Engine _ocr;
         private static readonly object _lock = new object();
 
+        // 缓存 DPI 缩放因子，避免从后台线程访问 WPF 对象
+        // 在应用启动时（UI 线程）设置一次，之后仅读取，无竞态风险
+        private static double _cachedDpiX = 1.0;
+        private static double _cachedDpiY = 1.0;
+
+        /// <summary>缓存的 X 方向 DPI 缩放因子</summary>
+        public static double CachedDpiX => _cachedDpiX;
+        /// <summary>缓存的 Y 方向 DPI 缩放因子</summary>
+        public static double CachedDpiY => _cachedDpiY;
+
+        /// <summary>
+        /// 在 UI 线程上更新 DPI 缓存（应在主窗口加载后调用）
+        /// </summary>
+        public static void UpdateDpi()
+        {
+            try
+            {
+                var mainWindow = System.Windows.Application.Current?.MainWindow;
+                if (mainWindow != null)
+                {
+                    var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(mainWindow);
+                    _cachedDpiX = dpi.DpiScaleX;
+                    _cachedDpiY = dpi.DpiScaleY;
+                    logger.Info("DPI cache updated: X={0}, Y={1}", _cachedDpiX, _cachedDpiY);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to update DPI cache, using default 1.0");
+            }
+        }
+
         /// <summary>
         /// 初始化 OCR 引擎（懒加载，首次调用时初始化）
         /// </summary>
@@ -86,15 +118,9 @@ namespace ShaoLu.Services
 
             try
             {
-                // 获取 DPI 缩放因子，将逻辑像素转换为物理像素
-                double dpiScaleX = 1.0, dpiScaleY = 1.0;
-                var mainWindow = System.Windows.Application.Current?.MainWindow;
-                if (mainWindow != null)
-                {
-                    var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(mainWindow);
-                    dpiScaleX = dpi.DpiScaleX;
-                    dpiScaleY = dpi.DpiScaleY;
-                }
+                // 使用缓存的 DPI 缩放因子，将逻辑像素转换为物理像素
+                double dpiScaleX = _cachedDpiX;
+                double dpiScaleY = _cachedDpiY;
 
                 int x = (int)(region.X * dpiScaleX);
                 int y = (int)(region.Y * dpiScaleY);

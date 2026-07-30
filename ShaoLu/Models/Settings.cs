@@ -43,6 +43,11 @@ namespace ShaoLu.Models
         public bool ConfirmBeforeRun { get; set; } = false;
 
         /// <summary>
+        /// 执行 OCR 时是否在屏幕上标示识别区域
+        /// </summary>
+        public bool ShowOCRRegionOnRun { get; set; } = true;
+
+        /// <summary>
         /// 新建图像步骤的默认相似度阈值
         /// </summary>
         public double DefaultSimilarityThreshold { get; set; } = 0.85;

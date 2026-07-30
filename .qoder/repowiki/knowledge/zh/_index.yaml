@@ -1,0 +1,42 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: master
+nodes_managed: true
+exported_at: "2026-07-30T10:16:27Z"
+modules:
+    "":
+        dir_name: ShaoLu 自动化烧录解决方案
+        title: ShaoLu 自动化烧录解决方案
+        scope:
+            - Readme.md
+            - .gitignore
+            - .gitattributes
+            - ShaoLu.slnx
+            - review_diff.txt
+        source_files: []
+        children:
+            - nunit_tests
+            - shaolu_app
+        depends_on: []
+        related_to: []
+    nunit_tests:
+        dir_name: ShaoLu 项目 NUnit 单元测试集
+        title: ShaoLu 项目 NUnit 单元测试集
+        scope:
+            - NUnitTest/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: shaolu_app
+    shaolu_app:
+        dir_name: AutoShaoLu 自动化烧录 WPF 客户端
+        title: AutoShaoLu 自动化烧录 WPF 客户端
+        scope:
+            - ShaoLu/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: nunit_tests

@@ -63,8 +63,8 @@ namespace NUnitTest
                     TextToType = "Hello World",
                     DelayBetweenKeys = 0.1,
                     WaitTime = 0.5,
-                    TrueGoto = 3,
-                    FalseGoto = 5,
+                    TrueGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000003"),
+                    FalseGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000005"),
                     IsNeed = false,
                     EnableLog = true
                 };
@@ -76,8 +76,8 @@ namespace NUnitTest
                 Assert.That(clone.TextToType, Is.EqualTo("Hello World"));
                 Assert.That(clone.DelayBetweenKeys, Is.EqualTo(0.1));
                 Assert.That(clone.WaitTime, Is.EqualTo(0.5));
-                Assert.That(clone.TrueGoto, Is.EqualTo(3));
-                Assert.That(clone.FalseGoto, Is.EqualTo(5));
+                Assert.That(clone.TrueGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000003")));
+                Assert.That(clone.FalseGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000005")));
                 Assert.That(clone.IsNeed, Is.False);
                 Assert.That(clone.EnableLog, Is.True);
                 Assert.That(clone.Type, Is.EqualTo(StepType.TypeText));
@@ -154,8 +154,8 @@ namespace NUnitTest
                     ReloadText = true,
                     WaitTime = 1.0,
                     DelayBetweenKeys = 0.02,
-                    TrueGoto = 2,
-                    FalseGoto = 4,
+                    TrueGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000002"),
+                    FalseGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000004"),
                     IsNeed = false,
                     EnableLog = true
                 };
@@ -172,8 +172,8 @@ namespace NUnitTest
                 Assert.That(clone.ReloadText, Is.True);
                 Assert.That(clone.WaitTime, Is.EqualTo(1.0));
                 Assert.That(clone.DelayBetweenKeys, Is.EqualTo(0.02));
-                Assert.That(clone.TrueGoto, Is.EqualTo(2));
-                Assert.That(clone.FalseGoto, Is.EqualTo(4));
+                Assert.That(clone.TrueGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000002")));
+                Assert.That(clone.FalseGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000004")));
                 Assert.That(clone.IsNeed, Is.False);
                 Assert.That(clone.EnableLog, Is.True);
             }
@@ -222,8 +222,8 @@ namespace NUnitTest
                 var original = new EmptyStep("Empty", "Desc")
                 {
                     WaitTime = 2.0,
-                    TrueGoto = 1,
-                    FalseGoto = 2,
+                    TrueGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                    FalseGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000002"),
                     IsNeed = false
                 };
 
@@ -232,8 +232,8 @@ namespace NUnitTest
                 Assert.That(clone.Name, Is.EqualTo("Empty"));
                 Assert.That(clone.Description, Is.EqualTo("Desc"));
                 Assert.That(clone.WaitTime, Is.EqualTo(2.0));
-                Assert.That(clone.TrueGoto, Is.EqualTo(1));
-                Assert.That(clone.FalseGoto, Is.EqualTo(2));
+                Assert.That(clone.TrueGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000001")));
+                Assert.That(clone.FalseGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000002")));
                 Assert.That(clone.IsNeed, Is.False);
                 Assert.That(clone.IsTrue, Is.True);
             }
@@ -283,8 +283,8 @@ namespace NUnitTest
                     PopupType = "Warning",
                     WaitTime = 0.5,
                     IsNeed = true,
-                    TrueGoto = 10,
-                    FalseGoto = 20
+                    TrueGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000010"),
+                    FalseGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000020")
                 };
 
                 var clone = (PopupStep)original.Clone();
@@ -295,8 +295,8 @@ namespace NUnitTest
                 Assert.That(clone.PopupType, Is.EqualTo("Warning"));
                 Assert.That(clone.WaitTime, Is.EqualTo(0.5));
                 Assert.That(clone.IsNeed, Is.True);
-                Assert.That(clone.TrueGoto, Is.EqualTo(10));
-                Assert.That(clone.FalseGoto, Is.EqualTo(20));
+                Assert.That(clone.TrueGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000010")));
+                Assert.That(clone.FalseGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000020")));
             }
         }
 

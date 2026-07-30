@@ -12,6 +12,57 @@
     <conv:ConditionEnumToStringConverter x:Key="ConditionEnumToString"/>
     <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
+    <!-- 通用 Goto 跳转设置面板 -->
+    <DataTemplate x:Key="GotoPanelTemplate">
+        <GroupBox Header="{lex:Loc GotoPanel}" Margin="0,10,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label Content="{lex:Loc StepTrueGoto}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ComboBox Grid.Column="1" 
+                          ItemsSource="{Binding AllSteps}"
+                          SelectedValue="{Binding TrueGotoUid, TargetNullValue={x:Static sys:Guid.Empty}}"
+                          SelectedValuePath="Uid"
+                          IsEditable="False"
+                          MinWidth="120">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text=" - "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Label Grid.Row="2" Content="{lex:Loc StepFalseGoto}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ComboBox Grid.Row="2" Grid.Column="1" 
+                          ItemsSource="{Binding AllSteps}"
+                          SelectedValue="{Binding FalseGotoUid, TargetNullValue={x:Static sys:Guid.Empty}}"
+                          SelectedValuePath="Uid"
+                          IsEditable="False"
+                          MinWidth="120">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text=" - "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+        </GroupBox>
+    </DataTemplate>
+
     <!-- 通用条件判断面板 -->
     <DataTemplate x:Key="ConditionPanelTemplate">
         <GroupBox Header="{lex:Loc ConditionPanel}" Margin="0,10,0,0">
@@ -44,29 +95,31 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <!-- 第一行：变量 + 行号 -->
-                                        <ComboBox SelectedItem="{Binding Variable}" Margin="0,0,3,3">
+                                        <!-- 第一行：引用步骤 + 变量 -->
+                                        <ComboBox ItemsSource="{Binding AllSteps}"
+                                                  SelectedValue="{Binding StepUid}"
+                                                  SelectedValuePath="Uid"
+                                                  MinWidth="80" Margin="0,0,3,3"
+                                                  ToolTip="{lex:Loc Condition_StepRef_Tooltip}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock>
+                                                        <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                                        <Run Text="-"/>
+                                                        <Run Text="{Binding Name, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <ComboBox Grid.Column="1" 
+                                                  ItemsSource="{Binding AvailableVariables}"
+                                                  SelectedItem="{Binding Variable}" Margin="0,0,0,3">
                                             <ComboBox.ItemTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
                                                 </DataTemplate>
                                             </ComboBox.ItemTemplate>
-                                            <models:ConditionVariable>ConstantTrue</models:ConditionVariable>
-                                            <models:ConditionVariable>ConstantFalse</models:ConditionVariable>
-                                            <models:ConditionVariable>Self_IsTrue</models:ConditionVariable>
-                                            <models:ConditionVariable>Self_Similarity</models:ConditionVariable>
-                                            <models:ConditionVariable>Self_ExecutionTimeMs</models:ConditionVariable>
-                                            <models:ConditionVariable>Self_ClickX</models:ConditionVariable>
-                                            <models:ConditionVariable>Self_ClickY</models:ConditionVariable>
-                                            <models:ConditionVariable>Self_OCRText</models:ConditionVariable>
-                                            <models:ConditionVariable>Step_IsTrue</models:ConditionVariable>
-                                            <models:ConditionVariable>Step_Similarity</models:ConditionVariable>
-                                            <models:ConditionVariable>Step_ExecutionTimeMs</models:ConditionVariable>
-                                            <models:ConditionVariable>Step_ClickX</models:ConditionVariable>
-                                            <models:ConditionVariable>Step_ClickY</models:ConditionVariable>
-                                            <models:ConditionVariable>Step_OCRText</models:ConditionVariable>
                                         </ComboBox>
-                                        <wd:NumericBox Grid.Column="1" Value="{Binding StepLineNo}" MinWidth="35" Minimum="0" Margin="0,0,0,3" ToolTip="{lex:Loc Condition_StepLineNo_Tooltip}"/>
                                         <!-- 第二行：运算符 + 值 + 连接符 -->
                                         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal">
                                             <ComboBox SelectedItem="{Binding Operator}" MinWidth="70" Margin="0,0,3,0">
@@ -170,6 +223,7 @@
                     Interval="0.1"/>
                 </StackPanel>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
@@ -229,6 +283,7 @@
                 <TextBlock Text="{lex:Loc FindImage_OCR_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"/>
             </StackPanel>
 
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
@@ -294,6 +349,7 @@
                     Interval="0.1"/>
                 </StackPanel>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
@@ -356,6 +412,7 @@
                     <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
                 </StackPanel>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
@@ -376,6 +433,7 @@
                 <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
@@ -422,6 +480,7 @@
                 <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding TextToType}"/>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
@@ -452,7 +511,7 @@
                     <ListBox ItemsSource="{Binding Contents}" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBox Text="{Binding .,Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
+                                <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                         <ListBox.ItemsPanel>
@@ -463,6 +522,7 @@
                     </ListBox>
                 </StackPanel>
             </GroupBox>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
@@ -479,14 +539,15 @@
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc PopupText}" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
+                         MinWidth="200" MinHeight="60"
+                         AcceptsReturn="True" AcceptsTab="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         Margin="0,0,10,5"/>
                 <StackPanel Orientation="Horizontal">
-                    <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
-                               MinWidth="150"
-                               Margin="0,0,10,0"
-                               VerticalAlignment="Center"/>
-                               
-                    <Button Content="{lex:Loc Font}" Command="{Binding FontSelectCommand}" Margin="3,0,0,0"/>
-                    <Button Content="{lex:Loc Color}" Command="{Binding ColorSelectCommand}" Margin="3,0,0,0"/>
+                    <Button Content="{lex:Loc Font}" Command="{Binding FontSelectCommand}" Margin="0,0,5,0" Padding="10,3"/>
+                    <Button Content="{lex:Loc Color}" Command="{Binding ColorSelectCommand}" Padding="10,3"/>
                 </StackPanel>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">
@@ -565,6 +626,7 @@
                     </ListBox>
                 </Grid>
             </GroupBox>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
@@ -591,6 +653,7 @@
                 <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>

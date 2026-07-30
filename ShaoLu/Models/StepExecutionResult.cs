@@ -33,6 +33,11 @@ namespace ShaoLu.Models
         public string OCRText { get; set; }
 
         /// <summary>
+        /// 弹出框用户选择的按钮值
+        /// </summary>
+        public string PopupResult { get; set; }
+
+        /// <summary>
         /// 错误信息
         /// </summary>
         public string ErrorMessage { get; set; }

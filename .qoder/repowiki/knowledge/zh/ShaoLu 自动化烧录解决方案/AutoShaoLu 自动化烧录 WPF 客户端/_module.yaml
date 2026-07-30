@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: shaolu_app
+title: AutoShaoLu 自动化烧录 WPF 客户端
+scope:
+    - ShaoLu/
+source_files: []
+depends_on: []
+related_to:
+    - path: nunit_tests

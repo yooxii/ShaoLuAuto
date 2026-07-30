@@ -1,4 +1,5 @@
 using ShaoLu.Models;
+using System;
 using System.Collections.Generic;
 
 namespace ShaoLu.Services
@@ -9,6 +10,7 @@ namespace ShaoLu.Services
     public class StepExecutionContext
     {
         private readonly Dictionary<int, StepExecutionResult> _results = new();
+        private readonly Dictionary<Guid, StepExecutionResult> _resultsByUid = new();
 
         /// <summary>
         /// 设置指定行号步骤的执行结果
@@ -16,6 +18,14 @@ namespace ShaoLu.Services
         public void SetResult(int lineNo, StepExecutionResult result)
         {
             _results[lineNo] = result;
+        }
+
+        /// <summary>
+        /// 设置指定 Uid 步骤的执行结果
+        /// </summary>
+        public void SetResultByUid(Guid uid, StepExecutionResult result)
+        {
+            _resultsByUid[uid] = result;
         }
 
         /// <summary>
@@ -27,21 +37,31 @@ namespace ShaoLu.Services
         }
 
         /// <summary>
+        /// 根据 Uid 获取步骤执行结果
+        /// </summary>
+        public StepExecutionResult GetResultByUid(Guid? uid)
+        {
+            if (!uid.HasValue) return null;
+            return _resultsByUid.TryGetValue(uid.Value, out var result) ? result : null;
+        }
+
+        /// <summary>
         /// 清空所有结果（每次运行前调用）
         /// </summary>
         public void Clear()
         {
             _results.Clear();
+            _resultsByUid.Clear();
         }
 
         /// <summary>
         /// 解析条件变量的实际值
         /// </summary>
         /// <param name="variable">条件变量类型</param>
-        /// <param name="stepLineNo">引用的步骤行号（当变量为 Step_* 时使用）</param>
+        /// <param name="stepUid">引用的步骤 Uid（当变量为 Step_* 时使用）</param>
         /// <param name="currentResult">当前步骤的执行结果</param>
         /// <returns>变量的实际值</returns>
-        public object ResolveVariable(ConditionVariable variable, int stepLineNo, StepExecutionResult currentResult)
+        public object ResolveVariable(ConditionVariable variable, Guid? stepUid, StepExecutionResult currentResult)
         {
             switch (variable)
             {
@@ -64,20 +84,24 @@ namespace ShaoLu.Services
                     return currentResult?.ClickPosition?.Y ?? 0;
                 case ConditionVariable.Self_OCRText:
                     return currentResult?.OCRText ?? string.Empty;
+                case ConditionVariable.Self_PopupResult:
+                    return currentResult?.PopupResult ?? string.Empty;
 
-                // 引用其他步骤
+                // 引用其他步骤（通过 Uid 查找）
                 case ConditionVariable.Step_IsTrue:
-                    return GetResult(stepLineNo)?.IsTrue ?? false;
+                    return GetResultByUid(stepUid)?.IsTrue ?? false;
                 case ConditionVariable.Step_Similarity:
-                    return GetResult(stepLineNo)?.Similarity ?? -1;
+                    return GetResultByUid(stepUid)?.Similarity ?? -1;
                 case ConditionVariable.Step_ExecutionTimeMs:
-                    return GetResult(stepLineNo)?.ExecutionTimeMs ?? 0;
+                    return GetResultByUid(stepUid)?.ExecutionTimeMs ?? 0;
                 case ConditionVariable.Step_ClickX:
-                    return GetResult(stepLineNo)?.ClickPosition?.X ?? 0;
+                    return GetResultByUid(stepUid)?.ClickPosition?.X ?? 0;
                 case ConditionVariable.Step_ClickY:
-                    return GetResult(stepLineNo)?.ClickPosition?.Y ?? 0;
+                    return GetResultByUid(stepUid)?.ClickPosition?.Y ?? 0;
                 case ConditionVariable.Step_OCRText:
-                    return GetResult(stepLineNo)?.OCRText ?? string.Empty;
+                    return GetResultByUid(stepUid)?.OCRText ?? string.Empty;
+                case ConditionVariable.Step_PopupResult:
+                    return GetResultByUid(stepUid)?.PopupResult ?? string.Empty;
 
                 default:
                     return null;

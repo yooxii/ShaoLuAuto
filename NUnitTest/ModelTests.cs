@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using ShaoLu.Models;
+using System;
 
 namespace NUnitTest
 {
@@ -20,7 +21,7 @@ namespace NUnitTest
                 var condition = new StepCondition();
 
                 Assert.That(condition.Variable, Is.EqualTo(ConditionVariable.Self_IsTrue));
-                Assert.That(condition.StepLineNo, Is.EqualTo(0));
+                Assert.That(condition.StepUid, Is.Null);
                 Assert.That(condition.Operator, Is.EqualTo(ConditionOperator.Equal));
                 Assert.That(condition.Value, Is.EqualTo(string.Empty));
                 Assert.That(condition.Connector, Is.EqualTo(LogicConnector.And));
@@ -32,7 +33,7 @@ namespace NUnitTest
                 var original = new StepCondition
                 {
                     Variable = ConditionVariable.Step_Similarity,
-                    StepLineNo = 5,
+                    StepUid = Guid.Parse("00000000-0000-0000-0000-000000000005"),
                     Operator = ConditionOperator.GreaterThan,
                     Value = "0.8",
                     Connector = LogicConnector.Or
@@ -41,7 +42,7 @@ namespace NUnitTest
                 var clone = original.Clone();
 
                 Assert.That(clone.Variable, Is.EqualTo(ConditionVariable.Step_Similarity));
-                Assert.That(clone.StepLineNo, Is.EqualTo(5));
+                Assert.That(clone.StepUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000005")));
                 Assert.That(clone.Operator, Is.EqualTo(ConditionOperator.GreaterThan));
                 Assert.That(clone.Value, Is.EqualTo("0.8"));
                 Assert.That(clone.Connector, Is.EqualTo(LogicConnector.Or));

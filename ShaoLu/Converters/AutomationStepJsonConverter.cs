@@ -1,6 +1,7 @@
 ﻿using ShaoLu.Models;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
+using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -12,6 +13,22 @@ namespace ShaoLu.Converters
     /// </summary>
     public class AutomationStepBaseJsonConverter : JsonConverter<AutomationStepBase>
     {
+        /// <summary>
+        /// 存储旧格式（int 行号）的 Goto 值，待反序列化完成后解析为 Uid
+        /// Key: 步骤 Uid, Value: (TrueGotoLineNo, FalseGotoLineNo)
+        /// </summary>
+        [ThreadStatic]
+        private static ConcurrentDictionary<Guid, (int TrueGoto, int FalseGoto)> _pendingGotoResolution;
+
+        /// <summary>
+        /// 获取并清空待解析的 Goto 映射（由 StepsFile 在反序列化后调用）
+        /// </summary>
+        public static ConcurrentDictionary<Guid, (int TrueGoto, int FalseGoto)> TakePendingGotoResolution()
+        {
+            var result = _pendingGotoResolution ?? new ConcurrentDictionary<Guid, (int, int)>();
+            _pendingGotoResolution = null;
+            return result;
+        }
         public override AutomationStepBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             // 1. 读取 JSON 为 JsonDocument 以便多次解析
@@ -85,12 +102,59 @@ namespace ShaoLu.Converters
             };
 
             // 5. 将 JsonElement 重新转换为具体的对象
-            var jsonText = root.GetRawText();
+            // 处理旧格式兼容：TrueGoto/FalseGoto 可能是 int（旧版行号）
+            int oldTrueGoto = 0, oldFalseGoto = 0;
+            string jsonText;
+            if (root.TryGetProperty("TrueGoto", out var tgProp) && tgProp.ValueKind == JsonValueKind.Number)
+            {
+                oldTrueGoto = tgProp.GetInt32();
+            }
+            if (root.TryGetProperty("FalseGoto", out var fgProp) && fgProp.ValueKind == JsonValueKind.Number)
+            {
+                oldFalseGoto = fgProp.GetInt32();
+            }
 
-            // 注意：为了防止递归调用当前转换器，最好使用一个不包含当前转换器的 options
-            // 但如果 concreteType 是具体子类且没有注册全局转换器，直接传 options 通常也是安全的
-            // 为了更稳健，可以克隆 options 并移除当前转换器（如果需要）
+            if (oldTrueGoto > 0 || oldFalseGoto > 0)
+            {
+                // 移除数字类型的 TrueGoto/FalseGoto，避免 Guid? 反序列化失败
+                using var modifiedDoc = JsonDocument.Parse(RemoveNumericGotoFields(root.GetRawText()));
+                jsonText = modifiedDoc.RootElement.GetRawText();
+
+                // 记录待解析的行号，等反序列化完成后统一处理
+                if (root.TryGetProperty("Uid", out var uidProp) && uidProp.ValueKind == JsonValueKind.String)
+                {
+                    var stepUid = Guid.Parse(uidProp.GetString());
+                    _pendingGotoResolution ??= new ConcurrentDictionary<Guid, (int, int)>();
+                    _pendingGotoResolution[stepUid] = (oldTrueGoto, oldFalseGoto);
+                }
+            }
+            else
+            {
+                jsonText = root.GetRawText();
+            }
+
             return (AutomationStepBase)JsonSerializer.Deserialize(jsonText, concreteType, options);
+        }
+
+        /// <summary>
+        /// 移除 JSON 中数字类型的 TrueGoto/FalseGoto 字段
+        /// </summary>
+        private static string RemoveNumericGotoFields(string json)
+        {
+            using var doc = JsonDocument.Parse(json);
+            using var ms = new System.IO.MemoryStream();
+            using (var writer = new Utf8JsonWriter(ms))
+            {
+                writer.WriteStartObject();
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    if ((prop.Name == "TrueGoto" || prop.Name == "FalseGoto") && prop.Value.ValueKind == JsonValueKind.Number)
+                        continue; // 跳过数字类型的 Goto 字段
+                    prop.WriteTo(writer);
+                }
+                writer.WriteEndObject();
+            }
+            return System.Text.Encoding.UTF8.GetString(ms.ToArray());
         }
 
         public override void Write(Utf8JsonWriter writer, AutomationStepBase value, JsonSerializerOptions options)

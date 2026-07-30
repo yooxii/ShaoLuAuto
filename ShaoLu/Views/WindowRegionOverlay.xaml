@@ -1,0 +1,15 @@
+<Window x:Class="ShaoLu.Views.WindowRegionOverlay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        IsHitTestVisible="False">
+    <Border x:Name="RegionBorder" 
+            BorderBrush="#00CC00" 
+            BorderThickness="2" 
+            Background="#2200CC00"
+            CornerRadius="2"/>
+</Window>

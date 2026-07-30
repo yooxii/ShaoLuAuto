@@ -506,14 +506,15 @@ namespace NUnitTest
         [Test]
         public void Evaluate_StepReference_IsTrue()
         {
-            _context.SetResult(5, new StepExecutionResult { IsTrue = true });
+            var uid = System.Guid.Parse("00000000-0000-0000-0000-000000000005");
+            _context.SetResultByUid(uid, new StepExecutionResult { IsTrue = true });
 
             var conditions = new List<StepCondition>
             {
                 new StepCondition
                 {
                     Variable = ConditionVariable.Step_IsTrue,
-                    StepLineNo = 5,
+                    StepUid = uid,
                     Operator = ConditionOperator.Equal,
                     Value = "true"
                 }
@@ -525,14 +526,15 @@ namespace NUnitTest
         [Test]
         public void Evaluate_StepReference_Similarity()
         {
-            _context.SetResult(3, new StepExecutionResult { Similarity = 0.88 });
+            var uid = System.Guid.Parse("00000000-0000-0000-0000-000000000003");
+            _context.SetResultByUid(uid, new StepExecutionResult { Similarity = 0.88 });
 
             var conditions = new List<StepCondition>
             {
                 new StepCondition
                 {
                     Variable = ConditionVariable.Step_Similarity,
-                    StepLineNo = 3,
+                    StepUid = uid,
                     Operator = ConditionOperator.GreaterThan,
                     Value = "0.8"
                 }
@@ -549,9 +551,9 @@ namespace NUnitTest
                 new StepCondition
                 {
                     Variable = ConditionVariable.Step_IsTrue,
-                    StepLineNo = 99,  // 不存在的步骤
+                    StepUid = System.Guid.Parse("00000000-0000-0000-0000-000000000099"),
                     Operator = ConditionOperator.Equal,
-                    Value = "false"  // 默认值为 false
+                    Value = "false"
                 }
             };
             var result = ConditionEvaluator.Evaluate(conditions, _context, _currentResult);
@@ -572,7 +574,7 @@ namespace NUnitTest
                 new StepCondition
                 {
                     Variable = ConditionVariable.Step_OCRText,
-                    StepLineNo = 999,
+                    StepUid = System.Guid.Parse("00000000-0000-0000-0000-000000000999"),
                     Operator = ConditionOperator.IsNotEmpty
                 }
             };

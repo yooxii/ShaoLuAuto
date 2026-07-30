@@ -361,8 +361,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var res = new ClickImageStep(Name, Description)
             {
                 Type = Type,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 ImagePath = ImagePath,
                 CroppedImg = clonedImg,
@@ -490,8 +490,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var res = new FindImageStep(Name, Description)
             {
                 Type = Type,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 ImagePath = ImagePath,
                 CroppedImg = clonedImg,
@@ -530,12 +530,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
             string ocrText = null;
             if (EnableOCR && IsTrue && !OCRRect.IsEmpty && OCRRect.Width > 0 && OCRRect.Height > 0)
             {
-                // 计算 OCR 区域在屏幕上的绝对坐标
-                // res.LeftTop 是找到的图片在屏幕上的左上角坐标
+                // res.LeftTop 是物理像素坐标（来自 OpenCV 模板匹配），需除以 DPI 缩放转为逻辑像素
                 // OCRRect 是相对于原图的坐标，需减去 CroppedRect 偏移得到相对于裁剪图的坐标
-                double ocrScreenX = res.LeftTop.X + (OCRRect.X - CroppedRect.X);
-                double ocrScreenY = res.LeftTop.Y + (OCRRect.Y - CroppedRect.Y);
-                var screenRegion = new Rect(ocrScreenX, ocrScreenY, OCRRect.Width, OCRRect.Height);
+                double dpiX = Services.OCRService.CachedDpiX;
+                double dpiY = Services.OCRService.CachedDpiY;
+                double ocrScreenX = res.LeftTop.X / dpiX + (OCRRect.X - CroppedRect.X);
+                double ocrScreenY = res.LeftTop.Y / dpiY + (OCRRect.Y - CroppedRect.Y);
+                var screenRegion = new Rect(ocrScreenX, ocrScreenY, OCRRect.Width / dpiX, OCRRect.Height / dpiY);
+
+                // 如果设置开启，在屏幕上标示 OCR 区域
+                if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
+                {
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                        Views.WindowRegionOverlay.ShowRegion(screenRegion, 2.0));
+                }
 
                 ocrText = await Task.Run(() => Services.OCRService.RecognizeRegion(screenRegion), cancellationToken);
                 OCRResultPreview = string.IsNullOrWhiteSpace(ocrText)
@@ -551,15 +559,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ClickPosition = res.IsEmpty ? null : res.Center,
                 OCRText = ocrText,
             };
-
-            // 日志记录
-            if (EnableLog)
-            {
-                string fileName = System.IO.Path.GetFileNameWithoutExtension(
-                    Utils.SingletonLocator.Main.StepFilePath ?? "unsaved");
-                string logContent = ocrText ?? (IsTrue ? "Found" : "Not Found");
-                Services.ExecutionLogService.Log(Uid, fileName, Name, logContent, ocrText);
-            }
 
             return IsTrue;
         }

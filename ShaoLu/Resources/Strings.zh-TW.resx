@@ -463,7 +463,7 @@
     <value>記錄執行日誌</value>
   </data>
   <data name="ExecutionLog" xml:space="preserve">
-    <value>執行日誌</value>
+    <value>執行記錄</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>搜尋</value>
@@ -478,7 +478,7 @@
     <value>步驟名稱</value>
   </data>
   <data name="InputText" xml:space="preserve">
-    <value>輸入內容</value>
+    <value>執行結果</value>
   </data>
   <data name="ExecutedAt" xml:space="preserve">
     <value>執行時間</value>
@@ -689,6 +689,9 @@
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>條件判斷</value>
+  </data>
+  <data name="GotoPanel" xml:space="preserve">
+    <value>跳轉設置</value>
   </data>
   <data name="ConditionMode" xml:space="preserve">
     <value>模式</value>

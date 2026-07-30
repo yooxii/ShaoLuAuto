@@ -44,8 +44,8 @@ namespace NUnitTest
                     TextToType = "Hello World",
                     DelayBetweenKeys = 0.08,
                     WaitTime = 0.5,
-                    TrueGoto = 2,
-                    FalseGoto = 3,
+                    TrueGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000002"),
+                    FalseGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000003"),
                     IsNeed = true
                 }
             };
@@ -65,8 +65,8 @@ namespace NUnitTest
             Assert.That(loadedStep.TextToType, Is.EqualTo("Hello World"));
             Assert.That(loadedStep.DelayBetweenKeys, Is.EqualTo(0.08));
             Assert.That(loadedStep.WaitTime, Is.EqualTo(0.5));
-            Assert.That(loadedStep.TrueGoto, Is.EqualTo(2));
-            Assert.That(loadedStep.FalseGoto, Is.EqualTo(3));
+            Assert.That(loadedStep.TrueGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000002")));
+            Assert.That(loadedStep.FalseGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000003")));
             Assert.That(loadedStep.IsNeed, Is.True);
             Assert.That(loadedStep.Type, Is.EqualTo(StepType.TypeText));
         }
@@ -121,8 +121,8 @@ namespace NUnitTest
                     PopupText = "确认继续？",
                     PopupType = "Question",
                     WaitTime = 1.0,
-                    TrueGoto = 5,
-                    FalseGoto = 10
+                    TrueGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000005"),
+                    FalseGotoUid = Guid.Parse("00000000-0000-0000-0000-000000000010")
                 }
             };
 
@@ -137,8 +137,8 @@ namespace NUnitTest
             Assert.That(popup.Title, Is.EqualTo("提示"));
             Assert.That(popup.PopupText, Is.EqualTo("确认继续？"));
             Assert.That(popup.PopupType, Is.EqualTo("Question"));
-            Assert.That(popup.TrueGoto, Is.EqualTo(5));
-            Assert.That(popup.FalseGoto, Is.EqualTo(10));
+            Assert.That(popup.TrueGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000005")));
+            Assert.That(popup.FalseGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000010")));
         }
 
         [Test]

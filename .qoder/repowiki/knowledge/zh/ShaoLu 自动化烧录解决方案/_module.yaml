@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: ""
+title: ShaoLu 自动化烧录解决方案
+scope:
+    - Readme.md
+    - .gitignore
+    - .gitattributes
+    - ShaoLu.slnx
+    - review_diff.txt
+source_files: []
+depends_on: []
+related_to: []

@@ -463,16 +463,22 @@
     <value>记录执行日志</value>
   </data>
   <data name="ExecutionLog" xml:space="preserve">
-    <value>执行日志</value>
+    <value>执行记录</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>搜索</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>筛选</value>
+  </data>
+  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
+    <value>选择要引用的步骤（当变量为“引用步骤”类型时使用）</value>
   </data>
   <data name="StepFileName" xml:space="preserve">
     <value>步骤文件</value>
   </data>
   <data name="InputText" xml:space="preserve">
-    <value>输入内容</value>
+    <value>执行结果</value>
   </data>
   <data name="ExecutedAt" xml:space="preserve">
     <value>执行时间</value>
@@ -663,6 +669,9 @@
   <data name="Msg_ConfirmDeleteSteps" xml:space="preserve">
     <value>确定删除所选步骤吗？</value>
   </data>
+  <data name="Msg_DeleteReferenced" xml:space="preserve">
+    <value>以下步骤引用了待删除的步骤，删除后引用将被清空：</value>
+  </data>
   <data name="DeleteStepTitle" xml:space="preserve">
     <value>删除步骤</value>
   </data>
@@ -683,6 +692,9 @@
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>条件判断</value>
+  </data>
+  <data name="GotoPanel" xml:space="preserve">
+    <value>跳转设置</value>
   </data>
   <data name="ConditionMode" xml:space="preserve">
     <value>模式</value>

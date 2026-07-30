@@ -107,6 +107,9 @@ namespace ShaoLu.Utils
             if (steps == null)
                 throw new InvalidOperationException($"压缩包 '{packagePath}' 中的 steps.json 内容为空或格式无效。");
 
+            // 后处理：解析旧格式 int 行号的 TrueGoto/FalseGoto 为 Uid
+            ResolveLegacyGotoLineNumbers(steps);
+
             // 设置工作目录
             var mainVM = SingletonLocator.Main;
             mainVM.StepImageWorkDir = workDir;
@@ -208,10 +211,34 @@ namespace ShaoLu.Utils
                     throw new InvalidOperationException($"文件 '{filePath}' 内容为空或格式无效，无法反序列化为步骤列表。");
                 }
 
+                // 后处理：解析旧格式 int 行号的 TrueGoto/FalseGoto 为 Uid
+                ResolveLegacyGotoLineNumbers(steps);
+
                 return steps;
             }
         }
 
         #endregion
+
+        /// <summary>
+        /// 解析旧格式（int 行号）的 TrueGoto/FalseGoto 为步骤 Uid
+        /// </summary>
+        private static void ResolveLegacyGotoLineNumbers(ObservableCollection<AutomationStepBase> steps)
+        {
+            var pending = AutomationStepBaseJsonConverter.TakePendingGotoResolution();
+            if (pending == null || pending.IsEmpty) return;
+
+            foreach (var kvp in pending)
+            {
+                var step = steps.FirstOrDefault(s => s.Uid == kvp.Key);
+                if (step == null) continue;
+
+                var (trueGotoLine, falseGotoLine) = kvp.Value;
+                if (trueGotoLine > 0 && trueGotoLine <= steps.Count)
+                    step.TrueGotoUid = steps[trueGotoLine - 1].Uid;
+                if (falseGotoLine > 0 && falseGotoLine <= steps.Count)
+                    step.FalseGotoUid = steps[falseGotoLine - 1].Uid;
+            }
+        }
     }
 }

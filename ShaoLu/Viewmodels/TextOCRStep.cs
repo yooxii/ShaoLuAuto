@@ -90,8 +90,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 OCRRegion = new Rect(OCRRegion.X, OCRRegion.Y, OCRRegion.Width, OCRRegion.Height),
                 WaitTime = WaitTime,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
                 ConditionMode = ConditionMode,
@@ -129,14 +129,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = !string.IsNullOrWhiteSpace(text);
             IsError = false;
             ErrorType = StepErrorType.None;
-
-            // 日志记录
-            if (EnableLog)
-            {
-                string fileName = System.IO.Path.GetFileNameWithoutExtension(
-                    Utils.SingletonLocator.Main.StepFilePath ?? "unsaved");
-                ExecutionLogService.Log(Uid, fileName, Name, text ?? string.Empty, text);
-            }
 
             return IsTrue;
         }

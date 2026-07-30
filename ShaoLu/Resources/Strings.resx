@@ -463,7 +463,7 @@
     <value>Enable Execution Log</value>
   </data>
   <data name="ExecutionLog" xml:space="preserve">
-    <value>Execution Log</value>
+    <value>Execution Record</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>Search</value>
@@ -472,7 +472,7 @@
     <value>Step File</value>
   </data>
   <data name="InputText" xml:space="preserve">
-    <value>Input Text</value>
+    <value>Result</value>
   </data>
   <data name="ExecutedAt" xml:space="preserve">
     <value>Executed At</value>
@@ -683,6 +683,9 @@
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>Condition</value>
+  </data>
+  <data name="GotoPanel" xml:space="preserve">
+    <value>Jump Settings</value>
   </data>
   <data name="ConditionMode" xml:space="preserve">
     <value>Mode</value>

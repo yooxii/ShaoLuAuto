@@ -1,4 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace ShaoLu.Models
 {
@@ -34,6 +38,7 @@ namespace ShaoLu.Models
         Self_ClickX,
         Self_ClickY,
         Self_OCRText,
+        Self_PopupResult,
 
         // 引用其他步骤（通过 StepLineNo 指定）
         Step_IsTrue,
@@ -42,6 +47,7 @@ namespace ShaoLu.Models
         Step_ClickX,
         Step_ClickY,
         Step_OCRText,
+        Step_PopupResult,
     }
 
     /// <summary>
@@ -76,7 +82,7 @@ namespace ShaoLu.Models
     public class StepCondition : ObservableObject
     {
         private ConditionVariable _variable = ConditionVariable.Self_IsTrue;
-        private int _stepLineNo;
+        private Guid? _stepUid;
         private ConditionOperator _operator = ConditionOperator.Equal;
         private string _value = string.Empty;
         private LogicConnector _connector = LogicConnector.And;
@@ -87,9 +93,147 @@ namespace ShaoLu.Models
         public ConditionVariable Variable { get => _variable; set => SetProperty(ref _variable, value); }
 
         /// <summary>
-        /// 当 Variable 为 Step_* 时引用目标步骤行号
+        /// 当 Variable 为 Step_* 时引用目标步骤的 Uid
         /// </summary>
-        public int StepLineNo { get => _stepLineNo; set => SetProperty(ref _stepLineNo, value); }
+        [JsonPropertyName("StepUid")]
+        public Guid? StepUid
+        {
+            get => _stepUid;
+            set
+            {
+                if (SetProperty(ref _stepUid, value))
+                    OnPropertyChanged(nameof(AvailableVariables));
+            }
+        }
+
+        /// <summary>
+        /// 旧版行号字段（仅用于反序列化兼容，不序列化）
+        /// </summary>
+        [JsonPropertyName("StepLineNo")]
+        public int LegacyStepLineNo { get; set; }
+
+        /// <summary>
+        /// 所有步骤集合（供条件面板 ComboBox 绑定）
+        /// </summary>
+        [JsonIgnore]
+        public ObservableCollection<Viewmodels.AutomationStep.AutomationStepBase> AllSteps
+        {
+            get
+            {
+                try { return Utils.SingletonLocator.Steps.AutomationStepBases; }
+                catch { return null; }
+            }
+        }
+
+        /// <summary>
+        /// 根据选中步骤类型返回可用的条件变量列表
+        /// </summary>
+        [JsonIgnore]
+        public List<ConditionVariable> AvailableVariables
+        {
+            get
+            {
+                var stepType = ResolveStepType();
+                var vars = new List<ConditionVariable>
+                {
+                    ConditionVariable.ConstantTrue,
+                    ConditionVariable.ConstantFalse,
+                };
+
+                switch (stepType)
+                {
+                    case StepType.ClickImage:
+                    case StepType.FindImage:
+                    case StepType.ClickImages:
+                    case StepType.FindImages:
+                        vars.AddRange(new[]
+                        {
+                            ConditionVariable.Self_IsTrue,
+                            ConditionVariable.Self_Similarity,
+                            ConditionVariable.Self_ExecutionTimeMs,
+                            ConditionVariable.Self_ClickX,
+                            ConditionVariable.Self_ClickY,
+                            ConditionVariable.Self_OCRText,
+                            ConditionVariable.Self_PopupResult,
+                            ConditionVariable.Step_IsTrue,
+                            ConditionVariable.Step_Similarity,
+                            ConditionVariable.Step_ExecutionTimeMs,
+                            ConditionVariable.Step_ClickX,
+                            ConditionVariable.Step_ClickY,
+                            ConditionVariable.Step_OCRText,
+                            ConditionVariable.Step_PopupResult,
+                        });
+                        break;
+                    case StepType.Popup:
+                        vars.AddRange(new[]
+                        {
+                            ConditionVariable.Self_IsTrue,
+                            ConditionVariable.Self_PopupResult,
+                            ConditionVariable.Self_ExecutionTimeMs,
+                            ConditionVariable.Step_IsTrue,
+                            ConditionVariable.Step_PopupResult,
+                            ConditionVariable.Step_ExecutionTimeMs,
+                        });
+                        break;
+                    case StepType.TextOCR:
+                        vars.AddRange(new[]
+                        {
+                            ConditionVariable.Self_IsTrue,
+                            ConditionVariable.Self_OCRText,
+                            ConditionVariable.Self_ExecutionTimeMs,
+                            ConditionVariable.Step_IsTrue,
+                            ConditionVariable.Step_OCRText,
+                            ConditionVariable.Step_ExecutionTimeMs,
+                        });
+                        break;
+                    default: // 文本步骤及其他
+                        vars.AddRange(new[]
+                        {
+                            ConditionVariable.Self_IsTrue,
+                            ConditionVariable.Self_ExecutionTimeMs,
+                            ConditionVariable.Self_OCRText,
+                            ConditionVariable.Self_PopupResult,
+                            ConditionVariable.Step_IsTrue,
+                            ConditionVariable.Step_ExecutionTimeMs,
+                            ConditionVariable.Step_OCRText,
+                            ConditionVariable.Step_PopupResult,
+                        });
+                        break;
+                }
+                return vars;
+            }
+        }
+
+        /// <summary>
+        /// 解析当前选中步骤的类型（无选中时返回当前步骤类型）
+        /// </summary>
+        private StepType ResolveStepType()
+        {
+            if (_stepUid.HasValue && _stepUid.Value != Guid.Empty)
+            {
+                try
+                {
+                    var steps = Utils.SingletonLocator.Steps.AutomationStepBases;
+                    if (steps != null)
+                    {
+                        foreach (var s in steps)
+                        {
+                            if (s.Uid == _stepUid.Value) return s.Type;
+                        }
+                    }
+                }
+                catch { }
+            }
+            // 未选择步骤时，尝试获取当前步骤的类型
+            try
+            {
+                var steps = Utils.SingletonLocator.Steps.AutomationStepBases;
+                if (steps != null && steps.Count > 0)
+                    return steps[0].Type; // 默认返回第一个步骤类型
+            }
+            catch { }
+            return StepType.ClickImage;
+        }
 
         /// <summary>
         /// 运算符
@@ -111,7 +255,7 @@ namespace ShaoLu.Models
             return new StepCondition
             {
                 Variable = Variable,
-                StepLineNo = StepLineNo,
+                StepUid = StepUid,
                 Operator = Operator,
                 Value = Value,
                 Connector = Connector,

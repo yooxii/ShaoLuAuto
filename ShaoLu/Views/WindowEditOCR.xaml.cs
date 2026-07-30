@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Point = System.Windows.Point;
@@ -67,10 +68,24 @@ namespace ShaoLu.Views
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
 
                 var workArea = SystemParameters.WorkArea;
-                int w = (int)workArea.Width;
-                int h = (int)workArea.Height;
-                int sx = (int)workArea.X;
-                int sy = (int)workArea.Y;
+
+                // 获取 DPI 缩放因子，将逻辑像素转换为物理像素用于截图
+                double dpiX = 1.0, dpiY = 1.0;
+                if (mainWindow != null)
+                {
+                    var source = PresentationSource.FromVisual(mainWindow);
+                    if (source?.CompositionTarget != null)
+                    {
+                        dpiX = source.CompositionTarget.TransformToDevice.M11;
+                        dpiY = source.CompositionTarget.TransformToDevice.M22;
+                    }
+                }
+
+                // 截图使用物理像素
+                int w = (int)(workArea.Width * dpiX);
+                int h = (int)(workArea.Height * dpiY);
+                int sx = (int)(workArea.X * dpiX);
+                int sy = (int)(workArea.Y * dpiY);
 
                 BitmapSource screenshot;
                 using (var bmp = new Bitmap(w, h))
@@ -95,7 +110,8 @@ namespace ShaoLu.Views
                 if (result == true && !window.SelectedRegion.IsEmpty)
                 {
                     var r = window.SelectedRegion;
-                    return new Rect(r.X + sx, r.Y + sy, r.Width, r.Height);
+                    // 返回逻辑像素坐标（OCRService.RecognizeRegion 内部会乘以 DPI 缩放）
+                    return new Rect(r.X + workArea.X, r.Y + workArea.Y, r.Width, r.Height);
                 }
                 return Rect.Empty;
             }

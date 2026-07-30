@@ -129,8 +129,8 @@
                             <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
                             <DataGridTextColumn Header="{lex:Loc StepName}" Binding="{Binding Name, UpdateSourceTrigger=LostFocus}" Width="120" CanUserSort="False"/>
                             <DataGridTextColumn Header="{lex:Loc StepDescription}" Binding="{Binding Description}" Width="*" CanUserSort="False"/>
-                            <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGoto, UpdateSourceTrigger=LostFocus}" Width="*" CanUserSort="False"/>
-                            <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGoto, UpdateSourceTrigger=LostFocus}" Width="*" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepTrueGoto}" Binding="{Binding TrueGotoLineNo, Mode=OneWay}" Width="*" IsReadOnly="True" CanUserSort="False"/>
+                            <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGotoLineNo, Mode=OneWay}" Width="*" IsReadOnly="True" CanUserSort="False"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </GroupBox>

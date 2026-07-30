@@ -23,8 +23,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Description = Description,
                 Type = Type,
                 IsNeed = IsNeed,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 WaitTime = WaitTime,
                 ImagePath = ImagePath,
                 CroppedImageName = CroppedImageName,
@@ -103,8 +103,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var res = new ClickImagesStep(Name, Description)
             {
                 Type = Type,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsTrue = IsTrue,
                 IsNeed = IsNeed,
                 OneByOne = OneByOne,
@@ -181,8 +181,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var res = new FindImagesStep(Name, Description)
             {
                 Type = Type,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsTrue = IsTrue,
                 IsSave = IsSave,
                 IsNeed = IsNeed,

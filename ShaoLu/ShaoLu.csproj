@@ -141,6 +141,7 @@
     <Compile Include="Converters\SettingsTemplateSelector.cs" />
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
+    <Compile Include="Models\ContentItem.cs" />
     <Compile Include="Models\FontModel.cs" />
     <Compile Include="Models\StepCondition.cs" />
     <Compile Include="Models\StepExecutionResult.cs" />
@@ -186,6 +187,7 @@
     <Compile Include="Converters\StepTemplateSelector.cs" />
     <Compile Include="Utils\DataGridSelectedItemsBehavior.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
+    <Compile Include="Utils\RichTextHelper.cs" />
     <Compile Include="Utils\StepsFile.cs" />
     <Compile Include="Utils\SingletonLocator.cs" />
     <Compile Include="Viewmodels\AutomationStep.cs" />
@@ -220,6 +222,9 @@
     </Compile>
     <Compile Include="Views\WindowExecutionLog.xaml.cs">
       <DependentUpon>WindowExecutionLog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowRegionOverlay.xaml.cs">
+      <DependentUpon>WindowRegionOverlay.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowLogin.xaml.cs">
       <DependentUpon>WindowLogin.xaml</DependentUpon>
@@ -295,6 +300,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\WindowRegionOverlay.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\WindowLogin.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -350,6 +359,33 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="ShaoLu_TemporaryKey.pfx" />
+    <None Include="tessdata\chi_sim.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tessdata\chi_sim_vert.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tessdata\chi_tra.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tessdata\chi_tra_vert.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tessdata\eng.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tessdata\enm.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tessdata\jav.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tessdata\jpn.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tessdata\jpn_vert.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

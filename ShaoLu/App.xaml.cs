@@ -56,6 +56,9 @@ namespace ShaoLu
                 var mainWindow = new MainWindow();
                 MainWindow = mainWindow;
                 mainWindow.Show();
+
+                // 5. 缓存 DPI 缩放因子（供 OCR 服务在后台线程使用）
+                OCRService.UpdateDpi();
             }
             catch (Exception ex)
             {

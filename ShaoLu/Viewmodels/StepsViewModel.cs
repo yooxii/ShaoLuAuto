@@ -6,6 +6,7 @@ using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -238,16 +239,70 @@ namespace ShaoLu.Viewmodels
 
             try
             {
-                var (_, popup) = WindowAsyncPopup.Show(LanguageService.GetLocalizedString("Msg_ConfirmDeleteSteps"), LanguageService.GetLocalizedString("DeleteStepTitle"), PopupButtons.YesNo, MessageBoxImage.Warning);
+                if (SelectedSteps.Count == 0) return;
+
+                // 检查待删除步骤是否被其他步骤引用
+                var deletingUids = SelectedSteps.Select(s => s.Uid).ToHashSet();
+                var referencingSteps = new List<string>();
+
+                foreach (var step in AutomationStepBases)
+                {
+                    if (deletingUids.Contains(step.Uid)) continue; // 跳过待删除的步骤本身
+
+                    bool references = false;
+                    if (step.TrueGotoUid.HasValue && deletingUids.Contains(step.TrueGotoUid.Value))
+                        references = true;
+                    if (step.FalseGotoUid.HasValue && deletingUids.Contains(step.FalseGotoUid.Value))
+                        references = true;
+                    if (step.Conditions != null)
+                    {
+                        foreach (var cond in step.Conditions)
+                        {
+                            if (cond.StepUid.HasValue && deletingUids.Contains(cond.StepUid.Value))
+                            {
+                                references = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (references)
+                        referencingSteps.Add($"{step.LineNo} - {step.Name}");
+                }
+
+                // 如果有引用，提示用户
+                string message = LanguageService.GetLocalizedString("Msg_ConfirmDeleteSteps");
+                if (referencingSteps.Count > 0)
+                {
+                    message += "\n\n" + LanguageService.GetLocalizedString("Msg_DeleteReferenced") + "\n"
+                        + string.Join("\n", referencingSteps);
+                }
+
+                var (_, popup) = WindowAsyncPopup.Show(message, LanguageService.GetLocalizedString("DeleteStepTitle"), PopupButtons.YesNo, MessageBoxImage.Warning);
                 var res = await popup;
                 if (res == PopupButton.Yes.Value)
                 {
-                    if (SelectedSteps.Count > 0)
+                    // 删除前清空引用
+                    foreach (var step in AutomationStepBases)
                     {
-                        for (int i = SelectedSteps.Count - 1; i >= 0; i--)
+                        if (deletingUids.Contains(step.Uid)) continue;
+                        if (step.TrueGotoUid.HasValue && deletingUids.Contains(step.TrueGotoUid.Value))
+                            step.TrueGotoUid = null;
+                        if (step.FalseGotoUid.HasValue && deletingUids.Contains(step.FalseGotoUid.Value))
+                            step.FalseGotoUid = null;
+                        if (step.Conditions != null)
                         {
-                            AutomationStepBases.Remove(SelectedSteps[i]);
+                            foreach (var cond in step.Conditions)
+                            {
+                                if (cond.StepUid.HasValue && deletingUids.Contains(cond.StepUid.Value))
+                                    cond.StepUid = null;
+                            }
                         }
+                    }
+
+                    for (int i = SelectedSteps.Count - 1; i >= 0; i--)
+                    {
+                        AutomationStepBases.Remove(SelectedSteps[i]);
                     }
                 }
             }
@@ -279,7 +334,6 @@ namespace ShaoLu.Viewmodels
 
         private void SelectStep()
         {
-            if (!EnsureLoggedIn()) return;
             if (SelectedStep == null) return;
             if (SelectedSteps == null || SelectedSteps.Count == 0) return;
             foreach (var step in SelectedSteps)
@@ -459,6 +513,7 @@ namespace ShaoLu.Viewmodels
 
                         // 存入执行上下文
                         _executionContext.SetResult(step.LineNo, result);
+                        _executionContext.SetResultByUid(step.Uid, result);
 
                         // 自定义条件判断
                         if (step.ConditionMode == ConditionMode.Custom && step.Conditions.Count > 0)
@@ -473,8 +528,6 @@ namespace ShaoLu.Viewmodels
                             string logContent = $"[Result:{step.IsTrue}] [Time:{result.ExecutionTimeMs:F0}ms]";
                             if (result.Similarity >= 0)
                                 logContent += $" [Similarity:{result.Similarity:F3}]";
-                            if (!string.IsNullOrEmpty(result.OCRText))
-                                logContent += $" [OCR:{result.OCRText}]";
                             ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText);
                         }
                     }
@@ -500,7 +553,7 @@ namespace ShaoLu.Viewmodels
                             await popupTask;
                         }
 
-                        if (step.FalseGoto <= 0)
+                        if (!step.FalseGotoUid.HasValue || step.FalseGotoUid.Value == Guid.Empty)
                         {
                             StopSignal = true;
                             break;
@@ -511,15 +564,20 @@ namespace ShaoLu.Viewmodels
                         }
                     }
 
-                    // 确定下一个执行索引
-                    int targetGoto = step.IsTrue ? step.TrueGoto : step.FalseGoto;
+                    // 确定下一个执行索引（通过 Uid 查找目标步骤）
+                    Guid? targetUid = step.IsTrue ? step.TrueGotoUid : step.FalseGotoUid;
 
-                    if (targetGoto > 0) // 有跳转目标
+                    if (targetUid.HasValue && targetUid.Value != Guid.Empty)
                     {
-                        int nextIndex = targetGoto - 1; // 转为 0-based
+                        int nextIndex = FindIndexByUid(targetUid.Value);
 
+                        if (nextIndex < 0)
+                        {
+                            // 目标步骤不存在（可能被删除），继续下一步
+                            step.SelfReferenceCount = 0;
+                        }
                         // 自引用检测
-                        if (nextIndex == i) // 指向自身
+                        else if (nextIndex == i) // 指向自身
                         {
                             step.SelfReferenceCount++;
                             if (step.SelfReferenceCount >= step.SelfReferenceLimit)
@@ -538,12 +596,10 @@ namespace ShaoLu.Viewmodels
                         else
                         {
                             step.SelfReferenceCount = 0; // 非自引用时重置
-                            // 边界检查
-                            if (nextIndex >= 0 && nextIndex < AutomationStepBases.Count)
-                                i = nextIndex - 1;
+                            i = nextIndex - 1;
                         }
                     }
-                    // targetGoto == 0 时不修改 i，for 循环 i++ 自然进入下一步
+                    // targetUid 为空时不修改 i，for 循环 i++ 自然进入下一步
                 }
                 StopSignal = true;
                 Application.Current.MainWindow.WindowState = WindowState.Normal;
@@ -582,6 +638,18 @@ namespace ShaoLu.Viewmodels
 
         #endregion
 
+        /// <summary>
+        /// 根据 Uid 查找步骤在集合中的索引，找不到返回 -1
+        /// </summary>
+        public int FindIndexByUid(Guid uid)
+        {
+            if (AutomationStepBases == null) return -1;
+            for (int i = 0; i < AutomationStepBases.Count; i++)
+            {
+                if (AutomationStepBases[i].Uid == uid) return i;
+            }
+            return -1;
+        }
 
     }
 }

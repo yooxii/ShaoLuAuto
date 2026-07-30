@@ -14,6 +14,7 @@ namespace ShaoLu.Viewmodels
         private string _selectedFileName;
         private DateTime? _dateFrom;
         private DateTime? _dateTo;
+        private bool _isFilterExpanded;
         private string _sortColumn = "ExecutedAt";
         private bool _sortDescending = true;
         private int _currentPage = 1;
@@ -39,6 +40,11 @@ namespace ShaoLu.Viewmodels
         public ObservableCollection<StepExecutionLog> Logs { get; }
 
         public ObservableCollection<string> FileNames { get; }
+
+        /// <summary>
+        /// 筛选区域是否展开
+        /// </summary>
+        public bool IsFilterExpanded { get => _isFilterExpanded; set => SetProperty(ref _isFilterExpanded, value); }
 
         /// <summary>
         /// 搜索关键字（匹配 InputText 或 StepName）

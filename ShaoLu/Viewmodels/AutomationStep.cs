@@ -37,8 +37,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _description;
         private StepType _type;
         private bool _isTrue = false;
-        private int _trueGoto;
-        private int _falseGoto;
+        private Guid? _trueGotoUid;
+        private Guid? _falseGotoUid;
         private double _waitTime = 0.1;
         private StepErrorType _errorType = StepErrorType.None;
 
@@ -53,6 +53,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// 步骤的唯一uid
         /// </summary>
         public Guid Uid => _uid;
+
+        /// <summary>
+        /// 用于创建占位项（如“无跳转”）的特殊构造
+        /// </summary>
+        private protected AutomationStepBase(bool isPlaceholder)
+        {
+            _uid = Guid.Empty;
+        }
 
         public bool IsSave { get => _isSave; set => SetProperty(ref _isSave, value); }
 
@@ -95,10 +103,84 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
 
         /// <summary>
-        /// 如果真,去执行某行
+        /// 如果真,跳转到的步骤 Uid
         /// </summary>
-        public int TrueGoto { get => _trueGoto; set => SetProperty(ref _trueGoto, value); }
-        public int FalseGoto { get => _falseGoto; set => SetProperty(ref _falseGoto, value); }
+        [JsonPropertyName("TrueGoto")]
+        public Guid? TrueGotoUid { get => _trueGotoUid; set { if (SetProperty(ref _trueGotoUid, value)) { OnPropertyChanged(nameof(TrueGotoLineNo)); } } }
+
+        /// <summary>
+        /// 如果假,跳转到的步骤 Uid
+        /// </summary>
+        [JsonPropertyName("FalseGoto")]
+        public Guid? FalseGotoUid { get => _falseGotoUid; set { if (SetProperty(ref _falseGotoUid, value)) { OnPropertyChanged(nameof(FalseGotoLineNo)); } } }
+
+        /// <summary>
+        /// TrueGoto 对应的行号（只读，用于 UI 显示）
+        /// </summary>
+        [JsonIgnore]
+        public int TrueGotoLineNo => ResolveLineNo(_trueGotoUid);
+
+        /// <summary>
+        /// FalseGoto 对应的行号（只读，用于 UI 显示）
+        /// </summary>
+        [JsonIgnore]
+        public int FalseGotoLineNo => ResolveLineNo(_falseGotoUid);
+
+        /// <summary>
+        /// 根据 Uid 解析步骤行号，找不到返回 0
+        /// </summary>
+        private static int ResolveLineNo(Guid? uid)
+        {
+            if (!uid.HasValue || uid.Value == Guid.Empty) return 0;
+            try
+            {
+                var steps = SingletonLocator.Steps.AutomationStepBases;
+                if (steps == null) return 0;
+                for (int i = 0; i < steps.Count; i++)
+                {
+                    if (steps[i].Uid == uid.Value) return i + 1;
+                }
+            }
+            catch { /* DI 未初始化时忽略 */ }
+            return 0;
+        }
+
+        /// <summary>
+        /// 所有步骤集合（供 Goto ComboBox 绑定，包含“无跳转”占位项）
+        /// </summary>
+        [JsonIgnore]
+        public ObservableCollection<AutomationStepBase> AllSteps
+        {
+            get
+            {
+                try
+                {
+                    var result = new ObservableCollection<AutomationStepBase> { GotoPlaceholder };
+                    foreach (var s in SingletonLocator.Steps.AutomationStepBases)
+                        result.Add(s);
+                    return result;
+                }
+                catch { return null; }
+            }
+        }
+
+        /// <summary>
+        /// Goto 下拉框的“无跳转”占位项
+        /// </summary>
+        private static AutomationStepBase _gotoPlaceholder;
+        [JsonIgnore]
+        public static AutomationStepBase GotoPlaceholder
+        {
+            get
+            {
+                if (_gotoPlaceholder == null)
+                {
+                    _gotoPlaceholder = new EmptyStep(true);
+                    _gotoPlaceholder.Name = "(无跳转)";
+                }
+                return _gotoPlaceholder;
+            }
+        }
 
         public double WaitTime { get => _waitTime; set => SetProperty(ref _waitTime, value); }
 
@@ -242,8 +324,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TextToType = TextToType,
                 DelayBetweenKeys = DelayBetweenKeys,
                 WaitTime = WaitTime,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
             };
@@ -267,12 +349,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = res;
             IsError = false;
             ErrorType = StepErrorType.None;
-
-            if (res && EnableLog)
-            {
-                string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
-                Services.ExecutionLogService.Log(Uid, fileName, Name, TextToType);
-            }
 
             return res;
         }
@@ -376,8 +452,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 WaitTime = WaitTime,
                 TextToType = TextToType,
                 DelayBetweenKeys = DelayBetweenKeys,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
             };
@@ -420,12 +496,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     return Autogui.TypeTextSafe(TextToType);
             });
 
-            if (res && EnableLog)
-            {
-                string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
-                Services.ExecutionLogService.Log(Uid, fileName, Name, TextToType);
-            }
-
             Increment();
             IsTrue = res;
             IsError = false;
@@ -444,7 +514,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private double _delayBetweenKeys = 0.01;
         private bool _reloadIndex = false;
         private int _index = 0;
-        private ObservableCollection<string> _contents = [];
+        private ObservableCollection<ContentItem> _contents = [];
         private string[] _delimiter = ["\n", "\r", "\n\r", "\t", ",", ";", "|"];
 
 
@@ -462,7 +532,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>
         /// 待输入内容
         /// </summary>
-        public ObservableCollection<string> Contents { get => _contents; set => SetProperty(ref _contents, value); }
+        [JsonConverter(typeof(ContentItemCollectionConverter))]
+        public ObservableCollection<ContentItem> Contents { get => _contents; set => SetProperty(ref _contents, value); }
 
         /// <summary>
         /// 分割符
@@ -497,10 +568,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FilePath = FilePath,
                 TextToType = TextToType,
                 DelayBetweenKeys = DelayBetweenKeys,
-                Contents = new ObservableCollection<string>(Contents),
+                Contents = new ObservableCollection<ContentItem>(Contents.Select(c => new ContentItem(c.Text))),
                 ReloadIndex = ReloadIndex,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 Index = Index,
                 EnableLog = EnableLog,
@@ -520,7 +591,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [RelayCommand]
         private void AddContent()
         {
-            Contents.Add("");
+            Contents.Add(new ContentItem(""));
         }
 
         [RelayCommand]
@@ -543,7 +614,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 string res = FileServices.SmartReadTextFile(FilePath);
                 Contents.Clear();
-                Contents.AddRange(res.Split(Delimiter, StringSplitOptions.RemoveEmptyEntries).ToList());
+                foreach (var item in res.Split(Delimiter, StringSplitOptions.RemoveEmptyEntries))
+                    Contents.Add(new ContentItem(item));
             }
             else if (Path.GetExtension(FilePath).ToLower() == ".xlsx")
             {
@@ -554,7 +626,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Contents.Clear();
                 for (int r = 1; r <= ws.Dimension.End.Row; r++)
                 {
-                    Contents.Add(ws.Cells[r, 1].Text);
+                    Contents.Add(new ContentItem(ws.Cells[r, 1].Text));
                 }
             }
             else
@@ -576,7 +648,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     Index = 0;
                     throw new InvalidOperationException($"{Name}'s Contents is Finished.");
                 }
-                TextToType = Contents[Index];
+                TextToType = Contents[Index].Text;
                 Index++;
             }
             await Task.Delay((int)WaitTime * 1000, cancellationToken);
@@ -590,12 +662,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = res;
             IsError = false;
             ErrorType = StepErrorType.None;
-
-            if (res && EnableLog)
-            {
-                string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
-                Services.ExecutionLogService.Log(Uid, fileName, Name, TextToType);
-            }
 
             return res;
         }
@@ -678,8 +744,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             return new PopupStep(Name, Description)
             {
                 IsTrue = IsTrue,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 Title = Title,
                 PopupText = PopupText,
                 PopupFont = PopupFont?.Clone(),
@@ -739,6 +805,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         // 用户点击了弹窗按钮
                         var result = await popupTask;
                         IsTrue = (result == PopupButton.Yes.Value);
+                        LastResult = new StepExecutionResult
+                        {
+                            IsTrue = IsTrue,
+                            PopupResult = result,
+                            ExecutedAt = DateTime.Now,
+                        };
                         return IsTrue;
                     }
                 }
@@ -808,6 +880,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
     public class EmptyStep : AutomationStepBase
     {
+        /// <summary>
+        /// 内部占位构造（Uid=Guid.Empty）
+        /// </summary>
+        internal EmptyStep(bool placeholder) : base(placeholder)
+        {
+            IsTrue = true;
+            Type = StepType.Empty;
+        }
         public EmptyStep() : base()
         {
             IsTrue = true;
@@ -832,8 +912,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             return new EmptyStep(Name, Description)
             {
                 WaitTime = WaitTime,
-                TrueGoto = TrueGoto,
-                FalseGoto = FalseGoto,
+                TrueGotoUid = TrueGotoUid,
+                FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
             };
         }

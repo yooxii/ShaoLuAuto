@@ -63,7 +63,7 @@ namespace ShaoLu.Services
                     return false;
 
                 // 解析变量值
-                object leftValue = context.ResolveVariable(cond.Variable, cond.StepLineNo, currentResult);
+                object leftValue = context.ResolveVariable(cond.Variable, cond.StepUid, currentResult);
 
                 // 执行比较
                 return Compare(leftValue, cond.Operator, cond.Value);

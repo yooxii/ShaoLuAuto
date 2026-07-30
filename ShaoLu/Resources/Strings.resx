@@ -468,14 +468,8 @@
   <data name="Search" xml:space="preserve">
     <value>Search</value>
   </data>
-  <data name="Reset" xml:space="preserve">
-    <value>Reset</value>
-  </data>
   <data name="StepFileName" xml:space="preserve">
     <value>Step File</value>
-  </data>
-  <data name="StepName" xml:space="preserve">
-    <value>Step Name</value>
   </data>
   <data name="InputText" xml:space="preserve">
     <value>Input Text</value>
@@ -710,5 +704,71 @@
   </data>
   <data name="OCR_NoResult" xml:space="preserve">
     <value>No text recognized</value>
+  </data>
+  <data name="ConditionMode_Label" xml:space="preserve">
+    <value>ConditionMode_Label</value>
+  </data>
+  <data name="ConditionMode_Hint" xml:space="preserve">
+    <value>ConditionMode_Hint</value>
+  </data>
+  <data name="Condition_StepLineNo_Tooltip" xml:space="preserve">
+    <value>Condition_StepLineNo_Tooltip</value>
+  </data>
+  <data name="Condition_Value_Tooltip" xml:space="preserve">
+    <value>Condition_Value_Tooltip</value>
+  </data>
+  <data name="Condition_Add" xml:space="preserve">
+    <value>Condition_Add</value>
+  </data>
+  <data name="Condition_Remove" xml:space="preserve">
+    <value>Condition_Remove</value>
+  </data>
+  <data name="CropImage_EnableRatioScale" xml:space="preserve">
+    <value>Enable Ratio Scale</value>
+  </data>
+  <data name="CropImage_RatioLabel" xml:space="preserve">
+    <value>Crop Ratio:</value>
+  </data>
+  <data name="CropImage_SelectImage" xml:space="preserve">
+    <value>Select Image</value>
+  </data>
+  <data name="CropImage_SaveImage" xml:space="preserve">
+    <value>Save Image</value>
+  </data>
+  <data name="Settings_AppSettings" xml:space="preserve">
+    <value>Settings_AppSettings</value>
+  </data>
+  <data name="Settings_StepSettings" xml:space="preserve">
+    <value>Settings_StepSettings</value>
+  </data>
+  <data name="Settings_DaysHint" xml:space="preserve">
+    <value>Settings_DaysHint</value>
+  </data>
+  <data name="MultiCropImage_RotateTooltip" xml:space="preserve">
+    <value>Rotate crop frame</value>
+  </data>
+  <data name="MultiCropImage_ResetRotationTooltip" xml:space="preserve">
+    <value>Reset rotation</value>
+  </data>
+  <data name="OCR_EditRegionTitle" xml:space="preserve">
+    <value>OCR_EditRegionTitle</value>
+  </data>
+  <data name="OCR_EditRegionHint" xml:space="preserve">
+    <value>OCR_EditRegionHint</value>
+  </data>
+  <data name="FindImage_OCR_Group" xml:space="preserve">
+    <value>OCR Text Recognition</value>
+  </data>
+  <data name="FindImage_EnableOCR" xml:space="preserve">
+    <value>Perform OCR after image found</value>
+  </data>
+  <data name="SetOCRRegion" xml:space="preserve">
+    <value>SetOCRRegion</value>
+  </data>
+  <data name="ClearOCRRegion" xml:space="preserve">
+    <value>Clear OCR Region</value>
+  </data>
+  <data name="FindImage_OCR_Hint" xml:space="preserve">
+    <value>FindImage_OCR_Hint</value>
   </data>
 </root>

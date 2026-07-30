@@ -6,6 +6,9 @@
     xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:local="clr-namespace:ShaoLu.Controls"
+    xmlns:lex="http://wpflocalizeextension.codeplex.com"
+    lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+    lex:ResxLocalizationProvider.DefaultDictionary="Strings"
     mc:Ignorable="d" 
     d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
@@ -18,10 +21,10 @@
             <CheckBox
                 x:Name="myCheckBox"
                 wd:ElementHelper.CornerRadius="3"
-                Content="开启等比缩放"
+                Content="{lex:Loc CropImage_EnableRatioScale}"
                 IsChecked="False" />
             <StackPanel Margin="10,0" Orientation="Horizontal">
-                <TextBlock VerticalAlignment="Center" Text="裁剪区域比例:" />
+                <TextBlock VerticalAlignment="Center" Text="{lex:Loc CropImage_RatioLabel}" />
                 <Slider
                     x:Name="myRectScaleSlider"
                     Width="100"
@@ -48,12 +51,12 @@
             <Button
                 wd:ElementHelper.CornerRadius="3"
                 Click="OnImportClickHandler"
-                Content="选择图片"
+                Content="{lex:Loc CropImage_SelectImage}"
                 Style="{StaticResource WD.PrimaryButton}" />
             <Button
                 wd:ElementHelper.CornerRadius="3"
                 Click="SaveCrop_Click"
-                Content="保存图片"
+                Content="{lex:Loc CropImage_SaveImage}"
                 Style="{StaticResource WD.SuccessPrimaryButton}" />
         </StackPanel>
     </Grid>

@@ -79,7 +79,7 @@ namespace ShaoLu.Services
         /// <summary>
         /// 截取屏幕指定区域并执行 OCR
         /// </summary>
-        /// <param name="region">屏幕区域（绝对坐标）</param>
+        /// <param name="region">屏幕区域（WPF 逻辑像素坐标）</param>
         /// <returns>识别到的文本</returns>
         public static string RecognizeRegion(System.Windows.Rect region)
         {
@@ -88,11 +88,20 @@ namespace ShaoLu.Services
 
             try
             {
-                // 截取屏幕指定区域
-                int x = (int)region.X;
-                int y = (int)region.Y;
-                int width = (int)region.Width;
-                int height = (int)region.Height;
+                // 获取 DPI 缩放因子，将逻辑像素转换为物理像素
+                double dpiScaleX = 1.0, dpiScaleY = 1.0;
+                var mainWindow = System.Windows.Application.Current?.MainWindow;
+                if (mainWindow != null)
+                {
+                    var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(mainWindow);
+                    dpiScaleX = dpi.DpiScaleX;
+                    dpiScaleY = dpi.DpiScaleY;
+                }
+
+                int x = (int)(region.X * dpiScaleX);
+                int y = (int)(region.Y * dpiScaleY);
+                int width = Math.Max(1, (int)(region.Width * dpiScaleX));
+                int height = Math.Max(1, (int)(region.Height * dpiScaleY));
 
                 using (Bitmap bmp = new Bitmap(width, height))
                 {

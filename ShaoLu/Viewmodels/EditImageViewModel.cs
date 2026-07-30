@@ -20,6 +20,7 @@ namespace ShaoLu.Viewmodels
         private ImageSource _imgSrc;
         private ImageSource _imgDst;
         private Rect _cropRect;
+        private Rect _ocrRect = Rect.Empty;
         private double _startX = 0;
         private double _startY = 0;
 
@@ -51,6 +52,15 @@ namespace ShaoLu.Viewmodels
         {
             get => _cropRect;
             set => SetProperty(ref _cropRect, value);
+        }
+
+        /// <summary>
+        /// OCR 识别区域（相对于原图像素坐标）
+        /// </summary>
+        public Rect OCRRect
+        {
+            get => _ocrRect;
+            set => SetProperty(ref _ocrRect, value);
         }
 
         public double StartX
@@ -93,7 +103,7 @@ namespace ShaoLu.Viewmodels
         }
 
 
-        public event Action<ImageSource, Rect, List<ClickThumb>> OnImageSaved;
+        public event Action<ImageSource, Rect, List<ClickThumb>, Rect> OnImageSaved;
         public event Action<Rect> OnCropRectChanged;
 
         public void SetThumbs(List<ClickThumb> clickThumbs)
@@ -116,7 +126,7 @@ namespace ShaoLu.Viewmodels
                 return false;
             }
 
-            OnImageSaved?.Invoke(ImgDst, CropRect, Thumbs.ToList());
+            OnImageSaved?.Invoke(ImgDst, CropRect, Thumbs.ToList(), OCRRect);
             return true;
         }
 

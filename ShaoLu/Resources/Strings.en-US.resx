@@ -705,4 +705,70 @@
   <data name="OCR_NoResult" xml:space="preserve">
     <value>No text recognized</value>
   </data>
+  <data name="ConditionMode_Label" xml:space="preserve">
+    <value>Mode:</value>
+  </data>
+  <data name="ConditionMode_Hint" xml:space="preserve">
+    <value>Tip: Select 'Custom' to override the step's default success/failure result with rules below.</value>
+  </data>
+  <data name="Condition_StepLineNo_Tooltip" xml:space="preserve">
+    <value>Referenced step line number (only for 'Step_*' variable types)</value>
+  </data>
+  <data name="Condition_Value_Tooltip" xml:space="preserve">
+    <value>Comparison value (e.g., true, 0.9, text to contain)</value>
+  </data>
+  <data name="Condition_Add" xml:space="preserve">
+    <value>+ Add</value>
+  </data>
+  <data name="Condition_Remove" xml:space="preserve">
+    <value>- Remove</value>
+  </data>
+  <data name="CropImage_EnableRatioScale" xml:space="preserve">
+    <value>Enable Ratio Scale</value>
+  </data>
+  <data name="CropImage_RatioLabel" xml:space="preserve">
+    <value>Crop Ratio:</value>
+  </data>
+  <data name="CropImage_SelectImage" xml:space="preserve">
+    <value>Select Image</value>
+  </data>
+  <data name="CropImage_SaveImage" xml:space="preserve">
+    <value>Save Image</value>
+  </data>
+  <data name="Settings_AppSettings" xml:space="preserve">
+    <value>App Settings</value>
+  </data>
+  <data name="Settings_StepSettings" xml:space="preserve">
+    <value>Step Settings</value>
+  </data>
+  <data name="Settings_DaysHint" xml:space="preserve">
+    <value>days (0 = never clean)</value>
+  </data>
+  <data name="MultiCropImage_RotateTooltip" xml:space="preserve">
+    <value>Rotate crop frame</value>
+  </data>
+  <data name="MultiCropImage_ResetRotationTooltip" xml:space="preserve">
+    <value>Reset rotation</value>
+  </data>
+  <data name="OCR_EditRegionTitle" xml:space="preserve">
+    <value>OCR Region Selection</value>
+  </data>
+  <data name="OCR_EditRegionHint" xml:space="preserve">
+    <value>Drag on screenshot to select OCR region, Enter to confirm, ESC to cancel</value>
+  </data>
+  <data name="FindImage_OCR_Group" xml:space="preserve">
+    <value>OCR Text Recognition</value>
+  </data>
+  <data name="FindImage_EnableOCR" xml:space="preserve">
+    <value>Perform OCR after image found</value>
+  </data>
+  <data name="SetOCRRegion" xml:space="preserve">
+    <value>Set OCR Region</value>
+  </data>
+  <data name="ClearOCRRegion" xml:space="preserve">
+    <value>Clear OCR Region</value>
+  </data>
+  <data name="FindImage_OCR_Hint" xml:space="preserve">
+    <value>Use 'Set OCR Region' in the Edit window menu to define the recognition area</value>
+  </data>
 </root>

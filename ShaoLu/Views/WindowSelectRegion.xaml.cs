@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace ShaoLu.Views
 {
@@ -77,9 +78,11 @@ namespace ShaoLu.Views
 
             if (width > 5 && height > 5)
             {
-                // 将窗口坐标转换为屏幕绝对坐标
+                // 将窗口坐标转换为屏幕绝对坐标（统一使用逻辑像素，DPI 缩放在 OCRService 中处理）
                 Point screenPoint = PointToScreen(new Point(x, y));
-                SelectedRegion = new Rect(screenPoint.X, screenPoint.Y, width, height);
+                var dpi = VisualTreeHelper.GetDpi(this);
+                // 存储为逻辑像素坐标（PointToScreen 返回物理像素，需除以 DPI 缩放）
+                SelectedRegion = new Rect(screenPoint.X / dpi.DpiScaleX, screenPoint.Y / dpi.DpiScaleY, width, height);
                 DialogResult = true;
             }
             else

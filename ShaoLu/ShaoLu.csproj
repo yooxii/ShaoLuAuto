@@ -26,7 +26,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{6326F714-723E-4EAB-8F52-0DFDDA17B648}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>ShaoLu</RootNamespace>
@@ -37,9 +37,10 @@
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -67,7 +68,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>preview</LangVersion>
     <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
@@ -77,7 +78,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>preview</LangVersion>
     <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>D34B9140737992249728A2BD514F28D21CD403CB</ManifestCertificateThumbprint>
@@ -131,6 +132,7 @@
     <Compile Include="Controls\MultiCropImage.cs" />
     <Compile Include="Converters\AutomationStepJsonConverter.cs" />
     <Compile Include="Converters\ConditionModeToVisibilityConverter.cs" />
+    <Compile Include="Converters\ConditionEnumToStringConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\BoolToInverseBoolConverter.cs" />
     <Compile Include="Converters\SettingsTemplateSelector.cs" />
@@ -210,6 +212,9 @@
     <Compile Include="Views\WindowSelectRegion.xaml.cs">
       <DependentUpon>WindowSelectRegion.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\WindowEditOCR.xaml.cs">
+      <DependentUpon>WindowEditOCR.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\WindowExecutionLog.xaml.cs">
       <DependentUpon>WindowExecutionLog.xaml</DependentUpon>
     </Compile>
@@ -276,6 +281,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowSelectRegion.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowEditOCR.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -370,6 +379,7 @@
     <PackageReference Include="OpenCvSharp4.runtime.win.slim">
       <Version>4.13.0.20260627</Version>
     </PackageReference>
+    <PackageReference Include="Paddle.Runtime.win_x64" Version="3.4.0" />
     <PackageReference Include="PaddleOCRSharp">
       <Version>6.2.0</Version>
     </PackageReference>

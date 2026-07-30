@@ -2,7 +2,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:ShaoLu.Controls"
-    xmlns:conv="clr-namespace:ShaoLu.Converters">
+    xmlns:conv="clr-namespace:ShaoLu.Converters"
+    xmlns:lex="http://wpflocalizeextension.codeplex.com">
     
     <Style x:Key="ScreenCutRectangleStyle" TargetType="Rectangle">
         <Setter Property="Fill" Value="#80000000" />
@@ -50,12 +51,12 @@
                             <!-- 新增：旋转手柄 -->
                             <Ellipse x:Name="PART_RotateHandle" Width="16" Height="16" Fill="White" Stroke="Black"
                      HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-24,0,0"
-                     Cursor="Hand" ToolTip="旋转裁剪框"/>
+                     Cursor="Hand" ToolTip="{lex:Loc MultiCropImage_RotateTooltip}"/>
 
                             <!-- 新增：复位按钮 -->
                             <Button x:Name="PART_ResetRotationBtn" Content="↺" Width="16" Height="16" FontSize="10"
                     HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-44,0,0"
-                    Opacity="0.8" ToolTip="复位旋转"/>
+                    Opacity="0.8" ToolTip="{lex:Loc MultiCropImage_ResetRotationTooltip}"/>
                         </Canvas>
                     </Grid>
                 </ControlTemplate>

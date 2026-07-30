@@ -14,6 +14,7 @@
         Cursor="Cross"
         KeyDown="Window_KeyDown">
     <Canvas x:Name="SelectionCanvas" 
+            Background="Transparent"
             MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
             MouseMove="Canvas_MouseMove"
             MouseLeftButtonUp="Canvas_MouseLeftButtonUp">
@@ -37,6 +38,7 @@
                    Text="{lex:Loc OCR_SelectRegionHint}"
                    Foreground="White" 
                    FontSize="16"
+                   IsHitTestVisible="False"
                    HorizontalAlignment="Center"
                    Canvas.Left="10" Canvas.Top="10"/>
     </Canvas>

@@ -26,6 +26,9 @@
                 <MenuItem Header="{lex:Loc AllVisibale}" Command="{Binding AllThumbVisibilityCommand}" CommandParameter="1"/>
                 <MenuItem Header="{lex:Loc AllHidden}" Command="{Binding AllThumbVisibilityCommand}" CommandParameter="0"/>
                 <MenuItem Header="{lex:Loc AllDelete}" Command="{Binding ClearThumbsCommand}"/>
+                <Separator/>
+                <MenuItem Header="{lex:Loc SetOCRRegion}" Click="SetOCRRegion_Click"/>
+                <MenuItem Header="{lex:Loc ClearOCRRegion}" Click="ClearOCRRegion_Click"/>
             </Menu>
         </StackPanel>
         <wd:WDScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
@@ -39,6 +42,32 @@
                     <Viewbox Width="{Binding ImgSrc.Width}" Height="{Binding ImgSrc.Height}">
                         <wd:CropImage x:Name="EditImage" Margin="5" Source="{Binding ImgSrc}"/>
                     </Viewbox>
+                    <!-- OCR 矩形覆盖层 -->
+                    <Canvas x:Name="OCRCanvas" 
+                            Width="{Binding ActualWidth, ElementName=EditImage}" 
+                            Height="{Binding ActualHeight, ElementName=EditImage}"
+                            Background="Transparent"
+                            MouseLeftButtonDown="OCRCanvas_MouseLeftButtonDown"
+                            MouseMove="OCRCanvas_MouseMove"
+                            MouseLeftButtonUp="OCRCanvas_MouseLeftButtonUp"
+                            Visibility="Collapsed">
+                        <Rectangle x:Name="OCRRectOverlay" 
+                                   Stroke="#FF00CC00" StrokeThickness="2" StrokeDashArray="4 2"
+                                   Fill="#2200FF00" Visibility="Collapsed"/>
+                    </Canvas>
+                    <!-- OCR 矩形静态显示 -->
+                    <Canvas x:Name="OCRDisplayCanvas"
+                            Width="{Binding ActualWidth, ElementName=EditImage}" 
+                            Height="{Binding ActualHeight, ElementName=EditImage}"
+                            IsHitTestVisible="False">
+                        <Rectangle x:Name="OCRRectDisplay" 
+                                   Stroke="#FF00CC00" StrokeThickness="2" StrokeDashArray="4 2"
+                                   Fill="#1100FF00" Visibility="Collapsed"/>
+                        <Border x:Name="OCRLabel" Background="#CC006600" CornerRadius="2" Padding="3,1"
+                                Visibility="Collapsed">
+                            <TextBlock Text="OCR" Foreground="White" FontSize="9" FontWeight="Bold"/>
+                        </Border>
+                    </Canvas>
                     <ItemsControl ItemsSource="{Binding Thumbs}">
                         
                         <ItemsControl.ItemContainerStyle>

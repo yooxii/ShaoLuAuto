@@ -1,0 +1,60 @@
+<Window x:Class="ShaoLu.Views.WindowEditOCR"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        Title="{lex:Loc OCR_EditRegionTitle}" 
+        WindowStyle="None"
+        Background="Black"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        PreviewKeyDown="Window_PreviewKeyDown"
+        PreviewMouseRightButtonDown="Window_PreviewMouseRightButtonDown">
+    <Grid>
+        <!-- 截图填充整个窗口 -->
+        <Image x:Name="ScreenshotImage" Stretch="Fill"/>
+        
+        <!-- 绘制层 -->
+        <Canvas x:Name="DrawCanvas" 
+                Background="Transparent"
+                Focusable="True"
+                MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
+                MouseMove="Canvas_MouseMove"
+                MouseLeftButtonUp="Canvas_MouseLeftButtonUp"
+                MouseRightButtonDown="Canvas_MouseRightButtonDown"
+                KeyDown="Canvas_KeyDown">
+            <Rectangle x:Name="MaskTop" Fill="#88000000" IsHitTestVisible="False" Visibility="Collapsed"/>
+            <Rectangle x:Name="MaskBottom" Fill="#88000000" IsHitTestVisible="False" Visibility="Collapsed"/>
+            <Rectangle x:Name="MaskLeft" Fill="#88000000" IsHitTestVisible="False" Visibility="Collapsed"/>
+            <Rectangle x:Name="MaskRight" Fill="#88000000" IsHitTestVisible="False" Visibility="Collapsed"/>
+            <Rectangle x:Name="OCRRect" 
+                       Stroke="#FF00CC00" StrokeThickness="2" StrokeDashArray="6 3"
+                       Fill="Transparent" IsHitTestVisible="False" Visibility="Collapsed"/>
+            <Border x:Name="SizeTip" Background="#CC000000" CornerRadius="3" Padding="5,2" 
+                    IsHitTestVisible="False" Visibility="Collapsed">
+                <TextBlock x:Name="SizeTipText" Foreground="#00FF00" FontSize="12" FontWeight="Bold"/>
+            </Border>
+        </Canvas>
+
+        <!-- 顶部提示栏 -->
+        <Border VerticalAlignment="Top" Background="#AA000000" Padding="10,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="HintText" Grid.Column="0" Foreground="White" FontSize="13"
+                           Text="{lex:Loc OCR_EditRegionHint}" VerticalAlignment="Center"/>
+                <Button x:Name="BtnOk" Grid.Column="1" Content="✓ Enter" 
+                        Click="BtnOk_Click" Margin="8,0" Padding="8,3"
+                        Background="#4400AA00" Foreground="White" BorderBrush="#00CC00"/>
+                <Button x:Name="BtnEsc" Grid.Column="2" Content="✕ Esc" 
+                        Click="BtnEsc_Click" Padding="8,3"
+                        Background="#44AA0000" Foreground="White" BorderBrush="#CC0000"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -9,7 +9,7 @@
     <!-- App 设置模板 -->
     <DataTemplate DataType="{x:Type vm:AppSettingsViewModel}">
         <StackPanel>
-            <TextBlock Text="App 设置" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+            <TextBlock Text="{lex:Loc Settings_AppSettings}" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="120"/>
@@ -61,7 +61,7 @@
                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
                     <wd:NumericBox Value="{Binding LogRetentionDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                    Minimum="0" Maximum="3650" Width="80"/>
-                    <TextBlock Text="天（0 = 永不清理）" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                    <TextBlock Text="{lex:Loc Settings_DaysHint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
                 </StackPanel>
             </Grid>
         </StackPanel>
@@ -70,7 +70,7 @@
     <!-- Step 设置模板 -->
     <DataTemplate DataType="{x:Type vm:StepSettingsViewModel}">
         <StackPanel>
-            <TextBlock Text="Step 设置" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+            <TextBlock Text="{lex:Loc Settings_StepSettings}" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="160"/>

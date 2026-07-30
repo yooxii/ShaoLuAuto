@@ -145,10 +145,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void SelectRegion()
         {
-            var window = new WindowSelectRegion();
-            if (window.ShowDialog() == true)
+            var region = WindowEditOCR.ShowAndSelect();
+            if (!region.IsEmpty)
             {
-                OCRRegion = window.SelectedRegion;
+                OCRRegion = region;
                 OnPropertyChanged(nameof(OCRRegionText));
             }
         }

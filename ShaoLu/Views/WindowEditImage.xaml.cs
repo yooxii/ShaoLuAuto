@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Views
@@ -15,6 +16,8 @@ namespace ShaoLu.Views
     public partial class WindowEditImage : Window
     {
         public EditImageViewModel editImageViewModel = new();
+        private bool _isDrawingOCR;
+        private System.Windows.Point _ocrStartPoint;
 
         public WindowEditImage()
         {
@@ -23,6 +26,11 @@ namespace ShaoLu.Views
             editImageViewModel.OnCropRectChanged += (rect) =>
             { 
                 EditImage.SetCropRect(rect);
+            };
+            editImageViewModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(EditImageViewModel.OCRRect))
+                    UpdateOCRDisplay();
             };
         }
 
@@ -51,6 +59,91 @@ namespace ShaoLu.Views
         {
             this.Close();
         }
+
+        #region OCR 矩形绘制
+
+        private void SetOCRRegion_Click(object sender, RoutedEventArgs e)
+        {
+            _isDrawingOCR = true;
+            OCRCanvas.Visibility = Visibility.Visible;
+            OCRCanvas.Cursor = Cursors.Cross;
+            OCRRectOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private void ClearOCRRegion_Click(object sender, RoutedEventArgs e)
+        {
+            editImageViewModel.OCRRect = Rect.Empty;
+            UpdateOCRDisplay();
+        }
+
+        private void OCRCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isDrawingOCR) return;
+            _ocrStartPoint = e.GetPosition(OCRCanvas);
+            OCRRectOverlay.Visibility = Visibility.Visible;
+            Canvas.SetLeft(OCRRectOverlay, _ocrStartPoint.X);
+            Canvas.SetTop(OCRRectOverlay, _ocrStartPoint.Y);
+            OCRRectOverlay.Width = 0;
+            OCRRectOverlay.Height = 0;
+            OCRCanvas.CaptureMouse();
+        }
+
+        private void OCRCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_isDrawingOCR || e.LeftButton != MouseButtonState.Pressed) return;
+            var cur = e.GetPosition(OCRCanvas);
+            double x = Math.Min(_ocrStartPoint.X, cur.X);
+            double y = Math.Min(_ocrStartPoint.Y, cur.Y);
+            double w = Math.Abs(cur.X - _ocrStartPoint.X);
+            double h = Math.Abs(cur.Y - _ocrStartPoint.Y);
+            Canvas.SetLeft(OCRRectOverlay, x);
+            Canvas.SetTop(OCRRectOverlay, y);
+            OCRRectOverlay.Width = w;
+            OCRRectOverlay.Height = h;
+        }
+
+        private void OCRCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isDrawingOCR) return;
+            _isDrawingOCR = false;
+            OCRCanvas.ReleaseMouseCapture();
+            OCRCanvas.Visibility = Visibility.Collapsed;
+            OCRCanvas.Cursor = Cursors.Arrow;
+
+            var end = e.GetPosition(OCRCanvas);
+            double x = Math.Min(_ocrStartPoint.X, end.X);
+            double y = Math.Min(_ocrStartPoint.Y, end.Y);
+            double w = Math.Abs(end.X - _ocrStartPoint.X);
+            double h = Math.Abs(end.Y - _ocrStartPoint.Y);
+
+            if (w > 3 && h > 3)
+            {
+                editImageViewModel.OCRRect = new Rect(x, y, w, h);
+            }
+            UpdateOCRDisplay();
+        }
+
+        private void UpdateOCRDisplay()
+        {
+            var rect = editImageViewModel.OCRRect;
+            if (rect.IsEmpty || rect.Width <= 0 || rect.Height <= 0)
+            {
+                OCRRectDisplay.Visibility = Visibility.Collapsed;
+                OCRLabel.Visibility = Visibility.Collapsed;
+                return;
+            }
+            Canvas.SetLeft(OCRRectDisplay, rect.X);
+            Canvas.SetTop(OCRRectDisplay, rect.Y);
+            OCRRectDisplay.Width = rect.Width;
+            OCRRectDisplay.Height = rect.Height;
+            OCRRectDisplay.Visibility = Visibility.Visible;
+
+            Canvas.SetLeft(OCRLabel, rect.X);
+            Canvas.SetTop(OCRLabel, rect.Y - 14);
+            OCRLabel.Visibility = Visibility.Visible;
+        }
+
+        #endregion
 
         private void ClickPointThumb_DragDelta(object sender, DragDeltaEventArgs e)
         {

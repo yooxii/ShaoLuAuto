@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Point = ShaoLu.Models.Point;
@@ -171,13 +172,23 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         windowEditImage.editImageViewModel.SetCropRect(CroppedRect);
                     if (ClickThumbs != null && ClickThumbs.Count > 0)
                         windowEditImage.editImageViewModel.SetThumbs(ClickThumbs);
+                    // 传递 OCR 矩形
+                    if (this is FindImageStep findStep && !findStep.OCRRect.IsEmpty)
+                        windowEditImage.editImageViewModel.OCRRect = findStep.OCRRect;
                 }), System.Windows.Threading.DispatcherPriority.Background);
-                windowEditImage.editImageViewModel.OnImageSaved += (img, rect, clickthumbs) =>
+                windowEditImage.editImageViewModel.OnImageSaved += (img, rect, clickthumbs, ocrRect) =>
                 {
                     CroppedImg = img;
                     CroppedRect = rect;
                     ClickThumbs = clickthumbs;
                     IsError = false;
+                    // 保存 OCR 矩形
+                    if (this is FindImageStep findStep)
+                    {
+                        findStep.OCRRect = ocrRect;
+                        findStep.EnableOCR = !ocrRect.IsEmpty && ocrRect.Width > 0 && ocrRect.Height > 0;
+                        findStep.OnPropertyChanged(nameof(findStep.OCRRegionText));
+                    }
                 };
             }
         }
@@ -415,6 +426,47 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private double _timeout = 3;
         public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
 
+        #region OCR 功能
+
+        private bool _enableOCR = false;
+        /// <summary>
+        /// 是否启用 OCR 识别（在找到图片后对指定区域进行文字识别）
+        /// </summary>
+        public bool EnableOCR { get => _enableOCR; set => SetProperty(ref _enableOCR, value); }
+
+        private Rect _ocrRect = Rect.Empty;
+        /// <summary>
+        /// OCR 识别区域（相对于原图像素坐标，在编辑窗口中设置）
+        /// </summary>
+        public Rect OCRRect { get => _ocrRect; set => SetProperty(ref _ocrRect, value); }
+
+        private string _ocrResultPreview;
+        /// <summary>
+        /// OCR 识别结果预览
+        /// </summary>
+        [JsonIgnore]
+        public string OCRResultPreview
+        {
+            get => _ocrResultPreview;
+            set => SetProperty(ref _ocrResultPreview, value);
+        }
+
+        /// <summary>
+        /// OCR 区域描述文本（用于 UI 显示）
+        /// </summary>
+        [JsonIgnore]
+        public string OCRRegionText
+        {
+            get
+            {
+                if (OCRRect.IsEmpty)
+                    return LanguageService.GetLocalizedString("OCR_NoRegion", "未选择区域");
+                return $"X:{OCRRect.X:F0}, Y:{OCRRect.Y:F0}, W:{OCRRect.Width:F0}, H:{OCRRect.Height:F0}";
+            }
+        }
+
+        #endregion
+
         public FindImageStep() : base()
         {
             Type = StepType.FindImage;
@@ -447,7 +499,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 SimilarityThreshold = SimilarityThreshold,
                 WaitTime = WaitTime,
                 GapTime = GapTime,
-                Timeout = Timeout
+                Timeout = Timeout,
+                EnableOCR = EnableOCR,
+                OCRRect = new(OCRRect.X, OCRRect.Y, OCRRect.Width, OCRRect.Height),
+                EnableLog = EnableLog,
+                ConditionMode = ConditionMode,
+                Conditions = new(Conditions),
             };
             if (clonedImg != null)
                 res.SaveCroppedImageToDisk(clonedImg);
@@ -468,13 +525,40 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsError = false;
             ErrorType = StepErrorType.None;
 
+            // OCR 识别（如果启用且找到图片）
+            string ocrText = null;
+            if (EnableOCR && IsTrue && !OCRRect.IsEmpty && OCRRect.Width > 0 && OCRRect.Height > 0)
+            {
+                // 计算 OCR 区域在屏幕上的绝对坐标
+                // res.LeftTop 是找到的图片在屏幕上的左上角坐标
+                // OCRRect 是相对于原图的坐标，需减去 CroppedRect 偏移得到相对于裁剪图的坐标
+                double ocrScreenX = res.LeftTop.X + (OCRRect.X - CroppedRect.X);
+                double ocrScreenY = res.LeftTop.Y + (OCRRect.Y - CroppedRect.Y);
+                var screenRegion = new Rect(ocrScreenX, ocrScreenY, OCRRect.Width, OCRRect.Height);
+
+                ocrText = await Task.Run(() => Services.OCRService.RecognizeRegion(screenRegion), cancellationToken);
+                OCRResultPreview = string.IsNullOrWhiteSpace(ocrText)
+                    ? LanguageService.GetLocalizedString("OCR_NoResult", "未识别到文本")
+                    : ocrText;
+            }
+
             // 填充执行结果
             LastResult = new StepExecutionResult
             {
                 IsTrue = IsTrue,
                 Similarity = res.Similarity,
                 ClickPosition = res.IsEmpty ? null : res.Center,
+                OCRText = ocrText,
             };
+
+            // 日志记录
+            if (EnableLog)
+            {
+                string fileName = System.IO.Path.GetFileNameWithoutExtension(
+                    Utils.SingletonLocator.Main.StepFilePath ?? "unsaved");
+                string logContent = ocrText ?? (IsTrue ? "Found" : "Not Found");
+                Services.ExecutionLogService.Log(Uid, fileName, Name, logContent);
+            }
 
             return IsTrue;
         }

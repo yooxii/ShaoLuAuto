@@ -9,10 +9,99 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <conv:ConditionModeToVisibilityConverter x:Key="ConditionModeToVisibility"/>
+    <conv:ConditionEnumToStringConverter x:Key="ConditionEnumToString"/>
+    <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+    <!-- 通用条件判断面板 -->
+    <DataTemplate x:Key="ConditionPanelTemplate">
+        <GroupBox Header="{lex:Loc ConditionPanel}" Margin="0,10,0,0">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,3">
+                    <Label Content="{lex:Loc ConditionMode_Label}" VerticalAlignment="Center"/>
+                    <ComboBox SelectedItem="{Binding ConditionMode}" MinWidth="200">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <models:ConditionMode>Default</models:ConditionMode>
+                        <models:ConditionMode>Custom</models:ConditionMode>
+                    </ComboBox>
+                </StackPanel>
+                <TextBlock Text="{lex:Loc ConditionMode_Hint}" 
+                           Foreground="Gray" FontSize="11" Margin="0,2,0,5" TextWrapping="Wrap"/>
+                <StackPanel Visibility="{Binding ConditionMode, Converter={StaticResource ConditionModeToVisibility}}">
+                    <ItemsControl ItemsSource="{Binding Conditions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:StepCondition}">
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <ComboBox SelectedItem="{Binding Variable}" MinWidth="160" Margin="0,0,3,0">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                        <models:ConditionVariable>ConstantTrue</models:ConditionVariable>
+                                        <models:ConditionVariable>ConstantFalse</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_IsTrue</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_Similarity</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_ExecutionTimeMs</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_ClickX</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_ClickY</models:ConditionVariable>
+                                        <models:ConditionVariable>Self_OCRText</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_IsTrue</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_Similarity</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_ExecutionTimeMs</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_ClickX</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_ClickY</models:ConditionVariable>
+                                        <models:ConditionVariable>Step_OCRText</models:ConditionVariable>
+                                    </ComboBox>
+                                    <wd:NumericBox Value="{Binding StepLineNo}" MinWidth="40" Minimum="0" Margin="0,0,3,0" ToolTip="{lex:Loc Condition_StepLineNo_Tooltip}"/>
+                                    <ComboBox SelectedItem="{Binding Operator}" MinWidth="100" Margin="0,0,3,0">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                        <models:ConditionOperator>Equal</models:ConditionOperator>
+                                        <models:ConditionOperator>NotEqual</models:ConditionOperator>
+                                        <models:ConditionOperator>GreaterThan</models:ConditionOperator>
+                                        <models:ConditionOperator>LessThan</models:ConditionOperator>
+                                        <models:ConditionOperator>GreaterOrEqual</models:ConditionOperator>
+                                        <models:ConditionOperator>LessOrEqual</models:ConditionOperator>
+                                        <models:ConditionOperator>Contains</models:ConditionOperator>
+                                        <models:ConditionOperator>NotContains</models:ConditionOperator>
+                                        <models:ConditionOperator>IsEmpty</models:ConditionOperator>
+                                        <models:ConditionOperator>IsNotEmpty</models:ConditionOperator>
+                                    </ComboBox>
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}" MinWidth="60" Margin="0,0,3,0"
+                                             ToolTip="{lex:Loc Condition_Value_Tooltip}"/>
+                                    <ComboBox SelectedItem="{Binding Connector}" MinWidth="80" Margin="0,0,3,0">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                        <models:LogicConnector>And</models:LogicConnector>
+                                        <models:LogicConnector>Or</models:LogicConnector>
+                                    </ComboBox>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                        <Button Content="{lex:Loc Condition_Add}" Command="{Binding AddConditionCommand}" Margin="0,0,5,0"/>
+                        <Button Content="{lex:Loc Condition_Remove}" Command="{Binding RemoveConditionCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+    </DataTemplate>
 
     <!-- 识图步骤的UI -->
     <DataTemplate x:Key="ClickImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
         <StackPanel Orientation="Vertical">
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel>
                 <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
                 <StackPanel Orientation="Horizontal">
@@ -67,11 +156,13 @@
                     Interval="0.1"/>
                 </StackPanel>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="FindImageStepTemplate" DataType="{x:Type AutoVM:FindImageStep}">
         <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel>
                 <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
                 <StackPanel Orientation="Horizontal">
@@ -115,12 +206,23 @@
                 <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
             </StackPanel>
+
+            <!-- OCR 识别区域（通过编辑窗口设置） -->
+            <StackPanel Margin="0,8,0,0" Visibility="{Binding EnableOCR, Converter={StaticResource BoolToVis}}">
+                <Label Content="{lex:Loc FindImage_OCR_Group}" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" 
+                         IsReadOnly="True" MinWidth="200" HorizontalAlignment="Left"/>
+                <TextBlock Text="{lex:Loc FindImage_OCR_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
 
     <DataTemplate x:Key="ClickImagesStepTemplate" DataType="{x:Type AutoVM:ClickImagesStep}">
         <StackPanel Orientation="Vertical">
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel Orientation="Horizontal">
                 <Button Content=" + " Command="{Binding AddImageCommand}" Margin="0,0,10,0"/>
                 <Button Content=" - " Command="{Binding DelImageCommand}" Margin="0,0,10,0"/>
@@ -178,11 +280,13 @@
                     Interval="0.1"/>
                 </StackPanel>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="FindImagesStepTemplate" DataType="{x:Type AutoVM:FindImagesStep}">
         <StackPanel Orientation="Vertical">
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel Orientation="Horizontal">
                 <Button Content=" + " Command="{Binding AddImageCommand}" Margin="0,0,10,0"/>
                 <Button Content=" - " Command="{Binding DelImageCommand}" Margin="0,0,10,0"/>
@@ -238,15 +342,14 @@
                     <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
                 </StackPanel>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
     <!-- 输入文字步骤的UI -->
     <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
         <StackPanel Orientation="Vertical">
-            <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Margin="0,5,0,0">
-                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" HorizontalAlignment="Left"/>
-            </StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
@@ -259,14 +362,13 @@
                 <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="TextStepMoreTemplate" DataType="{x:Type AutoVM:TypeTextMoreStep}">
         <StackPanel Orientation="Vertical">
-            <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Margin="0,5,0,0">
-                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" HorizontalAlignment="Left"/>
-            </StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc Prefix}" VerticalAlignment="Center"/>
@@ -306,14 +408,13 @@
                 <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding TextToType}"/>
             </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
     
     <DataTemplate x:Key="TextStepFromFileTemplate" DataType="{x:Type AutoVM:TypeTextFromFileStep}">
         <StackPanel Orientation="Vertical">
-            <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,5">
-                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" HorizontalAlignment="Left"/>
-            </StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
@@ -347,11 +448,13 @@
                     </ListBox>
                 </StackPanel>
             </GroupBox>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="PopupStepTemplate" DataType="{x:Type AutoVM:PopupStep}">
         <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel VerticalAlignment="Center">
                 <Label Content="{lex:Loc Title}" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" 
@@ -447,76 +550,14 @@
                     </ListBox>
                 </Grid>
             </GroupBox>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
-    </DataTemplate>
-
-    <!-- 通用条件判断面板 -->
-    <DataTemplate x:Key="ConditionPanelTemplate">
-        <GroupBox Header="{lex:Loc ConditionPanel}" Margin="0,10,0,0">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,3">
-                    <Label Content="{lex:Loc ConditionMode}" VerticalAlignment="Center"/>
-                    <ComboBox SelectedItem="{Binding ConditionMode}" MinWidth="120">
-                        <models:ConditionMode>Default</models:ConditionMode>
-                        <models:ConditionMode>Custom</models:ConditionMode>
-                    </ComboBox>
-                </StackPanel>
-                <StackPanel Visibility="{Binding ConditionMode, Converter={StaticResource ConditionModeToVisibility}}">
-                    <ItemsControl ItemsSource="{Binding Conditions}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type models:StepCondition}">
-                                <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <ComboBox SelectedItem="{Binding Variable}" MinWidth="100" Margin="0,0,3,0">
-                                        <models:ConditionVariable>ConstantTrue</models:ConditionVariable>
-                                        <models:ConditionVariable>ConstantFalse</models:ConditionVariable>
-                                        <models:ConditionVariable>Self_IsTrue</models:ConditionVariable>
-                                        <models:ConditionVariable>Self_Similarity</models:ConditionVariable>
-                                        <models:ConditionVariable>Self_ExecutionTimeMs</models:ConditionVariable>
-                                        <models:ConditionVariable>Self_ClickX</models:ConditionVariable>
-                                        <models:ConditionVariable>Self_ClickY</models:ConditionVariable>
-                                        <models:ConditionVariable>Self_OCRText</models:ConditionVariable>
-                                        <models:ConditionVariable>Step_IsTrue</models:ConditionVariable>
-                                        <models:ConditionVariable>Step_Similarity</models:ConditionVariable>
-                                        <models:ConditionVariable>Step_ExecutionTimeMs</models:ConditionVariable>
-                                        <models:ConditionVariable>Step_ClickX</models:ConditionVariable>
-                                        <models:ConditionVariable>Step_ClickY</models:ConditionVariable>
-                                        <models:ConditionVariable>Step_OCRText</models:ConditionVariable>
-                                    </ComboBox>
-                                    <wd:NumericBox Value="{Binding StepLineNo}" MinWidth="40" Minimum="0" Margin="0,0,3,0"/>
-                                    <ComboBox SelectedItem="{Binding Operator}" MinWidth="60" Margin="0,0,3,0">
-                                        <models:ConditionOperator>Equal</models:ConditionOperator>
-                                        <models:ConditionOperator>NotEqual</models:ConditionOperator>
-                                        <models:ConditionOperator>GreaterThan</models:ConditionOperator>
-                                        <models:ConditionOperator>LessThan</models:ConditionOperator>
-                                        <models:ConditionOperator>GreaterOrEqual</models:ConditionOperator>
-                                        <models:ConditionOperator>LessOrEqual</models:ConditionOperator>
-                                        <models:ConditionOperator>Contains</models:ConditionOperator>
-                                        <models:ConditionOperator>NotContains</models:ConditionOperator>
-                                        <models:ConditionOperator>IsEmpty</models:ConditionOperator>
-                                        <models:ConditionOperator>IsNotEmpty</models:ConditionOperator>
-                                    </ComboBox>
-                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}" MinWidth="60" Margin="0,0,3,0"/>
-                                    <ComboBox SelectedItem="{Binding Connector}" MinWidth="45" Margin="0,0,3,0">
-                                        <models:LogicConnector>And</models:LogicConnector>
-                                        <models:LogicConnector>Or</models:LogicConnector>
-                                    </ComboBox>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                        <Button Content=" + " Command="{Binding AddConditionCommand}" Margin="0,0,5,0"/>
-                        <Button Content=" - " Command="{Binding RemoveConditionCommand}"/>
-                    </StackPanel>
-                </StackPanel>
-                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,5,0,0"/>
-            </StackPanel>
-        </GroupBox>
     </DataTemplate>
 
     <!-- TextOCR 步骤的UI -->
     <DataTemplate x:Key="TextOCRStepTemplate" DataType="{x:Type AutoVM:TextOCRStep}">
         <StackPanel Orientation="Vertical">
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel Margin="0,5,0,0">
                 <Label Content="{lex:Loc OCR_Region}" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal">

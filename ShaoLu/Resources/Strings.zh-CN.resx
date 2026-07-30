@@ -705,4 +705,70 @@
   <data name="OCR_NoResult" xml:space="preserve">
     <value>未识别到文本</value>
   </data>
+  <data name="ConditionMode_Label" xml:space="preserve">
+    <value>判断模式:</value>
+  </data>
+  <data name="ConditionMode_Hint" xml:space="preserve">
+    <value>提示：选择“自定义”后，下方规则将替代步骤默认的成功/失败判断。</value>
+  </data>
+  <data name="Condition_StepLineNo_Tooltip" xml:space="preserve">
+    <value>引用步骤行号（仅“引用步骤”类型有效）</value>
+  </data>
+  <data name="Condition_Value_Tooltip" xml:space="preserve">
+    <value>比较值（例如: true, 0.9, 包含的文字等）</value>
+  </data>
+  <data name="Condition_Add" xml:space="preserve">
+    <value>+ 添加条件</value>
+  </data>
+  <data name="Condition_Remove" xml:space="preserve">
+    <value>- 删除条件</value>
+  </data>
+  <data name="CropImage_EnableRatioScale" xml:space="preserve">
+    <value>开启等比缩放</value>
+  </data>
+  <data name="CropImage_RatioLabel" xml:space="preserve">
+    <value>裁剪区域比例:</value>
+  </data>
+  <data name="CropImage_SelectImage" xml:space="preserve">
+    <value>选择图片</value>
+  </data>
+  <data name="CropImage_SaveImage" xml:space="preserve">
+    <value>保存图片</value>
+  </data>
+  <data name="Settings_AppSettings" xml:space="preserve">
+    <value>App 设置</value>
+  </data>
+  <data name="Settings_StepSettings" xml:space="preserve">
+    <value>Step 设置</value>
+  </data>
+  <data name="Settings_DaysHint" xml:space="preserve">
+    <value>天（0 = 永不清理）</value>
+  </data>
+  <data name="MultiCropImage_RotateTooltip" xml:space="preserve">
+    <value>旋转裁剪框</value>
+  </data>
+  <data name="MultiCropImage_ResetRotationTooltip" xml:space="preserve">
+    <value>复位旋转</value>
+  </data>
+  <data name="OCR_EditRegionTitle" xml:space="preserve">
+    <value>OCR 区域选择</value>
+  </data>
+  <data name="OCR_EditRegionHint" xml:space="preserve">
+    <value>在截图上拖拽框选 OCR 识别区域，按 Enter 确认，ESC 取消</value>
+  </data>
+  <data name="FindImage_OCR_Group" xml:space="preserve">
+    <value>OCR 文字识别</value>
+  </data>
+  <data name="FindImage_EnableOCR" xml:space="preserve">
+    <value>找到图片后执行 OCR 识别</value>
+  </data>
+  <data name="SetOCRRegion" xml:space="preserve">
+    <value>设置OCR区域</value>
+  </data>
+  <data name="ClearOCRRegion" xml:space="preserve">
+    <value>清除OCR区域</value>
+  </data>
+  <data name="FindImage_OCR_Hint" xml:space="preserve">
+    <value>通过“编辑”窗口中的菜单“设置OCR区域”来指定识别范围</value>
+  </data>
 </root>

@@ -190,6 +190,24 @@ namespace ShaoLu.Views
                 _ => SystemIcons.Information.ToBitmapSource(),
             };
         }
+
+        /// <summary>
+        /// 从外部触发关闭弹窗并设置结果（供超时/步骤到达模式使用）
+        /// </summary>
+        public void CloseWithResult(string result)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.InvokeAsync(() => CloseWithResult(result));
+                return;
+            }
+
+            _tcs?.TrySetResult(result ?? string.Empty);
+            if (IsVisible)
+            {
+                Close();
+            }
+        }
     }
 
     // 辅助扩展方法：将 System.Drawing.Icon 转换为 WPF ImageSource

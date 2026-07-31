@@ -57,6 +57,9 @@ namespace ShaoLu
                 MainWindow = mainWindow;
                 mainWindow.Show();
 
+                // 5. 应用全局字体设置
+                SettingsWindowViewModel.ApplyGlobalFont(Utils.SingletonLocator.Settings.App.WindowFont);
+
                 // 5. 缓存 DPI 缩放因子（供 OCR 服务在后台线程使用）
                 OCRService.UpdateDpi();
             }

@@ -363,6 +363,27 @@
   <data name="Buttons" xml:space="preserve">
     <value>按钮组</value>
   </data>
+  <data name="PopupCloseMode" xml:space="preserve">
+    <value>关闭模式</value>
+  </data>
+  <data name="CloseMode" xml:space="preserve">
+    <value>关闭方式</value>
+  </data>
+  <data name="AutoCloseSeconds" xml:space="preserve">
+    <value>自动关闭时间</value>
+  </data>
+  <data name="CloseOnStep" xml:space="preserve">
+    <value>到达步骤时关闭</value>
+  </data>
+  <data name="CloseMode_ButtonClick" xml:space="preserve">
+    <value>点击按钮关闭</value>
+  </data>
+  <data name="CloseMode_Timeout" xml:space="preserve">
+    <value>超时自动关闭</value>
+  </data>
+  <data name="CloseMode_StepReached" xml:space="preserve">
+    <value>到达步骤关闭</value>
+  </data>
   <data name="Refresh" xml:space="preserve">
     <value>刷新</value>
   </data>
@@ -509,6 +530,9 @@
   </data>
   <data name="DefaultSelfReferenceLimit" xml:space="preserve">
     <value>自引用上限</value>
+  </data>
+  <data name="SelfReferenceLimitHint" xml:space="preserve">
+    <value>(-1=无限制, 0=禁止自引用)</value>
   </data>
   <data name="DefaultStepParams" xml:space="preserve">
     <value>新建步骤默认参数</value>
@@ -791,6 +815,9 @@
   </data>
   <data name="Settings_DebugSettings" xml:space="preserve">
     <value>调试设置</value>
+  </data>
+  <data name="Settings_RunBehavior" xml:space="preserve">
+    <value>运行行为</value>
   </data>
   <data name="ShowOCRRegionOnRun" xml:space="preserve">
     <value>运行时显示OCR识别区域</value>

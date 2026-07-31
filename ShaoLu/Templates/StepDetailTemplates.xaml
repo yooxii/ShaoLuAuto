@@ -627,6 +627,68 @@
                     </ListBox>
                 </Grid>
             </GroupBox>
+            <!-- 关闭模式设置 -->
+            <GroupBox Header="{lex:Loc PopupCloseMode}" Margin="0,5,0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <TextBlock Text="{lex:Loc CloseMode}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox ItemsSource="{Binding CloseModes}" 
+                                  SelectedItem="{Binding CloseMode}"
+                                  MinWidth="150">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <!-- Timeout 模式配置 -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CloseMode}" Value="Timeout">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="{lex:Loc AutoCloseSeconds}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <wd:NumericBox Value="{Binding AutoCloseSeconds, Mode=TwoWay}" 
+                                       Minimum="0.5" Maximum="3600" Precision="1" Interval="0.5" Width="80"/>
+                        <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                    </StackPanel>
+                    <!-- StepReached 模式配置 -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CloseMode}" Value="StepReached">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="{lex:Loc CloseOnStep}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox ItemsSource="{Binding AllSteps}"
+                                  SelectedValue="{Binding CloseOnStepUid, TargetNullValue={x:Static sys:Guid.Empty}}"
+                                  SelectedValuePath="Uid"
+                                  MinWidth="150">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                        <Run Text=" - "/>
+                                        <Run Text="{Binding Name, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>

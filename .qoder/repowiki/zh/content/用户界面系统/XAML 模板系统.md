@@ -17,6 +17,13 @@
 - [Styles.xaml](file://ShaoLu/Themes/Styles.xaml)
 </cite>
 
+## 更新摘要
+**变更内容**   
+- 新增Goto面板模板，提供直观的步骤导航界面
+- 支持通过下拉列表选择True/False分支的目标步骤，替代之前的数字输入方式
+- 增强弹出框文本编辑器的多行支持功能
+- 改进用户交互体验和操作便捷性
+
 ## 目录
 1. [简介](#简介)
 2. [项目结构](#项目结构)
@@ -32,10 +39,12 @@
 ## 简介
 本文件系统化梳理 ShaoLu 的 XAML 模板体系，重点说明动态 UI 生成机制与 DataTemplate、ControlTemplate 的使用方式；深入解析模板选择器 TemplateSelector（SettingsTemplateSelector、StepTemplateSelector）的工作原理；解释三类模板的职责与使用场景：SettingsTemplates（设置界面）、StepDetailTemplates（步骤详情编辑）、StepSummaryTemplates（步骤摘要展示）。同时覆盖数据绑定、样式定制、响应式布局、性能优化与缓存策略、调试技巧与常见问题，并提供模板开发示例与设计模式建议。
 
+**最新更新**：新增了直观的Goto跳转面板模板，大幅改进了步骤导航的用户体验，将复杂的数字输入方式替换为可视化的下拉选择界面。
+
 ## 项目结构
 ShaoLu 将模板资源按用途拆分到独立 XAML 文件中，并通过 ResourceDictionary 在视图层按需合并加载：
 - SettingsTemplates.xaml：定义 App 与 Step 两类设置的 DataTemplate，配合 SettingsTemplateSelector 实现动态渲染。
-- StepDetailTemplates.xaml：为多种自动化步骤类型提供详细的编辑面板，包含条件判断通用面板、图像识别、文本输入、弹窗、OCR 等。
+- StepDetailTemplates.xaml：为多种自动化步骤类型提供详细的编辑面板，包含条件判断通用面板、图像识别、文本输入、弹窗、OCR等，**新增Goto跳转面板模板**。
 - StepSummaryTemplates.xaml：为列表或摘要视图提供精简的数据模板。
 - Converters 下的两个 Selector：根据数据类型或枚举值返回对应模板。
 - View 层通过 ContentControl + ContentTemplateSelector 或 ItemsControl/DataGrid 的 ItemTemplate 使用模板。
@@ -69,22 +78,11 @@ UCSteps --> SDT
 UCSteps --> StepSel
 ```
 
-图表来源 
+**图表来源** 
 - [App.xaml:1-36](file://ShaoLu/App.xaml#L1-L36)
 - [Styles.xaml:1-232](file://ShaoLu/Themes/Styles.xaml#L1-L232)
 - [SettingsTemplates.xaml:1-143](file://ShaoLu/Templates/SettingsTemplates.xaml#L1-L143)
-- [StepDetailTemplates.xaml:1-608](file://ShaoLu/Templates/StepDetailTemplates.xaml#L1-L608)
-- [StepSummaryTemplates.xaml:1-55](file://ShaoLu/Templates/StepSummaryTemplates.xaml#L1-L55)
-- [SettingsTemplateSelector.cs:1-26](file://ShaoLu/Converters/SettingsTemplateSelector.cs#L1-L26)
-- [StepTemplateSelector.cs:1-44](file://ShaoLu/Converters/StepTemplateSelector.cs#L1-L44)
-- [WindowSettings.xaml:1-67](file://ShaoLu/Views/WindowSettings.xaml#L1-L67)
-- [UserControlSteps.xaml:1-166](file://ShaoLu/Views/UserControlSteps.xaml#L1-L166)
-
-章节来源
-- [App.xaml:1-36](file://ShaoLu/App.xaml#L1-L36)
-- [Styles.xaml:1-232](file://ShaoLu/Themes/Styles.xaml#L1-L232)
-- [SettingsTemplates.xaml:1-143](file://ShaoLu/Templates/SettingsTemplates.xaml#L1-L143)
-- [StepDetailTemplates.xaml:1-608](file://ShaoLu/Templates/StepDetailTemplates.xaml#L1-L608)
+- [StepDetailTemplates.xaml:1-671](file://ShaoLu/Templates/StepDetailTemplates.xaml#L1-L671)
 - [StepSummaryTemplates.xaml:1-55](file://ShaoLu/Templates/StepSummaryTemplates.xaml#L1-L55)
 - [SettingsTemplateSelector.cs:1-26](file://ShaoLu/Converters/SettingsTemplateSelector.cs#L1-L26)
 - [StepTemplateSelector.cs:1-44](file://ShaoLu/Converters/StepTemplateSelector.cs#L1-L44)
@@ -97,20 +95,11 @@ UCSteps --> StepSel
   - StepTemplateSelector：基于 AutomationStepBase.Type（StepType 枚举）返回不同的步骤详情模板。
 - 模板资源
   - SettingsTemplates.xaml：为 App 与 Step 设置提供 DataTemplate，并绑定到相应 ViewModel 的属性。
-  - StepDetailTemplates.xaml：为每种步骤类型提供编辑面板，包含通用条件面板、参数输入、命令按钮等。
+  - StepDetailTemplates.xaml：为每种步骤类型提供编辑面板，包含通用条件面板、参数输入、命令按钮等，**新增Goto跳转面板模板**。
   - StepSummaryTemplates.xaml：为列表项提供简洁的数据展示模板。
 - 视图集成
   - WindowSettings.xaml：通过 ContentControl + 合并资源字典 + 选择器，动态渲染设置面板。
   - UserControlSteps.xaml：通过 DataGrid 展示步骤列表，右侧 ContentControl 使用 StepTemplateSelector 渲染选中步骤的详情。
-
-章节来源
-- [SettingsTemplateSelector.cs:1-26](file://ShaoLu/Converters/SettingsTemplateSelector.cs#L1-L26)
-- [StepTemplateSelector.cs:1-44](file://ShaoLu/Converters/StepTemplateSelector.cs#L1-L44)
-- [SettingsTemplates.xaml:1-143](file://ShaoLu/Templates/SettingsTemplates.xaml#L1-L143)
-- [StepDetailTemplates.xaml:1-608](file://ShaoLu/Templates/StepDetailTemplates.xaml#L1-L608)
-- [StepSummaryTemplates.xaml:1-55](file://ShaoLu/Templates/StepSummaryTemplates.xaml#L1-L55)
-- [WindowSettings.xaml:1-67](file://ShaoLu/Views/WindowSettings.xaml#L1-L67)
-- [UserControlSteps.xaml:1-166](file://ShaoLu/Views/UserControlSteps.xaml#L1-L166)
 
 ## 架构总览
 下图展示了从视图到模板选择器再到具体模板的调用链，以及数据模型与 ViewModel 的绑定关系。
@@ -131,15 +120,10 @@ VM-->>Tpl : 属性变更通知(INotifyPropertyChanged)
 Tpl-->>V : UI 更新
 ```
 
-图表来源 
+**图表来源** 
 - [UserControlSteps.xaml:138-152](file://ShaoLu/Views/UserControlSteps.xaml#L138-L152)
 - [StepTemplateSelector.cs:21-41](file://ShaoLu/Converters/StepTemplateSelector.cs#L21-L41)
-- [StepDetailTemplates.xaml:598-608](file://ShaoLu/Templates/StepDetailTemplates.xaml#L598-L608)
-
-章节来源
-- [UserControlSteps.xaml:138-152](file://ShaoLu/Views/UserControlSteps.xaml#L138-L152)
-- [StepTemplateSelector.cs:21-41](file://ShaoLu/Converters/StepTemplateSelector.cs#L21-L41)
-- [StepDetailTemplates.xaml:598-608](file://ShaoLu/Templates/StepDetailTemplates.xaml#L598-L608)
+- [StepDetailTemplates.xaml:661-671](file://ShaoLu/Templates/StepDetailTemplates.xaml#L661-L671)
 
 ## 详细组件分析
 
@@ -163,13 +147,7 @@ SettingsTemplateSelector --> AppSettingsViewModel : "匹配时返回 App 模板"
 SettingsTemplateSelector --> StepSettingsViewModel : "匹配时返回 Step 模板"
 ```
 
-图表来源 
-- [SettingsTemplateSelector.cs:1-26](file://ShaoLu/Converters/SettingsTemplateSelector.cs#L1-L26)
-- [SettingsTemplates.xaml:10-68](file://ShaoLu/Templates/SettingsTemplates.xaml#L10-L68)
-- [SettingsTemplates.xaml:71-141](file://ShaoLu/Templates/SettingsTemplates.xaml#L71-L141)
-- [WindowSettings.xaml:45-55](file://ShaoLu/Views/WindowSettings.xaml#L45-L55)
-
-章节来源
+**图表来源** 
 - [SettingsTemplateSelector.cs:1-26](file://ShaoLu/Converters/SettingsTemplateSelector.cs#L1-L26)
 - [SettingsTemplates.xaml:10-68](file://ShaoLu/Templates/SettingsTemplates.xaml#L10-L68)
 - [SettingsTemplates.xaml:71-141](file://ShaoLu/Templates/SettingsTemplates.xaml#L71-L141)
@@ -212,16 +190,10 @@ OCR --> End
 Default --> End
 ```
 
-图表来源 
+**图表来源** 
 - [StepTemplateSelector.cs:21-41](file://ShaoLu/Converters/StepTemplateSelector.cs#L21-L41)
 - [AutomationStepModel.cs:9-22](file://ShaoLu/Models/AutomationStepModel.cs#L9-L22)
-- [StepDetailTemplates.xaml:598-608](file://ShaoLu/Templates/StepDetailTemplates.xaml#L598-L608)
-- [UserControlSteps.xaml:143-144](file://ShaoLu/Views/UserControlSteps.xaml#L143-L144)
-
-章节来源
-- [StepTemplateSelector.cs:21-41](file://ShaoLu/Converters/StepTemplateSelector.cs#L21-L41)
-- [AutomationStepModel.cs:9-22](file://ShaoLu/Models/AutomationStepModel.cs#L9-L22)
-- [StepDetailTemplates.xaml:598-608](file://ShaoLu/Templates/StepDetailTemplates.xaml#L598-L608)
+- [StepDetailTemplates.xaml:661-671](file://ShaoLu/Templates/StepDetailTemplates.xaml#L661-L671)
 - [UserControlSteps.xaml:143-144](file://ShaoLu/Views/UserControlSteps.xaml#L143-L144)
 
 ### 模板资源：SettingsTemplates（设置界面）
@@ -234,36 +206,100 @@ Default --> End
 - 国际化：
   - 通过 lex:Loc 获取本地化字符串。
 
-章节来源
-- [SettingsTemplates.xaml:10-68](file://ShaoLu/Templates/SettingsTemplates.xaml#L10-L68)
-- [SettingsTemplates.xaml:71-141](file://ShaoLu/Templates/SettingsTemplates.xaml#L71-L141)
-- [SettingsViewModel.cs:33-81](file://ShaoLu/Viewmodels/SettingsViewModel.cs#L33-L81)
-- [SettingsViewModel.cs:84-137](file://ShaoLu/Viewmodels/SettingsViewModel.cs#L84-L137)
-
 ### 模板资源：StepDetailTemplates（步骤详情）
-- 通用条件面板：
-  - 支持“默认/自定义”模式切换，自定义模式下可添加多条条件规则（变量、运算符、值、连接符）。
-  - 使用 Converter 将枚举转换为显示文本，Visibility 转换器控制条件面板显隐。
-- 各步骤模板：
-  - 图像识别（单击/查找/多图）：相似度阈值滑块与数值框联动、点击次数/间隔、等待/超时、可选 OCR 区域。
-  - 文本输入（单行/多段/文件）：前缀/中缀/后缀拼接预览、延迟、文件内容列表（虚拟化）。
-  - 弹窗：标题、文本、字体颜色、类型图标、按钮集合。
-  - OCR：选择区域、测试预览、等待时间。
-- 模板选择器注册：
-  - 在资源字典末尾声明 StepDetailSelector，并将各模板注入。
 
-章节来源
-- [StepDetailTemplates.xaml:16-113](file://ShaoLu/Templates/StepDetailTemplates.xaml#L16-L113)
-- [StepDetailTemplates.xaml:116-175](file://ShaoLu/Templates/StepDetailTemplates.xaml#L116-L175)
-- [StepDetailTemplates.xaml:177-234](file://ShaoLu/Templates/StepDetailTemplates.xaml#L177-L234)
-- [StepDetailTemplates.xaml:237-299](file://ShaoLu/Templates/StepDetailTemplates.xaml#L237-L299)
-- [StepDetailTemplates.xaml:301-361](file://ShaoLu/Templates/StepDetailTemplates.xaml#L301-L361)
-- [StepDetailTemplates.xaml:364-381](file://ShaoLu/Templates/StepDetailTemplates.xaml#L364-L381)
-- [StepDetailTemplates.xaml:383-427](file://ShaoLu/Templates/StepDetailTemplates.xaml#L383-L427)
-- [StepDetailTemplates.xaml:429-468](file://ShaoLu/Templates/StepDetailTemplates.xaml#L429-L468)
-- [StepDetailTemplates.xaml:470-570](file://ShaoLu/Templates/StepDetailTemplates.xaml#L470-L570)
-- [StepDetailTemplates.xaml:572-596](file://ShaoLu/Templates/StepDetailTemplates.xaml#L572-L596)
-- [StepDetailTemplates.xaml:598-608](file://ShaoLu/Templates/StepDetailTemplates.xaml#L598-L608)
+#### **新增：Goto跳转面板模板**
+
+**更新**：新增了统一的Goto跳转面板模板，提供直观的步骤导航界面。
+
+- **功能特性**：
+  - 提供"若真则"和"若假则"两个下拉选择框
+  - 自动显示所有可用步骤，包括步骤编号和名称
+  - 支持"无跳转"占位选项
+  - 实时显示目标步骤的行号信息
+  - 支持双向数据绑定到 TrueGotoUid 和 FalseGotoUid 属性
+
+- **技术实现**：
+  ```xaml
+  <DataTemplate x:Key="GotoPanelTemplate">
+      <GroupBox Header="{lex:Loc GotoPanel}" Margin="0,10,0,0">
+          <Grid>
+              <!-- 若真则跳转 -->
+              <ComboBox ItemsSource="{Binding AllSteps}"
+                        SelectedValue="{Binding TrueGotoUid}"
+                        SelectedValuePath="Uid">
+                  <ComboBox.ItemTemplate>
+                      <DataTemplate>
+                          <TextBlock>
+                              <Run Text="{Binding LineNo}"/>
+                              <Run Text=" - "/>
+                              <Run Text="{Binding Name}"/>
+                          </TextBlock>
+                      </DataTemplate>
+                  </ComboBox.ItemTemplate>
+              </ComboBox>
+              <!-- 若假则跳转 -->
+              <ComboBox ItemsSource="{Binding AllSteps}"
+                        SelectedValue="{Binding FalseGotoUid}"
+                        SelectedValuePath="Uid">
+                  <!-- 类似配置 -->
+              </ComboBox>
+          </Grid>
+      </GroupBox>
+  </DataTemplate>
+  ```
+
+- **数据源支持**：
+  - `AllSteps` 集合：包含所有可用步骤，自动添加"无跳转"占位项
+  - `TrueGotoUid` / `FalseGotoUid`：目标步骤的唯一标识符
+  - `LineNo`：步骤的行号，用于UI显示
+  - `Name`：步骤名称，用于用户友好显示
+
+- **用户体验改进**：
+  - 替代了之前复杂的数字输入方式
+  - 提供可视化步骤导航界面
+  - 减少用户操作错误
+  - 提高配置效率
+
+#### **增强：弹出框文本编辑器多行支持**
+
+**更新**：增强了PopupStep模板中的文本编辑器功能。
+
+- **多行文本支持**：
+  ```xaml
+  <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
+           MinWidth="200" MinHeight="60"
+           AcceptsReturn="True" AcceptsTab="True"
+           TextWrapping="Wrap"
+           VerticalScrollBarVisibility="Auto"
+           Margin="0,0,10,5"/>
+  ```
+
+- **功能特性**：
+  - `AcceptsReturn="True"`：支持回车换行
+  - `AcceptsTab="True"`：支持Tab键缩进
+  - `TextWrapping="Wrap"`：自动文本换行
+  - `VerticalScrollBarVisibility="Auto"`：垂直滚动条自动显示
+  - 增强的文本编辑体验
+
+#### **通用条件面板**：
+- 支持"默认/自定义"模式切换，自定义模式下可添加多条条件规则（变量、运算符、值、连接符）。
+- 使用 Converter 将枚举转换为显示文本，Visibility 转换器控制条件面板显隐。
+
+#### **各步骤模板**：
+- 图像识别（单击/查找/多图）：相似度阈值滑块与数值框联动、点击次数/间隔、等待/超时、可选 OCR 区域。
+- 文本输入（单行/多段/文件）：前缀/中缀/后缀拼接预览、延迟、文件内容列表（虚拟化）。
+- 弹窗：标题、文本、字体颜色、类型图标、按钮集合。
+- OCR：选择区域、测试预览、等待时间。
+
+#### **模板选择器注册**：
+- 在资源字典末尾声明 StepDetailSelector，并将各模板注入。
+
+**章节来源**   
+- [StepDetailTemplates.xaml:15-64](file://ShaoLu/Templates/StepDetailTemplates.xaml#L15-L64)
+- [StepDetailTemplates.xaml:66-166](file://ShaoLu/Templates/StepDetailTemplates.xaml#L66-L166)
+- [StepDetailTemplates.xaml:530-632](file://ShaoLu/Templates/StepDetailTemplates.xaml#L530-L632)
+- [StepDetailTemplates.xaml:661-671](file://ShaoLu/Templates/StepDetailTemplates.xaml#L661-L671)
 
 ### 模板资源：StepSummaryTemplates（步骤摘要）
 - 内容：
@@ -271,11 +307,6 @@ Default --> End
   - TextStepSummaryTemplate：展示输入内容与键间隔。
 - 模板选择器：
   - StepSummarySelector 仅包含图像与文本两类模板，用于列表摘要视图。
-
-章节来源
-- [StepSummaryTemplates.xaml:19-36](file://ShaoLu/Templates/StepSummaryTemplates.xaml#L19-L36)
-- [StepSummaryTemplates.xaml:39-50](file://ShaoLu/Templates/StepSummaryTemplates.xaml#L39-L50)
-- [StepSummaryTemplates.xaml:52-55](file://ShaoLu/Templates/StepSummaryTemplates.xaml#L52-L55)
 
 ### 数据模型与 ViewModel
 - 步骤基类与类型：
@@ -287,8 +318,15 @@ Default --> End
   - AppSettingsModel、StepSettingsModel 定义应用与步骤级默认配置。
   - SettingsViewModel 负责构建设置树、保存回写与应用窗口设置。
 
-章节来源
+**更新**：AutomationStepBase 新增了完整的Goto跳转支持：
+- `TrueGotoUid` 和 `FalseGotoUid` 属性：存储目标步骤的唯一标识符
+- `AllSteps` 集合：提供所有可用步骤供Goto面板使用
+- `GotoPlaceholder`：静态占位项，表示"无跳转"选项
+- `TrueGotoLineNo` 和 `FalseGotoLineNo`：只读属性，计算显示目标步骤的行号
+
+**章节来源**
 - [AutomationStep.cs:25-205](file://ShaoLu/Viewmodels/AutomationStep.cs#L25-L205)
+- [AutomationStep.cs:105-183](file://ShaoLu/Viewmodels/AutomationStep.cs#L105-L183)
 - [AutomationStepModel.cs:9-22](file://ShaoLu/Models/AutomationStepModel.cs#L9-L22)
 - [Settings.cs:7-33](file://ShaoLu/Models/Settings.cs#L7-L33)
 - [Settings.cs:34-68](file://ShaoLu/Models/Settings.cs#L34-L68)
@@ -317,16 +355,7 @@ AppXaml["App.xaml"] --> Theme["WPFDevelopers 主题"]
 Styles["Styles.xaml"] --> Controls["控件样式/ControlTemplate"]
 ```
 
-图表来源 
-- [WindowSettings.xaml:45-55](file://ShaoLu/Views/WindowSettings.xaml#L45-L55)
-- [UserControlSteps.xaml:47-51](file://ShaoLu/Views/UserControlSteps.xaml#L47-L51)
-- [StepTemplateSelector.cs:21-41](file://ShaoLu/Converters/StepTemplateSelector.cs#L21-L41)
-- [AutomationStepModel.cs:9-22](file://ShaoLu/Models/AutomationStepModel.cs#L9-L22)
-- [SettingsTemplateSelector.cs:12-23](file://ShaoLu/Converters/SettingsTemplateSelector.cs#L12-L23)
-- [App.xaml:10-27](file://ShaoLu/App.xaml#L10-L27)
-- [Styles.xaml:1-232](file://ShaoLu/Themes/Styles.xaml#L1-L232)
-
-章节来源
+**图表来源** 
 - [WindowSettings.xaml:45-55](file://ShaoLu/Views/WindowSettings.xaml#L45-L55)
 - [UserControlSteps.xaml:47-51](file://ShaoLu/Views/UserControlSteps.xaml#L47-L51)
 - [StepTemplateSelector.cs:21-41](file://ShaoLu/Converters/StepTemplateSelector.cs#L21-L41)
@@ -347,7 +376,10 @@ Styles["Styles.xaml"] --> Controls["控件样式/ControlTemplate"]
 - 异步与取消：
   - 长耗时操作使用 Task 与 CancellationToken，避免阻塞 UI 线程（参考弹窗步骤的异步处理）。
 
-[本节为通用指导，不直接分析具体文件]
+**更新**：Goto面板的性能优化：
+- 使用 `SelectedValuePath="Uid"` 提高绑定性能
+- `IsEditable="False"` 禁用编辑模式，提升响应速度
+- 虚拟化的步骤列表确保大量步骤时的流畅体验
 
 ## 故障排查指南
 - 模板未生效
@@ -363,16 +395,20 @@ Styles["Styles.xaml"] --> Controls["控件样式/ControlTemplate"]
   - 启用虚拟化与回收，避免复杂模板在大量项中渲染。
 - 弹窗无法关闭
   - 检查异步任务与取消令牌是否正确注册与释放。
+- **Goto面板问题**：
+  - 确认 `AllSteps` 集合正确初始化
+  - 检查 `TrueGotoUid` 和 `FalseGotoUid` 属性绑定
+  - 验证步骤UID的唯一性和有效性
 
-章节来源
-- [StepDetailTemplates.xaml:16-113](file://ShaoLu/Templates/StepDetailTemplates.xaml#L16-L113)
+**章节来源**
+- [StepDetailTemplates.xaml:66-166](file://ShaoLu/Templates/StepDetailTemplates.xaml#L66-L166)
 - [AutomationStep.cs:693-752](file://ShaoLu/Viewmodels/AutomationStep.cs#L693-L752)
 - [UserControlSteps.xaml:143-152](file://ShaoLu/Views/UserControlSteps.xaml#L143-L152)
 
 ## 结论
-ShaoLu 的 XAML 模板系统以 DataTemplate 为核心，结合 TemplateSelector 实现高度可扩展的动态 UI 生成。通过清晰的职责划分（设置模板、详情模板、摘要模板）与良好的资源组织，既保证了 UI 的可维护性，又提升了扩展性与性能。建议在新增步骤类型时，遵循现有模式：扩展枚举、实现 ViewModel、编写模板并在选择器中注册，同时利用虚拟化与合适的绑定策略保障性能。
+ShaoLu 的 XAML 模板系统以 DataTemplate 为核心，结合 TemplateSelector 实现高度可扩展的动态 UI 生成。通过清晰的职责划分（设置模板、详情模板、摘要模板）与良好的资源组织，既保证了 UI 的可维护性，又提升了扩展性与性能。**最新的Goto跳转面板模板进一步提升了用户体验，将复杂的数字输入方式替换为直观的可视化选择界面，大大简化了步骤导航的配置过程。**
 
-[本节为总结，不直接分析具体文件]
+建议在新增步骤类型时，遵循现有模式：扩展枚举、实现 ViewModel、编写模板并在选择器中注册，同时利用虚拟化与合适的绑定策略保障性能。
 
 ## 附录
 - 模板开发示例与建议
@@ -380,7 +416,7 @@ ShaoLu 的 XAML 模板系统以 DataTemplate 为核心，结合 TemplateSelector
     - 在 StepType 枚举中添加新值。
     - 在 AutomationStepBase 派生类中实现业务逻辑与 UI 所需属性。
     - 在 StepDetailTemplates.xaml 中定义 DataTemplate，并在 StepDetailSelector 中注册。
-    - 在 UserControlSteps.xaml 的菜单或工具栏中添加“新增步骤”入口。
+    - 在 UserControlSteps.xaml 的菜单或工具栏中添加"新增步骤"入口。
   - 设置项扩展：
     - 在 AppSettingsModel/StepSettingsModel 中添加属性。
     - 在 SettingsTemplates.xaml 中增加对应控件与绑定。
@@ -393,5 +429,14 @@ ShaoLu 的 XAML 模板系统以 DataTemplate 为核心，结合 TemplateSelector
     - 使用 Visual Studio 的 Live Visual Tree 与 XAML 诊断。
     - 在 SelectTemplate 中加断点，确认返回模板是否符合预期。
     - 通过 ToolTip 与临时 TextBlock 输出中间状态，辅助定位绑定问题。
+  - **Goto面板开发指南**：
+    - 确保步骤UID的唯一性和有效性
+    - 正确处理"无跳转"占位项
+    - 实现双向数据绑定到Uid属性
+    - 提供友好的步骤显示格式（行号-名称）
 
-[本节为概念性内容，不直接分析具体文件]
+**更新**：Goto面板的最佳实践：
+- 使用 `TargetNullValue={x:Static sys:Guid.Empty}` 处理空值情况
+- 通过 `ResolveLineNo` 方法动态计算显示的行号
+- 利用 `SingletonLocator.Steps.AutomationStepBases` 获取步骤集合
+- 实现 `GotoPlaceholder` 静态属性提供统一的占位项

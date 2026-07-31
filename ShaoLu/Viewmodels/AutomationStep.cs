@@ -189,7 +189,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// </summary>
         public StepErrorType ErrorType { get => _errorType; set => SetProperty(ref _errorType, value); }
 
-        // 自引用次数上限（序列化，可在 UI 配置）
+        // 自引用次数上限（-1=无限制, 0=禁止自引用, >0=限制次数）
         private int _selfReferenceLimit = 10;
         public int SelfReferenceLimit { get => _selfReferenceLimit; set => SetProperty(ref _selfReferenceLimit, value); }
 
@@ -695,6 +695,29 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private PopupButtons _popupButtons = PopupButtons.OK;
         public PopupButtons PopupButtons { get => _popupButtons; set => SetProperty(ref _popupButtons, value); }
 
+        #region 关闭模式
+
+        private PopupCloseMode _closeMode = PopupCloseMode.ButtonClick;
+        /// <summary>关闭模式：ButtonClick=点击按钮, Timeout=超时自动关闭, StepReached=到达步骤关闭</summary>
+        public PopupCloseMode CloseMode { get => _closeMode; set => SetProperty(ref _closeMode, value); }
+
+        private double _autoCloseSeconds = 5;
+        /// <summary>Timeout 模式下的自动关闭时间(秒)</summary>
+        public double AutoCloseSeconds { get => _autoCloseSeconds; set => SetProperty(ref _autoCloseSeconds, value); }
+
+        private Guid? _closeOnStepUid;
+        /// <summary>StepReached 模式下，到达此步骤时关闭弹窗</summary>
+        public Guid? CloseOnStepUid { get => _closeOnStepUid; set => SetProperty(ref _closeOnStepUid, value); }
+
+        [JsonIgnore]
+        public List<PopupCloseMode> CloseModes { get; } = [PopupCloseMode.ButtonClick, PopupCloseMode.Timeout, PopupCloseMode.StepReached];
+
+        /// <summary>运行时引用：当前活跃的弹窗实例（供 StepReached 模式使用）</summary>
+        [JsonIgnore]
+        internal WindowAsyncPopup ActivePopupWindow { get; set; }
+
+        #endregion
+
         #region 命令
 
         [JsonIgnore]
@@ -763,6 +786,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 PopupFont = PopupFont?.Clone(),
                 PopupType = PopupType,
                 PopupButtons = new PopupButtons(PopupButtons),
+                CloseMode = CloseMode,
+                AutoCloseSeconds = AutoCloseSeconds,
+                CloseOnStepUid = CloseOnStepUid,
                 WaitTime = WaitTime,
                 IsNeed = IsNeed,
             };
@@ -782,22 +808,23 @@ namespace ShaoLu.Viewmodels.AutomationStep
             // 1. 启动异步弹窗任务
             var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, PopupButtons, iconType);
 
-            // 2. 等待任务完成或被取消
+            // 保存活跃窗口引用（供 StepReached 模式使用）
+            if (popupWindow is WindowAsyncPopup asyncPopup)
+            {
+                ActivePopupWindow = asyncPopup;
+            }
+
+            // 2. 根据关闭模式处理
             try
             {
-                // 将 CancellationToken 注册到 Task
                 using (cancellationToken.Register(() =>
                 {
-                    // 当取消发生时，在 UI 线程关闭窗口
-                    // 检查窗口是否仍然存在且未关闭
                     if (popupWindow != null && !popupWindow.Dispatcher.HasShutdownStarted)
                     {
                         popupWindow.Dispatcher.InvokeAsync(() =>
                         {
                             if (popupWindow.IsVisible)
-                            {
                                 popupWindow.Close();
-                            }
                         });
                     }
                 }))
@@ -805,22 +832,52 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     var cancelTask = new TaskCompletionSource<bool>();
                     using (cancellationToken.Register(() => cancelTask.TrySetResult(true)))
                     {
-                        var completedTask = await Task.WhenAny(popupTask, cancelTask.Task);
+                        Task completedTask;
+
+                        if (CloseMode == PopupCloseMode.Timeout && AutoCloseSeconds > 0)
+                        {
+                            // 超时模式：等待弹窗任务、取消任务、超时任务三者之一完成
+                            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(AutoCloseSeconds), cancellationToken);
+                            completedTask = await Task.WhenAny(popupTask, cancelTask.Task, timeoutTask);
+
+                            if (completedTask == timeoutTask)
+                            {
+                                // 超时自动关闭，返回默认按钮值
+                                var defaultResult = PopupButtons.DefaultButton?.Value ?? string.Empty;
+                                if (popupWindow is WindowAsyncPopup ap)
+                                {
+                                    ap.CloseWithResult(defaultResult);
+                                }
+                                var result = await popupTask; // 等待实际完成
+                                IsTrue = (result == PopupButton.YesValue);
+                                LastResult = new StepExecutionResult
+                                {
+                                    IsTrue = IsTrue,
+                                    PopupResult = result,
+                                    ExecutedAt = DateTime.Now,
+                                };
+                                return IsTrue;
+                            }
+                        }
+                        else
+                        {
+                            // ButtonClick 或 StepReached 模式：等待弹窗任务或取消任务
+                            completedTask = await Task.WhenAny(popupTask, cancelTask.Task);
+                        }
 
                         if (completedTask == cancelTask.Task)
                         {
-                            // 用户点击了停止
                             IsTrue = false;
                             return false;
                         }
 
-                        // 用户点击了弹窗按钮
-                        var result = await popupTask;
-                        IsTrue = (result == PopupButton.Yes.Value);
+                        // 用户点击了弹窗按钮（或被外部关闭）
+                        var popupResult = await popupTask;
+                        IsTrue = (popupResult == PopupButton.YesValue);
                         LastResult = new StepExecutionResult
                         {
                             IsTrue = IsTrue,
-                            PopupResult = result,
+                            PopupResult = popupResult,
                             ExecutedAt = DateTime.Now,
                         };
                         return IsTrue;
@@ -832,6 +889,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 System.Diagnostics.Debug.WriteLine($"Popup error: {ex.Message}");
                 IsTrue = false;
                 return IsTrue;
+            }
+            finally
+            {
+                ActivePopupWindow = null;
             }
         }
 

@@ -35,6 +35,9 @@ namespace ShaoLu.Models
     {
         public bool ShowErrorPopup { get; set; } = false;
         public bool MinimizeOnRun { get; set; } = true;
+        /// <summary>
+        /// 默认自引用次数上限（-1=无限制, 0=禁止自引用, >0=限制次数）
+        /// </summary>
         public int DefaultSelfReferenceLimit { get; set; } = 10;
 
         /// <summary>

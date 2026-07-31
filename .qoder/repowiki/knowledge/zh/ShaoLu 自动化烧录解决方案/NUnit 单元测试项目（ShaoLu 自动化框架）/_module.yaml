@@ -1,9 +1,8 @@
 schema_version: 1
 module_path: nunit_tests
-title: ShaoLu 项目 NUnit 单元测试集
+title: NUnit 单元测试项目（ShaoLu 自动化框架）
 scope:
     - NUnitTest/
 source_files: []
 depends_on: []
-related_to:
-    - path: shaolu_app
+related_to: []

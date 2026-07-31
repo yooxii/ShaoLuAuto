@@ -9,24 +9,23 @@
     <!-- App 设置模板 -->
     <DataTemplate DataType="{x:Type vm:AppSettingsViewModel}">
         <StackPanel>
-            <TextBlock Text="{lex:Loc Settings_AppSettings}" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+            <TextBlock Text="{lex:Loc Settings_AppSettings}" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc Theme}" VerticalAlignment="Center"/>
-                <ToggleButton Grid.Row="0" Grid.Column="1" IsChecked="{Binding ThemeLight}" Margin="0,4">
-                </ToggleButton>
+            <!-- 主题 -->
+            <Expander Header="{lex:Loc Theme}" IsExpanded="True" Tag="App_Theme" Margin="0,0,0,8">
+                <Grid Margin="20,8,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{lex:Loc Theme}" VerticalAlignment="Center"/>
+                    <ToggleButton Grid.Column="1" IsChecked="{Binding ThemeLight}" HorizontalAlignment="Left"/>
+                </Grid>
+            </Expander>
 
-                <Grid Grid.ColumnSpan="2" Grid.Row="1">
+            <!-- 字体 -->
+            <Expander Header="{lex:Loc Font}" IsExpanded="True" Tag="App_Font" Margin="0,0,0,8">
+                <Grid Margin="20,8,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
@@ -40,7 +39,6 @@
                             <ColumnDefinition Width="auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        
                         <TextBlock Grid.Column="0" Text="{lex:Loc Font}" VerticalAlignment="Center"/>
                         <TextBox Grid.Column="1" Text="{Binding Font.FontFamily, UpdateSourceTrigger=PropertyChanged}" Margin="0,4"/>
                     </Grid>
@@ -56,107 +54,128 @@
 
                     <Button Grid.Column="4" Content="..." Margin="0,4" Command="{Binding FontSelectCommand}"/>
                 </Grid>
+            </Expander>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc LogRetentionDays}" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
+            <!-- 日志 -->
+            <Expander Header="{lex:Loc LogRetentionDays}" IsExpanded="True" Tag="App_Log" Margin="0,0,0,8">
+                <StackPanel Orientation="Horizontal" Margin="20,8,0,8">
                     <wd:NumericBox Value="{Binding LogRetentionDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                    Minimum="0" Maximum="3650" Width="80"/>
                     <TextBlock Text="{lex:Loc Settings_DaysHint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
                 </StackPanel>
-            </Grid>
+            </Expander>
         </StackPanel>
     </DataTemplate>
 
     <!-- Step 设置模板 -->
     <DataTemplate DataType="{x:Type vm:StepSettingsViewModel}">
         <StackPanel>
-            <TextBlock Text="{lex:Loc Settings_StepSettings}" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="160"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+            <TextBlock Text="{lex:Loc Settings_StepSettings}" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc ShowErrorPopup}" VerticalAlignment="Center"/>
-                <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowErrorPopup}"/>
+            <!-- 运行行为 -->
+            <Expander Header="{lex:Loc Settings_RunBehavior}" IsExpanded="True" Tag="Step_Run" Margin="0,0,0,8">
+                <Grid Margin="20,8,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc MinimizeOnRun}" VerticalAlignment="Center"/>
-                <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding MinimizeOnRun}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc ShowErrorPopup}" VerticalAlignment="Center"/>
+                    <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowErrorPopup}"/>
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc ConfirmBeforeRun}" VerticalAlignment="Center"/>
-                <CheckBox Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ConfirmBeforeRun}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc MinimizeOnRun}" VerticalAlignment="Center"/>
+                    <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding MinimizeOnRun}"/>
 
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="{lex:Loc DefaultSelfReferenceLimit}" VerticalAlignment="Center"/>
-                <wd:NumericBox Grid.Row="6" Grid.Column="1" Value="{Binding DefaultSelfReferenceLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                               Minimum="1" Maximum="9999" Width="80" HorizontalAlignment="Left"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc ConfirmBeforeRun}" VerticalAlignment="Center"/>
+                    <CheckBox Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ConfirmBeforeRun}"/>
 
-                <TextBlock Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Text="{lex:Loc DefaultStepParams}" 
-                           FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="{lex:Loc DefaultSelfReferenceLimit}" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
+                        <wd:NumericBox Value="{Binding DefaultSelfReferenceLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                       Minimum="-1" Maximum="9999" Width="80" HorizontalAlignment="Left"/>
+                        <TextBlock Text="{lex:Loc SelfReferenceLimitHint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                    </StackPanel>
+                </Grid>
+            </Expander>
 
-                <TextBlock Grid.Row="10" Grid.Column="0" Text="{lex:Loc DefaultSimilarityThreshold}" VerticalAlignment="Center"/>
-                <StackPanel Grid.Row="10" Grid.Column="1" Orientation="Horizontal">
-                    <wd:NumericBox Value="{Binding DefaultSimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                   Precision="3" Interval="0.05" Minimum="0" Maximum="1" Width="80"/>
-                    <TextBlock Text="(0~1)" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
-                </StackPanel>
+            <!-- 默认参数 -->
+            <Expander Header="{lex:Loc DefaultStepParams}" IsExpanded="True" Tag="Step_Params" Margin="0,0,0,8">
+                <Grid Margin="20,8,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="12" Grid.Column="0" Text="{lex:Loc DefaultWaitTime}" VerticalAlignment="Center"/>
-                <StackPanel Grid.Row="12" Grid.Column="1" Orientation="Horizontal">
-                    <wd:NumericBox Value="{Binding DefaultWaitTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                   Precision="3" Interval="0.1" Minimum="0" Width="80"/>
-                    <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
-                </StackPanel>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc DefaultSimilarityThreshold}" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                        <wd:NumericBox Value="{Binding DefaultSimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                       Precision="3" Interval="0.05" Minimum="0" Maximum="1" Width="80"/>
+                        <TextBlock Text="(0~1)" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                    </StackPanel>
 
-                <TextBlock Grid.Row="14" Grid.Column="0" Text="{lex:Loc DefaultTimeout}" VerticalAlignment="Center"/>
-                <StackPanel Grid.Row="14" Grid.Column="1" Orientation="Horizontal">
-                    <wd:NumericBox Value="{Binding DefaultTimeout, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                   Precision="3" Interval="0.5" Minimum="0" Width="80"/>
-                    <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
-                </StackPanel>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc DefaultWaitTime}" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                        <wd:NumericBox Value="{Binding DefaultWaitTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                       Precision="3" Interval="0.1" Minimum="0" Width="80"/>
+                        <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                    </StackPanel>
 
-                <TextBlock Grid.Row="16" Grid.Column="0" Text="{lex:Loc DefaultClicks}" VerticalAlignment="Center"/>
-                <wd:NumericBox Grid.Row="16" Grid.Column="1" Value="{Binding DefaultClicks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                               Minimum="1" Maximum="999" Width="80" HorizontalAlignment="Left"/>
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc DefaultTimeout}" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                        <wd:NumericBox Value="{Binding DefaultTimeout, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                       Precision="3" Interval="0.5" Minimum="0" Width="80"/>
+                        <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                    </StackPanel>
 
-                <TextBlock Grid.Row="18" Grid.Column="0" Grid.ColumnSpan="2" Text="{lex:Loc Settings_DebugSettings}" 
-                           FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="{lex:Loc DefaultClicks}" VerticalAlignment="Center"/>
+                    <wd:NumericBox Grid.Row="6" Grid.Column="1" Value="{Binding DefaultClicks, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                   Minimum="1" Maximum="999" Width="80" HorizontalAlignment="Left"/>
+                </Grid>
+            </Expander>
 
-                <TextBlock Grid.Row="20" Grid.Column="0" Text="{lex:Loc ShowOCRRegionOnRun}" VerticalAlignment="Center"/>
-                <CheckBox Grid.Row="20" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowOCRRegionOnRun}"/>
+            <!-- 调试选项 -->
+            <Expander Header="{lex:Loc Settings_DebugSettings}" IsExpanded="True" Tag="Step_Debug" Margin="0,0,0,8">
+                <Grid Margin="20,8,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="22" Grid.Column="0" Text="{lex:Loc ShowFoundImageRegionOnRun}" VerticalAlignment="Center"/>
-                <CheckBox Grid.Row="22" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowFoundImageRegionOnRun}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc ShowOCRRegionOnRun}" VerticalAlignment="Center"/>
+                    <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowOCRRegionOnRun}"/>
 
-                <TextBlock Grid.Row="24" Grid.Column="0" Text="{lex:Loc ShowClickPositionOnRun}" VerticalAlignment="Center"/>
-                <CheckBox Grid.Row="24" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowClickPositionOnRun}"/>
-            </Grid>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc ShowFoundImageRegionOnRun}" VerticalAlignment="Center"/>
+                    <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowFoundImageRegionOnRun}"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc ShowClickPositionOnRun}" VerticalAlignment="Center"/>
+                    <CheckBox Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowClickPositionOnRun}"/>
+                </Grid>
+            </Expander>
         </StackPanel>
     </DataTemplate>
 

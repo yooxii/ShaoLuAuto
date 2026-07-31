@@ -20,6 +20,8 @@ namespace ShaoLu.Converters
                 return ConvertConditionOperator(op);
             if (value is LogicConnector connector)
                 return ConvertLogicConnector(connector);
+            if (value is PopupCloseMode closeMode)
+                return ConvertPopupCloseMode(closeMode);
             return value?.ToString() ?? string.Empty;
         }
 
@@ -76,6 +78,14 @@ namespace ShaoLu.Converters
             LogicConnector.And => "并且 (AND)",
             LogicConnector.Or => "或者 (OR)",
             _ => c.ToString(),
+        };
+
+        public static string ConvertPopupCloseMode(PopupCloseMode m) => m switch
+        {
+            PopupCloseMode.ButtonClick => Services.LanguageService.GetLocalizedString("CloseMode_ButtonClick"),
+            PopupCloseMode.Timeout => Services.LanguageService.GetLocalizedString("CloseMode_Timeout"),
+            PopupCloseMode.StepReached => Services.LanguageService.GetLocalizedString("CloseMode_StepReached"),
+            _ => m.ToString(),
         };
 
         /// <summary>

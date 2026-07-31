@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: master
 nodes_managed: true
-exported_at: "2026-07-30T10:16:27Z"
+exported_at: "2026-07-31T04:13:42Z"
 modules:
     "":
         dir_name: ShaoLu 自动化烧录解决方案
@@ -21,22 +21,20 @@ modules:
         depends_on: []
         related_to: []
     nunit_tests:
-        dir_name: ShaoLu 项目 NUnit 单元测试集
-        title: ShaoLu 项目 NUnit 单元测试集
+        dir_name: NUnit 单元测试项目（ShaoLu 自动化框架）
+        title: NUnit 单元测试项目（ShaoLu 自动化框架）
         scope:
             - NUnitTest/
         source_files: []
         children: []
         depends_on: []
-        related_to:
-            - path: shaolu_app
+        related_to: []
     shaolu_app:
-        dir_name: AutoShaoLu 自动化烧录 WPF 客户端
-        title: AutoShaoLu 自动化烧录 WPF 客户端
+        dir_name: AutoShaoLu 自动化烧录测试工具（WPF）
+        title: AutoShaoLu 自动化烧录测试工具（WPF）
         scope:
             - ShaoLu/
         source_files: []
         children: []
         depends_on: []
-        related_to:
-            - path: nunit_tests
+        related_to: []

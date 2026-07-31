@@ -363,6 +363,27 @@
   <data name="Buttons" xml:space="preserve">
     <value>Buttons</value>
   </data>
+  <data name="PopupCloseMode" xml:space="preserve">
+    <value>Close Mode</value>
+  </data>
+  <data name="CloseMode" xml:space="preserve">
+    <value>Close Mode</value>
+  </data>
+  <data name="AutoCloseSeconds" xml:space="preserve">
+    <value>Auto Close After</value>
+  </data>
+  <data name="CloseOnStep" xml:space="preserve">
+    <value>Close On Step</value>
+  </data>
+  <data name="CloseMode_ButtonClick" xml:space="preserve">
+    <value>Button Click</value>
+  </data>
+  <data name="CloseMode_Timeout" xml:space="preserve">
+    <value>Auto Timeout</value>
+  </data>
+  <data name="CloseMode_StepReached" xml:space="preserve">
+    <value>Step Reached</value>
+  </data>
   <data name="Refresh" xml:space="preserve">
     <value>Refresh</value>
   </data>
@@ -503,6 +524,9 @@
   </data>
   <data name="DefaultSelfReferenceLimit" xml:space="preserve">
     <value>Self-Reference Limit</value>
+  </data>
+  <data name="SelfReferenceLimitHint" xml:space="preserve">
+    <value>(-1=Unlimited, 0=Disabled)</value>
   </data>
   <data name="DefaultStepParams" xml:space="preserve">
     <value>Default Parameters for New Steps</value>
@@ -785,6 +809,9 @@
   </data>
   <data name="Settings_DebugSettings" xml:space="preserve">
     <value>Debug Settings</value>
+  </data>
+  <data name="Settings_RunBehavior" xml:space="preserve">
+    <value>Run Behavior</value>
   </data>
   <data name="ShowOCRRegionOnRun" xml:space="preserve">
     <value>Show OCR region overlay on run</value>

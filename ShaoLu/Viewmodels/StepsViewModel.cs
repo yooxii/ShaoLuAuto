@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace ShaoLu.Viewmodels
@@ -236,7 +237,14 @@ namespace ShaoLu.Viewmodels
         private async void DelStep()
         {
             if (!EnsureLoggedIn()) return;
+            await RemoveStepsAsync(confirm: true);
+        }
 
+        /// <summary>
+        /// 核心删除逻辑，confirm=true 时弹出确认对话框
+        /// </summary>
+        private async Task RemoveStepsAsync(bool confirm)
+        {
             try
             {
                 if (SelectedSteps.Count == 0) return;
@@ -270,45 +278,48 @@ namespace ShaoLu.Viewmodels
                         referencingSteps.Add($"{step.LineNo} - {step.Name}");
                 }
 
-                // 如果有引用，提示用户
-                string message = LanguageService.GetLocalizedString("Msg_ConfirmDeleteSteps");
-                if (referencingSteps.Count > 0)
+                // 如果需要确认，弹出确认对话框
+                if (confirm)
                 {
-                    message += "\n\n" + LanguageService.GetLocalizedString("Msg_DeleteReferenced") + "\n"
-                        + string.Join("\n", referencingSteps);
+                    string message = LanguageService.GetLocalizedString("Msg_ConfirmDeleteSteps");
+                    if (referencingSteps.Count > 0)
+                    {
+                        message += "\n\n" + LanguageService.GetLocalizedString("Msg_DeleteReferenced") + "\n"
+                            + string.Join("\n", referencingSteps);
+                    }
+
+                    var (_, popup) = WindowAsyncPopup.Show(message, LanguageService.GetLocalizedString("DeleteStepTitle"), PopupButtons.YesNo, MessageBoxImage.Warning);
+                    var res = await popup;
+                    if (res != PopupButton.YesValue)
+                        return;
                 }
 
-                var (_, popup) = WindowAsyncPopup.Show(message, LanguageService.GetLocalizedString("DeleteStepTitle"), PopupButtons.YesNo, MessageBoxImage.Warning);
-                var res = await popup;
-                if (res == PopupButton.Yes.Value)
+                // 删除前清空引用
+                foreach (var step in AutomationStepBases)
                 {
-                    // 删除前清空引用
-                    foreach (var step in AutomationStepBases)
+                    if (deletingUids.Contains(step.Uid)) continue;
+                    if (step.TrueGotoUid.HasValue && deletingUids.Contains(step.TrueGotoUid.Value))
+                        step.TrueGotoUid = null;
+                    if (step.FalseGotoUid.HasValue && deletingUids.Contains(step.FalseGotoUid.Value))
+                        step.FalseGotoUid = null;
+                    if (step.Conditions != null)
                     {
-                        if (deletingUids.Contains(step.Uid)) continue;
-                        if (step.TrueGotoUid.HasValue && deletingUids.Contains(step.TrueGotoUid.Value))
-                            step.TrueGotoUid = null;
-                        if (step.FalseGotoUid.HasValue && deletingUids.Contains(step.FalseGotoUid.Value))
-                            step.FalseGotoUid = null;
-                        if (step.Conditions != null)
+                        foreach (var cond in step.Conditions)
                         {
-                            foreach (var cond in step.Conditions)
-                            {
-                                if (cond.StepUid.HasValue && deletingUids.Contains(cond.StepUid.Value))
-                                    cond.StepUid = null;
-                            }
+                            if (cond.StepUid.HasValue && deletingUids.Contains(cond.StepUid.Value))
+                                cond.StepUid = null;
                         }
                     }
+                }
 
-                    for (int i = SelectedSteps.Count - 1; i >= 0; i--)
-                    {
-                        AutomationStepBases.Remove(SelectedSteps[i]);
-                    }
+                for (int i = SelectedSteps.Count - 1; i >= 0; i--)
+                {
+                    AutomationStepBases.Remove(SelectedSteps[i]);
                 }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "DelStep error: ");
+                logger.Error(ex, "RemoveSteps error: ");
             }
         }
 
@@ -390,10 +401,10 @@ namespace ShaoLu.Viewmodels
             }
         }
 
-        private void CutStep()
+        private async void CutStep()
         {
             CopyStep();
-            DelStep();
+            await RemoveStepsAsync(confirm: false);
         }
 
         private void PasteStep()
@@ -469,7 +480,7 @@ namespace ShaoLu.Viewmodels
                         LanguageService.GetLocalizedString("Msg_ConfirmRun"), LanguageService.GetLocalizedString("Question"),
                         PopupButtons.YesNo, MessageBoxImage.Question);
                     var confirmResult = await confirmTask;
-                    if (confirmResult != PopupButton.Yes.Value)
+                    if (confirmResult != PopupButton.YesValue)
                         return;
                 }
 
@@ -488,6 +499,9 @@ namespace ShaoLu.Viewmodels
                         break;
                     }
                     var step = AutomationStepBases[i];
+
+                    // StepReached 模式：检查是否有弹窗需要在到达此步骤时关闭
+                    CheckAndCloseStepReachedPopups(step.Uid);
 
                     if (!step.IsNeed)
                         continue;
@@ -580,7 +594,8 @@ namespace ShaoLu.Viewmodels
                         else if (nextIndex == i) // 指向自身
                         {
                             step.SelfReferenceCount++;
-                            if (step.SelfReferenceCount >= step.SelfReferenceLimit)
+                            // SelfReferenceLimit: -1=无限制, 0=禁止自引用, >0=限制次数
+                            if (step.SelfReferenceLimit >= 0 && step.SelfReferenceCount >= step.SelfReferenceLimit)
                             {
                                 step.IsError = true;
                                 step.ErrorType = StepErrorType.SelfReferenceLimit;
@@ -634,6 +649,24 @@ namespace ShaoLu.Viewmodels
                 TimeoutException => StepErrorType.ExecutionTimeout,
                 _ => StepErrorType.Unknown
             };
+        }
+
+        /// <summary>
+        /// StepReached 模式：检查所有 PopupStep，如果有活跃弹窗的目标步骤是当前步骤，则关闭弹窗
+        /// </summary>
+        private void CheckAndCloseStepReachedPopups(Guid currentStepUid)
+        {
+            foreach (var s in AutomationStepBases)
+            {
+                if (s is PopupStep popupStep
+                    && popupStep.CloseMode == PopupCloseMode.StepReached
+                    && popupStep.CloseOnStepUid == currentStepUid
+                    && popupStep.ActivePopupWindow != null)
+                {
+                    var defaultResult = popupStep.PopupButtons.DefaultButton?.Value ?? string.Empty;
+                    popupStep.ActivePopupWindow.CloseWithResult(defaultResult);
+                }
+            }
         }
 
         #endregion

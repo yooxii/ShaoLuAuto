@@ -21,10 +21,15 @@ namespace ShaoLu.Viewmodels
         private string _title;
         private object _viewModel;
         private bool _isExpanded;
+        private string _sectionKey;
 
         public string Title { get => _title; set => SetProperty(ref _title, value); }
         public object ViewModel { get => _viewModel; set => SetProperty(ref _viewModel, value); }
         public bool IsExpanded { get => _isExpanded; set => SetProperty(ref _isExpanded, value); }
+        /// <summary>
+        /// 用于右侧滚动定位的标识键
+        /// </summary>
+        public string SectionKey { get => _sectionKey; set => SetProperty(ref _sectionKey, value); }
 
         public ObservableCollection<SettingsCategory> Children { get; } = [];
     }
@@ -176,15 +181,23 @@ namespace ShaoLu.Viewmodels
             {
                 Title = "App " + LanguageService.GetLocalizedString("Settings"),
                 ViewModel = new AppSettingsViewModel(Settings.App),
-                IsExpanded = true
+                IsExpanded = true,
+                SectionKey = "App"
             };
+            appNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Theme"), SectionKey = "App_Theme" });
+            appNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Font"), SectionKey = "App_Font" });
+            appNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("LogRetentionDays"), SectionKey = "App_Log" });
 
             var stepNode = new SettingsCategory
             {
                 Title = "Step " + LanguageService.GetLocalizedString("Settings"),
                 ViewModel = new StepSettingsViewModel(Settings.Step),
-                IsExpanded = true
+                IsExpanded = true,
+                SectionKey = "Step"
             };
+            stepNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Settings_RunBehavior"), SectionKey = "Step_Run" });
+            stepNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("DefaultStepParams"), SectionKey = "Step_Params" });
+            stepNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Settings_DebugSettings"), SectionKey = "Step_Debug" });
 
             Categories.Add(appNode);
             Categories.Add(stepNode);
@@ -213,7 +226,7 @@ namespace ShaoLu.Viewmodels
             string title = LanguageService.GetLocalizedString("Save");
             var (_, popup) = WindowAsyncPopup.Show(msg, title, PopupButtons.YesCancel, MessageBoxImage.Information);
             var res = await popup;
-            if (res == PopupButton.Yes.Value)
+            if (res == PopupButton.YesValue)
             {
                 WindowClosed?.Invoke();
             }
@@ -222,8 +235,24 @@ namespace ShaoLu.Viewmodels
         private void ApplyWindowSettings()
         {
             ThemeManager.Instance.SetTheme(Settings.App.ThemeLight ? ThemeType.Light : ThemeType.Dark);
-            System.Windows.Application.Current.MainWindow.FontFamily = new System.Windows.Media.FontFamily(Settings.App.WindowFont.FontFamily);
-            System.Windows.Application.Current.MainWindow.FontSize = Settings.App.WindowFont.FontSize;
+            ApplyGlobalFont(Settings.App.WindowFont);
+        }
+
+        /// <summary>
+        /// 将字体设置应用到所有已打开的窗口
+        /// </summary>
+        public static void ApplyGlobalFont(FontModel font)
+        {
+            if (font == null || string.IsNullOrEmpty(font.FontFamily)) return;
+
+            var fontFamily = new System.Windows.Media.FontFamily(font.FontFamily);
+            foreach (Window window in System.Windows.Application.Current.Windows)
+            {
+                window.FontFamily = fontFamily;
+                window.FontSize = font.FontSize;
+                window.FontWeight = font.FontWeight;
+                window.FontStyle = font.FontStyle;
+            }
         }
     }
 }

@@ -40,6 +40,19 @@ namespace ShaoLu.Models
         Unknown
     }
 
+    /// <summary>
+    /// 弹出窗口关闭模式
+    /// </summary>
+    public enum PopupCloseMode
+    {
+        /// <summary>默认：用户点击按钮关闭</summary>
+        ButtonClick,
+        /// <summary>按时间自动关闭</summary>
+        Timeout,
+        /// <summary>到某个步骤时关闭</summary>
+        StepReached,
+    }
+
     public class AutoPoint
     {
     }

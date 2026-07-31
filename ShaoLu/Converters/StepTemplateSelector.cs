@@ -11,8 +11,6 @@ namespace ShaoLu.Converters
         public DataTemplate ClickImageTemplate { get; set; }
         public DataTemplate TypeTextTemplate { get; set; }
         public DataTemplate FindImageTemplate { get; set; }
-        public DataTemplate ClickImagesTemplate { get; set; }
-        public DataTemplate FindImagesTemplate { get; set; }
         public DataTemplate TypeTextMoreTemplate { get; set; }
         public DataTemplate TypeTextFromFileTemplate { get; set; }
         public DataTemplate PopupTemplate { get; set; }
@@ -27,8 +25,8 @@ namespace ShaoLu.Converters
                     StepType.Empty => EmptyTemplate,
                     StepType.ClickImage => ClickImageTemplate,
                     StepType.FindImage => FindImageTemplate,
-                    StepType.ClickImages => ClickImagesTemplate,
-                    StepType.FindImages => FindImagesTemplate,
+                    StepType.ClickImages => EmptyTemplate,
+                    StepType.FindImages => EmptyTemplate,
                     StepType.TypeText => TypeTextTemplate,
                     StepType.TypeTextMore => TypeTextMoreTemplate,
                     StepType.TypeTextFromFile => TypeTextFromFileTemplate,

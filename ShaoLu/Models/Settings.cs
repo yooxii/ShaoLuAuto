@@ -19,7 +19,6 @@ namespace ShaoLu.Models
 
     public class AppSettingsModel
     {
-        public bool ThemeLight { get; set; } = true;
         public double WindowWidth { get; set; } = 1000;
         public double WindowHeight { get; set; } = 600;
 
@@ -61,6 +60,21 @@ namespace ShaoLu.Models
         public bool ShowClickPositionOnRun { get; set; } = false;
 
         /// <summary>
+        /// OCR 区域覆盖层设置
+        /// </summary>
+        public OverlaySetting OCRRegionOverlay { get; set; } = new() { Color = "#00CC00", Duration = 2.0 };
+
+        /// <summary>
+        /// 找到图像覆盖层设置
+        /// </summary>
+        public OverlaySetting FoundImageOverlay { get; set; } = new() { Color = "#0088FF", Duration = 2.0 };
+
+        /// <summary>
+        /// 点击位置覆盖层设置
+        /// </summary>
+        public OverlaySetting ClickPositionOverlay { get; set; } = new() { Color = "#FF4444", Duration = 1.5 };
+
+        /// <summary>
         /// 新建图像步骤的默认相似度阈值
         /// </summary>
         public double DefaultSimilarityThreshold { get; set; } = 0.85;
@@ -89,5 +103,14 @@ namespace ShaoLu.Models
     {
         public ModifierKeys Modifiers { get; set; } // 修饰键
         public Key Key { get; set; } // 主键
+    }
+
+    /// <summary>
+    /// 调试覆盖层配置（颜色 + 显示时长）
+    /// </summary>
+    public class OverlaySetting
+    {
+        public string Color { get; set; } = "#00CC00";
+        public double Duration { get; set; } = 2.0;
     }
 }

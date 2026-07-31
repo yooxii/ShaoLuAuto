@@ -150,7 +150,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     lastClickPos.X / dpiX - markerSize / 2, lastClickPos.Y / dpiY - markerSize / 2,
                     markerSize, markerSize);
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                    Views.WindowRegionOverlay.ShowRegion(clickRegion, 2.0));
+                    Views.WindowRegionOverlay.ShowRegion(clickRegion, Utils.SingletonLocator.Settings.Step.ClickPositionOverlay.Color, Utils.SingletonLocator.Settings.Step.ClickPositionOverlay.Duration));
             }
 
             // 填充执行结果

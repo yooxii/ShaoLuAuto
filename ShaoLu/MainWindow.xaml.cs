@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -87,6 +88,13 @@ namespace ShaoLu
             // 窗口关闭时务必注销热键，防止资源泄漏
             _source?.RemoveHook(WndProc);
             NativeMethods.UnregisterHotKey(new WindowInteropHelper(this).Handle, HOTKEY_STOP_ID);
+
+            // 关闭所有子窗口
+            foreach (var window in Application.Current.Windows.Cast<Window>().Where(w => w != this).ToList())
+            {
+                window.Close();
+            }
+
             base.OnClosed(e);
         }
 

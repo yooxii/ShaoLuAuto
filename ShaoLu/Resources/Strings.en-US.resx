@@ -825,4 +825,7 @@
   <data name="RichTextEdit" xml:space="preserve">
     <value>Rich Text Edit</value>
   </data>
+  <data name="MouseActions" xml:space="preserve">
+    <value>Mouse Actions</value>
+  </data>
 </root>

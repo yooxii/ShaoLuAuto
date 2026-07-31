@@ -1,24 +1,29 @@
 using System;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace ShaoLu.Views
 {
     /// <summary>
-    /// 屏幕区域标示覆盖窗口，用于可视化 OCR 区域
+    /// 屏幕区域标示覆盖窗口，用于可视化调试区域
     /// </summary>
     public partial class WindowRegionOverlay : Window
     {
         private readonly DispatcherTimer _closeTimer;
 
-        public WindowRegionOverlay(Rect logicalRegion, double durationSeconds = 2.0)
+        public WindowRegionOverlay(Rect logicalRegion, string color = "#00CC00", double durationSeconds = 2.0)
         {
             InitializeComponent();
 
-            // 将逻辑像素坐标转换为屏幕位置
-            var source = PresentationSource.FromVisual(Application.Current?.MainWindow);
-            double dpiX = source?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
-            double dpiY = source?.CompositionTarget?.TransformToDevice.M22 ?? 1.0;
+            // 应用自定义颜色
+            try
+            {
+                var c = (Color)ColorConverter.ConvertFromString(color);
+                RegionBorder.BorderBrush = new SolidColorBrush(c);
+                RegionBorder.Background = new SolidColorBrush(Color.FromArgb(0x22, c.R, c.G, c.B));
+            }
+            catch { /* 颜色解析失败时使用默认值 */ }
 
             // 窗口使用逻辑坐标定位（WPF 自动处理 DPI）
             Left = logicalRegion.X;
@@ -47,14 +52,14 @@ namespace ShaoLu.Views
         /// <summary>
         /// 在屏幕上显示区域标示（非阻塞）
         /// </summary>
-        public static void ShowRegion(Rect logicalRegion, double durationSeconds = 2.0)
+        public static void ShowRegion(Rect logicalRegion, string color = "#00CC00", double durationSeconds = 2.0)
         {
             if (logicalRegion.IsEmpty || logicalRegion.Width <= 0 || logicalRegion.Height <= 0)
                 return;
 
             try
             {
-                var overlay = new WindowRegionOverlay(logicalRegion, durationSeconds);
+                var overlay = new WindowRegionOverlay(logicalRegion, color, durationSeconds);
                 overlay.Show();
             }
             catch

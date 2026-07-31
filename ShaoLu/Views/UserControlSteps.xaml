@@ -25,8 +25,6 @@
                 <MenuItem Header="{lex:Loc Add}">
                     <MenuItem Header="{lex:Loc AddImageStep}" Command="{Binding AddStepCommand}" CommandParameter="ClickImage"/>
                     <MenuItem Header="{lex:Loc AddFindImageStep}" Command="{Binding AddStepCommand}" CommandParameter="FindImage"/>
-                    <MenuItem Header="{lex:Loc AddImagesStep}" Command="{Binding AddStepCommand}" CommandParameter="ClickImages"/>
-                    <MenuItem Header="{lex:Loc AddFindImagesStep}" Command="{Binding AddStepCommand}" CommandParameter="FindImages"/>
                     <MenuItem Header="{lex:Loc AddTextStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeText"/>
                     <MenuItem Header="{lex:Loc AddTextMoreStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeTextMore"/>
                     <MenuItem Header="{lex:Loc AddTextFromFileStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeTextFromFile"/>
@@ -77,8 +75,6 @@
                                        >
                             <MenuItem Header="{lex:Loc AddImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImage"/>
                             <MenuItem Header="{lex:Loc AddFindImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FindImage"/>
-                            <MenuItem Header="{lex:Loc AddImagesStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImages"/>
-                            <MenuItem Header="{lex:Loc AddFindImagesStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FindImages"/>
                         </wd:SplitButton>
                         <wd:SplitButton x:Name="AddTextStep" Content="{lex:Loc AddTextStep}" CommandParameter="TypeText" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
                                        >
@@ -98,7 +94,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MinWidth="400"/>
                     <ColumnDefinition Width="3"/>
-                    <ColumnDefinition Width="Auto" MinWidth="255"/>
+                    <ColumnDefinition Width="320"/>
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
                     <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}"

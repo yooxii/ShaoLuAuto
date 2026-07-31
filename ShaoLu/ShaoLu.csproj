@@ -143,6 +143,7 @@
     <Compile Include="Models\AutomationStepModel.cs" />
     <Compile Include="Models\ContentItem.cs" />
     <Compile Include="Models\FontModel.cs" />
+    <Compile Include="Models\MouseActionItem.cs" />
     <Compile Include="Models\StepCondition.cs" />
     <Compile Include="Models\StepExecutionResult.cs" />
     <Compile Include="Models\User.cs" />
@@ -434,14 +435,30 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Content Include="tessdata\chi_sim.traineddata" />
-    <Content Include="tessdata\chi_sim_vert.traineddata" />
-    <Content Include="tessdata\chi_tra.traineddata" />
-    <Content Include="tessdata\chi_tra_vert.traineddata" />
-    <Content Include="tessdata\eng.traineddata" />
-    <Content Include="tessdata\equ.traineddata" />
-    <Content Include="tessdata\jpn.traineddata" />
-    <Content Include="tessdata\jpn_vert.traineddata" />
+    <Content Include="tessdata\chi_sim.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="tessdata\chi_sim_vert.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="tessdata\chi_tra.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="tessdata\chi_tra_vert.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="tessdata\eng.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="tessdata\equ.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="tessdata\jpn.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="tessdata\jpn_vert.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

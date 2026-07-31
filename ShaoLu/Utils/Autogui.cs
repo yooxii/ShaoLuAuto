@@ -306,6 +306,78 @@ namespace ShaoLu.Utils
         }
 
         /// <summary>
+        /// 顺序执行鼠标动作列表
+        /// </summary>
+        public static void ExecuteMouseActions(System.Collections.Generic.List<Models.MouseActionItem> actions)
+        {
+            if (actions == null || actions.Count == 0) return;
+            foreach (var action in actions)
+            {
+                for (int i = 0; i < action.Count; i++)
+                {
+                    switch (action.ActionType)
+                    {
+                        case Models.MouseActionType.LeftClick:
+                            sim.Mouse.LeftButtonClick();
+                            break;
+                        case Models.MouseActionType.RightClick:
+                            sim.Mouse.RightButtonClick();
+                            break;
+                        case Models.MouseActionType.DoubleClick:
+                            sim.Mouse.LeftButtonDoubleClick();
+                            break;
+                        case Models.MouseActionType.ScrollUp:
+                            sim.Mouse.VerticalScroll(1);
+                            break;
+                        case Models.MouseActionType.ScrollDown:
+                            sim.Mouse.VerticalScroll(-1);
+                            break;
+                    }
+                    Thread.Sleep((int)(action.Interval * 1000));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 在屏幕上查找图像并执行鼠标动作序列
+        /// </summary>
+        public static AutoRect ClickImageOnScreenEx(Bitmap templateImage, Position position, List<Point>? clickposition, double threshold, System.Collections.Generic.List<Models.MouseActionItem> actions, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3)
+        {
+            int nextclickTimeMs = (int)(nextclicktime * 1000);
+            int waitTimeMs = (int)(waittime * 1000);
+            int timeoutMs = (int)(timeout * 1000);
+
+            Thread.Sleep(waitTimeMs);
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            while (true)
+            {
+                if (stopwatch.ElapsedMilliseconds >= timeoutMs)
+                {
+                    throw new Exception(LanguageService.GetLocalizedString("NoMatchingImage"));
+                }
+                try
+                {
+                    AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.1, 0.2);
+                    if (!rect.IsEmpty && clickposition != null)
+                    {
+                        foreach (Point p in clickposition)
+                        {
+                            MoveMouseTo(rect, position, p);
+                            ExecuteMouseActions(actions);
+                            Thread.Sleep(nextclickTimeMs);
+                        }
+                        return rect;
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+        }
+
+        /// <summary>
         /// 将 WPF ImageSource 转换为 System.Drawing.Bitmap
         /// </summary>
         public static Bitmap? ConvertImageSourceToBitmap(ImageSource imageSource)

@@ -18,7 +18,7 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -165,348 +165,169 @@
         </GroupBox>
     </DataTemplate>
 
-    <!-- 识图步骤的UI -->
+    <!-- 识图点击步骤 -->
     <DataTemplate x:Key="ClickImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
-        <StackPanel Orientation="Vertical">
+        <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            <StackPanel>
-                <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="PathTextBlock"
-                           Text="{Binding ImagePath}" 
-                           VerticalAlignment="Center" 
-                           MinWidth="150"
-                           MaxWidth="250"
-                           TextWrapping="NoWrap"
-                           IsReadOnly="True"
-                           ToolTip="{Binding ImagePath}"/>
-                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
-                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Select_target_pic}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding ImagePath}" IsReadOnly="True" MinWidth="120" MaxWidth="200" ToolTip="{Binding ImagePath}" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
+                <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
             </StackPanel>
-
-            <StackPanel Margin="0,5,0,0">
-                <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                        Precision="3"
-                        Interval="0.001"
-                        Width="70"/>
-                    <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                        Minimum="0" 
-                        Maximum="1" 
-                        Width="150"/>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
+                <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
-            <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" Width="70" Precision="3" Minimum="0" Interval="0.01"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Timeout}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" Width="70" Precision="3" Minimum="0" Interval="0.1"/>
+            </StackPanel>
+            <GroupBox Header="{lex:Loc MouseActions}" Margin="0,5,0,0">
                 <StackPanel>
-                    <Label Content="{lex:Loc Clicks}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding Clicks, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                        <Button Content="+" Command="{Binding AddMouseActionCommand}" MinWidth="30" Margin="0,0,5,0"/>
+                        <Button Content="-" Command="{Binding RemoveMouseActionCommand}" MinWidth="30"/>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding MouseActions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <ComboBox ItemsSource="{x:Static models:MouseActionItem.AllTypes}" SelectedItem="{Binding ActionType}" MinWidth="100" Margin="0,0,5,0"/>
+                                    <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="1" Maximum="99" Margin="0,0,5,0"/>
+                                    <wd:NumericBox Value="{Binding Interval, Mode=TwoWay}" MinWidth="60" Minimum="0" Precision="3" Interval="0.05" Margin="0,0,5,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
-                <StackPanel >
-                    <Label Content="{lex:Loc ClickGap}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding ClickGap, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"
-                    MaxWidth="300"
-                    Precision="3"
-                    Interval="0.01"/>
-                </StackPanel>
-                <StackPanel >
-                    <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
-                    Precision="3" Minimum="0"
-                    Interval="0.01"/>
-                </StackPanel>
-                <StackPanel >
-                    <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
-                    Precision="3" Minimum="0"
-                    Interval="0.1"/>
-                </StackPanel>
-            </StackPanel>
+            </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
+    <!-- 识图查找步骤 -->
     <DataTemplate x:Key="FindImageStepTemplate" DataType="{x:Type AutoVM:FindImageStep}">
         <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            <StackPanel>
-                <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="PathTextBlock"
-                           Text="{Binding ImagePath}" 
-                           MinWidth="150"
-                           MaxWidth="250"
-                           TextWrapping="NoWrap"
-                           IsReadOnly="True"
-                           ToolTip="{Binding ImagePath}"/>
-                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
-                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Select_target_pic}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding ImagePath}" IsReadOnly="True" MinWidth="120" MaxWidth="200" ToolTip="{Binding ImagePath}" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
+                <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
             </StackPanel>
-
-            <StackPanel Margin="0,5,0,0">
-                <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                        Precision="3"
-                        Interval="0.001"
-                        Width="70"/>
-                    <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                        Minimum="0" 
-                        Maximum="1" 
-                        Width="150"/>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
+                <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
-
-
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
-
-            <StackPanel>
-                <Label Content="{lex:Loc FindTimeInterval}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding GapTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc FindTimeInterval}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding GapTime, UpdateSourceTrigger=LostFocus}" Width="70" Minimum="0" Precision="3" Interval="0.1"/>
             </StackPanel>
-            <StackPanel>
-                <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Timeout}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" Width="70" Minimum="0" Precision="3" Interval="0.1"/>
             </StackPanel>
-
-            <!-- OCR 识别区域（通过编辑窗口设置） -->
-            <StackPanel Margin="0,8,0,0" Visibility="{Binding EnableOCR, Converter={StaticResource BoolToVis}}">
-                <Label Content="{lex:Loc FindImage_OCR_Group}" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" 
-                         IsReadOnly="True" MinWidth="200" HorizontalAlignment="Left"/>
+            <StackPanel Margin="0,5,0,0" Visibility="{Binding EnableOCR, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{lex:Loc FindImage_OCR_Group}" Margin="0,0,0,2"/>
+                <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" IsReadOnly="True" MinWidth="180" HorizontalAlignment="Left"/>
                 <TextBlock Text="{lex:Loc FindImage_OCR_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"/>
             </StackPanel>
-
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
-
-    <DataTemplate x:Key="ClickImagesStepTemplate" DataType="{x:Type AutoVM:ClickImagesStep}">
-        <StackPanel Orientation="Vertical">
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            <StackPanel Orientation="Horizontal">
-                <Button Content=" + " Command="{Binding AddImageCommand}" Margin="0,0,10,0"/>
-                <Button Content=" - " Command="{Binding DelImageCommand}" Margin="0,0,10,0"/>
-            </StackPanel>
-            <ListBox ItemsSource="{Binding Images}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Vertical">
-                            <StackPanel>
-                                <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBox x:Name="PathTextBlock" Text="{Binding ImagePath}" VerticalAlignment="Center" 
-                                           MinWidth="150" MaxWidth="250" TextWrapping="NoWrap" IsReadOnly="True" ToolTip="{Binding ImagePath}"/>
-                                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
-                                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <StackPanel Margin="0,5,0,0">
-                                <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                   Precision="3" Interval="0.001" Width="70"/>
-                                    <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                            Minimum="0" Maximum="1" Width="150"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            
-            <StackPanel>
-                <StackPanel>
-                    <Label Content="{lex:Loc Clicks}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding Clicks, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"/>
-                </StackPanel>
-                <StackPanel >
-                    <Label Content="{lex:Loc ClickGap}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding ClickGap, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0"
-                    MaxWidth="300"
-                    Precision="3"
-                    Interval="0.01"/>
-                </StackPanel>
-                <StackPanel >
-                    <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
-                    Precision="3" Minimum="0"
-                    Interval="0.01"/>
-                </StackPanel>
-                <StackPanel >
-                    <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" 
-                    Precision="3" Minimum="0"
-                    Interval="0.1"/>
-                </StackPanel>
-            </StackPanel>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
-        </StackPanel>
-    </DataTemplate>
-
-    <DataTemplate x:Key="FindImagesStepTemplate" DataType="{x:Type AutoVM:FindImagesStep}">
-        <StackPanel Orientation="Vertical">
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            <StackPanel Orientation="Horizontal">
-                <Button Content=" + " Command="{Binding AddImageCommand}" Margin="0,0,10,0"/>
-                <Button Content=" - " Command="{Binding DelImageCommand}" Margin="0,0,10,0"/>
-            </StackPanel>
-            <ListBox ItemsSource="{Binding Images}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel>
-                            <StackPanel>
-                                <Label Content="{lex:Loc Select_target_pic}" VerticalAlignment="Center" Target="{Binding ElementName=PathTextBlock}"/>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBox x:Name="PathTextBlock"
-                               Text="{Binding ImagePath}" 
-                               MinWidth="150"
-                               MaxWidth="250"
-                               TextWrapping="NoWrap"
-                               IsReadOnly="True"
-                               ToolTip="{Binding ImagePath}"/>
-                                    <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
-                                    <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <StackPanel Margin="0,5,0,0">
-                                <Label Content="{lex:Loc Picture_similarity_threshold}" VerticalAlignment="Center"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                            Precision="3"
-                            Interval="0.001"
-                            Width="70"/>
-                                    <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                            Minimum="0" 
-                            Maximum="1" 
-                            Width="150"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <StackPanel>
-                <StackPanel VerticalAlignment="Center">
-                    <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
-                </StackPanel>
-                <StackPanel>
-                    <Label Content="{lex:Loc FindTimeInterval}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding GapTime, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
-                </StackPanel>
-                
-                <StackPanel>
-                    <Label Content="{lex:Loc Timeout}" VerticalAlignment="Center"/>
-                    <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.1"/>
-                </StackPanel>
-            </StackPanel>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
-        </StackPanel>
-    </DataTemplate>
-
-    <!-- 输入文字步骤的UI -->
+    <!-- 输入文字步骤 -->
     <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
-        <StackPanel Orientation="Vertical">
+        <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
-            </StackPanel>
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc Type_text}" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Type_text}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
             </StackPanel>
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc DelayBetweenKeys}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
+    <!-- 输入文字(多)步骤 -->
     <DataTemplate x:Key="TextStepMoreTemplate" DataType="{x:Type AutoVM:TypeTextMoreStep}">
-        <StackPanel Orientation="Vertical">
+        <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc Prefix}" VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox Text="{Binding Prefix, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
-                    <CheckBox IsChecked="{Binding Prefix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" HorizontalAlignment="Left"/>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Prefix}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Prefix, UpdateSourceTrigger=LostFocus}" MinWidth="120"/>
+                <CheckBox IsChecked="{Binding Prefix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
-            
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc Infix}" VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox Text="{Binding Infix, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
-                    <CheckBox IsChecked="{Binding Infix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" HorizontalAlignment="Left"/>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Infix}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Infix, UpdateSourceTrigger=LostFocus}" MinWidth="120"/>
+                <CheckBox IsChecked="{Binding Infix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
-
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc Suffix}" VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox Text="{Binding Suffix, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
-                    <CheckBox IsChecked="{Binding Suffix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" HorizontalAlignment="Left"/>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Suffix}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Suffix, UpdateSourceTrigger=LostFocus}" MinWidth="120"/>
+                <CheckBox IsChecked="{Binding Suffix_gen}" Content="{lex:Loc AutoGen}" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
-
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
-            
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc DelayBetweenKeys}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
-
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc Preview}" VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding TextToType}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Preview}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding TextToType}" VerticalAlignment="Center"/>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
-    
-    <DataTemplate x:Key="TextStepFromFileTemplate" DataType="{x:Type AutoVM:TypeTextFromFileStep}">
-        <StackPanel Orientation="Vertical">
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
-            </StackPanel>
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc DelayBetweenKeys}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding DelayBetweenKeys}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
-            </StackPanel>
-            <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Margin="0,5,0,5">
-                <CheckBox IsChecked="{Binding ReloadIndex}" Content="{lex:Loc ReloadIndex}" HorizontalAlignment="Left"/>
-                <Button Content="{lex:Loc Reset}" Command="{Binding ResetIndexCommand}" HorizontalAlignment="Right"/>
-            </StackPanel>
 
-            <GroupBox Header="{lex:Loc Contents}">
-                <StackPanel VerticalAlignment="Center" Margin="0,5,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}" Margin="0,0,5,3"/>
-                        <Button Content=" + " Command="{Binding AddContentCommand}" Margin="0,0,5,3"/>
-                        <Button Content=" - " Command="{Binding DelContentCommand}" Margin="0,0,5,3"/>
+    <!-- 从文件输入文字步骤 -->
+    <DataTemplate x:Key="TextStepFromFileTemplate" DataType="{x:Type AutoVM:TypeTextFromFileStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc DelayBetweenKeys}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding DelayBetweenKeys}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,3">
+                <CheckBox IsChecked="{Binding ReloadIndex}" Content="{lex:Loc ReloadIndex}" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc Reset}" Command="{Binding ResetIndexCommand}" Margin="5,0,0,0"/>
+            </StackPanel>
+            <GroupBox Header="{lex:Loc Contents}" Margin="0,5,0,0">
+                <StackPanel Margin="0,3,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                        <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}" Margin="0,0,5,0"/>
+                        <Button Content="+" Command="{Binding AddContentCommand}" MinWidth="30" Margin="0,0,5,0"/>
+                        <Button Content="-" Command="{Binding DelContentCommand}" MinWidth="30"/>
                     </StackPanel>
                     <ListBox ItemsSource="{Binding Contents}" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <ListBox.ItemTemplate>
@@ -516,7 +337,7 @@
                         </ListBox.ItemTemplate>
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <VirtualizingStackPanel Orientation="Vertical" />
+                                <VirtualizingStackPanel Orientation="Vertical"/>
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                     </ListBox>
@@ -527,37 +348,26 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 弹出框步骤 -->
     <DataTemplate x:Key="PopupStepTemplate" DataType="{x:Type AutoVM:PopupStep}">
         <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc Title}" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" 
-                     MinWidth="150"
-                     Margin="0,0,10,0"
-                     VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Title}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
             </StackPanel>
-            <StackPanel>
-                <Label Content="{lex:Loc PopupText}" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
-                         Width="300" Height="60"
-                         AcceptsReturn="True" AcceptsTab="True"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Auto"
-                         Margin="0,0,0,5"/>
-                <StackPanel Orientation="Horizontal">
+            <StackPanel Margin="0,2">
+                <Label Content="{lex:Loc PopupText}" Padding="0,0,0,2"/>
+                <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" Height="60" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"/>
+                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                     <Button Content="{lex:Loc Font}" Command="{Binding FontSelectCommand}" Margin="0,0,5,0" Padding="10,3"/>
                     <Button Content="{lex:Loc Color}" Command="{Binding ColorSelectCommand}" Margin="0,0,5,0" Padding="10,3"/>
                     <Button Content="{lex:Loc RichTextEdit}" Command="{Binding RichTextEditCommand}" Padding="10,3"/>
                 </StackPanel>
             </StackPanel>
-            <StackPanel VerticalAlignment="Center">
-                <Label Content="{lex:Loc PopupType}" VerticalAlignment="Center"/>
-                <ComboBox SelectedValue="{Binding PopupType, UpdateSourceTrigger=LostFocus}" 
-                     ItemsSource="{Binding PopupTypes}"
-                     MinWidth="150"
-                     Margin="0,0,10,0"
-                     VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc PopupType}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox SelectedValue="{Binding PopupType, UpdateSourceTrigger=LostFocus}" ItemsSource="{Binding PopupTypes}" MinWidth="150">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -566,21 +376,11 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="❓"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding}" Value="Error">
-                                                    <Setter Property="Text" Value="❌"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding}" Value="Warning">
-                                                    <Setter Property="Text" Value="⚠️"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding}" Value="Information">
-                                                    <Setter Property="Text" Value="ℹ️"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding}" Value="Question">
-                                                    <Setter Property="Text" Value="❓"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding}" Value="None">
-                                                    <Setter Property="Text" Value=""/>
-                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="Error"><Setter Property="Text" Value="❌"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="Warning"><Setter Property="Text" Value="⚠️"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="Information"><Setter Property="Text" Value="ℹ️"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="Question"><Setter Property="Text" Value="❓"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="None"><Setter Property="Text" Value=""/></DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </TextBlock.Style>
@@ -591,30 +391,18 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </StackPanel>
-            <GroupBox Header="{lex:Loc Buttons}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content=" + " Command="{Binding AddButtonCommand}" Margin="0,0,10,0"/>
-                        <Button Content=" - " Command="{Binding DelButtonCommand}" Margin="0,0,10,0"/>
+            <GroupBox Header="{lex:Loc Buttons}" Margin="0,5,0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                        <Button Content="+" Command="{Binding AddButtonCommand}" MinWidth="30" Margin="0,0,5,0"/>
+                        <Button Content="-" Command="{Binding DelButtonCommand}" MinWidth="30"/>
                     </StackPanel>
-                    <ListBox Grid.Row="1" ItemsSource="{Binding PopupButtons.Buttons}">
+                    <ListBox ItemsSource="{Binding PopupButtons.Buttons}">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type VM:PopupButton}">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBox Text="{Binding DisplayText, UpdateSourceTrigger=LostFocus}" 
-                                             MinWidth="120"
-                                             Margin="0,0,10,0"
-                                             VerticalAlignment="Center"/>
-                                    <ComboBox Text="{Binding Value}" 
-                                              MinWidth="150"
-                                              ItemsSource="{Binding DefaultValues}"
-                                              Margin="0,0,10,0"
-                                              IsEditable="True"
-                                              VerticalAlignment="Center">
+                                    <TextBox Text="{Binding DisplayText, UpdateSourceTrigger=LostFocus}" MinWidth="120" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <ComboBox Text="{Binding Value}" MinWidth="130" ItemsSource="{Binding DefaultValues}" IsEditable="True" VerticalAlignment="Center">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
@@ -625,16 +413,13 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </Grid>
+                </StackPanel>
             </GroupBox>
-            <!-- 关闭模式设置 -->
             <GroupBox Header="{lex:Loc PopupCloseMode}" Margin="0,5,0,0">
                 <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                        <TextBlock Text="{lex:Loc CloseMode}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox ItemsSource="{Binding CloseModes}" 
-                                  SelectedItem="{Binding CloseMode}"
-                                  MinWidth="150">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                        <Label Content="{lex:Loc CloseMode}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding CloseModes}" SelectedItem="{Binding CloseMode}" MinWidth="150">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
@@ -642,47 +427,33 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
                     </StackPanel>
-                    <!-- Timeout 模式配置 -->
                     <StackPanel Orientation="Horizontal">
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding CloseMode}" Value="Timeout">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding CloseMode}" Value="Timeout"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
-                        <TextBlock Text="{lex:Loc AutoCloseSeconds}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <wd:NumericBox Value="{Binding AutoCloseSeconds, Mode=TwoWay}" 
-                                       Minimum="0.5" Maximum="3600" Precision="1" Interval="0.5" Width="80"/>
-                        <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
+                        <Label Content="{lex:Loc AutoCloseSeconds}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                        <wd:NumericBox Value="{Binding AutoCloseSeconds, Mode=TwoWay}" Minimum="0.5" Maximum="3600" Precision="1" Interval="0.5" Width="70"/>
+                        <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="5,0,0,0" Foreground="Gray"/>
                     </StackPanel>
-                    <!-- StepReached 模式配置 -->
                     <StackPanel Orientation="Horizontal">
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">
                                 <Setter Property="Visibility" Value="Collapsed"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding CloseMode}" Value="StepReached">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding CloseMode}" Value="StepReached"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
-                        <TextBlock Text="{lex:Loc CloseOnStep}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox ItemsSource="{Binding AllSteps}"
-                                  SelectedValue="{Binding CloseOnStepUid, TargetNullValue={x:Static sys:Guid.Empty}}"
-                                  SelectedValuePath="Uid"
-                                  MinWidth="150">
+                        <Label Content="{lex:Loc CloseOnStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding AllSteps}" SelectedValue="{Binding CloseOnStepUid, TargetNullValue={x:Static sys:Guid.Empty}}" SelectedValuePath="Uid" MinWidth="150">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock>
-                                        <Run Text="{Binding LineNo, Mode=OneWay}"/>
-                                        <Run Text=" - "/>
-                                        <Run Text="{Binding Name, Mode=OneWay}"/>
-                                    </TextBlock>
+                                    <TextBlock><Run Text="{Binding LineNo, Mode=OneWay}"/><Run Text=" - "/><Run Text="{Binding Name, Mode=OneWay}"/></TextBlock>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
@@ -694,27 +465,22 @@
         </StackPanel>
     </DataTemplate>
 
-    <!-- TextOCR 步骤的UI -->
+    <!-- TextOCR 步骤 -->
     <DataTemplate x:Key="TextOCRStepTemplate" DataType="{x:Type AutoVM:TextOCRStep}">
-        <StackPanel Orientation="Vertical">
+        <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
-            <StackPanel Margin="0,5,0,0">
-                <Label Content="{lex:Loc OCR_Region}" VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" 
-                             IsReadOnly="True" MinWidth="200" VerticalAlignment="Center"/>
-                    <Button Content="{lex:Loc OCR_SelectRegion}" Command="{Binding SelectRegionCommand}" Margin="5,0,0,0"/>
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc OCR_Region}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" IsReadOnly="True" MinWidth="150" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc OCR_SelectRegion}" Command="{Binding SelectRegionCommand}" Margin="3,0,0,0"/>
             </StackPanel>
-            <StackPanel Margin="0,5,0,0">
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
+            </StackPanel>
+            <StackPanel Margin="0,3,0,0">
                 <Button Content="{lex:Loc OCR_Test}" Command="{Binding TestOCRCommand}" HorizontalAlignment="Left"/>
-                <TextBox Text="{Binding OCRResultPreview, Mode=OneWay}" 
-                         IsReadOnly="True" MinHeight="40" TextWrapping="Wrap" 
-                         Margin="0,5,0,0" VerticalScrollBarVisibility="Auto"/>
-            </StackPanel>
-            <StackPanel Margin="0,5,0,0">
-                <Label Content="{lex:Loc WaitTime}" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding WaitTime}" MinWidth="200" HorizontalAlignment="Left" Minimum="0" Precision="3" Interval="0.001"/>
+                <TextBox Text="{Binding OCRResultPreview, Mode=OneWay}" IsReadOnly="True" MinHeight="40" TextWrapping="Wrap" Margin="0,3,0,0" VerticalScrollBarVisibility="Auto"/>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
@@ -724,8 +490,6 @@
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
                      FindImageTemplate="{StaticResource FindImageStepTemplate}"
-                     ClickImagesTemplate="{StaticResource ClickImagesStepTemplate}"
-                     FindImagesTemplate="{StaticResource FindImagesStepTemplate}"
                      TypeTextTemplate="{StaticResource TextStepTemplate}"
                      TypeTextMoreTemplate="{StaticResource TextStepMoreTemplate}"
                      TypeTextFromFileTemplate="{StaticResource TextStepFromFileTemplate}"

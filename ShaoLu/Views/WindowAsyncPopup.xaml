@@ -9,7 +9,7 @@
         WindowStartupLocation="CenterScreen"
         SizeToContent="WidthAndHeight"
         MinHeight="180" MinWidth="300" 
-        MaxWidth="600" MaxHeight="500"
+        MaxWidth="500" MaxHeight="500"
         Topmost="True">
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
@@ -31,7 +31,7 @@
         <!-- 消息内容（支持富文本，可滚动） -->
         <ScrollViewer Grid.Row="0" Grid.Column="1" 
                       VerticalScrollBarVisibility="Auto" 
-                      MaxHeight="350"
+                      MaxHeight="300"
                       VerticalAlignment="Center">
             <FlowDocumentScrollViewer x:Name="MessageViewer" 
                                       Margin="0,0,10,0"

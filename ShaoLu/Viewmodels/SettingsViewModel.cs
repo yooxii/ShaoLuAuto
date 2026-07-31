@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
-using WPFDevelopers;
 
 namespace ShaoLu.Viewmodels
 {
@@ -37,17 +36,14 @@ namespace ShaoLu.Viewmodels
     // ===== App 设置 ViewModel =====
     public partial class AppSettingsViewModel : ObservableObject
     {
-        private bool _themeLight;
         private FontModel _font;
         private int _logRetentionDays;
 
-        public bool ThemeLight { get => _themeLight; set => SetProperty(ref _themeLight, value); }
         public FontModel Font { get => _font; set => SetProperty(ref _font, value); }
         public int LogRetentionDays { get => _logRetentionDays; set => SetProperty(ref _logRetentionDays, value); }
 
         public AppSettingsViewModel(AppSettingsModel model)
         {
-            ThemeLight = model.ThemeLight;
             Font = model.WindowFont;
             LogRetentionDays = model.LogRetentionDays;
         }
@@ -55,7 +51,6 @@ namespace ShaoLu.Viewmodels
 
         public void ApplyTo(AppSettingsModel model)
         {
-            model.ThemeLight = ThemeLight;
             model.WindowFont = Font;
             model.LogRetentionDays = LogRetentionDays;
         }
@@ -108,6 +103,9 @@ namespace ShaoLu.Viewmodels
         public bool ShowOCRRegionOnRun { get => _showOCRRegionOnRun; set => SetProperty(ref _showOCRRegionOnRun, value); }
         public bool ShowFoundImageRegionOnRun { get => _showFoundImageRegionOnRun; set => SetProperty(ref _showFoundImageRegionOnRun, value); }
         public bool ShowClickPositionOnRun { get => _showClickPositionOnRun; set => SetProperty(ref _showClickPositionOnRun, value); }
+        public OverlaySetting OCRRegionOverlay { get; set; }
+        public OverlaySetting FoundImageOverlay { get; set; }
+        public OverlaySetting ClickPositionOverlay { get; set; }
         public int DefaultSelfReferenceLimit { get => _defaultSelfReferenceLimit; set => SetProperty(ref _defaultSelfReferenceLimit, value); }
         public double DefaultSimilarityThreshold { get => _defaultSimilarityThreshold; set => SetProperty(ref _defaultSimilarityThreshold, value); }
         public double DefaultWaitTime { get => _defaultWaitTime; set => SetProperty(ref _defaultWaitTime, value); }
@@ -125,6 +123,9 @@ namespace ShaoLu.Viewmodels
             ShowOCRRegionOnRun = model.ShowOCRRegionOnRun;
             ShowFoundImageRegionOnRun = model.ShowFoundImageRegionOnRun;
             ShowClickPositionOnRun = model.ShowClickPositionOnRun;
+            OCRRegionOverlay = model.OCRRegionOverlay;
+            FoundImageOverlay = model.FoundImageOverlay;
+            ClickPositionOverlay = model.ClickPositionOverlay;
             DefaultSelfReferenceLimit = model.DefaultSelfReferenceLimit;
             DefaultSimilarityThreshold = model.DefaultSimilarityThreshold;
             DefaultWaitTime = model.DefaultWaitTime;
@@ -143,6 +144,9 @@ namespace ShaoLu.Viewmodels
             model.ShowOCRRegionOnRun = ShowOCRRegionOnRun;
             model.ShowFoundImageRegionOnRun = ShowFoundImageRegionOnRun;
             model.ShowClickPositionOnRun = ShowClickPositionOnRun;
+            model.OCRRegionOverlay = OCRRegionOverlay;
+            model.FoundImageOverlay = FoundImageOverlay;
+            model.ClickPositionOverlay = ClickPositionOverlay;
             model.DefaultSelfReferenceLimit = DefaultSelfReferenceLimit;
             model.DefaultSimilarityThreshold = DefaultSimilarityThreshold;
             model.DefaultWaitTime = DefaultWaitTime;
@@ -234,7 +238,6 @@ namespace ShaoLu.Viewmodels
 
         private void ApplyWindowSettings()
         {
-            ThemeManager.Instance.SetTheme(Settings.App.ThemeLight ? ThemeType.Light : ThemeType.Dark);
             ApplyGlobalFont(Settings.App.WindowFont);
         }
 

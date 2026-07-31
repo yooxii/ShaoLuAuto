@@ -831,4 +831,7 @@
   <data name="RichTextEdit" xml:space="preserve">
     <value>富文本编辑</value>
   </data>
+  <data name="MouseActions" xml:space="preserve">
+    <value>鼠标动作</value>
+  </data>
 </root>

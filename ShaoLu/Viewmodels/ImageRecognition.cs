@@ -339,6 +339,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
         public double NextClickTime { get => _nextClickTime; set => SetProperty(ref _nextClickTime, value); }
 
+        private System.Collections.ObjectModel.ObservableCollection<Models.MouseActionItem> _mouseActions = new() { new Models.MouseActionItem() };
+        /// <summary>鼠标动作序列（顺序执行）</summary>
+        public System.Collections.ObjectModel.ObservableCollection<Models.MouseActionItem> MouseActions { get => _mouseActions; set => SetProperty(ref _mouseActions, value); }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        private RelayCommand addMouseActionCommand;
+        [System.Text.Json.Serialization.JsonIgnore]
+        public RelayCommand AddMouseActionCommand => addMouseActionCommand ??= new RelayCommand(() => MouseActions.Add(new Models.MouseActionItem()));
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        private RelayCommand removeMouseActionCommand;
+        [System.Text.Json.Serialization.JsonIgnore]
+        public RelayCommand RemoveMouseActionCommand => removeMouseActionCommand ??= new RelayCommand(() => { if (MouseActions.Count > 1) MouseActions.RemoveAt(MouseActions.Count - 1); });
+
         public ClickImageStep() : base()
         {
             Type = StepType.ClickImage;
@@ -373,6 +387,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ClickGap = ClickGap,
                 WaitTime = WaitTime,
                 Timeout = Timeout,
+                MouseActions = new(MouseActions?.Select(a => a.Clone()).ToList()),
             };
             if (clonedImg != null)
                 res.SaveCroppedImageToDisk(clonedImg);
@@ -398,6 +413,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var rect = await Task.Run(async () =>
             {
                 await Task.Delay((int)WaitTime * 1000, cancellationToken);
+                if (MouseActions != null && MouseActions.Count > 0)
+                    return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, MouseActions.ToList(), NextClickTime, 0, Timeout);
                 return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
             });
             IsTrue = !rect.IsEmpty;
@@ -538,7 +555,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     res.LeftTop.X / dpiX, res.LeftTop.Y / dpiY,
                     imgW / dpiX, imgH / dpiY);
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                    Views.WindowRegionOverlay.ShowRegion(foundRegion, 2.0));
+                    Views.WindowRegionOverlay.ShowRegion(foundRegion, Utils.SingletonLocator.Settings.Step.FoundImageOverlay.Color, Utils.SingletonLocator.Settings.Step.FoundImageOverlay.Duration));
             }
 
             // OCR 识别（如果启用且找到图片）
@@ -557,7 +574,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
                 {
                     await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                        Views.WindowRegionOverlay.ShowRegion(screenRegion, 2.0));
+                        Views.WindowRegionOverlay.ShowRegion(screenRegion, Utils.SingletonLocator.Settings.Step.OCRRegionOverlay.Color, Utils.SingletonLocator.Settings.Step.OCRRegionOverlay.Duration));
                 }
 
                 ocrText = await Task.Run(() => Services.OCRService.RecognizeRegion(screenRegion), cancellationToken);

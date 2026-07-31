@@ -112,6 +112,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 return false;
             }
 
+            // 如果设置开启，在屏幕上标示 OCR 区域
+            if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
+            {
+                var overlay = Utils.SingletonLocator.Settings.Step.OCRRegionOverlay;
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                    WindowRegionOverlay.ShowRegion(OCRRegion, overlay.Color, overlay.Duration));
+            }
+
             string text = await Task.Run(() =>
             {
                 return OCRService.RecognizeRegion(OCRRegion);

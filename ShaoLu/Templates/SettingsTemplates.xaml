@@ -11,18 +11,6 @@
         <StackPanel>
             <TextBlock Text="{lex:Loc Settings_AppSettings}" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
 
-            <!-- 主题 -->
-            <Expander Header="{lex:Loc Theme}" IsExpanded="True" Tag="App_Theme" Margin="0,0,0,8">
-                <Grid Margin="20,8,0,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{lex:Loc Theme}" VerticalAlignment="Center"/>
-                    <ToggleButton Grid.Column="1" IsChecked="{Binding ThemeLight}" HorizontalAlignment="Left"/>
-                </Grid>
-            </Expander>
-
             <!-- 字体 -->
             <Expander Header="{lex:Loc Font}" IsExpanded="True" Tag="App_Font" Margin="0,0,0,8">
                 <Grid Margin="20,8,0,8">
@@ -156,7 +144,9 @@
                 <Grid Margin="20,8,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="160"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -167,13 +157,19 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc ShowOCRRegionOnRun}" VerticalAlignment="Center"/>
-                    <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowOCRRegionOnRun}"/>
+                    <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowOCRRegionOnRun}" Margin="0,0,10,0"/>
+                    <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding OCRRegionOverlay.Color, UpdateSourceTrigger=LostFocus}" Width="70" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <wd:NumericBox Grid.Row="0" Grid.Column="3" Value="{Binding OCRRegionOverlay.Duration, Mode=TwoWay}" Width="60" Minimum="0.5" Maximum="30" Precision="1" Interval="0.5"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="{lex:Loc ShowFoundImageRegionOnRun}" VerticalAlignment="Center"/>
-                    <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowFoundImageRegionOnRun}"/>
+                    <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowFoundImageRegionOnRun}" Margin="0,0,10,0"/>
+                    <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding FoundImageOverlay.Color, UpdateSourceTrigger=LostFocus}" Width="70" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <wd:NumericBox Grid.Row="2" Grid.Column="3" Value="{Binding FoundImageOverlay.Duration, Mode=TwoWay}" Width="60" Minimum="0.5" Maximum="30" Precision="1" Interval="0.5"/>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc ShowClickPositionOnRun}" VerticalAlignment="Center"/>
-                    <CheckBox Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowClickPositionOnRun}"/>
+                    <CheckBox Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ShowClickPositionOnRun}" Margin="0,0,10,0"/>
+                    <TextBox Grid.Row="4" Grid.Column="2" Text="{Binding ClickPositionOverlay.Color, UpdateSourceTrigger=LostFocus}" Width="70" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <wd:NumericBox Grid.Row="4" Grid.Column="3" Value="{Binding ClickPositionOverlay.Duration, Mode=TwoWay}" Width="60" Minimum="0.5" Maximum="30" Precision="1" Interval="0.5"/>
                 </Grid>
             </Expander>
         </StackPanel>

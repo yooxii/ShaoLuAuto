@@ -842,18 +842,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
                             if (completedTask == timeoutTask)
                             {
-                                // 超时自动关闭，返回默认按钮值
+                                // 超时自动关闭，返回默认按钮值，不等待窗口关闭
                                 var defaultResult = PopupButtons.DefaultButton?.Value ?? string.Empty;
                                 if (popupWindow is WindowAsyncPopup ap)
                                 {
                                     ap.CloseWithResult(defaultResult);
                                 }
-                                var result = await popupTask; // 等待实际完成
-                                IsTrue = (result == PopupButton.YesValue);
+                                IsTrue = (defaultResult == PopupButton.YesValue);
                                 LastResult = new StepExecutionResult
                                 {
                                     IsTrue = IsTrue,
-                                    PopupResult = result,
+                                    PopupResult = defaultResult,
                                     ExecutedAt = DateTime.Now,
                                 };
                                 return IsTrue;

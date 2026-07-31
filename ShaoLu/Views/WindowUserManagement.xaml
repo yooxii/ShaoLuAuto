@@ -52,15 +52,15 @@
                 <StackPanel Margin="8">
                     <StackPanel Margin="0,0,0,6">
                         <TextBlock Text="{lex:Loc Login_Username}" FontSize="12"/>
-                        <TextBox Text="{Binding NewUsername, UpdateSourceTrigger=PropertyChanged}" Height="26"/>
+                        <TextBox Text="{Binding NewUsername, UpdateSourceTrigger=PropertyChanged}" Height="28" Padding="5,4" VerticalContentAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,6">
                         <TextBlock Text="{lex:Loc Login_Password}" FontSize="12"/>
-                        <PasswordBox x:Name="AddPasswordBox" Height="26" PasswordChanged="AddPasswordBox_PasswordChanged"/>
+                        <PasswordBox x:Name="AddPasswordBox" Height="28" Padding="5,4" VerticalContentAlignment="Center" PasswordChanged="AddPasswordBox_PasswordChanged"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,6">
                         <TextBlock Text="{lex:Loc RoleHeader}" FontSize="12"/>
-                        <ComboBox SelectedIndex="{Binding NewRoleIndex}" Height="26">
+                        <ComboBox SelectedIndex="{Binding NewRoleIndex}" Height="28" Padding="5,4" VerticalContentAlignment="Center">
                             <ComboBoxItem Content="{lex:Loc AdminRole}"/>
                             <ComboBoxItem Content="{lex:Loc UserRole}"/>
                         </ComboBox>
@@ -74,15 +74,15 @@
                 <StackPanel Margin="8">
                     <StackPanel Margin="0,0,0,6">
                         <TextBlock Text="{lex:Loc SelectedUser}" FontSize="12"/>
-                        <TextBox Text="{Binding SelectedUser.Username, Mode=OneWay}" IsReadOnly="True" Height="26"/>
+                        <TextBox Text="{Binding SelectedUser.Username, Mode=OneWay}" IsReadOnly="True" Height="28" Padding="5,4" VerticalContentAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,6">
                         <TextBlock Text="{lex:Loc OldPassword}" FontSize="12"/>
-                        <PasswordBox x:Name="OldPasswordBox" Height="26" PasswordChanged="OldPasswordBox_PasswordChanged"/>
+                        <PasswordBox x:Name="OldPasswordBox" Height="28" Padding="5,4" VerticalContentAlignment="Center" PasswordChanged="OldPasswordBox_PasswordChanged"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,6">
                         <TextBlock Text="{lex:Loc NewPassword}" FontSize="12"/>
-                        <PasswordBox x:Name="NewPasswordBox" Height="26" PasswordChanged="NewPasswordBox_PasswordChanged"/>
+                        <PasswordBox x:Name="NewPasswordBox" Height="28" Padding="5,4" VerticalContentAlignment="Center" PasswordChanged="NewPasswordBox_PasswordChanged"/>
                     </StackPanel>
                     <Button Content="{lex:Loc ChangePasswordButton}" Command="{Binding ChangePasswordCommand}" Height="30" Margin="0,4,0,0"/>
                 </StackPanel>

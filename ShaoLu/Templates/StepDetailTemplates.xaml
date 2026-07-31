@@ -537,17 +537,18 @@
                      Margin="0,0,10,0"
                      VerticalAlignment="Center"/>
             </StackPanel>
-            <StackPanel VerticalAlignment="Center">
+            <StackPanel>
                 <Label Content="{lex:Loc PopupText}" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding PopupText, UpdateSourceTrigger=LostFocus}" 
-                         MinWidth="200" MinHeight="60"
+                         Width="300" Height="60"
                          AcceptsReturn="True" AcceptsTab="True"
                          TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Auto"
-                         Margin="0,0,10,5"/>
+                         Margin="0,0,0,5"/>
                 <StackPanel Orientation="Horizontal">
                     <Button Content="{lex:Loc Font}" Command="{Binding FontSelectCommand}" Margin="0,0,5,0" Padding="10,3"/>
-                    <Button Content="{lex:Loc Color}" Command="{Binding ColorSelectCommand}" Padding="10,3"/>
+                    <Button Content="{lex:Loc Color}" Command="{Binding ColorSelectCommand}" Margin="0,0,5,0" Padding="10,3"/>
+                    <Button Content="{lex:Loc RichTextEdit}" Command="{Binding RichTextEditCommand}" Padding="10,3"/>
                 </StackPanel>
             </StackPanel>
             <StackPanel VerticalAlignment="Center">

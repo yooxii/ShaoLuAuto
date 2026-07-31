@@ -783,4 +783,25 @@
   <data name="OCRText" xml:space="preserve">
     <value>OCR結果</value>
   </data>
+  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
+    <value>選擇要引用的步驟（當變數為「引用步驟」類型時使用）</value>
+  </data>
+  <data name="Seconds" xml:space="preserve">
+    <value>秒</value>
+  </data>
+  <data name="Settings_DebugSettings" xml:space="preserve">
+    <value>調試設置</value>
+  </data>
+  <data name="ShowOCRRegionOnRun" xml:space="preserve">
+    <value>運行時顯示OCR識別區域</value>
+  </data>
+  <data name="ShowFoundImageRegionOnRun" xml:space="preserve">
+    <value>運行時顯示找到圖像的區域</value>
+  </data>
+  <data name="ShowClickPositionOnRun" xml:space="preserve">
+    <value>運行時顯示點擊位置</value>
+  </data>
+  <data name="RichTextEdit" xml:space="preserve">
+    <value>富文本編輯</value>
+  </data>
 </root>

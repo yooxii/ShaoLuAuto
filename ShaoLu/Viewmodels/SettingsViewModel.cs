@@ -86,6 +86,9 @@ namespace ShaoLu.Viewmodels
         private bool _showErrorPopup;
         private bool _minimizeOnRun;
         private bool _confirmBeforeRun;
+        private bool _showOCRRegionOnRun;
+        private bool _showFoundImageRegionOnRun;
+        private bool _showClickPositionOnRun;
         private int _defaultSelfReferenceLimit;
         private double _defaultSimilarityThreshold;
         private double _defaultWaitTime;
@@ -97,6 +100,9 @@ namespace ShaoLu.Viewmodels
         public bool ShowErrorPopup { get => _showErrorPopup; set => SetProperty(ref _showErrorPopup, value); }
         public bool MinimizeOnRun { get => _minimizeOnRun; set => SetProperty(ref _minimizeOnRun, value); }
         public bool ConfirmBeforeRun { get => _confirmBeforeRun; set => SetProperty(ref _confirmBeforeRun, value); }
+        public bool ShowOCRRegionOnRun { get => _showOCRRegionOnRun; set => SetProperty(ref _showOCRRegionOnRun, value); }
+        public bool ShowFoundImageRegionOnRun { get => _showFoundImageRegionOnRun; set => SetProperty(ref _showFoundImageRegionOnRun, value); }
+        public bool ShowClickPositionOnRun { get => _showClickPositionOnRun; set => SetProperty(ref _showClickPositionOnRun, value); }
         public int DefaultSelfReferenceLimit { get => _defaultSelfReferenceLimit; set => SetProperty(ref _defaultSelfReferenceLimit, value); }
         public double DefaultSimilarityThreshold { get => _defaultSimilarityThreshold; set => SetProperty(ref _defaultSimilarityThreshold, value); }
         public double DefaultWaitTime { get => _defaultWaitTime; set => SetProperty(ref _defaultWaitTime, value); }
@@ -111,6 +117,9 @@ namespace ShaoLu.Viewmodels
             ShowErrorPopup = model.ShowErrorPopup;
             MinimizeOnRun = model.MinimizeOnRun;
             ConfirmBeforeRun = model.ConfirmBeforeRun;
+            ShowOCRRegionOnRun = model.ShowOCRRegionOnRun;
+            ShowFoundImageRegionOnRun = model.ShowFoundImageRegionOnRun;
+            ShowClickPositionOnRun = model.ShowClickPositionOnRun;
             DefaultSelfReferenceLimit = model.DefaultSelfReferenceLimit;
             DefaultSimilarityThreshold = model.DefaultSimilarityThreshold;
             DefaultWaitTime = model.DefaultWaitTime;
@@ -126,6 +135,9 @@ namespace ShaoLu.Viewmodels
             model.ShowErrorPopup = ShowErrorPopup;
             model.MinimizeOnRun = MinimizeOnRun;
             model.ConfirmBeforeRun = ConfirmBeforeRun;
+            model.ShowOCRRegionOnRun = ShowOCRRegionOnRun;
+            model.ShowFoundImageRegionOnRun = ShowFoundImageRegionOnRun;
+            model.ShowClickPositionOnRun = ShowClickPositionOnRun;
             model.DefaultSelfReferenceLimit = DefaultSelfReferenceLimit;
             model.DefaultSimilarityThreshold = DefaultSimilarityThreshold;
             model.DefaultWaitTime = DefaultWaitTime;

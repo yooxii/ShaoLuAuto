@@ -48,6 +48,16 @@ namespace ShaoLu.Models
         public bool ShowOCRRegionOnRun { get; set; } = true;
 
         /// <summary>
+        /// 找到图像时是否在屏幕上标示匹配区域
+        /// </summary>
+        public bool ShowFoundImageRegionOnRun { get; set; } = false;
+
+        /// <summary>
+        /// 点击时是否在屏幕上标示点击位置
+        /// </summary>
+        public bool ShowClickPositionOnRun { get; set; } = false;
+
+        /// <summary>
         /// 新建图像步骤的默认相似度阈值
         /// </summary>
         public double DefaultSimilarityThreshold { get; set; } = 0.85;

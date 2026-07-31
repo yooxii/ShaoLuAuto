@@ -526,6 +526,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsError = false;
             ErrorType = StepErrorType.None;
 
+            // 调试：标示找到图像的区域
+            if (IsTrue && Utils.SingletonLocator.Settings.Step.ShowFoundImageRegionOnRun)
+            {
+                double dpiX = Services.OCRService.CachedDpiX;
+                double dpiY = Services.OCRService.CachedDpiY;
+                var srcImg = (CroppedImg ?? ImgSrc) as System.Windows.Media.Imaging.BitmapSource;
+                double imgW = srcImg?.PixelWidth ?? 0;
+                double imgH = srcImg?.PixelHeight ?? 0;
+                var foundRegion = new Rect(
+                    res.LeftTop.X / dpiX, res.LeftTop.Y / dpiY,
+                    imgW / dpiX, imgH / dpiY);
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    Views.WindowRegionOverlay.ShowRegion(foundRegion, 2.0));
+            }
+
             // OCR 识别（如果启用且找到图片）
             string ocrText = null;
             if (EnableOCR && IsTrue && !OCRRect.IsEmpty && OCRRect.Width > 0 && OCRRect.Height > 0)
@@ -534,8 +549,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 // OCRRect 是相对于原图的坐标，需减去 CroppedRect 偏移得到相对于裁剪图的坐标
                 double dpiX = Services.OCRService.CachedDpiX;
                 double dpiY = Services.OCRService.CachedDpiY;
-                double ocrScreenX = res.LeftTop.X / dpiX + (OCRRect.X - CroppedRect.X);
-                double ocrScreenY = res.LeftTop.Y / dpiY + (OCRRect.Y - CroppedRect.Y);
+                double ocrScreenX = (res.LeftTop.X + OCRRect.X - CroppedRect.X) / dpiX;
+                double ocrScreenY = (res.LeftTop.Y + OCRRect.Y - CroppedRect.Y) / dpiY;
                 var screenRegion = new Rect(ocrScreenX, ocrScreenY, OCRRect.Width / dpiX, OCRRect.Height / dpiY);
 
                 // 如果设置开启，在屏幕上标示 OCR 区域

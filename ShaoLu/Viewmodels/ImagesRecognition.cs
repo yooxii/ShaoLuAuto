@@ -140,6 +140,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsError = false;
             ErrorType = StepErrorType.None;
 
+            // 调试：标示点击位置
+            if (IsTrue && lastClickPos != null && Utils.SingletonLocator.Settings.Step.ShowClickPositionOnRun)
+            {
+                double dpiX = Services.OCRService.CachedDpiX;
+                double dpiY = Services.OCRService.CachedDpiY;
+                const double markerSize = 20;
+                var clickRegion = new System.Windows.Rect(
+                    lastClickPos.X / dpiX - markerSize / 2, lastClickPos.Y / dpiY - markerSize / 2,
+                    markerSize, markerSize);
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    Views.WindowRegionOverlay.ShowRegion(clickRegion, 2.0));
+            }
+
             // 填充执行结果
             LastResult = new StepExecutionResult
             {

@@ -223,7 +223,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void AddCondition()
         {
-            Conditions.Add(new StepCondition());
+            Conditions.Add(new StepCondition { ParentStepUid = Uid });
         }
 
         private void RemoveCondition()
@@ -720,7 +720,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public RelayCommand DelButtonCommand => delButtonCommand ??= new RelayCommand(DelButton);
 
+        [JsonIgnore]
+        private RelayCommand richTextEditCommand;
+        [JsonIgnore]
+        public RelayCommand RichTextEditCommand => richTextEditCommand ??= new RelayCommand(RichTextEdit);
+
         #endregion
+
+        private void RichTextEdit()
+        {
+            var result = Views.WindowRichTextEditor.ShowDialog(PopupText);
+            if (result != null)
+                PopupText = result;
+        }
 
         public PopupStep() : base()
         {

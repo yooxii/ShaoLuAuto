@@ -107,6 +107,12 @@ namespace ShaoLu.Models
         }
 
         /// <summary>
+        /// 拥有此条件的步骤 Uid（不序列化，运行时设置）
+        /// </summary>
+        [JsonIgnore]
+        public Guid ParentStepUid { get; set; }
+
+        /// <summary>
         /// 旧版行号字段（仅用于反序列化兼容，不序列化）
         /// </summary>
         [JsonPropertyName("StepLineNo")]
@@ -205,7 +211,7 @@ namespace ShaoLu.Models
         }
 
         /// <summary>
-        /// 解析当前选中步骤的类型（无选中时返回当前步骤类型）
+        /// 解析当前选中步骤的类型（无选中时返回父步骤类型）
         /// </summary>
         private StepType ResolveStepType()
         {
@@ -224,14 +230,22 @@ namespace ShaoLu.Models
                 }
                 catch { }
             }
-            // 未选择步骤时，尝试获取当前步骤的类型
-            try
+            // 未选择步骤时，使用父步骤的类型
+            if (ParentStepUid != Guid.Empty)
             {
-                var steps = Utils.SingletonLocator.Steps.AutomationStepBases;
-                if (steps != null && steps.Count > 0)
-                    return steps[0].Type; // 默认返回第一个步骤类型
+                try
+                {
+                    var steps = Utils.SingletonLocator.Steps.AutomationStepBases;
+                    if (steps != null)
+                    {
+                        foreach (var s in steps)
+                        {
+                            if (s.Uid == ParentStepUid) return s.Type;
+                        }
+                    }
+                }
+                catch { }
             }
-            catch { }
             return StepType.ClickImage;
         }
 
@@ -256,6 +270,7 @@ namespace ShaoLu.Models
             {
                 Variable = Variable,
                 StepUid = StepUid,
+                ParentStepUid = ParentStepUid,
                 Operator = Operator,
                 Value = Value,
                 Connector = Connector,

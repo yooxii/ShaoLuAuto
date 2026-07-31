@@ -28,15 +28,14 @@
                Margin="0,0,15,10" 
                VerticalAlignment="Top"/>
 
-        <!-- 消息文本（可滚动） -->
+        <!-- 消息内容（支持富文本，可滚动） -->
         <ScrollViewer Grid.Row="0" Grid.Column="1" 
                       VerticalScrollBarVisibility="Auto" 
                       MaxHeight="350"
                       VerticalAlignment="Center">
-            <TextBlock x:Name="MessageText" 
-                       TextWrapping="Wrap" 
-                       FontSize="14"
-                       Margin="0,0,10,0"/>
+            <FlowDocumentScrollViewer x:Name="MessageViewer" 
+                                      Margin="0,0,10,0"
+                                      IsToolBarVisible="False"/>
         </ScrollViewer>
 
         <!-- 按钮区域 -->

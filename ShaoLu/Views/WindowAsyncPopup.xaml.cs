@@ -79,21 +79,23 @@ namespace ShaoLu.Views
                 _tcs = tcs
             };
 
-            // 1. 设置消息文本
-            if (popup.MessageText != null)
+            // 1. 设置消息内容（支持富文本）
+            if (popup.MessageViewer != null)
             {
-                popup.MessageText.Text = message ?? string.Empty;
+                var doc = Utils.RichTextHelper.Deserialize(message ?? string.Empty);
 
-                // 如果提供了字体模型，应用字体设置
+                // 如果提供了字体模型，应用字体设置到 FlowDocument 级别
                 if (font != null)
                 {
-                    popup.MessageText.FontFamily = new System.Windows.Media.FontFamily(font.FontFamily);
-                    popup.MessageText.FontSize = font.FontSize;
-                    popup.MessageText.FontStyle = font.FontStyle;
-                    popup.MessageText.FontWeight = font.FontWeight;
+                    doc.FontFamily = new System.Windows.Media.FontFamily(font.FontFamily);
+                    doc.FontSize = font.FontSize;
+                    doc.FontStyle = font.FontStyle;
+                    doc.FontWeight = font.FontWeight;
                     var color = System.Drawing.Color.FromArgb(font.FontColor);
-                    popup.MessageText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, color.R, color.G, color.B));
+                    doc.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, color.R, color.G, color.B));
                 }
+
+                popup.MessageViewer.Document = doc;
             }
 
             // 2. 设置图标 (从缓存获取)

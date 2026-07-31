@@ -786,4 +786,22 @@
   <data name="OCRText" xml:space="preserve">
     <value>OCR结果</value>
   </data>
+  <data name="Seconds" xml:space="preserve">
+    <value>秒</value>
+  </data>
+  <data name="Settings_DebugSettings" xml:space="preserve">
+    <value>调试设置</value>
+  </data>
+  <data name="ShowOCRRegionOnRun" xml:space="preserve">
+    <value>运行时显示OCR识别区域</value>
+  </data>
+  <data name="ShowFoundImageRegionOnRun" xml:space="preserve">
+    <value>运行时显示找到图像的区域</value>
+  </data>
+  <data name="ShowClickPositionOnRun" xml:space="preserve">
+    <value>运行时显示点击位置</value>
+  </data>
+  <data name="RichTextEdit" xml:space="preserve">
+    <value>富文本编辑</value>
+  </data>
 </root>

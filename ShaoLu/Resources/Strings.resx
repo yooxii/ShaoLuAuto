@@ -709,22 +709,25 @@
     <value>No text recognized</value>
   </data>
   <data name="ConditionMode_Label" xml:space="preserve">
-    <value>ConditionMode_Label</value>
+    <value>Mode:</value>
   </data>
   <data name="ConditionMode_Hint" xml:space="preserve">
-    <value>ConditionMode_Hint</value>
+    <value>Tip: When "Custom" is selected, the rules below will replace the step's default success/failure judgment.</value>
   </data>
   <data name="Condition_StepLineNo_Tooltip" xml:space="preserve">
-    <value>Condition_StepLineNo_Tooltip</value>
+    <value>Referenced step line number (only for "Step_*" variables)</value>
+  </data>
+  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
+    <value>Select the step to reference (used when variable is a "Step_*" type)</value>
   </data>
   <data name="Condition_Value_Tooltip" xml:space="preserve">
-    <value>Condition_Value_Tooltip</value>
+    <value>Comparison value (e.g.: true, 0.9, text to match, etc.)</value>
   </data>
   <data name="Condition_Add" xml:space="preserve">
-    <value>Condition_Add</value>
+    <value>+ Add Condition</value>
   </data>
   <data name="Condition_Remove" xml:space="preserve">
-    <value>Condition_Remove</value>
+    <value>- Remove Condition</value>
   </data>
   <data name="CropImage_EnableRatioScale" xml:space="preserve">
     <value>Enable Ratio Scale</value>
@@ -776,5 +779,23 @@
   </data>
   <data name="OCRText" xml:space="preserve">
     <value>OCR Result</value>
+  </data>
+  <data name="Seconds" xml:space="preserve">
+    <value>sec</value>
+  </data>
+  <data name="Settings_DebugSettings" xml:space="preserve">
+    <value>Debug Settings</value>
+  </data>
+  <data name="ShowOCRRegionOnRun" xml:space="preserve">
+    <value>Show OCR region overlay on run</value>
+  </data>
+  <data name="ShowFoundImageRegionOnRun" xml:space="preserve">
+    <value>Show found image region overlay on run</value>
+  </data>
+  <data name="ShowClickPositionOnRun" xml:space="preserve">
+    <value>Show click position overlay on run</value>
+  </data>
+  <data name="RichTextEdit" xml:space="preserve">
+    <value>Rich Text Edit</value>
   </data>
 </root>

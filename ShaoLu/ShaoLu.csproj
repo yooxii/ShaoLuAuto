@@ -4,9 +4,9 @@
   <PropertyGroup>
     <LangVersion>preview</LangVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>\\bnt56\品保部\ORT實驗資料\21. ORT Programs\6. AutoShaoLu\Publish\</PublishUrl>
+    <PublishUrl>D:\22400616\</PublishUrl>
     <Install>true</Install>
-    <InstallFrom>Unc</InstallFrom>
+    <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateMode>Background</UpdateMode>
     <UpdateInterval>7</UpdateInterval>
@@ -17,7 +17,7 @@
     <UpdateUrl>\\bnt56\品保部\ORT實驗資料\21. ORT Programs\6. AutoShaoLu\Publish\</UpdateUrl>
     <ProductName>AutoShaoLu%28自動化燒録%29</ProductName>
     <PublisherName>ORT</PublisherName>
-    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>0.5.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -226,6 +226,9 @@
     <Compile Include="Views\WindowRegionOverlay.xaml.cs">
       <DependentUpon>WindowRegionOverlay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\WindowRichTextEditor.xaml.cs">
+      <DependentUpon>WindowRichTextEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\WindowLogin.xaml.cs">
       <DependentUpon>WindowLogin.xaml</DependentUpon>
     </Compile>
@@ -304,6 +307,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\WindowRichTextEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\WindowLogin.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -359,33 +366,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="ShaoLu_TemporaryKey.pfx" />
-    <None Include="tessdata\chi_sim.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="tessdata\chi_sim_vert.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="tessdata\chi_tra.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="tessdata\chi_tra_vert.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="tessdata\eng.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="tessdata\enm.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="tessdata\jav.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="tessdata\jpn.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="tessdata\jpn_vert.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -452,18 +432,16 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Content Include="tessdata\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <FileAssociation Include=".autostep">
-      <Visible>False</Visible>
-      <Description>AutoShaoLu的步骤文件</Description>
-      <Progid>autostep</Progid>
-      <DefaultIcon>AutoShaoLu.ico</DefaultIcon>
-    </FileAssociation>
+    <Content Include="tessdata\chi_sim.traineddata" />
+    <Content Include="tessdata\chi_sim_vert.traineddata" />
+    <Content Include="tessdata\chi_tra.traineddata" />
+    <Content Include="tessdata\chi_tra_vert.traineddata" />
+    <Content Include="tessdata\eng.traineddata" />
+    <Content Include="tessdata\equ.traineddata" />
+    <Content Include="tessdata\jpn.traineddata" />
+    <Content Include="tessdata\jpn_vert.traineddata" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

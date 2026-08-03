@@ -187,6 +187,7 @@
     <Compile Include="Utils\Autogui.cs" />
     <Compile Include="Converters\StepTemplateSelector.cs" />
     <Compile Include="Utils\DataGridSelectedItemsBehavior.cs" />
+    <Compile Include="Utils\ListBoxSelectedUidsBehavior.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="Utils\RichTextHelper.cs" />
     <Compile Include="Utils\StepsFile.cs" />
@@ -197,6 +198,8 @@
     <Compile Include="Viewmodels\MainViewModel.cs" />
     <Compile Include="Viewmodels\LoginViewModel.cs" />
     <Compile Include="Viewmodels\TextOCRStep.cs" />
+    <Compile Include="Viewmodels\MouseActionStep.cs" />
+    <Compile Include="Viewmodels\StatisticsStep.cs" />
     <Compile Include="Viewmodels\UserManagementViewModel.cs" />
     <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />
@@ -229,6 +232,12 @@
     </Compile>
     <Compile Include="Views\WindowRichTextEditor.xaml.cs">
       <DependentUpon>WindowRichTextEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowStatistics.xaml.cs">
+      <DependentUpon>WindowStatistics.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowSelectPoint.xaml.cs">
+      <DependentUpon>WindowSelectPoint.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowLogin.xaml.cs">
       <DependentUpon>WindowLogin.xaml</DependentUpon>
@@ -309,6 +318,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowRichTextEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowStatistics.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowSelectPoint.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

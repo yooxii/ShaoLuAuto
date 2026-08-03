@@ -1,4 +1,5 @@
 using ShaoLu.Models;
+using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Globalization;
 using System.Windows.Data;
@@ -22,6 +23,10 @@ namespace ShaoLu.Converters
                 return ConvertLogicConnector(connector);
             if (value is PopupCloseMode closeMode)
                 return ConvertPopupCloseMode(closeMode);
+            if (value is StepScope scope)
+                return ConvertStepScope(scope);
+            if (value is PositionMode posMode)
+                return ConvertPositionMode(posMode);
             return value?.ToString() ?? string.Empty;
         }
 
@@ -85,6 +90,21 @@ namespace ShaoLu.Converters
             PopupCloseMode.ButtonClick => Services.LanguageService.GetLocalizedString("CloseMode_ButtonClick"),
             PopupCloseMode.Timeout => Services.LanguageService.GetLocalizedString("CloseMode_Timeout"),
             PopupCloseMode.StepReached => Services.LanguageService.GetLocalizedString("CloseMode_StepReached"),
+            _ => m.ToString(),
+        };
+
+        public static string ConvertStepScope(StepScope s) => s switch
+        {
+            StepScope.All => Services.LanguageService.GetLocalizedString("StatsScope_All"),
+            StepScope.LoggedOnly => Services.LanguageService.GetLocalizedString("StatsScope_LoggedOnly"),
+            StepScope.Custom => Services.LanguageService.GetLocalizedString("StatsScope_Custom"),
+            _ => s.ToString(),
+        };
+
+        public static string ConvertPositionMode(PositionMode m) => m switch
+        {
+            PositionMode.Absolute => Services.LanguageService.GetLocalizedString("PositionMode_Absolute"),
+            PositionMode.CurrentMouse => Services.LanguageService.GetLocalizedString("PositionMode_CurrentMouse"),
             _ => m.ToString(),
         };
 

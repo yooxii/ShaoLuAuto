@@ -1,0 +1,156 @@
+using ShaoLu.Services;
+using ShaoLu.Viewmodels.AutomationStep;
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Threading;
+
+namespace ShaoLu.Views
+{
+    /// <summary>
+    /// 统计信息悬浮窗口（表格展示，大小由内容决定）
+    /// </summary>
+    public partial class WindowStatistics : Window
+    {
+        private readonly StatisticsStep _step;
+        private readonly DispatcherTimer _refreshTimer;
+
+        public WindowStatistics(StatisticsStep step)
+        {
+            InitializeComponent();
+            _step = step;
+
+            // 应用窗口配置
+            Title = step.WindowTitle;
+            Left = step.WindowX;
+            Top = step.WindowY;
+            Topmost = step.AlwaysOnTop;
+
+            // 构建初始内容
+            BuildContent();
+
+            // 自动关闭
+            if (step.AutoCloseSeconds > 0)
+            {
+                var closeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(step.AutoCloseSeconds) };
+                closeTimer.Tick += (s, e) => { closeTimer.Stop(); Close(); };
+                closeTimer.Start();
+            }
+
+            // 定时刷新统计
+            _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _refreshTimer.Tick += (s, e) => BuildContent();
+            _refreshTimer.Start();
+        }
+
+        private void BuildContent()
+        {
+            ContentPanel.Children.Clear();
+            var context = StepExecutionContext.Instance;
+            var steps = Utils.SingletonLocator.Steps?.AutomationStepBases;
+
+            foreach (var item in _step.StatisticsItems)
+            {
+                if (!item.IsEnabled) continue;
+
+                if (item.Type == StatisticsItemType.TotalExecutionTime)
+                {
+                    AddTotalTimeSection(context);
+                }
+                else if (steps != null)
+                {
+                    AddStepTable(item, context, steps);
+                }
+            }
+        }
+
+        private void AddTotalTimeSection(StepExecutionContext context)
+        {
+            var title = LanguageService.GetLocalizedString("Stats_TotalTime");
+            var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+            panel.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.Bold, FontSize = 13, Margin = new Thickness(0, 0, 0, 4) });
+            panel.Children.Add(new TextBlock { Text = $"{context.TotalElapsedMs:F0} ms", FontSize = 12, Margin = new Thickness(10, 0, 0, 0) });
+            ContentPanel.Children.Add(panel);
+        }
+
+        private void AddStepTable(StatisticsItemConfig item, StepExecutionContext context, System.Collections.ObjectModel.ObservableCollection<AutomationStepBase> steps)
+        {
+            var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+            panel.Children.Add(new TextBlock { Text = item.DisplayName, FontWeight = FontWeights.Bold, FontSize = 13, Margin = new Thickness(0, 0, 0, 4) });
+
+            // 表格
+            var grid = new Grid { Margin = new Thickness(10, 0, 0, 0) };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // 表头
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            var headerStep = CreateCell(LanguageService.GetLocalizedString("StepName"), true);
+            var headerValue = CreateCell(GetValueColumnName(item.Type), true);
+            Grid.SetRow(headerStep, 0); Grid.SetColumn(headerStep, 0);
+            Grid.SetRow(headerValue, 0); Grid.SetColumn(headerValue, 1);
+            grid.Children.Add(headerStep);
+            grid.Children.Add(headerValue);
+
+            int rowIndex = 1;
+            foreach (var step in steps)
+            {
+                if (!item.IsStepInScope(step)) continue;
+
+                grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+                var nameCell = CreateCell($"{step.LineNo}. {step.Name}", false);
+                var valueCell = CreateCell(GetValueText(item.Type, context, step.Uid), false);
+                Grid.SetRow(nameCell, rowIndex); Grid.SetColumn(nameCell, 0);
+                Grid.SetRow(valueCell, rowIndex); Grid.SetColumn(valueCell, 1);
+                grid.Children.Add(nameCell);
+                grid.Children.Add(valueCell);
+                rowIndex++;
+            }
+
+            panel.Children.Add(grid);
+            ContentPanel.Children.Add(panel);
+        }
+
+        private TextBlock CreateCell(string text, bool isHeader)
+        {
+            return new TextBlock
+            {
+                Text = text,
+                FontSize = 11,
+                Margin = new Thickness(0, 1, 12, 1),
+                FontWeight = isHeader ? FontWeights.SemiBold : FontWeights.Normal,
+                Foreground = isHeader ? Brushes.Black : Brushes.DimGray,
+            };
+        }
+
+        private string GetValueColumnName(StatisticsItemType type)
+        {
+            return type switch
+            {
+                StatisticsItemType.StepExecutionTime => LanguageService.GetLocalizedString("Stats_ColTime"),
+                StatisticsItemType.StepExecutionCount => LanguageService.GetLocalizedString("Stats_ColCount"),
+                StatisticsItemType.StepExecutionResult => LanguageService.GetLocalizedString("Stats_ColResult"),
+                _ => "",
+            };
+        }
+
+        private string GetValueText(StatisticsItemType type, StepExecutionContext context, Guid uid)
+        {
+            return type switch
+            {
+                StatisticsItemType.StepExecutionTime => context.GetStepTime(uid) >= 0 ? $"{context.GetStepTime(uid):F0} ms" : "-",
+                StatisticsItemType.StepExecutionCount => $"{context.GetStepCount(uid)}",
+                StatisticsItemType.StepExecutionResult => context.GetStepResult(uid) ?? "-",
+                _ => "-",
+            };
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _refreshTimer?.Stop();
+            base.OnClosed(e);
+        }
+    }
+}

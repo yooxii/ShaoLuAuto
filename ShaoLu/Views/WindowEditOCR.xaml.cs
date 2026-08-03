@@ -10,6 +10,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using ShaoLu.Services;
 using Point = System.Windows.Point;
 
 namespace ShaoLu.Views
@@ -257,7 +258,9 @@ namespace ShaoLu.Views
             SizeTipText.Text = $"{(int)w} x {(int)h}";
             Canvas.SetLeft(SizeTip, x);
             Canvas.SetTop(SizeTip, y - 25);
-            HintText.Text = $"X:{x + _screenOffsetX:F0}, Y:{y + _screenOffsetY:F0}, W:{w:F0}, H:{h:F0}  |  Enter=确认  Esc/右键=取消";
+            HintText.Text = string.Format(
+                LanguageService.GetLocalizedString("OCR_MoveHint", "X:{0}, Y:{1}, W:{2}, H:{3}  |  Enter=确认  Esc/右键=取消"),
+                (int)(x + _screenOffsetX), (int)(y + _screenOffsetY), (int)w, (int)h);
         }
 
         private void Canvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -275,7 +278,9 @@ namespace ShaoLu.Views
             if (w > 5 && h > 5)
             {
                 SelectedRegion = new Rect(x, y, w, h);
-                HintText.Text = $"已选择 W:{w:F0} x H:{h:F0}  |  Enter=确认  Esc/右键=取消  再次拖拽=重选";
+                HintText.Text = string.Format(
+                    LanguageService.GetLocalizedString("OCR_SelectedHint", "已选择 W:{0} x H:{1}  |  Enter=确认  Esc/右键=取消  再次拖拽=重选"),
+                    (int)w, (int)h);
             }
             else
             {
@@ -320,7 +325,7 @@ namespace ShaoLu.Views
             MaskLeft.Visibility = Visibility.Collapsed;
             MaskRight.Visibility = Visibility.Collapsed;
             SelectedRegion = Rect.Empty;
-            HintText.Text = (string)FindResource("OCR_EditRegionHint") ?? "拖拽框选区域，Enter确认，Esc取消";
+            HintText.Text = LanguageService.GetLocalizedString("OCR_EditRegionHint", "拖拽框选区域，Enter确认，Esc取消");
         }
 
         #endregion

@@ -6,6 +6,7 @@
                     xmlns:lex="http://wpflocalizeextension.codeplex.com"
                     xmlns:conv="clr-namespace:ShaoLu.Converters"
                     xmlns:models="clr-namespace:ShaoLu.Models"
+                    xmlns:utils="clr-namespace:ShaoLu.Utils"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <conv:ConditionModeToVisibilityConverter x:Key="ConditionModeToVisibility"/>
@@ -199,7 +200,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
                                     <ComboBox ItemsSource="{x:Static models:MouseActionItem.AllTypes}" SelectedItem="{Binding ActionType}" MinWidth="100" Margin="0,0,5,0"/>
-                                    <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="1" Maximum="99" Margin="0,0,5,0"/>
+                                    <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="0" Maximum="99" Margin="0,0,5,0"/>
                                     <wd:NumericBox Value="{Binding Interval, Mode=TwoWay}" MinWidth="60" Minimum="0" Precision="3" Interval="0.05" Margin="0,0,5,0"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -487,6 +488,130 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 鼠标操作步骤 -->
+    <DataTemplate x:Key="MouseActionStepTemplate" DataType="{x:Type AutoVM:MouseActionStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc PositionMode}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding PositionModes}" SelectedItem="{Binding PositionMode}" MinWidth="120">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PositionMode}" Value="Absolute"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding TargetX, Mode=TwoWay}" Width="70" Precision="0" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding TargetY, Mode=TwoWay}" Width="70" Precision="0" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.01"/>
+            </StackPanel>
+            <GroupBox Header="{lex:Loc MouseActions}" Margin="0,5,0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                        <Button Content="+" Command="{Binding AddMouseActionCommand}" MinWidth="30" Margin="0,0,5,0"/>
+                        <Button Content="-" Command="{Binding RemoveMouseActionCommand}" MinWidth="30"/>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding MouseActions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <ComboBox ItemsSource="{x:Static models:MouseActionItem.AllTypes}" SelectedItem="{Binding ActionType}" MinWidth="100" Margin="0,0,5,0"/>
+                                    <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="1" Maximum="99" Margin="0,0,5,0"/>
+                                    <wd:NumericBox Value="{Binding Interval, Mode=TwoWay}" MinWidth="60" Minimum="0" Precision="3" Interval="0.05" Margin="0,0,5,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </GroupBox>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 统计信息步骤 -->
+    <DataTemplate x:Key="StatisticsStepTemplate" DataType="{x:Type AutoVM:StatisticsStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc StatsWindowTitle}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding WindowTitle, UpdateSourceTrigger=LostFocus}" MinWidth="120"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc StatsWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <CheckBox IsChecked="{Binding AlwaysOnTop}" Content="{lex:Loc StatsAlwaysOnTop}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc StatsAutoClose}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding AutoCloseSeconds, Mode=TwoWay}" Width="70" Minimum="0" Precision="1" Interval="1"/>
+                <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="5,0,0,0" Foreground="Gray"/>
+            </StackPanel>
+            <GroupBox Header="{lex:Loc StatsItems}" Margin="0,5,0,0">
+                <ItemsControl ItemsSource="{Binding StatisticsItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,2">
+                                <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding DisplayName}"/>
+                                <!-- 范围子设置 -->
+                                <StackPanel Orientation="Horizontal" Margin="18,2,0,0"
+                                            Visibility="{Binding ShowScopeSettings, Converter={StaticResource BoolToVis}}">
+                                    <Label Content="{lex:Loc StatsScope}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                                    <ComboBox ItemsSource="{Binding AllScopes}" SelectedItem="{Binding Scope}" MinWidth="120">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                                <!-- 自选步骤列表 -->
+                                <ListBox Margin="18,2,0,0" MaxHeight="120"
+                                         SelectionMode="Extended"
+                                         ItemsSource="{Binding DataContext.AllSteps, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                         utils:ListBoxSelectedUidsBehavior.SelectedUids="{Binding CustomStepUids}"
+                                         Visibility="{Binding ShowCustomList, Converter={StaticResource BoolToVis}}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock>
+                                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                                <Run Text=" - "/>
+                                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </GroupBox>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
                      FindImageTemplate="{StaticResource FindImageStepTemplate}"
@@ -494,5 +619,7 @@
                      TypeTextMoreTemplate="{StaticResource TextStepMoreTemplate}"
                      TypeTextFromFileTemplate="{StaticResource TextStepFromFileTemplate}"
                      PopupTemplate="{StaticResource PopupStepTemplate}"
-                     TextOCRTemplate="{StaticResource TextOCRStepTemplate}"/>
+                     TextOCRTemplate="{StaticResource TextOCRStepTemplate}"
+                     MouseActionTemplate="{StaticResource MouseActionStepTemplate}"
+                     StatisticsTemplate="{StaticResource StatisticsStepTemplate}"/>
 </ResourceDictionary>

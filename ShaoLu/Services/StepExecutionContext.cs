@@ -1,6 +1,7 @@
 using ShaoLu.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ShaoLu.Services
 {
@@ -9,8 +10,22 @@ namespace ShaoLu.Services
     /// </summary>
     public class StepExecutionContext
     {
+        private static StepExecutionContext _instance;
+        public static StepExecutionContext Instance => _instance ??= new StepExecutionContext();
+
         private readonly Dictionary<int, StepExecutionResult> _results = new();
         private readonly Dictionary<Guid, StepExecutionResult> _resultsByUid = new();
+        private readonly Dictionary<Guid, int> _executionCounts = new();
+        private readonly Stopwatch _totalStopwatch = new();
+
+        /// <summary>总执行时间(ms)</summary>
+        public double TotalElapsedMs => _totalStopwatch.ElapsedMilliseconds;
+
+        /// <summary>开始计时</summary>
+        public void StartTimer() => _totalStopwatch.Restart();
+
+        /// <summary>停止计时</summary>
+        public void StopTimer() => _totalStopwatch.Stop();
 
         /// <summary>
         /// 设置指定行号步骤的执行结果
@@ -26,6 +41,8 @@ namespace ShaoLu.Services
         public void SetResultByUid(Guid uid, StepExecutionResult result)
         {
             _resultsByUid[uid] = result;
+            _executionCounts.TryGetValue(uid, out int count);
+            _executionCounts[uid] = count + 1;
         }
 
         /// <summary>
@@ -52,6 +69,29 @@ namespace ShaoLu.Services
         {
             _results.Clear();
             _resultsByUid.Clear();
+            _executionCounts.Clear();
+            _totalStopwatch.Reset();
+        }
+
+        /// <summary>获取步骤执行时间</summary>
+        public double GetStepTime(Guid uid)
+        {
+            return _resultsByUid.TryGetValue(uid, out var r) ? r.ExecutionTimeMs : -1;
+        }
+
+        /// <summary>获取步骤执行次数</summary>
+        public int GetStepCount(Guid uid)
+        {
+            return _executionCounts.TryGetValue(uid, out int count) ? count : 0;
+        }
+
+        /// <summary>获取步骤执行结果描述</summary>
+        public string GetStepResult(Guid uid)
+        {
+            if (!_resultsByUid.TryGetValue(uid, out var r)) return null;
+            if (!string.IsNullOrEmpty(r.OCRText)) return r.OCRText;
+            if (!string.IsNullOrEmpty(r.PopupResult)) return r.PopupResult;
+            return r.IsTrue ? "True" : "False";
         }
 
         /// <summary>

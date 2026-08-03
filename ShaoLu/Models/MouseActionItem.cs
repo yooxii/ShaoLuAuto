@@ -27,8 +27,8 @@ namespace ShaoLu.Models
         /// <summary>动作类型</summary>
         public MouseActionType ActionType { get => _actionType; set => SetProperty(ref _actionType, value); }
 
-        /// <summary>执行次数（点击次数/滚动格数）</summary>
-        public int Count { get => _count; set => SetProperty(ref _count, value); }
+        /// <summary>执行次数（点击次数/滚动格数），最小为0</summary>
+        public int Count { get => _count; set => SetProperty(ref _count, value < 0 ? 0 : value); }
 
         /// <summary>动作间隔(秒)</summary>
         public double Interval { get => _interval; set => SetProperty(ref _interval, value); }

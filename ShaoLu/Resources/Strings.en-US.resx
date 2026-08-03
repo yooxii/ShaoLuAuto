@@ -783,6 +783,12 @@
   <data name="OCR_EditRegionHint" xml:space="preserve">
     <value>Drag on screenshot to select OCR region, Enter to confirm, ESC to cancel</value>
   </data>
+  <data name="OCR_MoveHint" xml:space="preserve">
+    <value>X:{0}, Y:{1}, W:{2}, H:{3}  |  Enter=Confirm  Esc/Right-click=Cancel</value>
+  </data>
+  <data name="OCR_SelectedHint" xml:space="preserve">
+    <value>Selected W:{0} x H:{1}  |  Enter=Confirm  Esc/Right-click=Cancel  Drag again=Reselect</value>
+  </data>
   <data name="FindImage_OCR_Group" xml:space="preserve">
     <value>OCR Text Recognition</value>
   </data>
@@ -827,5 +833,77 @@
   </data>
   <data name="MouseActions" xml:space="preserve">
     <value>Mouse Actions</value>
+  </data>
+  <data name="AddMouseActionStep" xml:space="preserve">
+    <value>Mouse Action</value>
+  </data>
+  <data name="AddStatisticsStep" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="PositionMode" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="PositionMode_Absolute" xml:space="preserve">
+    <value>Absolute Coordinates</value>
+  </data>
+  <data name="PositionMode_CurrentMouse" xml:space="preserve">
+    <value>Current Mouse Position</value>
+  </data>
+  <data name="StatsWindowTitle" xml:space="preserve">
+    <value>Window Title</value>
+  </data>
+  <data name="StatsWindowPos" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="StatsWindowSize" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="StatsAlwaysOnTop" xml:space="preserve">
+    <value>Always on Top</value>
+  </data>
+  <data name="StatsAutoClose" xml:space="preserve">
+    <value>Auto Close</value>
+  </data>
+  <data name="StatsItems" xml:space="preserve">
+    <value>Statistics Items</value>
+  </data>
+  <data name="SelectPoint" xml:space="preserve">
+    <value>Select Point</value>
+  </data>
+  <data name="SelectPointHint" xml:space="preserve">
+    <value>Click to select a point, Esc/Right-click to cancel</value>
+  </data>
+  <data name="Stats_TotalTime" xml:space="preserve">
+    <value>Total Execution Time</value>
+  </data>
+  <data name="Stats_StepTime" xml:space="preserve">
+    <value>Step Execution Time</value>
+  </data>
+  <data name="Stats_StepCount" xml:space="preserve">
+    <value>Step Execution Count</value>
+  </data>
+  <data name="Stats_StepResult" xml:space="preserve">
+    <value>Step Execution Result</value>
+  </data>
+  <data name="Stats_ColTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="Stats_ColCount" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="Stats_ColResult" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="StatsScope" xml:space="preserve">
+    <value>Scope</value>
+  </data>
+  <data name="StatsScope_All" xml:space="preserve">
+    <value>All Steps</value>
+  </data>
+  <data name="StatsScope_LoggedOnly" xml:space="preserve">
+    <value>Logged Steps Only</value>
+  </data>
+  <data name="StatsScope_Custom" xml:space="preserve">
+    <value>Custom Selection</value>
   </data>
 </root>

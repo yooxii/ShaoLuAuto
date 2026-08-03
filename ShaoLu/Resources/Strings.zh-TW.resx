@@ -789,6 +789,12 @@
   <data name="OCR_EditRegionHint" xml:space="preserve">
     <value>在截圖上拖拽框選 OCR 辨識區域，按 Enter 確認，ESC 取消</value>
   </data>
+  <data name="OCR_MoveHint" xml:space="preserve">
+    <value>X:{0}, Y:{1}, W:{2}, H:{3}  |  Enter=確認  Esc/右鍵=取消</value>
+  </data>
+  <data name="OCR_SelectedHint" xml:space="preserve">
+    <value>已選擇 W:{0} x H:{1}  |  Enter=確認  Esc/右鍵=取消  再次拖拽=重選</value>
+  </data>
   <data name="FindImage_OCR_Group" xml:space="preserve">
     <value>OCR 文字辨識</value>
   </data>
@@ -833,5 +839,77 @@
   </data>
   <data name="MouseActions" xml:space="preserve">
     <value>滑鼠動作</value>
+  </data>
+  <data name="AddMouseActionStep" xml:space="preserve">
+    <value>滑鼠操作</value>
+  </data>
+  <data name="AddStatisticsStep" xml:space="preserve">
+    <value>統計資訊</value>
+  </data>
+  <data name="PositionMode" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="PositionMode_Absolute" xml:space="preserve">
+    <value>絕對座標</value>
+  </data>
+  <data name="PositionMode_CurrentMouse" xml:space="preserve">
+    <value>滑鼠目前位置</value>
+  </data>
+  <data name="StatsWindowTitle" xml:space="preserve">
+    <value>視窗標題</value>
+  </data>
+  <data name="StatsWindowPos" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="StatsWindowSize" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="StatsAlwaysOnTop" xml:space="preserve">
+    <value>始終置頂</value>
+  </data>
+  <data name="StatsAutoClose" xml:space="preserve">
+    <value>自動關閉</value>
+  </data>
+  <data name="StatsItems" xml:space="preserve">
+    <value>統計項</value>
+  </data>
+  <data name="SelectPoint" xml:space="preserve">
+    <value>選取座標點</value>
+  </data>
+  <data name="SelectPointHint" xml:space="preserve">
+    <value>單擊選取一個座標點，Esc/右鍵取消</value>
+  </data>
+  <data name="Stats_TotalTime" xml:space="preserve">
+    <value>總執行時間</value>
+  </data>
+  <data name="Stats_StepTime" xml:space="preserve">
+    <value>步驟執行時間</value>
+  </data>
+  <data name="Stats_StepCount" xml:space="preserve">
+    <value>步驟執行次數</value>
+  </data>
+  <data name="Stats_StepResult" xml:space="preserve">
+    <value>步驟執行結果</value>
+  </data>
+  <data name="Stats_ColTime" xml:space="preserve">
+    <value>耗時</value>
+  </data>
+  <data name="Stats_ColCount" xml:space="preserve">
+    <value>次數</value>
+  </data>
+  <data name="Stats_ColResult" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="StatsScope" xml:space="preserve">
+    <value>統計範圍</value>
+  </data>
+  <data name="StatsScope_All" xml:space="preserve">
+    <value>所有步驟</value>
+  </data>
+  <data name="StatsScope_LoggedOnly" xml:space="preserve">
+    <value>僅記錄日誌的步驟</value>
+  </data>
+  <data name="StatsScope_Custom" xml:space="preserve">
+    <value>自選步驟</value>
   </data>
 </root>

@@ -17,6 +17,8 @@ namespace ShaoLu.Models
         TypeTextMore,
         TypeTextFromFile,
         TextOCR = 200,
+        MouseAction = 201,
+        Statistics = 202,
         Popup = 1000,
         // 其他步骤类型...
     }

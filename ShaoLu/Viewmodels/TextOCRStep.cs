@@ -161,6 +161,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 return;
             }
 
+            // 标示 OCR 区域
+            if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
+            {
+                var overlay = Utils.SingletonLocator.Settings.Step.OCRRegionOverlay;
+                WindowRegionOverlay.ShowRegion(OCRRegion, overlay.Color, overlay.Duration);
+            }
+
             try
             {
                 string text = OCRService.RecognizeRegion(OCRRegion);

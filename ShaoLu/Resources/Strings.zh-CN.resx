@@ -489,12 +489,6 @@
   <data name="Search" xml:space="preserve">
     <value>搜索</value>
   </data>
-  <data name="Filter" xml:space="preserve">
-    <value>筛选</value>
-  </data>
-  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
-    <value>选择要引用的步骤（当变量为“引用步骤”类型时使用）</value>
-  </data>
   <data name="StepFileName" xml:space="preserve">
     <value>步骤文件</value>
   </data>
@@ -693,9 +687,6 @@
   <data name="Msg_ConfirmDeleteSteps" xml:space="preserve">
     <value>确定删除所选步骤吗？</value>
   </data>
-  <data name="Msg_DeleteReferenced" xml:space="preserve">
-    <value>以下步骤引用了待删除的步骤，删除后引用将被清空：</value>
-  </data>
   <data name="DeleteStepTitle" xml:space="preserve">
     <value>删除步骤</value>
   </data>
@@ -776,6 +767,9 @@
   </data>
   <data name="Condition_StepLineNo_Tooltip" xml:space="preserve">
     <value>引用步骤行号（仅“引用步骤”类型有效）</value>
+  </data>
+  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
+    <value>选择要引用的步骤（当变量为“引用步骤”类型时使用）</value>
   </data>
   <data name="Condition_Value_Tooltip" xml:space="preserve">
     <value>比较值（例如: true, 0.9, 包含的文字等）</value>
@@ -938,5 +932,14 @@
   </data>
   <data name="StatsScope_Custom" xml:space="preserve">
     <value>自选步骤</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>筛选</value>
+  </data>
+  <data name="Msg_DeleteReferenced" xml:space="preserve">
+    <value>以下步骤引用了待删除的步骤，删除后引用将被清空：</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>关闭</value>
   </data>
 </root>

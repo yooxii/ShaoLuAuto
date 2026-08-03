@@ -933,4 +933,7 @@
   <data name="StatsScope_Custom" xml:space="preserve">
     <value>Custom Selection</value>
   </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
 </root>

@@ -220,7 +220,7 @@
     <value>請選擇一個步驟</value>
   </data>
   <data name="StepName" xml:space="preserve">
-    <value>名稱</value>
+    <value>步驟名稱</value>
   </data>
   <data name="StepType" xml:space="preserve">
     <value>類型</value>
@@ -489,14 +489,8 @@
   <data name="Search" xml:space="preserve">
     <value>搜尋</value>
   </data>
-  <data name="Reset" xml:space="preserve">
-    <value>重置</value>
-  </data>
   <data name="StepFileName" xml:space="preserve">
     <value>步驟檔案</value>
-  </data>
-  <data name="StepName" xml:space="preserve">
-    <value>步驟名稱</value>
   </data>
   <data name="InputText" xml:space="preserve">
     <value>執行結果</value>
@@ -774,6 +768,9 @@
   <data name="Condition_StepLineNo_Tooltip" xml:space="preserve">
     <value>引用步驟行號（僅「引用步驟」類型有效）</value>
   </data>
+  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
+    <value>選擇要引用的步驟（當變數為「引用步驟」類型時使用）</value>
+  </data>
   <data name="Condition_Value_Tooltip" xml:space="preserve">
     <value>比較值（例如: true, 0.9, 包含的文字等）</value>
   </data>
@@ -839,9 +836,6 @@
   </data>
   <data name="OCRText" xml:space="preserve">
     <value>OCR結果</value>
-  </data>
-  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
-    <value>選擇要引用的步驟（當變數為「引用步驟」類型時使用）</value>
   </data>
   <data name="Seconds" xml:space="preserve">
     <value>秒</value>
@@ -938,5 +932,8 @@
   </data>
   <data name="StatsScope_Custom" xml:space="preserve">
     <value>自選步驟</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>關閉</value>
   </data>
 </root>

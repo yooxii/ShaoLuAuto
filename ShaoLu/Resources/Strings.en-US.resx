@@ -768,6 +768,9 @@
   <data name="Condition_StepLineNo_Tooltip" xml:space="preserve">
     <value>Referenced step line number (only for 'Step_*' variable types)</value>
   </data>
+  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
+    <value>Select the step to reference (used when variable is a "Step_*" type)</value>
+  </data>
   <data name="Condition_Value_Tooltip" xml:space="preserve">
     <value>Comparison value (e.g., true, 0.9, text to contain)</value>
   </data>
@@ -833,9 +836,6 @@
   </data>
   <data name="OCRText" xml:space="preserve">
     <value>OCR Result</value>
-  </data>
-  <data name="Condition_StepRef_Tooltip" xml:space="preserve">
-    <value>Select the step to reference (used when variable is a "Step_*" type)</value>
   </data>
   <data name="Seconds" xml:space="preserve">
     <value>sec</value>
@@ -932,5 +932,8 @@
   </data>
   <data name="StatsScope_Custom" xml:space="preserve">
     <value>Custom Selection</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
   </data>
 </root>

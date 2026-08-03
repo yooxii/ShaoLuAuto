@@ -5,12 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:lex="http://wpflocalizeextension.codeplex.com"
         xmlns:vm="clr-namespace:ShaoLu.Viewmodels"
+        xmlns:conv="clr-namespace:ShaoLu.Converters"
         d:DataContext="{d:DesignInstance Type=vm:ExecutionLogViewModel}"
         mc:Ignorable="d"
         Title="{lex:Loc ExecutionLog}" Height="550" Width="900"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:TruncateTextConverter x:Key="TruncateText"/>
     </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -82,12 +84,26 @@
                 <DataGridTextColumn Header="UID" 
                                     Binding="{Binding StepUid}" 
                                     Width="auto" SortMemberPath="StepUid"/>
-                <DataGridTextColumn Header="{lex:Loc InputText}" 
-                                    Binding="{Binding InputText}" 
-                                    Width="auto" SortMemberPath="InputText"/>
-                <DataGridTextColumn Header="{lex:Loc OCRText}" 
-                                    Binding="{Binding OCRText}" 
-                                    Width="auto" SortMemberPath="OCRText"/>
+                <DataGridTemplateColumn Header="{lex:Loc InputText}" SortMemberPath="InputText" Width="auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding InputText, Converter={StaticResource TruncateText}}"
+                                       Tag="{Binding InputText}"
+                                       ToolTip="{lex:Loc ClickToPreview}"
+                                       MouseLeftButtonUp="LogText_Click" Cursor="Hand"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{lex:Loc OCRText}" SortMemberPath="OCRText" Width="auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding OCRText, Converter={StaticResource TruncateText}}"
+                                       Tag="{Binding OCRText}"
+                                       ToolTip="{lex:Loc ClickToPreview}"
+                                       MouseLeftButtonUp="LogText_Click" Cursor="Hand"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 

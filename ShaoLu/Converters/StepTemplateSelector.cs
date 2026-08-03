@@ -14,7 +14,7 @@ namespace ShaoLu.Converters
         public DataTemplate TypeTextMoreTemplate { get; set; }
         public DataTemplate TypeTextFromFileTemplate { get; set; }
         public DataTemplate PopupTemplate { get; set; }
-        public DataTemplate TextOCRTemplate { get; set; }
+        public DataTemplate GetInputTemplate { get; set; }
         public DataTemplate MouseActionTemplate { get; set; }
         public DataTemplate StatisticsTemplate { get; set; }
 
@@ -33,7 +33,7 @@ namespace ShaoLu.Converters
                     StepType.TypeTextMore => TypeTextMoreTemplate,
                     StepType.TypeTextFromFile => TypeTextFromFileTemplate,
                     StepType.Popup => PopupTemplate,
-                    StepType.TextOCR => TextOCRTemplate,
+                    StepType.GetInput => GetInputTemplate,
                     StepType.MouseAction => MouseActionTemplate,
                     StepType.Statistics => StatisticsTemplate,
                     _ => ClickImageTemplate,

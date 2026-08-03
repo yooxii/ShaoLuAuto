@@ -262,7 +262,7 @@ namespace NUnitTest
                 Assert.That((int)StepType.FindImages, Is.EqualTo(101));
                 Assert.That((int)StepType.TypeTextMore, Is.EqualTo(102));
                 Assert.That((int)StepType.TypeTextFromFile, Is.EqualTo(103));
-                Assert.That((int)StepType.TextOCR, Is.EqualTo(200));
+                Assert.That((int)StepType.GetInput, Is.EqualTo(200));
                 Assert.That((int)StepType.Popup, Is.EqualTo(1000));
             }
         }

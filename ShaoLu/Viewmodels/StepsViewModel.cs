@@ -187,7 +187,7 @@ namespace ShaoLu.Viewmodels
                     "TypeTextMore" => new TypeTextMoreStep($"TypeTextMore_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextMore) + 1}"),
                     "TypeTextFromFile" => new TypeTextFromFileStep($"TypeTextFromFile_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextFromFile) + 1}"),
                     "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
-                    "TextOCR" => new TextOCRStep($"TextOCR_{AutomationStepBases.Count(t => t.Type == StepType.TextOCR) + 1}"),
+                    "GetInput" => new GetInputStep($"GetInput_{AutomationStepBases.Count(t => t.Type == StepType.GetInput) + 1}"),
                     "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
@@ -456,6 +456,9 @@ namespace ShaoLu.Viewmodels
                 step.SelfReferenceCount = 0;
                 step.ErrorType = StepErrorType.None;
                 step.LastResult = null;
+                // 重置统计步骤的条件计数
+                if (step is StatisticsStep statisticsStep)
+                    statisticsStep.ResetCounters();
                 if (step is TypeTextMoreStep textMoreStep)
                 {
                     if (textMoreStep.ReloadText)
@@ -532,8 +535,16 @@ namespace ShaoLu.Viewmodels
                         _executionContext.SetResult(step.LineNo, result);
                         _executionContext.SetResultByUid(step.Uid, result);
 
-                        // 自定义条件判断
-                        if (step.ConditionMode == ConditionMode.Custom && step.Conditions.Count > 0)
+                        // 统计步骤的条件计数累计
+                        foreach (var s in AutomationStepBases)
+                        {
+                            if (s is StatisticsStep statsStep)
+                                statsStep.UpdateConditionCounts(_executionContext, result);
+                        }
+
+                        // 自定义条件判断（统计步骤不参与条件判断）
+                        if (step is not StatisticsStep
+                            && step.ConditionMode == ConditionMode.Custom && step.Conditions.Count > 0)
                         {
                             step.IsTrue = ConditionEvaluator.Evaluate(step.Conditions, _executionContext, result);
                         }

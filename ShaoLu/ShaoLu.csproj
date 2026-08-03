@@ -186,19 +186,21 @@
     <Compile Include="Tools\ResxGenerator.cs" />
     <Compile Include="Utils\Autogui.cs" />
     <Compile Include="Converters\StepTemplateSelector.cs" />
+    <Compile Include="Converters\TruncateTextConverter.cs" />
     <Compile Include="Utils\DataGridSelectedItemsBehavior.cs" />
     <Compile Include="Utils\ListBoxSelectedUidsBehavior.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="Utils\RichTextHelper.cs" />
     <Compile Include="Utils\ScreenTextReader.cs" />
     <Compile Include="Utils\StepsFile.cs" />
+    <Compile Include="Utils\TextHelper.cs" />
     <Compile Include="Utils\SingletonLocator.cs" />
     <Compile Include="Viewmodels\AutomationStep.cs" />
     <Compile Include="Viewmodels\EditImageViewModel.cs" />
     <Compile Include="Viewmodels\ExecutionLogViewModel.cs" />
     <Compile Include="Viewmodels\MainViewModel.cs" />
     <Compile Include="Viewmodels\LoginViewModel.cs" />
-    <Compile Include="Viewmodels\TextOCRStep.cs" />
+    <Compile Include="Viewmodels\GetInputStep.cs" />
     <Compile Include="Viewmodels\MouseActionStep.cs" />
     <Compile Include="Viewmodels\StatisticsStep.cs" />
     <Compile Include="Viewmodels\UserManagementViewModel.cs" />
@@ -239,6 +241,9 @@
     </Compile>
     <Compile Include="Views\WindowSelectPoint.xaml.cs">
       <DependentUpon>WindowSelectPoint.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowTextPreview.xaml.cs">
+      <DependentUpon>WindowTextPreview.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowLogin.xaml.cs">
       <DependentUpon>WindowLogin.xaml</DependentUpon>
@@ -327,6 +332,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowSelectPoint.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowTextPreview.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

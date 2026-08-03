@@ -16,7 +16,7 @@ namespace ShaoLu.Models
         FindImages,
         TypeTextMore,
         TypeTextFromFile,
-        TextOCR = 200,
+        GetInput = 200,
         MouseAction = 201,
         Statistics = 202,
         Popup = 1000,

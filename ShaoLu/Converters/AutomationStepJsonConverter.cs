@@ -96,7 +96,7 @@ namespace ShaoLu.Converters
                 StepType.TypeTextFromFile => typeof(TypeTextFromFileStep),
                 StepType.Popup => typeof(PopupStep),
                 StepType.Empty => typeof(EmptyStep),
-                StepType.TextOCR => typeof(TextOCRStep),
+                StepType.GetInput => typeof(GetInputStep),
                 StepType.MouseAction => typeof(MouseActionStep),
                 StepType.Statistics => typeof(StatisticsStep),
                 // 添加其他映射...

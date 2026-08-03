@@ -711,7 +711,7 @@
   <data name="Menu_Logout" xml:space="preserve">
     <value>注销 ({0})</value>
   </data>
-  <data name="AddTextOCRStep" xml:space="preserve">
+  <data name="AddGetInputStep" xml:space="preserve">
     <value>获取输入</value>
   </data>
   <data name="InputMode" xml:space="preserve">
@@ -731,6 +731,15 @@
   </data>
   <data name="MouseActionCountHint" xml:space="preserve">
     <value>0 = 仅移动到指定位置（不执行动作）</value>
+  </data>
+  <data name="ClickToPreview" xml:space="preserve">
+    <value>点击预览全文</value>
+  </data>
+  <data name="TextPreviewTitle" xml:space="preserve">
+    <value>文本预览</value>
+  </data>
+  <data name="Stats_ConditionCount" xml:space="preserve">
+    <value>条件计数（True/False）</value>
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>条件判断</value>

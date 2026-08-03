@@ -1,6 +1,8 @@
+using ShaoLu.Models;
 using ShaoLu.Viewmodels;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace ShaoLu.Views
 {
@@ -26,6 +28,18 @@ namespace ShaoLu.Views
             if (!string.IsNullOrEmpty(columnName))
             {
                 _viewModel.ToggleSort(columnName);
+            }
+        }
+
+        /// <summary>
+        /// 点击截断的日志文本时预览完整内容
+        /// </summary>
+        private void LogText_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is TextBlock textBlock && textBlock.Tag is string fullText && !string.IsNullOrEmpty(fullText))
+            {
+                string title = textBlock.DataContext is StepExecutionLog log ? log.StepName : null;
+                WindowTextPreview.Show(title, fullText);
             }
         }
     }

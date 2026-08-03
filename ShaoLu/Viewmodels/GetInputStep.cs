@@ -26,10 +26,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
     /// <summary>
     /// 获取输入步骤：从指定方式获取屏幕信息（OCR 识别 / 读取可选择文本）
     /// </summary>
-    public class TextOCRStep : AutomationStepBase
+    public class GetInputStep : AutomationStepBase
     {
         private Rect _ocrRegion = new();
-        private string _ocrResultPreview;
+        private string _ocrResultFull;
         private GetInputMode _inputMode = GetInputMode.OCR;
         private System.Windows.Point _textPoint = new();
 
@@ -75,14 +75,28 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         /// <summary>
-        /// OCR 识别结果预览（运行时）
+        /// 获取结果完整文本（运行时）
         /// </summary>
         [JsonIgnore]
-        public string OCRResultPreview
+        public string OCRResultFull
         {
-            get => _ocrResultPreview;
-            set => SetProperty(ref _ocrResultPreview, value);
+            get => _ocrResultFull;
+            set
+            {
+                if (_ocrResultFull != value)
+                {
+                    _ocrResultFull = value;
+                    OnPropertyChanged(nameof(OCRResultFull));
+                    OnPropertyChanged(nameof(OCRResultPreview));
+                }
+            }
         }
+
+        /// <summary>
+        /// 获取结果预览文本（超过100字符时截断显示，点击可预览全文）
+        /// </summary>
+        [JsonIgnore]
+        public string OCRResultPreview => Utils.TextHelper.Truncate(OCRResultFull);
 
         #region 命令
 
@@ -101,24 +115,30 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public ICommand SelectTextPointCommand => selectTextPointCommand ??= new RelayCommand(SelectTextPoint);
 
+        [JsonIgnore]
+        private ICommand previewResultCommand;
+        /// <summary>点击截断的结果文本时预览完整内容</summary>
+        [JsonIgnore]
+        public ICommand PreviewResultCommand => previewResultCommand ??= new RelayCommand(PreviewResult);
+
         #endregion
 
         #region 构造
 
-        public TextOCRStep() : base()
+        public GetInputStep() : base()
         {
-            Type = StepType.TextOCR;
+            Type = StepType.GetInput;
         }
 
-        public TextOCRStep(string name) : base()
+        public GetInputStep(string name) : base()
         {
-            Type = StepType.TextOCR;
+            Type = StepType.GetInput;
             Name = name;
         }
 
-        public TextOCRStep(string name, string description) : base()
+        public GetInputStep(string name, string description) : base()
         {
-            Type = StepType.TextOCR;
+            Type = StepType.GetInput;
             Name = name;
             Description = description;
         }
@@ -127,7 +147,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override AutomationStepBase Clone()
         {
-            return new TextOCRStep(Name, Description)
+            return new GetInputStep(Name, Description)
             {
                 InputMode = InputMode,
                 OCRRegion = new Rect(OCRRegion.X, OCRRegion.Y, OCRRegion.Width, OCRRegion.Height),
@@ -185,7 +205,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
 
             // 存储结果
-            OCRResultPreview = text;
+            OCRResultFull = text;
             LastResult = new StepExecutionResult
             {
                 IsTrue = !string.IsNullOrWhiteSpace(text),
@@ -221,6 +241,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        private void PreviewResult()
+        {
+            if (string.IsNullOrEmpty(OCRResultFull)) return;
+            WindowTextPreview.Show(Name, OCRResultFull);
+        }
+
         private void TestOCR()
         {
             try
@@ -230,7 +256,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     double dpiX = OCRService.CachedDpiX;
                     double dpiY = OCRService.CachedDpiY;
                     string screenText = Utils.ScreenTextReader.ReadTextAtPoint(TextPoint.X * dpiX, TextPoint.Y * dpiY);
-                    OCRResultPreview = string.IsNullOrWhiteSpace(screenText)
+                    OCRResultFull = string.IsNullOrWhiteSpace(screenText)
                         ? LanguageService.GetLocalizedString("OCR_NoResult", "未读取到文本")
                         : screenText;
                     return;
@@ -238,7 +264,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
                 if (OCRRegion.IsEmpty || OCRRegion.Width <= 0 || OCRRegion.Height <= 0)
                 {
-                    OCRResultPreview = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择区域");
+                    OCRResultFull = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择区域");
                     return;
                 }
 
@@ -250,13 +276,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 }
 
                 string text = OCRService.RecognizeRegion(OCRRegion);
-                OCRResultPreview = string.IsNullOrWhiteSpace(text)
+                OCRResultFull = string.IsNullOrWhiteSpace(text)
                     ? LanguageService.GetLocalizedString("OCR_NoResult", "未识别到文本")
                     : text;
             }
             catch (Exception ex)
             {
-                OCRResultPreview = $"Error: {ex.Message}";
+                OCRResultFull = $"Error: {ex.Message}";
                 _logger.Error(ex, "Test OCR failed");
             }
         }

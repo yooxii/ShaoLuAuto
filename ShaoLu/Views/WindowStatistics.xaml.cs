@@ -38,6 +38,14 @@ namespace ShaoLu.Views
             });
         }
 
+        /// <summary>
+        /// 查找指定步骤 UID 已打开的统计窗口（全局同一步骤仅一个窗口）
+        /// </summary>
+        public static WindowStatistics FindOpenByStepUid(Guid stepUid)
+        {
+            return OpenWindows.FirstOrDefault(w => w._step.Uid == stepUid && w.IsLoaded);
+        }
+
         public WindowStatistics(StatisticsStep step)
         {
             InitializeComponent();
@@ -82,11 +90,29 @@ namespace ShaoLu.Views
                 {
                     AddTotalTimeSection(context);
                 }
+                else if (item.Type == StatisticsItemType.ConditionCount)
+                {
+                    AddConditionCountSection(item);
+                }
                 else if (steps != null)
                 {
                     AddStepTable(item, context, steps);
                 }
             }
+        }
+
+        private void AddConditionCountSection(StatisticsItemConfig item)
+        {
+            var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+            panel.Children.Add(new TextBlock { Text = item.DisplayName, FontWeight = FontWeights.Bold, FontSize = 13, Margin = new Thickness(0, 0, 0, 4) });
+            panel.Children.Add(new TextBlock
+            {
+                Text = $"True: {item.TrueCount}    False: {item.FalseCount}",
+                FontSize = 12,
+                Margin = new Thickness(10, 0, 0, 0),
+                Foreground = Brushes.DimGray,
+            });
+            ContentPanel.Children.Add(panel);
         }
 
         private void AddTotalTimeSection(StepExecutionContext context)
@@ -125,7 +151,7 @@ namespace ShaoLu.Views
                 grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
                 var nameCell = CreateCell($"{step.LineNo}. {step.Name}", false);
-                var valueCell = CreateCell(GetValueText(item.Type, context, step.Uid), false);
+                var valueCell = CreateValueCell(GetValueText(item.Type, context, step.Uid));
                 Grid.SetRow(nameCell, rowIndex); Grid.SetColumn(nameCell, 0);
                 Grid.SetRow(valueCell, rowIndex); Grid.SetColumn(valueCell, 1);
                 grid.Children.Add(nameCell);
@@ -147,6 +173,23 @@ namespace ShaoLu.Views
                 FontWeight = isHeader ? FontWeights.SemiBold : FontWeights.Normal,
                 Foreground = isHeader ? Brushes.Black : Brushes.DimGray,
             };
+        }
+
+        /// <summary>
+        /// 创建值单元格：超过100字符截断显示，点击可预览全文
+        /// </summary>
+        private TextBlock CreateValueCell(string fullText)
+        {
+            var cell = CreateCell(Utils.TextHelper.Truncate(fullText), false);
+            if (Utils.TextHelper.IsTruncated(fullText))
+            {
+                cell.TextDecorations = TextDecorations.Underline;
+                cell.Foreground = new SolidColorBrush(Color.FromRgb(0x1E, 0x6F, 0xD9));
+                cell.Cursor = System.Windows.Input.Cursors.Hand;
+                cell.ToolTip = LanguageService.GetLocalizedString("ClickToPreview");
+                cell.MouseLeftButtonUp += (s, e) => WindowTextPreview.Show(Title, fullText);
+            }
+            return cell;
         }
 
         private string GetValueColumnName(StatisticsItemType type)

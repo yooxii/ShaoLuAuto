@@ -181,7 +181,7 @@ namespace ShaoLu.Models
                             ConditionVariable.Step_ExecutionTimeMs,
                         });
                         break;
-                    case StepType.TextOCR:
+                    case StepType.GetInput:
                         vars.AddRange(new[]
                         {
                             ConditionVariable.Self_IsTrue,

@@ -702,7 +702,7 @@
   <data name="Menu_Logout" xml:space="preserve">
     <value>Logout ({0})</value>
   </data>
-  <data name="AddTextOCRStep" xml:space="preserve">
+  <data name="AddGetInputStep" xml:space="preserve">
     <value>Get Input</value>
   </data>
   <data name="InputMode" xml:space="preserve">
@@ -722,6 +722,15 @@
   </data>
   <data name="MouseActionCountHint" xml:space="preserve">
     <value>0 = move to position only (no action)</value>
+  </data>
+  <data name="ClickToPreview" xml:space="preserve">
+    <value>Click to preview full text</value>
+  </data>
+  <data name="TextPreviewTitle" xml:space="preserve">
+    <value>Text Preview</value>
+  </data>
+  <data name="Stats_ConditionCount" xml:space="preserve">
+    <value>Condition Count (True/False)</value>
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>Condition</value>

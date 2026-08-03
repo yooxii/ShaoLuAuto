@@ -64,6 +64,78 @@
         </GroupBox>
     </DataTemplate>
 
+    <!-- 条件规则行模板（步骤条件面板与统计条件计数共用） -->
+    <DataTemplate x:Key="ConditionRowTemplate" DataType="{x:Type models:StepCondition}">
+        <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="3" Padding="5" Margin="0,2">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- 第一行：引用步骤 + 变量 -->
+                <ComboBox ItemsSource="{Binding AllSteps}"
+                          SelectedValue="{Binding StepUid}"
+                          SelectedValuePath="Uid"
+                          MinWidth="80" Margin="0,0,3,3"
+                          ToolTip="{lex:Loc Condition_StepRef_Tooltip}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text="-"/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox Grid.Column="1" 
+                          ItemsSource="{Binding AvailableVariables}"
+                          SelectedItem="{Binding Variable}" Margin="0,0,0,3">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <!-- 第二行：运算符 + 值 + 连接符 -->
+                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <ComboBox SelectedItem="{Binding Operator}" MinWidth="70" Margin="0,0,3,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <models:ConditionOperator>Equal</models:ConditionOperator>
+                        <models:ConditionOperator>NotEqual</models:ConditionOperator>
+                        <models:ConditionOperator>GreaterThan</models:ConditionOperator>
+                        <models:ConditionOperator>LessThan</models:ConditionOperator>
+                        <models:ConditionOperator>GreaterOrEqual</models:ConditionOperator>
+                        <models:ConditionOperator>LessOrEqual</models:ConditionOperator>
+                        <models:ConditionOperator>Contains</models:ConditionOperator>
+                        <models:ConditionOperator>NotContains</models:ConditionOperator>
+                        <models:ConditionOperator>IsEmpty</models:ConditionOperator>
+                        <models:ConditionOperator>IsNotEmpty</models:ConditionOperator>
+                    </ComboBox>
+                    <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}" MinWidth="50" Margin="0,0,3,0"
+                             ToolTip="{lex:Loc Condition_Value_Tooltip}"/>
+                    <ComboBox SelectedItem="{Binding Connector}" MinWidth="55" Margin="0,0,3,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <models:LogicConnector>And</models:LogicConnector>
+                        <models:LogicConnector>Or</models:LogicConnector>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </DataTemplate>
+
     <!-- 通用条件判断面板 -->
     <DataTemplate x:Key="ConditionPanelTemplate">
         <GroupBox Header="{lex:Loc ConditionPanel}" Margin="0,10,0,0">
@@ -83,80 +155,7 @@
                 <TextBlock Text="{lex:Loc ConditionMode_Hint}" 
                            Foreground="Gray" FontSize="11" Margin="0,2,0,5" TextWrapping="Wrap"/>
                 <StackPanel Visibility="{Binding ConditionMode, Converter={StaticResource ConditionModeToVisibility}}">
-                    <ItemsControl ItemsSource="{Binding Conditions}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type models:StepCondition}">
-                                <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="3" Padding="5" Margin="0,2">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <!-- 第一行：引用步骤 + 变量 -->
-                                        <ComboBox ItemsSource="{Binding AllSteps}"
-                                                  SelectedValue="{Binding StepUid}"
-                                                  SelectedValuePath="Uid"
-                                                  MinWidth="80" Margin="0,0,3,3"
-                                                  ToolTip="{lex:Loc Condition_StepRef_Tooltip}">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock>
-                                                        <Run Text="{Binding LineNo, Mode=OneWay}"/>
-                                                        <Run Text="-"/>
-                                                        <Run Text="{Binding Name, Mode=OneWay}"/>
-                                                    </TextBlock>
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
-                                        </ComboBox>
-                                        <ComboBox Grid.Column="1" 
-                                                  ItemsSource="{Binding AvailableVariables}"
-                                                  SelectedItem="{Binding Variable}" Margin="0,0,0,3">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
-                                        </ComboBox>
-                                        <!-- 第二行：运算符 + 值 + 连接符 -->
-                                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal">
-                                            <ComboBox SelectedItem="{Binding Operator}" MinWidth="70" Margin="0,0,3,0">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                                <models:ConditionOperator>Equal</models:ConditionOperator>
-                                                <models:ConditionOperator>NotEqual</models:ConditionOperator>
-                                                <models:ConditionOperator>GreaterThan</models:ConditionOperator>
-                                                <models:ConditionOperator>LessThan</models:ConditionOperator>
-                                                <models:ConditionOperator>GreaterOrEqual</models:ConditionOperator>
-                                                <models:ConditionOperator>LessOrEqual</models:ConditionOperator>
-                                                <models:ConditionOperator>Contains</models:ConditionOperator>
-                                                <models:ConditionOperator>NotContains</models:ConditionOperator>
-                                                <models:ConditionOperator>IsEmpty</models:ConditionOperator>
-                                                <models:ConditionOperator>IsNotEmpty</models:ConditionOperator>
-                                            </ComboBox>
-                                            <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}" MinWidth="50" Margin="0,0,3,0"
-                                                     ToolTip="{lex:Loc Condition_Value_Tooltip}"/>
-                                            <ComboBox SelectedItem="{Binding Connector}" MinWidth="55" Margin="0,0,3,0">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                                <models:LogicConnector>And</models:LogicConnector>
-                                                <models:LogicConnector>Or</models:LogicConnector>
-                                            </ComboBox>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding Conditions}" ItemTemplate="{StaticResource ConditionRowTemplate}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                         <Button Content="{lex:Loc Condition_Add}" Command="{Binding AddConditionCommand}" Margin="0,0,5,0"/>
                         <Button Content="{lex:Loc Condition_Remove}" Command="{Binding RemoveConditionCommand}"/>
@@ -466,8 +465,8 @@
         </StackPanel>
     </DataTemplate>
 
-    <!-- TextOCR 步骤 -->
-    <DataTemplate x:Key="TextOCRStepTemplate" DataType="{x:Type AutoVM:TextOCRStep}">
+    <!-- 获取输入步骤 -->
+    <DataTemplate x:Key="GetInputStepTemplate" DataType="{x:Type AutoVM:GetInputStep}">
         <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel Orientation="Horizontal" Margin="0,2">
@@ -514,7 +513,14 @@
             </StackPanel>
             <StackPanel Margin="0,3,0,0">
                 <Button Content="{lex:Loc OCR_Test}" Command="{Binding TestOCRCommand}" HorizontalAlignment="Left"/>
-                <TextBox Text="{Binding OCRResultPreview, Mode=OneWay}" IsReadOnly="True" MinHeight="40" TextWrapping="Wrap" Margin="0,3,0,0" VerticalScrollBarVisibility="Auto"/>
+                <!-- 结果预览：超过100字符截断显示，点击预览全文 -->
+                <Border BorderBrush="#CCCCCC" BorderThickness="1" CornerRadius="2" MinHeight="40" Margin="0,3,0,0"
+                        Background="#FAFAFA" Cursor="Hand" ToolTip="{lex:Loc ClickToPreview}">
+                    <Border.InputBindings>
+                        <MouseBinding MouseAction="LeftClick" Command="{Binding PreviewResultCommand}"/>
+                    </Border.InputBindings>
+                    <TextBlock Text="{Binding OCRResultPreview, Mode=OneWay}" TextWrapping="Wrap" Padding="5"/>
+                </Border>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
@@ -638,13 +644,21 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
+                                <!-- 条件计数：判断条件编辑 -->
+                                <StackPanel Margin="18,2,0,0"
+                                            Visibility="{Binding ShowConditionSettings, Converter={StaticResource BoolToVis}}">
+                                    <ItemsControl ItemsSource="{Binding Conditions}" ItemTemplate="{StaticResource ConditionRowTemplate}"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <Button Content="{lex:Loc Condition_Add}" Command="{Binding AddConditionCommand}" Margin="0,0,5,0"/>
+                                        <Button Content="{lex:Loc Condition_Remove}" Command="{Binding RemoveConditionCommand}"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -655,7 +669,7 @@
                      TypeTextMoreTemplate="{StaticResource TextStepMoreTemplate}"
                      TypeTextFromFileTemplate="{StaticResource TextStepFromFileTemplate}"
                      PopupTemplate="{StaticResource PopupStepTemplate}"
-                     TextOCRTemplate="{StaticResource TextOCRStepTemplate}"
+                     GetInputTemplate="{StaticResource GetInputStepTemplate}"
                      MouseActionTemplate="{StaticResource MouseActionStepTemplate}"
                      StatisticsTemplate="{StaticResource StatisticsStepTemplate}"/>
 </ResourceDictionary>

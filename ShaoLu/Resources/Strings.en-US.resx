@@ -703,7 +703,25 @@
     <value>Logout ({0})</value>
   </data>
   <data name="AddTextOCRStep" xml:space="preserve">
-    <value>TextOCR</value>
+    <value>Get Input</value>
+  </data>
+  <data name="InputMode" xml:space="preserve">
+    <value>Input Method</value>
+  </data>
+  <data name="InputMode_OCR" xml:space="preserve">
+    <value>OCR Text Recognition</value>
+  </data>
+  <data name="InputMode_ScreenText" xml:space="preserve">
+    <value>Read Selectable Screen Text</value>
+  </data>
+  <data name="InputTextPoint" xml:space="preserve">
+    <value>Text Position</value>
+  </data>
+  <data name="StatsCloseOnStop" xml:space="preserve">
+    <value>Close window when run stops</value>
+  </data>
+  <data name="MouseActionCountHint" xml:space="preserve">
+    <value>0 = move to position only (no action)</value>
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>Condition</value>

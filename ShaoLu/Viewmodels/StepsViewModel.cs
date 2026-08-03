@@ -22,7 +22,7 @@ namespace ShaoLu.Viewmodels
         private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private CancellationTokenSource _cts;
         private readonly StepSettingsModel _stepSettings = SingletonLocator.Settings.Step;
-        private readonly StepExecutionContext _executionContext = new();
+        private readonly StepExecutionContext _executionContext = StepExecutionContext.Instance;
 
         #region 属性
 
@@ -445,8 +445,9 @@ namespace ShaoLu.Viewmodels
             StopSignal = false;
             // 初始化自动化引擎
             Autogui.StartAuto();
-            // 清空执行上下文
+            // 清空执行上下文并启动总计时
             _executionContext.Clear();
+            _executionContext.StartTimer();
             if (_stepSettings.MinimizeOnRun)
                 Application.Current.MainWindow.WindowState = WindowState.Minimized;
             foreach (var step in AutomationStepBases)
@@ -619,6 +620,8 @@ namespace ShaoLu.Viewmodels
                     // targetUid 为空时不修改 i，for 循环 i++ 自然进入下一步
                 }
                 StopSignal = true;
+                _executionContext.StopTimer();
+                Views.WindowStatistics.CloseAllOnStop();
                 Application.Current.MainWindow.WindowState = WindowState.Normal;
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -630,6 +633,8 @@ namespace ShaoLu.Viewmodels
             {
                 logger.Info("Operation Canceled");
                 StopSignal = true;
+                _executionContext.StopTimer();
+                Views.WindowStatistics.CloseAllOnStop();
             }
             catch (Exception ex)
             {

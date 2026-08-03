@@ -190,6 +190,7 @@
     <Compile Include="Utils\ListBoxSelectedUidsBehavior.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="Utils\RichTextHelper.cs" />
+    <Compile Include="Utils\ScreenTextReader.cs" />
     <Compile Include="Utils\StepsFile.cs" />
     <Compile Include="Utils\SingletonLocator.cs" />
     <Compile Include="Viewmodels\AutomationStep.cs" />

@@ -124,6 +124,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private double _windowY = 100;
         private bool _alwaysOnTop = true;
         private double _autoCloseSeconds = 0;
+        private bool _closeOnStop = true;
 
         private ObservableCollection<StatisticsItemConfig> _statisticsItems = new()
         {
@@ -147,6 +148,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         /// <summary>自动关闭时间（0=不自动关闭）</summary>
         public double AutoCloseSeconds { get => _autoCloseSeconds; set => SetProperty(ref _autoCloseSeconds, value); }
+
+        /// <summary>运行停止后是否自动关闭统计窗口</summary>
+        public bool CloseOnStop { get => _closeOnStop; set => SetProperty(ref _closeOnStop, value); }
 
         /// <summary>统计项配置集合</summary>
         public ObservableCollection<StatisticsItemConfig> StatisticsItems { get => _statisticsItems; set => SetProperty(ref _statisticsItems, value); }
@@ -182,6 +186,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 WindowY = WindowY,
                 AlwaysOnTop = AlwaysOnTop,
                 AutoCloseSeconds = AutoCloseSeconds,
+                CloseOnStop = CloseOnStop,
                 WaitTime = WaitTime,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,

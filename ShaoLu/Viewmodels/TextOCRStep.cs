@@ -3,6 +3,7 @@ using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Views;
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,12 +13,47 @@ using System.Windows.Input;
 namespace ShaoLu.Viewmodels.AutomationStep
 {
     /// <summary>
-    /// TextOCR 步骤：从屏幕指定区域执行 OCR 识别
+    /// 获取输入方式
+    /// </summary>
+    public enum GetInputMode
+    {
+        /// <summary>从屏幕指定区域执行 OCR 识别</summary>
+        OCR,
+        /// <summary>读取屏幕指定位置处可选择文本（UI Automation）</summary>
+        ScreenText,
+    }
+
+    /// <summary>
+    /// 获取输入步骤：从指定方式获取屏幕信息（OCR 识别 / 读取可选择文本）
     /// </summary>
     public class TextOCRStep : AutomationStepBase
     {
         private Rect _ocrRegion = new();
         private string _ocrResultPreview;
+        private GetInputMode _inputMode = GetInputMode.OCR;
+        private System.Windows.Point _textPoint = new();
+
+        /// <summary>
+        /// 获取输入方式
+        /// </summary>
+        public GetInputMode InputMode { get => _inputMode; set => SetProperty(ref _inputMode, value); }
+
+        /// <summary>所有获取方式（供 ComboBox 绑定）</summary>
+        [JsonIgnore]
+        public List<GetInputMode> InputModes { get; } = new() { GetInputMode.OCR, GetInputMode.ScreenText };
+
+        /// <summary>
+        /// ScreenText 模式下的目标位置（屏幕逻辑像素）
+        /// </summary>
+        public System.Windows.Point TextPoint { get => _textPoint; set { if (SetProperty(ref _textPoint, value)) OnPropertyChanged(nameof(TextPointText)); } }
+
+        /// <summary>
+        /// ScreenText 目标位置描述文本（用于 UI 显示）
+        /// </summary>
+        [JsonIgnore]
+        public string TextPointText => TextPoint == new System.Windows.Point(0, 0)
+            ? LanguageService.GetLocalizedString("OCR_NoRegion", "未选择位置")
+            : $"X:{TextPoint.X:F0}, Y:{TextPoint.Y:F0}";
 
         /// <summary>
         /// OCR 屏幕区域（绝对坐标）
@@ -60,6 +96,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public ICommand TestOCRCommand => testOCRCommand ??= new RelayCommand(TestOCR);
 
+        [JsonIgnore]
+        private ICommand selectTextPointCommand;
+        [JsonIgnore]
+        public ICommand SelectTextPointCommand => selectTextPointCommand ??= new RelayCommand(SelectTextPoint);
+
         #endregion
 
         #region 构造
@@ -88,7 +129,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             return new TextOCRStep(Name, Description)
             {
+                InputMode = InputMode,
                 OCRRegion = new Rect(OCRRegion.X, OCRRegion.Y, OCRRegion.Width, OCRRegion.Height),
+                TextPoint = new System.Windows.Point(TextPoint.X, TextPoint.Y),
                 WaitTime = WaitTime,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
@@ -103,27 +146,43 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             await Task.Delay((int)(WaitTime * 1000), cancellationToken);
 
-            if (OCRRegion == null || OCRRegion.IsEmpty || OCRRegion.Width <= 0 || OCRRegion.Height <= 0)
-            {
-                IsError = true;
-                ErrorType = StepErrorType.OCRError;
-                ErrorMessage = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择OCR区域");
-                IsTrue = false;
-                return false;
-            }
+            string text;
 
-            // 如果设置开启，在屏幕上标示 OCR 区域
-            if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
+            if (InputMode == GetInputMode.ScreenText)
             {
-                var overlay = Utils.SingletonLocator.Settings.Step.OCRRegionOverlay;
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                    WindowRegionOverlay.ShowRegion(OCRRegion, overlay.Color, overlay.Duration));
+                // 读取屏幕指定位置的可选择文本
+                text = await Task.Run(() =>
+                {
+                    double dpiX = OCRService.CachedDpiX;
+                    double dpiY = OCRService.CachedDpiY;
+                    return Utils.ScreenTextReader.ReadTextAtPoint(TextPoint.X * dpiX, TextPoint.Y * dpiY);
+                }, cancellationToken);
             }
-
-            string text = await Task.Run(() =>
+            else
             {
-                return OCRService.RecognizeRegion(OCRRegion);
-            }, cancellationToken);
+                // OCR 模式
+                if (OCRRegion == null || OCRRegion.IsEmpty || OCRRegion.Width <= 0 || OCRRegion.Height <= 0)
+                {
+                    IsError = true;
+                    ErrorType = StepErrorType.OCRError;
+                    ErrorMessage = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择OCR区域");
+                    IsTrue = false;
+                    return false;
+                }
+
+                // 如果设置开启，在屏幕上标示 OCR 区域
+                if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
+                {
+                    var overlay = Utils.SingletonLocator.Settings.Step.OCRRegionOverlay;
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
+                        WindowRegionOverlay.ShowRegion(OCRRegion, overlay.Color, overlay.Duration));
+                }
+
+                text = await Task.Run(() =>
+                {
+                    return OCRService.RecognizeRegion(OCRRegion);
+                }, cancellationToken);
+            }
 
             // 存储结果
             OCRResultPreview = text;
@@ -153,23 +212,43 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        private void SelectTextPoint()
+        {
+            var point = WindowSelectPoint.ShowAndSelect();
+            if (point.HasValue)
+            {
+                TextPoint = point.Value;
+            }
+        }
+
         private void TestOCR()
         {
-            if (OCRRegion.IsEmpty || OCRRegion.Width <= 0 || OCRRegion.Height <= 0)
-            {
-                OCRResultPreview = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择区域");
-                return;
-            }
-
-            // 标示 OCR 区域
-            if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
-            {
-                var overlay = Utils.SingletonLocator.Settings.Step.OCRRegionOverlay;
-                WindowRegionOverlay.ShowRegion(OCRRegion, overlay.Color, overlay.Duration);
-            }
-
             try
             {
+                if (InputMode == GetInputMode.ScreenText)
+                {
+                    double dpiX = OCRService.CachedDpiX;
+                    double dpiY = OCRService.CachedDpiY;
+                    string screenText = Utils.ScreenTextReader.ReadTextAtPoint(TextPoint.X * dpiX, TextPoint.Y * dpiY);
+                    OCRResultPreview = string.IsNullOrWhiteSpace(screenText)
+                        ? LanguageService.GetLocalizedString("OCR_NoResult", "未读取到文本")
+                        : screenText;
+                    return;
+                }
+
+                if (OCRRegion.IsEmpty || OCRRegion.Width <= 0 || OCRRegion.Height <= 0)
+                {
+                    OCRResultPreview = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择区域");
+                    return;
+                }
+
+                // 标示 OCR 区域
+                if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
+                {
+                    var overlay = Utils.SingletonLocator.Settings.Step.OCRRegionOverlay;
+                    WindowRegionOverlay.ShowRegion(OCRRegion, overlay.Color, overlay.Duration);
+                }
+
                 string text = OCRService.RecognizeRegion(OCRRegion);
                 OCRResultPreview = string.IsNullOrWhiteSpace(text)
                     ? LanguageService.GetLocalizedString("OCR_NoResult", "未识别到文本")

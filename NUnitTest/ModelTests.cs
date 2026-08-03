@@ -145,7 +145,6 @@ namespace NUnitTest
             {
                 var app = new AppSettingsModel();
 
-                Assert.That(app.ThemeLight, Is.True);
                 Assert.That(app.WindowWidth, Is.EqualTo(1000));
                 Assert.That(app.WindowHeight, Is.EqualTo(600));
                 Assert.That(app.LogRetentionDays, Is.EqualTo(0));

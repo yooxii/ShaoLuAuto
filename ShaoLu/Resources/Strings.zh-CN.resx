@@ -712,7 +712,25 @@
     <value>注销 ({0})</value>
   </data>
   <data name="AddTextOCRStep" xml:space="preserve">
-    <value>文字识别(OCR)</value>
+    <value>获取输入</value>
+  </data>
+  <data name="InputMode" xml:space="preserve">
+    <value>获取方式</value>
+  </data>
+  <data name="InputMode_OCR" xml:space="preserve">
+    <value>OCR 文字识别</value>
+  </data>
+  <data name="InputMode_ScreenText" xml:space="preserve">
+    <value>读取屏幕可选择文本</value>
+  </data>
+  <data name="InputTextPoint" xml:space="preserve">
+    <value>文本位置</value>
+  </data>
+  <data name="StatsCloseOnStop" xml:space="preserve">
+    <value>停止运行后关闭窗口</value>
+  </data>
+  <data name="MouseActionCountHint" xml:space="preserve">
+    <value>0 = 仅移动到指定位置（不执行动作）</value>
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>条件判断</value>

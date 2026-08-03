@@ -1,6 +1,8 @@
 using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -13,8 +15,28 @@ namespace ShaoLu.Views
     /// </summary>
     public partial class WindowStatistics : Window
     {
+        // 跟踪当前打开的统计窗口，供运行停止时统一关闭
+        private static readonly List<WindowStatistics> OpenWindows = new();
+
         private readonly StatisticsStep _step;
         private readonly DispatcherTimer _refreshTimer;
+
+        /// <summary>
+        /// 运行停止时关闭所有勾选了 CloseOnStop 的统计窗口
+        /// </summary>
+        public static void CloseAllOnStop()
+        {
+            Application.Current?.Dispatcher.InvokeAsync(() =>
+            {
+                foreach (var window in OpenWindows.ToList())
+                {
+                    if (window._step.CloseOnStop && window.IsLoaded)
+                    {
+                        window.Close();
+                    }
+                }
+            });
+        }
 
         public WindowStatistics(StatisticsStep step)
         {
@@ -42,6 +64,8 @@ namespace ShaoLu.Views
             _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _refreshTimer.Tick += (s, e) => BuildContent();
             _refreshTimer.Start();
+
+            OpenWindows.Add(this);
         }
 
         private void BuildContent()
@@ -150,6 +174,7 @@ namespace ShaoLu.Views
         protected override void OnClosed(EventArgs e)
         {
             _refreshTimer?.Stop();
+            OpenWindows.Remove(this);
             base.OnClosed(e);
         }
     }

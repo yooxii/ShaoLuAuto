@@ -27,6 +27,8 @@ namespace ShaoLu.Converters
                 return ConvertStepScope(scope);
             if (value is PositionMode posMode)
                 return ConvertPositionMode(posMode);
+            if (value is GetInputMode inputMode)
+                return ConvertGetInputMode(inputMode);
             return value?.ToString() ?? string.Empty;
         }
 
@@ -105,6 +107,13 @@ namespace ShaoLu.Converters
         {
             PositionMode.Absolute => Services.LanguageService.GetLocalizedString("PositionMode_Absolute"),
             PositionMode.CurrentMouse => Services.LanguageService.GetLocalizedString("PositionMode_CurrentMouse"),
+            _ => m.ToString(),
+        };
+
+        public static string ConvertGetInputMode(GetInputMode m) => m switch
+        {
+            GetInputMode.OCR => Services.LanguageService.GetLocalizedString("InputMode_OCR"),
+            GetInputMode.ScreenText => Services.LanguageService.GetLocalizedString("InputMode_ScreenText"),
             _ => m.ToString(),
         };
 

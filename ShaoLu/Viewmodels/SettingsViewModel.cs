@@ -188,7 +188,6 @@ namespace ShaoLu.Viewmodels
                 IsExpanded = true,
                 SectionKey = "App"
             };
-            appNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Theme"), SectionKey = "App_Theme" });
             appNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Font"), SectionKey = "App_Font" });
             appNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("LogRetentionDays"), SectionKey = "App_Log" });
 

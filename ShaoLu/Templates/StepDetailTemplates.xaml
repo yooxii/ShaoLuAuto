@@ -471,9 +471,42 @@
         <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc InputMode}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding InputModes}" SelectedItem="{Binding InputMode}" MinWidth="150">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <!-- OCR 模式配置 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding InputMode}" Value="OCR"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <Label Content="{lex:Loc OCR_Region}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" IsReadOnly="True" MinWidth="150" VerticalAlignment="Center"/>
                 <Button Content="{lex:Loc OCR_SelectRegion}" Command="{Binding SelectRegionCommand}" Margin="3,0,0,0"/>
+            </StackPanel>
+            <!-- ScreenText 模式配置 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding InputMode}" Value="ScreenText"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc InputTextPoint}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TextPointText, Mode=OneWay}" IsReadOnly="True" MinWidth="120" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectTextPointCommand}" Margin="3,0,0,0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
@@ -532,7 +565,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
                                     <ComboBox ItemsSource="{x:Static models:MouseActionItem.AllTypes}" SelectedItem="{Binding ActionType}" MinWidth="100" Margin="0,0,5,0"/>
-                                    <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="1" Maximum="99" Margin="0,0,5,0"/>
+                                    <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="0" Maximum="99" Margin="0,0,5,0" ToolTip="{lex:Loc MouseActionCountHint}"/>
                                     <wd:NumericBox Value="{Binding Interval, Mode=TwoWay}" MinWidth="60" Minimum="0" Precision="3" Interval="0.05" Margin="0,0,5,0"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -562,6 +595,9 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <CheckBox IsChecked="{Binding AlwaysOnTop}" Content="{lex:Loc StatsAlwaysOnTop}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <CheckBox IsChecked="{Binding CloseOnStop}" Content="{lex:Loc StatsCloseOnStop}" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc StatsAutoClose}" Padding="0,0,5,0" VerticalAlignment="Center"/>

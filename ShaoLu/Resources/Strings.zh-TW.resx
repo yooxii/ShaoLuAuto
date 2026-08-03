@@ -709,7 +709,25 @@
     <value>登出 ({0})</value>
   </data>
   <data name="AddTextOCRStep" xml:space="preserve">
-    <value>文字辨識(OCR)</value>
+    <value>獲取輸入</value>
+  </data>
+  <data name="InputMode" xml:space="preserve">
+    <value>獲取方式</value>
+  </data>
+  <data name="InputMode_OCR" xml:space="preserve">
+    <value>OCR 文字辨識</value>
+  </data>
+  <data name="InputMode_ScreenText" xml:space="preserve">
+    <value>讀取螢幕可選擇文字</value>
+  </data>
+  <data name="InputTextPoint" xml:space="preserve">
+    <value>文字位置</value>
+  </data>
+  <data name="StatsCloseOnStop" xml:space="preserve">
+    <value>停止運行後關閉視窗</value>
+  </data>
+  <data name="MouseActionCountHint" xml:space="preserve">
+    <value>0 = 僅移動到指定位置（不執行動作）</value>
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>條件判斷</value>

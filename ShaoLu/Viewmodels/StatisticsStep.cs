@@ -24,6 +24,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         StepExecutionResult,
         /// <summary>条件计数：按自定义条件统计 true/false 次数</summary>
         ConditionCount,
+        /// <summary>当前执行步骤：显示正在执行的步骤</summary>
+        CurrentStep,
     }
 
     /// <summary>
@@ -113,7 +115,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         /// <summary>是否为步骤级统计项（决定是否显示范围设置）</summary>
         [JsonIgnore]
-        public bool IsStepLevel => Type != StatisticsItemType.TotalExecutionTime && Type != StatisticsItemType.ConditionCount;
+        public bool IsStepLevel => Type != StatisticsItemType.TotalExecutionTime
+            && Type != StatisticsItemType.ConditionCount
+            && Type != StatisticsItemType.CurrentStep;
 
         /// <summary>是否显示范围设置（启用且为步骤级）</summary>
         [JsonIgnore]
@@ -145,6 +149,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     StatisticsItemType.StepExecutionCount => LanguageService.GetLocalizedString("Stats_StepCount"),
                     StatisticsItemType.StepExecutionResult => LanguageService.GetLocalizedString("Stats_StepResult"),
                     StatisticsItemType.ConditionCount => LanguageService.GetLocalizedString("Stats_ConditionCount"),
+                    StatisticsItemType.CurrentStep => LanguageService.GetLocalizedString("Stats_CurrentStep"),
                     _ => Type.ToString(),
                 };
             }
@@ -215,6 +220,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private ObservableCollection<StatisticsItemConfig> _statisticsItems = new()
         {
             new StatisticsItemConfig { Type = StatisticsItemType.TotalExecutionTime, IsEnabled = true },
+            new StatisticsItemConfig { Type = StatisticsItemType.CurrentStep, IsEnabled = false },
             new StatisticsItemConfig { Type = StatisticsItemType.StepExecutionTime, IsEnabled = false },
             new StatisticsItemConfig { Type = StatisticsItemType.StepExecutionCount, IsEnabled = false },
             new StatisticsItemConfig { Type = StatisticsItemType.StepExecutionResult, IsEnabled = false },

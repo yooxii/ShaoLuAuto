@@ -4,9 +4,9 @@
   <PropertyGroup>
     <LangVersion>preview</LangVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>D:\22400616\</PublishUrl>
+    <PublishUrl>\\bnt56\品保部\ORT實驗資料\21. ORT Programs\6. AutoShaoLu\Publish\</PublishUrl>
     <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
+    <InstallFrom>Unc</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateMode>Background</UpdateMode>
     <UpdateInterval>7</UpdateInterval>
@@ -17,8 +17,8 @@
     <UpdateUrl>\\bnt56\品保部\ORT實驗資料\21. ORT Programs\6. AutoShaoLu\Publish\</UpdateUrl>
     <ProductName>AutoShaoLu%28自動化燒録%29</ProductName>
     <PublisherName>ORT</PublisherName>
-    <ApplicationRevision>3</ApplicationRevision>
-    <ApplicationVersion>0.5.0.%2a</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>0.6.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>

@@ -243,7 +243,9 @@ namespace NUnitTest
             public void Convert_ConditionVariable_StepOCRText()
             {
                 var result = _converter.Convert(ConditionVariable.Step_OCRText, typeof(string), null, Culture);
-                Assert.That(result, Is.EqualTo("引用步骤 → OCR识别文本"));
+                // 已改用本地化资源，且名称中不再包含 OCR；
+                // 测试环境未初始化本地化时 LanguageService 回退返回资源键本身
+                Assert.That(result, Is.AnyOf("引用步骤 → 识别文本", "ConditionVariable_Step_Text"));
             }
 
             [Test]

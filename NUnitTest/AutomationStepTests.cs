@@ -266,11 +266,12 @@ namespace NUnitTest
             {
                 var step = new PopupStep();
                 Assert.That(step.PopupType, Is.EqualTo("Information"));
+                Assert.That(step.PopupTypes, Does.Contain("None"));
                 Assert.That(step.PopupTypes, Does.Contain("Information"));
                 Assert.That(step.PopupTypes, Does.Contain("Warning"));
                 Assert.That(step.PopupTypes, Does.Contain("Error"));
                 Assert.That(step.PopupTypes, Does.Contain("Question"));
-                Assert.That(step.PopupTypes.Count, Is.EqualTo(4));
+                Assert.That(step.PopupTypes.Count, Is.EqualTo(5));
             }
 
             [Test]

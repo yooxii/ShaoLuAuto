@@ -541,6 +541,9 @@ namespace ShaoLu.Viewmodels
                     {
                         SelectedStep = step;
 
+                        // 记录当前正在执行的步骤（供统计窗口展示）
+                        _executionContext.RunningStepUid = step.Uid;
+
                         // 计时执行
                         var sw = Stopwatch.StartNew();
                         await step.RunAsync(token);

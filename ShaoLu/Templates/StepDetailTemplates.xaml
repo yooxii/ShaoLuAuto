@@ -79,6 +79,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -140,6 +141,32 @@
                         <models:LogicConnector>And</models:LogicConnector>
                         <models:LogicConnector>Or</models:LogicConnector>
                     </ComboBox>
+                </StackPanel>
+                <!-- 第三行：识别文本提取设置（仅识别文本变量显示） -->
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0"
+                            Visibility="{Binding ShowTextExtractSettings, Converter={StaticResource BoolToVis}}">
+                    <Label Content="{lex:Loc TextExtract_Mode}" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding AllTextExtractModes}" SelectedItem="{Binding TextExtractMode}" MinWidth="90" Margin="0,0,3,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBox Text="{Binding ExtractLines, UpdateSourceTrigger=LostFocus}" MinWidth="60" Margin="0,0,3,0"
+                             VerticalAlignment="Center"
+                             ToolTip="{lex:Loc TextExtract_Lines_Tooltip}"
+                             Visibility="{Binding ShowExtractLines, Converter={StaticResource BoolToVis}}"/>
+                    <TextBox Text="{Binding ExtractMarker, UpdateSourceTrigger=LostFocus}" MinWidth="60" Margin="0,0,3,0"
+                             VerticalAlignment="Center"
+                             ToolTip="{lex:Loc TextExtract_Marker_Tooltip}"
+                             Visibility="{Binding ShowExtractMarker, Converter={StaticResource BoolToVis}}"/>
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding ShowExtractLength, Converter={StaticResource BoolToVis}}">
+                        <Label Content="{lex:Loc TextExtract_Length}" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                        <wd:NumericBox Value="{Binding ExtractLength, Mode=TwoWay}" Width="60" Minimum="0" Maximum="99999" Precision="0" Interval="1"
+                                       ToolTip="{lex:Loc TextExtract_Length_Tooltip}"/>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>

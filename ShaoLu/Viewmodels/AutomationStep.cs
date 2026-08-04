@@ -48,11 +48,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set => SetProperty(ref _isNeed, value);
         }
 
-        private readonly Guid _uid = Guid.NewGuid();
+        private Guid _uid = Guid.NewGuid();
         /// <summary>
         /// 步骤的唯一uid
+        /// 注意：setter 供 JSON 反序列化恢复原 Uid（跳转设置、条件引用均依赖 Uid），
+        /// 忽略 Guid.Empty 赋值以防覆盖已有标识（占位项除外，占位项在构造函数中直接赋值）
         /// </summary>
-        public Guid Uid => _uid;
+        public Guid Uid
+        {
+            get => _uid;
+            set
+            {
+                if (value != Guid.Empty) _uid = value;
+            }
+        }
 
         /// <summary>
         /// 用于创建占位项（如“无跳转”）的特殊构造

@@ -584,5 +584,78 @@ namespace NUnitTest
         }
 
         #endregion
+
+        #region 识别文本提取
+
+        private static StepCondition MakeTextCondition(TextExtractMode mode, string lines = null, string marker = null, int length = 0, ConditionOperator op = ConditionOperator.Equal, string value = null)
+        {
+            return new StepCondition
+            {
+                Variable = ConditionVariable.Self_OCRText,
+                TextExtractMode = mode,
+                ExtractLines = lines,
+                ExtractMarker = marker,
+                ExtractLength = length,
+                Operator = op,
+                Value = value,
+            };
+        }
+
+        [Test]
+        public void TextExtraction_Whole_NoChange()
+        {
+            var cond = MakeTextCondition(TextExtractMode.Whole);
+            Assert.That(ConditionEvaluator.ApplyTextExtraction("abc\ndef", cond), Is.EqualTo("abc\ndef"));
+        }
+
+        [Test]
+        public void TextExtraction_Lines_SingleAndRange()
+        {
+            var text = "L1\nL2\nL3\nL4\nL5";
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.Lines, lines: "2")), Is.EqualTo("L2"));
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.Lines, lines: "1,3")), Is.EqualTo("L1\nL3"));
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.Lines, lines: "2-4")), Is.EqualTo("L2\nL3\nL4"));
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.Lines, lines: "1,4-9")), Is.EqualTo("L1\nL4\nL5"));
+        }
+
+        [Test]
+        public void TextExtraction_FromSubstring_WithLength()
+        {
+            var text = "SN:ABC12345 OK";
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.FromSubstring, marker: "SN:", length: 8)), Is.EqualTo("ABC12345"));
+            // length = 0 表示直到末尾
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.FromSubstring, marker: "SN:")), Is.EqualTo("ABC12345 OK"));
+            // 子字符串不存在时返回空
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.FromSubstring, marker: "XX")), Is.EqualTo(""));
+        }
+
+        [Test]
+        public void TextExtraction_FromStart_And_FromEnd()
+        {
+            var text = "0123456789";
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.FromStart, length: 3)), Is.EqualTo("012"));
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.FromEnd, length: 3)), Is.EqualTo("789"));
+            // 长度超过文本时返回全文
+            Assert.That(ConditionEvaluator.ApplyTextExtraction(text, MakeTextCondition(TextExtractMode.FromStart, length: 50)), Is.EqualTo(text));
+        }
+
+        [Test]
+        public void Evaluate_OCRText_WithExtraction_ComparesExtractedText()
+        {
+            _currentResult.OCRText = "SN:ABC12345 OK";
+            var conditions = new List<StepCondition>
+            {
+                MakeTextCondition(TextExtractMode.FromSubstring, marker: "SN:", length: 8, op: ConditionOperator.Equal, value: "ABC12345")
+            };
+            Assert.That(ConditionEvaluator.Evaluate(conditions, _context, _currentResult), Is.True);
+
+            conditions = new List<StepCondition>
+            {
+                MakeTextCondition(TextExtractMode.FromSubstring, marker: "SN:", length: 8, op: ConditionOperator.Equal, value: "WRONG")
+            };
+            Assert.That(ConditionEvaluator.Evaluate(conditions, _context, _currentResult), Is.False);
+        }
+
+        #endregion
     }
 }

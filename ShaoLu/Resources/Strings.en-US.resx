@@ -921,6 +921,51 @@
   <data name="Stats_ColResult" xml:space="preserve">
     <value>Result</value>
   </data>
+  <data name="Stats_CurrentStep" xml:space="preserve">
+    <value>Current Executing Step</value>
+  </data>
+  <data name="ConditionVariable_Self_Text" xml:space="preserve">
+    <value>This Step → Recognized Text</value>
+  </data>
+  <data name="ConditionVariable_Step_Text" xml:space="preserve">
+    <value>Referenced Step → Recognized Text</value>
+  </data>
+  <data name="ConditionVariable_Self_Text_Tooltip" xml:space="preserve">
+    <value>Text content recognized by the current step</value>
+  </data>
+  <data name="ConditionVariable_Step_Text_Tooltip" xml:space="preserve">
+    <value>Recognized text of the referenced step</value>
+  </data>
+  <data name="TextExtract_Mode" xml:space="preserve">
+    <value>Text Extraction</value>
+  </data>
+  <data name="TextExtract_Whole" xml:space="preserve">
+    <value>Full Text</value>
+  </data>
+  <data name="TextExtract_Lines" xml:space="preserve">
+    <value>Read Specified Lines</value>
+  </data>
+  <data name="TextExtract_FromSubstring" xml:space="preserve">
+    <value>Read From Substring</value>
+  </data>
+  <data name="TextExtract_FromStart" xml:space="preserve">
+    <value>Read From Start</value>
+  </data>
+  <data name="TextExtract_FromEnd" xml:space="preserve">
+    <value>Read From End</value>
+  </data>
+  <data name="TextExtract_Length" xml:space="preserve">
+    <value>Length</value>
+  </data>
+  <data name="TextExtract_Lines_Tooltip" xml:space="preserve">
+    <value>Line numbers to read (1-based), supports comma and range, e.g. 1,3,5-8</value>
+  </data>
+  <data name="TextExtract_Marker_Tooltip" xml:space="preserve">
+    <value>Start reading after the first occurrence of this substring</value>
+  </data>
+  <data name="TextExtract_Length_Tooltip" xml:space="preserve">
+    <value>Number of characters to read (0 = until end)</value>
+  </data>
   <data name="StatsScope" xml:space="preserve">
     <value>Scope</value>
   </data>

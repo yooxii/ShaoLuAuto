@@ -24,6 +24,9 @@ namespace ShaoLu.Services
         /// <summary>刚刚执行完成的步骤 Uid（供 Step_Triggered 变量使用）</summary>
         public Guid? CurrentStepUid { get; set; }
 
+        /// <summary>当前正在执行的步骤 Uid（步骤开始前设置，供统计窗口展示）</summary>
+        public Guid? RunningStepUid { get; set; }
+
         /// <summary>开始计时</summary>
         public void StartTimer() => _totalStopwatch.Restart();
 
@@ -75,6 +78,7 @@ namespace ShaoLu.Services
             _executionCounts.Clear();
             _totalStopwatch.Reset();
             CurrentStepUid = null;
+            RunningStepUid = null;
         }
 
         /// <summary>获取步骤执行时间</summary>

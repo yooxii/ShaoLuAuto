@@ -179,6 +179,61 @@ namespace NUnitTest
         }
 
         [Test]
+        public void SaveAndLoad_GotoReferences_UidRoundTrip()
+        {
+            // 验证跳转设置依赖的 Uid 在保存/重新打开后保持不变
+            var step1 = new TypeTextStep("Step1") { TextToType = "A" };
+            var step2 = new TypeTextStep("Step2") { TextToType = "B" };
+            var step3 = new TypeTextStep("Step3") { TextToType = "C" };
+            step1.TrueGotoUid = step3.Uid;
+            step1.FalseGotoUid = step2.Uid;
+            step2.TrueGotoUid = step1.Uid;
+
+            var steps = new ObservableCollection<AutomationStepBase> { step1, step2, step3 };
+            string filePath = Path.Combine(_testDir, "goto_uid_steps.json");
+
+            StepsFile.SaveStepsToJson(steps, filePath);
+            var loaded = StepsFile.LoadStepsFromJson(filePath);
+
+            Assert.That(loaded.Count, Is.EqualTo(3));
+            // Uid 必须保持一致，否则跳转引用全部失效
+            Assert.That(loaded[0].Uid, Is.EqualTo(step1.Uid));
+            Assert.That(loaded[1].Uid, Is.EqualTo(step2.Uid));
+            Assert.That(loaded[2].Uid, Is.EqualTo(step3.Uid));
+            // 跳转目标仍指向加载后的对应步骤
+            Assert.That(loaded[0].TrueGotoUid, Is.EqualTo(loaded[2].Uid));
+            Assert.That(loaded[0].FalseGotoUid, Is.EqualTo(loaded[1].Uid));
+            Assert.That(loaded[1].TrueGotoUid, Is.EqualTo(loaded[0].Uid));
+        }
+
+        [Test]
+        public void SaveAndLoad_ConditionTextExtraction_RoundTrip()
+        {
+            // 验证条件行的识别文本提取设置能往返保存
+            var step = new TypeTextStep("提取步骤") { ConditionMode = ConditionMode.Custom };
+            step.Conditions.Add(new StepCondition
+            {
+                Variable = ConditionVariable.Self_OCRText,
+                TextExtractMode = TextExtractMode.FromSubstring,
+                ExtractMarker = "SN:",
+                ExtractLength = 8,
+                Operator = ConditionOperator.Equal,
+                Value = "ABC12345"
+            });
+
+            var steps = new ObservableCollection<AutomationStepBase> { step };
+            string filePath = Path.Combine(_testDir, "extract_steps.json");
+
+            StepsFile.SaveStepsToJson(steps, filePath);
+            var loaded = StepsFile.LoadStepsFromJson(filePath);
+
+            var cond = loaded[0].Conditions[0];
+            Assert.That(cond.TextExtractMode, Is.EqualTo(TextExtractMode.FromSubstring));
+            Assert.That(cond.ExtractMarker, Is.EqualTo("SN:"));
+            Assert.That(cond.ExtractLength, Is.EqualTo(8));
+        }
+
+        [Test]
         public void SaveStepsToJson_NullSteps_ThrowsArgumentNullException()
         {
             string filePath = Path.Combine(_testDir, "null_steps.json");

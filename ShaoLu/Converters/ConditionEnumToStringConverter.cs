@@ -1,4 +1,5 @@
 using ShaoLu.Models;
+using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Globalization;
@@ -31,6 +32,8 @@ namespace ShaoLu.Converters
                 return ConvertPositionMode(posMode);
             if (value is GetInputMode inputMode)
                 return ConvertGetInputMode(inputMode);
+            if (value is TextExtractMode extractMode)
+                return ConvertTextExtractMode(extractMode);
             return value?.ToString() ?? string.Empty;
         }
 
@@ -55,14 +58,14 @@ namespace ShaoLu.Converters
             ConditionVariable.Self_ExecutionTimeMs => "本步骤 → 执行耗时(ms)",
             ConditionVariable.Self_ClickX => "本步骤 → 点击X坐标",
             ConditionVariable.Self_ClickY => "本步骤 → 点击Y坐标",
-            ConditionVariable.Self_OCRText => "本步骤 → OCR识别文本",
+            ConditionVariable.Self_OCRText => LanguageService.GetLocalizedString("ConditionVariable_Self_Text"),
             ConditionVariable.Self_PopupResult => "本步骤 → 弹窗选择结果",
             ConditionVariable.Step_IsTrue => "引用步骤 → 执行结果",
             ConditionVariable.Step_Similarity => "引用步骤 → 相似度",
             ConditionVariable.Step_ExecutionTimeMs => "引用步骤 → 执行耗时(ms)",
             ConditionVariable.Step_ClickX => "引用步骤 → 点击X坐标",
             ConditionVariable.Step_ClickY => "引用步骤 → 点击Y坐标",
-            ConditionVariable.Step_OCRText => "引用步骤 → OCR识别文本",
+            ConditionVariable.Step_OCRText => LanguageService.GetLocalizedString("ConditionVariable_Step_Text"),
             ConditionVariable.Step_PopupResult => "引用步骤 → 弹窗选择结果",
             ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered"),
             _ => v.ToString(),
@@ -128,6 +131,16 @@ namespace ShaoLu.Converters
             _ => m.ToString(),
         };
 
+        public static string ConvertTextExtractMode(TextExtractMode m) => m switch
+        {
+            TextExtractMode.Whole => Services.LanguageService.GetLocalizedString("TextExtract_Whole"),
+            TextExtractMode.Lines => Services.LanguageService.GetLocalizedString("TextExtract_Lines"),
+            TextExtractMode.FromSubstring => Services.LanguageService.GetLocalizedString("TextExtract_FromSubstring"),
+            TextExtractMode.FromStart => Services.LanguageService.GetLocalizedString("TextExtract_FromStart"),
+            TextExtractMode.FromEnd => Services.LanguageService.GetLocalizedString("TextExtract_FromEnd"),
+            _ => m.ToString(),
+        };
+
         /// <summary>
         /// 获取条件变量的说明文本（用于ToolTip）
         /// </summary>
@@ -140,14 +153,14 @@ namespace ShaoLu.Converters
             ConditionVariable.Self_ExecutionTimeMs => "当前步骤执行所花费的时间（毫秒）",
             ConditionVariable.Self_ClickX => "当前步骤实际点击的屏幕X坐标",
             ConditionVariable.Self_ClickY => "当前步骤实际点击的屏幕Y坐标",
-            ConditionVariable.Self_OCRText => "当前步骤OCR识别出的文本内容",
+            ConditionVariable.Self_OCRText => Services.LanguageService.GetLocalizedString("ConditionVariable_Self_Text_Tooltip"),
             ConditionVariable.Self_PopupResult => "当前步骤弹出框用户点击的按钮值",
             ConditionVariable.Step_IsTrue => "指定行号步骤的执行结果（需在左侧填写行号）",
             ConditionVariable.Step_Similarity => "指定行号步骤的图像匹配相似度",
             ConditionVariable.Step_ExecutionTimeMs => "指定行号步骤的执行耗时",
             ConditionVariable.Step_ClickX => "指定行号步骤的点击X坐标",
             ConditionVariable.Step_ClickY => "指定行号步骤的点击Y坐标",
-            ConditionVariable.Step_OCRText => "指定行号步骤的OCR识别文本",
+            ConditionVariable.Step_OCRText => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Text_Tooltip"),
             ConditionVariable.Step_PopupResult => "指定行号步骤的弹出框选择结果",
             ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered_Tooltip"),
             _ => string.Empty,

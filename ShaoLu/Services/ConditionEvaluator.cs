@@ -66,6 +66,12 @@ namespace ShaoLu.Services
                 // 解析变量值
                 object leftValue = context.ResolveVariable(cond.Variable, cond.StepUid, currentResult);
 
+                // 识别文本变量：按条件行的提取设置预处理文本
+                if (cond.IsTextVariable && leftValue is string textValue)
+                {
+                    leftValue = ApplyTextExtraction(textValue, cond);
+                }
+
                 // 执行比较
                 return Compare(leftValue, cond.Operator, cond.Value);
             }
@@ -162,6 +168,91 @@ namespace ShaoLu.Services
             if (value == null) return true;
             if (value is string s) return string.IsNullOrWhiteSpace(s);
             return false;
+        }
+
+        /// <summary>
+        /// 按条件行的提取设置对识别文本进行预处理
+        /// 支持：指定行、从子字符串开始读取指定长度、从开头/末尾读取
+        /// </summary>
+        public static string ApplyTextExtraction(string text, StepCondition cond)
+        {
+            if (string.IsNullOrEmpty(text) || cond == null || cond.TextExtractMode == TextExtractMode.Whole)
+                return text ?? string.Empty;
+
+            try
+            {
+                switch (cond.TextExtractMode)
+                {
+                    case TextExtractMode.Lines:
+                        return ExtractLines(text, cond.ExtractLines);
+                    case TextExtractMode.FromSubstring:
+                        return ExtractFromSubstring(text, cond.ExtractMarker, cond.ExtractLength);
+                    case TextExtractMode.FromStart:
+                        return cond.ExtractLength > 0 && text.Length > cond.ExtractLength
+                            ? text.Substring(0, cond.ExtractLength)
+                            : text;
+                    case TextExtractMode.FromEnd:
+                        return cond.ExtractLength > 0 && text.Length > cond.ExtractLength
+                            ? text.Substring(text.Length - cond.ExtractLength)
+                            : text;
+                    default:
+                        return text;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Text extraction failed for mode {0}", cond.TextExtractMode);
+                return text;
+            }
+        }
+
+        /// <summary>
+        /// 提取指定行（1 基，支持 "1,3,5-8" 格式，多行结果按换行拼接）
+        /// </summary>
+        private static string ExtractLines(string text, string lineSpec)
+        {
+            if (string.IsNullOrWhiteSpace(lineSpec)) return text;
+
+            string[] lines = text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            var selected = new List<string>();
+            foreach (var part in lineSpec.Split(new[] { ',', '，', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var segment = part.Trim();
+                if (segment.Contains("-"))
+                {
+                    var bounds = segment.Split('-');
+                    if (bounds.Length == 2
+                        && int.TryParse(bounds[0].Trim(), out int start)
+                        && int.TryParse(bounds[1].Trim(), out int end))
+                    {
+                        for (int i = Math.Max(1, start); i <= Math.Min(lines.Length, end); i++)
+                            selected.Add(lines[i - 1]);
+                    }
+                }
+                else if (int.TryParse(segment, out int lineNo) && lineNo >= 1 && lineNo <= lines.Length)
+                {
+                    selected.Add(lines[lineNo - 1]);
+                }
+            }
+            return string.Join("\n", selected);
+        }
+
+        /// <summary>
+        /// 从子字符串首次出现位置之后读取指定长度（length&lt;=0 表示直到末尾）
+        /// </summary>
+        private static string ExtractFromSubstring(string text, string marker, int length)
+        {
+            if (string.IsNullOrEmpty(marker))
+            {
+                // 未指定子字符串时退化为从开头读取
+                return length > 0 && text.Length > length ? text.Substring(0, length) : text;
+            }
+
+            int index = text.IndexOf(marker, StringComparison.Ordinal);
+            if (index < 0) return string.Empty;
+
+            string rest = text.Substring(index + marker.Length);
+            return length > 0 && rest.Length > length ? rest.Substring(0, length) : rest;
         }
 
         private static bool IsNumeric(object value, out double result)

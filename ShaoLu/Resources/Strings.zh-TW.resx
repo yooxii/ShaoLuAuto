@@ -921,6 +921,51 @@
   <data name="Stats_ColResult" xml:space="preserve">
     <value>結果</value>
   </data>
+  <data name="Stats_CurrentStep" xml:space="preserve">
+    <value>目前執行步驟</value>
+  </data>
+  <data name="ConditionVariable_Self_Text" xml:space="preserve">
+    <value>本步驟 → 辨識文字</value>
+  </data>
+  <data name="ConditionVariable_Step_Text" xml:space="preserve">
+    <value>引用步驟 → 辨識文字</value>
+  </data>
+  <data name="ConditionVariable_Self_Text_Tooltip" xml:space="preserve">
+    <value>目前步驟辨識出的文字內容</value>
+  </data>
+  <data name="ConditionVariable_Step_Text_Tooltip" xml:space="preserve">
+    <value>引用步驟的辨識文字</value>
+  </data>
+  <data name="TextExtract_Mode" xml:space="preserve">
+    <value>文字擷取</value>
+  </data>
+  <data name="TextExtract_Whole" xml:space="preserve">
+    <value>完整文字</value>
+  </data>
+  <data name="TextExtract_Lines" xml:space="preserve">
+    <value>讀取指定行</value>
+  </data>
+  <data name="TextExtract_FromSubstring" xml:space="preserve">
+    <value>從子字串讀取</value>
+  </data>
+  <data name="TextExtract_FromStart" xml:space="preserve">
+    <value>從開頭讀取</value>
+  </data>
+  <data name="TextExtract_FromEnd" xml:space="preserve">
+    <value>從結尾讀取</value>
+  </data>
+  <data name="TextExtract_Length" xml:space="preserve">
+    <value>長度</value>
+  </data>
+  <data name="TextExtract_Lines_Tooltip" xml:space="preserve">
+    <value>要讀取的行號（1 基），支援逗號與區間，如 1,3,5-8</value>
+  </data>
+  <data name="TextExtract_Marker_Tooltip" xml:space="preserve">
+    <value>從該子字串首次出現位置之後開始讀取</value>
+  </data>
+  <data name="TextExtract_Length_Tooltip" xml:space="preserve">
+    <value>讀取的字元數（0 = 直到結尾）</value>
+  </data>
   <data name="StatsScope" xml:space="preserve">
     <value>統計範圍</value>
   </data>

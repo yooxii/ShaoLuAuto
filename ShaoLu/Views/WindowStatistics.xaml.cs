@@ -105,6 +105,10 @@ namespace ShaoLu.Views
                 {
                     AddTotalTimeSection(context);
                 }
+                else if (item.Type == StatisticsItemType.CurrentStep)
+                {
+                    AddCurrentStepSection(item, context, steps);
+                }
                 else if (item.Type == StatisticsItemType.ConditionCount)
                 {
                     AddConditionCountSection(item);
@@ -143,6 +147,26 @@ namespace ShaoLu.Views
             var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
             panel.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.Bold, FontSize = 13, Margin = new Thickness(0, 0, 0, 4) });
             panel.Children.Add(new TextBlock { Text = $"{context.TotalElapsedMs:F0} ms", FontSize = 12, Margin = new Thickness(10, 0, 0, 0) });
+            ContentPanel.Children.Add(panel);
+        }
+
+        /// <summary>
+        /// 当前执行步骤统计项：显示正在执行的步骤（行号 - 名称）
+        /// </summary>
+        private void AddCurrentStepSection(StatisticsItemConfig item, StepExecutionContext context,
+            System.Collections.ObjectModel.ObservableCollection<AutomationStepBase> steps)
+        {
+            var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+            panel.Children.Add(new TextBlock { Text = item.DisplayName, FontWeight = FontWeights.Bold, FontSize = 13, Margin = new Thickness(0, 0, 0, 4) });
+
+            string stepText = "-";
+            if (context.RunningStepUid.HasValue && steps != null)
+            {
+                var runningStep = steps.FirstOrDefault(s => s.Uid == context.RunningStepUid.Value);
+                if (runningStep != null)
+                    stepText = $"{runningStep.LineNo} - {runningStep.Name}";
+            }
+            panel.Children.Add(new TextBlock { Text = stepText, FontSize = 12, Margin = new Thickness(10, 0, 0, 0) });
             ContentPanel.Children.Add(panel);
         }
 

@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: nunit_tests
+title: NUnit 单元测试项目
+scope:
+    - NUnitTest/
+source_files: []
+depends_on: []
+related_to:
+    - path: shaolu_app/automation_engine
+    - path: shaolu_app/settings_user_management

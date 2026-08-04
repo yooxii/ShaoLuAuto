@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: shaolu_app/automation_engine
+title: 自动化步骤模型与执行结果
+scope:
+    - ShaoLu/Models/AutomationStepModel.cs
+    - ShaoLu/Models/StepCondition.cs
+    - ShaoLu/Models/StepExecutionLog.cs
+    - ShaoLu/Models/StepExecutionResult.cs
+source_files: []
+depends_on: []
+related_to:
+    - path: nunit_tests

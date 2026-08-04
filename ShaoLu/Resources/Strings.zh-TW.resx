@@ -775,10 +775,10 @@
     <value>比較值（例如: true, 0.9, 包含的文字等）</value>
   </data>
   <data name="Condition_Add" xml:space="preserve">
-    <value>+ 添加條件</value>
+    <value>+ 新增表達式</value>
   </data>
   <data name="Condition_Remove" xml:space="preserve">
-    <value>- 刪除條件</value>
+    <value>- 刪除表達式</value>
   </data>
   <data name="CropImage_EnableRatioScale" xml:space="preserve">
     <value>開啟等比縮放</value>
@@ -964,7 +964,22 @@
     <value>從該子字串首次出現位置之後開始讀取</value>
   </data>
   <data name="TextExtract_Length_Tooltip" xml:space="preserve">
-    <value>讀取的字元數（0 = 直到結尾）</value>
+    <value>讀取的數量，單位見右側選項（0 = 直到結尾）</value>
+  </data>
+  <data name="TextExtract_Unit_Char" xml:space="preserve">
+    <value>字元</value>
+  </data>
+  <data name="TextExtract_Unit_Line" xml:space="preserve">
+    <value>行</value>
+  </data>
+  <data name="StatsReset" xml:space="preserve">
+    <value>重置統計</value>
+  </data>
+  <data name="StatsResetConfirm" xml:space="preserve">
+    <value>確定要清空所有統計結果嗎？</value>
+  </data>
+  <data name="SaveSuccess" xml:space="preserve">
+    <value>儲存成功</value>
   </data>
   <data name="StatsScope" xml:space="preserve">
     <value>統計範圍</value>
@@ -1006,7 +1021,7 @@
     <value>名稱</value>
   </data>
   <data name="StatsAddConditionCount" xml:space="preserve">
-    <value>+ 新增條件計數</value>
+    <value>+ 新增表達式計數</value>
   </data>
   <data name="StatsCustomConditions" xml:space="preserve">
     <value>自訂條件</value>

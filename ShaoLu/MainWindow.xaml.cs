@@ -282,9 +282,16 @@ namespace ShaoLu
                 // 更新当前文件路径和工作目录
                 mainViewModel.StepFilePath = filePath;
                 mainViewModel.StepImageWorkDir = StepsFile.GetWorkDirPath(filePath);
+
+                // 保存成功反馈
+                WindowAsyncPopup.Show(
+                    LanguageService.GetLocalizedString("SaveSuccess"),
+                    LanguageService.GetLocalizedString("Save"),
+                    PopupButtons.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "Save file failed: {0}", filePath);
                 WindowAsyncPopup.Show(
                     $"{LanguageService.GetLocalizedString("SaveFailed")}: {ex.Message}",
                     LanguageService.GetLocalizedString("Save"),

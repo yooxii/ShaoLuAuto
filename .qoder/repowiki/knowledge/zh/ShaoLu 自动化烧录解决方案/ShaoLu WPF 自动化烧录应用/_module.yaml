@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: shaolu_app
+title: ShaoLu WPF 自动化烧录应用
+scope:
+    - ShaoLu/
+source_files: []
+depends_on: []
+related_to: []

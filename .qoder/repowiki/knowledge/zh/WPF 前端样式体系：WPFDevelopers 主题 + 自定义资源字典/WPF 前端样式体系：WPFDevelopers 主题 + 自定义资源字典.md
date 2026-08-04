@@ -6,61 +6,40 @@ scope:
     - '**'
 source_files:
     - ShaoLu/App.xaml
-    - ShaoLu/MainWindow.xaml
     - ShaoLu/Themes/Generic.xaml
     - ShaoLu/Themes/Styles.xaml
     - ShaoLu/Themes/Icons.xaml
+    - ShaoLu/MainWindow.xaml
     - ShaoLu/Templates/SettingsTemplates.xaml
-    - ShaoLu/Converters/BoolToInverseBoolConverter.cs
-    - ShaoLu/Controls/MultiCropImage.cs
+    - ShaoLu/Templates/StepDetailTemplates.xaml
+    - ShaoLu/Templates/StepSummaryTemplates.xaml
 ---
 
-## 系统概述
+本项目的 UI 样式基于 WPF 框架，采用 **WPFDevelopers** 第三方控件库作为主题与组件基础，并通过本地 ResourceDictionary 进行扩展与定制。整体风格遵循 MVVM 模式，XAML 视图与 C# 代码分离，样式集中在 Themes 目录的 ResourceDictionary 中统一管理。
 
-ShaoLu 自动化烧录客户端采用 WPF 框架构建，前端样式体系基于 **WPFDevelopers** 第三方控件库与项目内自定义 ResourceDictionary 相结合的方式实现。应用通过 App.xaml 中的 ResourceDictionary.MergedDictionaries 集中管理主题资源，支持 Light/Dark 自动切换。
+### 1. 使用的系统与工具
+- **WPFDevelopers**：通过 `xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"` 引入，在 App.xaml 中合并其 Theme.xaml 与 Resources，启用 Light/Dark 自动主题切换能力。
+- **WPF Localize Extension (lex)**：通过 `xmlns:lex="http://wpflocalizeextension.codeplex.com"` 实现多语言资源绑定（Strings.resx / Strings.zh-CN.resx / Strings.en-US.resx）。
+- **原生 WPF ResourceDictionary**：用于定义全局样式、控件模板、动画 Storyboard、图标 PathGeometry 等设计资产。
 
-## 核心架构与文件组织
+### 2. 核心样式文件与位置
+- `ShaoLu/App.xaml`：应用级资源入口，合并 WPFDevelopers 主题与本地资源。
+- `ShaoLu/Themes/Generic.xaml`：自定义控件 `MultiCropImage` 的 ControlTemplate 与全局色值（如 `PrimaryNormalSolidColorBrush`）。
+- `ShaoLu/Themes/Styles.xaml`：图像编辑工具栏按钮、CheckBox、RadioButton 的专用样式（`ImageTool.*` 命名空间前缀），包含悬停、按下、禁用状态触发器。
+- `ShaoLu/Themes/Icons.xaml`：集中存放所有 SVG 风格的 PathGeometry 图标（关闭、设置、裁剪、缩放、旋转、画笔、颜色等），供 `ImageTool.Icon.*` 键引用。
+- `ShaoLu/Templates/*.xaml`：步骤模板（SettingsTemplates、StepDetailTemplates、StepSummaryTemplates）使用 wd 控件库渲染界面。
+- `ShaoLu/Views/*.xaml`：各 Window/UserControl 视图，统一通过 `wd:` 前缀调用 WPFDevelopers 控件。
 
-### 主题入口与全局资源
-- `App.xaml`：应用级资源字典入口，合并 WPFDevelopers 的 Theme.xaml 和 Resources，启用自动主题跟随系统
-- `MainWindow.xaml`：主窗口使用 lex:Loc 多语言绑定，体现 MVVM + 本地化模式
+### 3. 架构与约定
+- **主题分层**：App.xaml 加载 WPFDevelopers 主题 → 再加载本地 ResourceDictionary，确保本地样式可覆盖默认主题。
+- **控件模板化**：自定义控件（如 `MultiCropImage`）在 Generic.xaml 中提供完整 ControlTemplate，使用 `PART_*` 命名约定暴露可视树节点。
+- **图标与样式命名空间隔离**：图像编辑相关样式统一以 `ImageTool.` 为 Key 前缀，避免与其他模块冲突。
+- **MVVM 绑定**：XAML 中通过 `d:DataContext` 与设计时 ViewModel 关联，运行时由 ViewModels 层驱动 UI。
+- **多语言**：所有用户可见文本通过 `{lex:Loc ...}` 标记绑定到 resx 资源文件，支持 en-US、zh-CN、zh-TW 三种语言。
 
-### 自定义样式层（Themes/）
-- `Generic.xaml`：自定义控件 MultiCropImage 的 ControlTemplate 定义，包含裁剪框、旋转手柄等交互元素样式
-- `Styles.xaml`：图像编辑工具栏专用样式，定义 IconButton、IconCloseButton、ArrowIconButton、IconCheckBox、IconRadioButton 等组件模板，统一 30x30 尺寸、#1887bf 主色调、悬停高亮效果
-- `Icons.xaml`：集中管理所有 SVG PathGeometry 图标资源，命名规范为 `ImageTool.Icon.{功能}`，涵盖裁剪、缩放、旋转、绘制、颜色选择等完整工具集
-
-### 模板与视图分离
-- `Templates/` 目录存放 SettingsTemplates.xaml、StepDetailTemplates.xaml、StepSummaryTemplates.xaml，按功能域分离 DataTemplate 定义
-- `Views/` 目录按 Window 和 UserControl 分类，每个界面独立 xaml.cs 代码后置
-- `Converters/` 目录集中处理数据绑定转换，如 BoolToVisibilityConverter、ConditionModeToVisibilityConverter 等
-
-## 设计约定与规范
-
-### 样式命名约定
-- 工具栏按钮样式统一前缀 `ImageTool.`，便于在图像编辑模块内复用
-- 图标资源使用 PathGeometry 而非图片文件，保持矢量缩放质量
-- 颜色常量集中在 Generic.xaml 中定义，如 PrimaryNormalSolidColorBrush = #3498DB
-
-### 交互状态处理
-- 所有按钮样式均定义 IsMouseOver、IsPressed、IsEnabled 三种状态的视觉反馈
-- 使用 Storyboard 定义淡入动画（ImageTool.FadeIn），时长 0.3s
-- DropShadowEffect 用于箭头按钮的悬浮阴影效果
-
-### 多语言与国际化
-- 通过 WPFLocalizeExtension (lex:) 实现 UI 文本本地化
-- 资源文件按语言分置：Strings.resx（默认）、Strings.zh-CN.resx、Strings.en-US.resx、Strings.zh-TW.resx
-- 所有用户可见文本必须通过 {lex:Loc Key} 绑定，禁止硬编码字符串
-
-## 依赖与扩展点
-
-### 第三方库集成
-- WPFDevelopers：提供现代化控件库和主题系统，支持 Radius 圆角、Color 主题色自定义
-- CommunityToolkit.Mvvm：MVVM 基础框架，提供 RelayCommand、BindableBase 等
-- NLog：日志记录框架，配置文件 NLog.config
-
-### 样式扩展建议
-- 新增控件样式应遵循现有命名空间约定，放在 Themes/Styles.xaml
-- 图标资源统一添加到 Icons.xaml，保持 ImageTool.Icon.* 命名格式
-- 复杂控件的 ControlTemplate 应放在 Generic.xaml，并遵循 PART_* 命名规范
-- 颜色值应提取为静态资源，避免魔法数字散落各处
+### 4. 约束与规范
+- 所有 XAML 视图必须声明 `xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"` 以使用标准控件。
+- 自定义控件模板必须遵循 WPF 的 `PART_*` 命名约定，以便代码后台通过 `GetTemplateChild` 访问。
+- 图标必须以 `PathGeometry` 形式定义在 Icons.xaml 中，并通过 `Key="ImageTool.Icon.<Name>"` 引用，禁止在 XAML 中内联路径数据。
+- 主题色通过静态 SolidColorBrush（如 `PrimaryNormalSolidColorBrush`）集中管理，避免硬编码颜色值。
+- 动画统一使用 Storyboard 定义在 Styles.xaml 中，通过 `StaticResource` 引用，禁止在 XAML 中直接编写 `<EventTrigger>` 动画。

@@ -282,5 +282,25 @@ namespace ShaoLu.Views
         {
             Close();
         }
+
+        /// <summary>
+        /// 重置统计：弹出确认窗口，确认后将所有统计结果清空
+        /// </summary>
+        private async void ResetButton_Click(object sender, RoutedEventArgs e)
+        {
+            var (_, confirmTask) = WindowAsyncPopup.Show(
+                LanguageService.GetLocalizedString("StatsResetConfirm"),
+                LanguageService.GetLocalizedString("StatsReset"),
+                Viewmodels.PopupButtons.YesNo, MessageBoxImage.Question);
+            string result = await confirmTask;
+            if (result != Viewmodels.PopupButton.YesValue) return;
+
+            // 清空执行上下文（步骤耗时/次数/结果、总计时）
+            StepExecutionContext.Instance.Clear();
+            // 重置本统计步骤的条件计数
+            _step.ResetCounters();
+            // 立即刷新界面
+            BuildContent();
+        }
     }
 }

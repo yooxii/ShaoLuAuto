@@ -80,6 +80,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -110,7 +111,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <!-- 第二行：运算符 + 值 + 连接符 -->
+                <!-- 第二行：运算符 + 值 -->
                 <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal">
                     <ComboBox SelectedItem="{Binding Operator}" MinWidth="70" Margin="0,0,3,0">
                         <ComboBox.ItemTemplate>
@@ -132,15 +133,6 @@
                     </ComboBox>
                     <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}" MinWidth="50" Margin="0,0,3,0"
                              ToolTip="{lex:Loc Condition_Value_Tooltip}"/>
-                    <ComboBox SelectedItem="{Binding Connector}" MinWidth="55" Margin="0,0,3,0">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                        <models:LogicConnector>And</models:LogicConnector>
-                        <models:LogicConnector>Or</models:LogicConnector>
-                    </ComboBox>
                 </StackPanel>
                 <!-- 第三行：识别文本提取设置（仅识别文本变量显示） -->
                 <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0"
@@ -166,7 +158,26 @@
                         <Label Content="{lex:Loc TextExtract_Length}" Padding="0,0,3,0" VerticalAlignment="Center"/>
                         <wd:NumericBox Value="{Binding ExtractLength, Mode=TwoWay}" Width="60" Minimum="0" Maximum="99999" Precision="0" Interval="1"
                                        ToolTip="{lex:Loc TextExtract_Length_Tooltip}"/>
+                        <ComboBox ItemsSource="{Binding AllExtractUnits}" SelectedItem="{Binding ExtractUnit}" MinWidth="60" Margin="3,0,0,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
+                </StackPanel>
+                <!-- 第四行：条件合并符（保持在最后） -->
+                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0">
+                    <ComboBox SelectedItem="{Binding Connector}" MinWidth="55" Margin="0,0,3,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <models:LogicConnector>And</models:LogicConnector>
+                        <models:LogicConnector>Or</models:LogicConnector>
+                    </ComboBox>
                 </StackPanel>
             </Grid>
         </Border>

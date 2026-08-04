@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: master
 nodes_managed: true
-exported_at: "2026-07-31T04:13:42Z"
+exported_at: "2026-08-04T16:17:15Z"
 modules:
     "":
         dir_name: ShaoLu 自动化烧录解决方案
@@ -21,20 +21,50 @@ modules:
         depends_on: []
         related_to: []
     nunit_tests:
-        dir_name: NUnit 单元测试项目（ShaoLu 自动化框架）
-        title: NUnit 单元测试项目（ShaoLu 自动化框架）
+        dir_name: NUnit 单元测试项目
+        title: NUnit 单元测试项目
         scope:
             - NUnitTest/
         source_files: []
         children: []
         depends_on: []
-        related_to: []
+        related_to:
+            - path: shaolu_app/automation_engine
+            - path: shaolu_app/settings_user_management
     shaolu_app:
-        dir_name: AutoShaoLu 自动化烧录测试工具（WPF）
-        title: AutoShaoLu 自动化烧录测试工具（WPF）
+        dir_name: ShaoLu WPF 自动化烧录应用
+        title: ShaoLu WPF 自动化烧录应用
         scope:
             - ShaoLu/
         source_files: []
-        children: []
+        children:
+            - shaolu_app/automation_engine
+            - shaolu_app/settings_user_management
         depends_on: []
         related_to: []
+    shaolu_app/automation_engine:
+        dir_name: 自动化步骤模型与执行结果
+        title: 自动化步骤模型与执行结果
+        scope:
+            - ShaoLu/Models/AutomationStepModel.cs
+            - ShaoLu/Models/StepCondition.cs
+            - ShaoLu/Models/StepExecutionLog.cs
+            - ShaoLu/Models/StepExecutionResult.cs
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: nunit_tests
+    shaolu_app/settings_user_management:
+        dir_name: 用户管理与应用设置持久化
+        title: 用户管理与应用设置持久化
+        scope:
+            - ShaoLu/Services/SettingsService.cs
+            - ShaoLu/Services/UserService.cs
+            - ShaoLu/Models/Settings.cs
+            - ShaoLu/Models/User.cs
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: nunit_tests

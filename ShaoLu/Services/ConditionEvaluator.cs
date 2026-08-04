@@ -1,6 +1,7 @@
 using ShaoLu.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace ShaoLu.Services
@@ -186,15 +187,17 @@ namespace ShaoLu.Services
                     case TextExtractMode.Lines:
                         return ExtractLines(text, cond.ExtractLines);
                     case TextExtractMode.FromSubstring:
-                        return ExtractFromSubstring(text, cond.ExtractMarker, cond.ExtractLength);
+                        return ExtractFromSubstring(text, cond.ExtractMarker, cond.ExtractLength, cond.ExtractUnit);
                     case TextExtractMode.FromStart:
-                        return cond.ExtractLength > 0 && text.Length > cond.ExtractLength
-                            ? text.Substring(0, cond.ExtractLength)
-                            : text;
+                        if (cond.ExtractLength <= 0) return text;
+                        return cond.ExtractUnit == ExtractUnit.Line
+                            ? TakeLinesFromStart(text, cond.ExtractLength)
+                            : (text.Length > cond.ExtractLength ? text.Substring(0, cond.ExtractLength) : text);
                     case TextExtractMode.FromEnd:
-                        return cond.ExtractLength > 0 && text.Length > cond.ExtractLength
-                            ? text.Substring(text.Length - cond.ExtractLength)
-                            : text;
+                        if (cond.ExtractLength <= 0) return text;
+                        return cond.ExtractUnit == ExtractUnit.Line
+                            ? TakeLinesFromEnd(text, cond.ExtractLength)
+                            : (text.Length > cond.ExtractLength ? text.Substring(text.Length - cond.ExtractLength) : text);
                     default:
                         return text;
                 }
@@ -213,7 +216,7 @@ namespace ShaoLu.Services
         {
             if (string.IsNullOrWhiteSpace(lineSpec)) return text;
 
-            string[] lines = text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            string[] lines = SplitLines(text);
             var selected = new List<string>();
             foreach (var part in lineSpec.Split(new[] { ',', '，', ' ', ';' }, StringSplitOptions.RemoveEmptyEntries))
             {
@@ -239,13 +242,33 @@ namespace ShaoLu.Services
 
         /// <summary>
         /// 从子字符串首次出现位置之后读取指定长度（length&lt;=0 表示直到末尾）
+        /// 按行读取时：从包含子字符串的行开始读取 length 行
         /// </summary>
-        private static string ExtractFromSubstring(string text, string marker, int length)
+        private static string ExtractFromSubstring(string text, string marker, int length, ExtractUnit unit)
         {
             if (string.IsNullOrEmpty(marker))
             {
                 // 未指定子字符串时退化为从开头读取
-                return length > 0 && text.Length > length ? text.Substring(0, length) : text;
+                if (length <= 0) return text;
+                return unit == ExtractUnit.Line ? TakeLinesFromStart(text, length)
+                    : (text.Length > length ? text.Substring(0, length) : text);
+            }
+
+            if (unit == ExtractUnit.Line)
+            {
+                // 按行：从包含子字符串的行开始读取
+                string[] lines = SplitLines(text);
+                int markerLine = -1;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (lines[i].IndexOf(marker, StringComparison.Ordinal) >= 0)
+                    {
+                        markerLine = i;
+                        break;
+                    }
+                }
+                if (markerLine < 0) return string.Empty;
+                return string.Join("\n", lines.Skip(markerLine).Take(length > 0 ? length : int.MaxValue));
             }
 
             int index = text.IndexOf(marker, StringComparison.Ordinal);
@@ -253,6 +276,27 @@ namespace ShaoLu.Services
 
             string rest = text.Substring(index + marker.Length);
             return length > 0 && rest.Length > length ? rest.Substring(0, length) : rest;
+        }
+
+        /// <summary>拆分文本为行（兼容多种换行符）</summary>
+        private static string[] SplitLines(string text)
+        {
+            return text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+        }
+
+        /// <summary>从开头读取指定行数（length&lt;=0 返回全部）</summary>
+        private static string TakeLinesFromStart(string text, int count)
+        {
+            if (count <= 0) return text;
+            return string.Join("\n", SplitLines(text).Take(count));
+        }
+
+        /// <summary>从末尾读取指定行数（length&lt;=0 返回全部）</summary>
+        private static string TakeLinesFromEnd(string text, int count)
+        {
+            if (count <= 0) return text;
+            var lines = SplitLines(text);
+            return string.Join("\n", lines.Skip(Math.Max(0, lines.Length - count)));
         }
 
         private static bool IsNumeric(object value, out double result)

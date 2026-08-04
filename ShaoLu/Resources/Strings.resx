@@ -775,10 +775,10 @@
     <value>Comparison value (e.g.: true, 0.9, text to match, etc.)</value>
   </data>
   <data name="Condition_Add" xml:space="preserve">
-    <value>+ Add Condition</value>
+    <value>+ Add Expression</value>
   </data>
   <data name="Condition_Remove" xml:space="preserve">
-    <value>- Remove Condition</value>
+    <value>- Remove Expression</value>
   </data>
   <data name="CropImage_EnableRatioScale" xml:space="preserve">
     <value>Enable Ratio Scale</value>
@@ -964,7 +964,22 @@
     <value>Start reading after the first occurrence of this substring</value>
   </data>
   <data name="TextExtract_Length_Tooltip" xml:space="preserve">
-    <value>Number of characters to read (0 = until end)</value>
+    <value>Amount to read, unit on the right (0 = until end)</value>
+  </data>
+  <data name="TextExtract_Unit_Char" xml:space="preserve">
+    <value>Characters</value>
+  </data>
+  <data name="TextExtract_Unit_Line" xml:space="preserve">
+    <value>Lines</value>
+  </data>
+  <data name="StatsReset" xml:space="preserve">
+    <value>Reset Statistics</value>
+  </data>
+  <data name="StatsResetConfirm" xml:space="preserve">
+    <value>Are you sure you want to clear all statistics?</value>
+  </data>
+  <data name="SaveSuccess" xml:space="preserve">
+    <value>Save succeeded</value>
   </data>
   <data name="StatsScope" xml:space="preserve">
     <value>Scope</value>
@@ -1006,7 +1021,7 @@
     <value>Name</value>
   </data>
   <data name="StatsAddConditionCount" xml:space="preserve">
-    <value>+ Add Condition Count</value>
+    <value>+ Add Expression Count</value>
   </data>
   <data name="StatsCustomConditions" xml:space="preserve">
     <value>Custom Conditions</value>

@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: shaolu_app/settings_user_management
+title: 用户管理与应用设置持久化
+scope:
+    - ShaoLu/Services/SettingsService.cs
+    - ShaoLu/Services/UserService.cs
+    - ShaoLu/Models/Settings.cs
+    - ShaoLu/Models/User.cs
+source_files: []
+depends_on: []
+related_to:
+    - path: nunit_tests

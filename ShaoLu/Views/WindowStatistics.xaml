@@ -46,7 +46,8 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="{lex:Loc BtnStop_Content}" Command="{Binding StopCommand}" MinWidth="50" Padding="8,2"/>
+                <Button Content="{lex:Loc BtnStop_Content}" Command="{Binding StopCommand}" MinWidth="50" Margin="0,0,5,0" Padding="8,2"/>
+                <Button Content="{lex:Loc StatsReset}" MinWidth="50" Padding="8,2" Click="ResetButton_Click"/>
             </StackPanel>
             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <StackPanel x:Name="ContentPanel"/>

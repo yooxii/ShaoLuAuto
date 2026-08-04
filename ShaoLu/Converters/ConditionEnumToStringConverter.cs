@@ -34,6 +34,8 @@ namespace ShaoLu.Converters
                 return ConvertGetInputMode(inputMode);
             if (value is TextExtractMode extractMode)
                 return ConvertTextExtractMode(extractMode);
+            if (value is ExtractUnit unit)
+                return ConvertExtractUnit(unit);
             return value?.ToString() ?? string.Empty;
         }
 
@@ -139,6 +141,13 @@ namespace ShaoLu.Converters
             TextExtractMode.FromStart => Services.LanguageService.GetLocalizedString("TextExtract_FromStart"),
             TextExtractMode.FromEnd => Services.LanguageService.GetLocalizedString("TextExtract_FromEnd"),
             _ => m.ToString(),
+        };
+
+        public static string ConvertExtractUnit(ExtractUnit u) => u switch
+        {
+            ExtractUnit.Character => Services.LanguageService.GetLocalizedString("TextExtract_Unit_Char"),
+            ExtractUnit.Line => Services.LanguageService.GetLocalizedString("TextExtract_Unit_Line"),
+            _ => u.ToString(),
         };
 
         /// <summary>

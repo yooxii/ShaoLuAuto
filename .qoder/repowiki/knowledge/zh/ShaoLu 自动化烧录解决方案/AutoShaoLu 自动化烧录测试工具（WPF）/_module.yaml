@@ -1,8 +1,0 @@
-schema_version: 1
-module_path: shaolu_app
-title: AutoShaoLu 自动化烧录测试工具（WPF）
-scope:
-    - ShaoLu/
-source_files: []
-depends_on: []
-related_to: []

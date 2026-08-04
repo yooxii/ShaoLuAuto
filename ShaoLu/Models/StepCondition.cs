@@ -98,6 +98,17 @@ namespace ShaoLu.Models
     }
 
     /// <summary>
+    /// 提取长度的读取单位
+    /// </summary>
+    public enum ExtractUnit
+    {
+        /// <summary>按字符数读取</summary>
+        Character,
+        /// <summary>按行数读取</summary>
+        Line,
+    }
+
+    /// <summary>
     /// 步骤条件规则行
     /// </summary>
     public class StepCondition : ObservableObject
@@ -111,6 +122,7 @@ namespace ShaoLu.Models
         private string _extractLines = string.Empty;
         private string _extractMarker = string.Empty;
         private int _extractLength = 0;
+        private ExtractUnit _extractUnit = ExtractUnit.Character;
 
         /// <summary>
         /// 条件变量
@@ -330,9 +342,22 @@ namespace ShaoLu.Models
         public string ExtractMarker { get => _extractMarker; set => SetProperty(ref _extractMarker, value); }
 
         /// <summary>
-        /// 读取长度（0 = 直到末尾）
+        /// 读取长度（0 = 直到末尾，单位由 ExtractUnit 决定）
         /// </summary>
         public int ExtractLength { get => _extractLength; set => SetProperty(ref _extractLength, value); }
+
+        /// <summary>
+        /// 读取单位（按字符数 / 按行数）
+        /// </summary>
+        public ExtractUnit ExtractUnit { get => _extractUnit; set => SetProperty(ref _extractUnit, value); }
+
+        /// <summary>所有读取单位选项（供 ComboBox 绑定）</summary>
+        [JsonIgnore]
+        public List<ExtractUnit> AllExtractUnits { get; } = new()
+        {
+            ExtractUnit.Character,
+            ExtractUnit.Line,
+        };
 
         /// <summary>
         /// 所有提取模式选项（供 ComboBox 绑定）
@@ -372,6 +397,10 @@ namespace ShaoLu.Models
         public bool ShowExtractLength => IsTextVariable &&
             (TextExtractMode == TextExtractMode.FromSubstring || TextExtractMode == TextExtractMode.FromStart || TextExtractMode == TextExtractMode.FromEnd);
 
+        /// <summary>是否显示读取单位选择（与长度输入同步显示）</summary>
+        [JsonIgnore]
+        public bool ShowExtractUnit => ShowExtractLength;
+
         /// <summary>
         /// 提取设置变更时刷新可见性
         /// </summary>
@@ -380,6 +409,7 @@ namespace ShaoLu.Models
             OnPropertyChanged(nameof(ShowExtractLines));
             OnPropertyChanged(nameof(ShowExtractMarker));
             OnPropertyChanged(nameof(ShowExtractLength));
+            OnPropertyChanged(nameof(ShowExtractUnit));
         }
 
         #endregion
@@ -398,6 +428,7 @@ namespace ShaoLu.Models
                 ExtractLines = ExtractLines,
                 ExtractMarker = ExtractMarker,
                 ExtractLength = ExtractLength,
+                ExtractUnit = ExtractUnit,
             };
         }
     }

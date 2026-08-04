@@ -48,6 +48,8 @@ namespace ShaoLu.Models
         Step_ClickY,
         Step_OCRText,
         Step_PopupResult,
+        /// <summary>引用步骤是否在本次评估前刚刚被执行（用于统计执行次数）</summary>
+        Step_Triggered,
     }
 
     /// <summary>
@@ -64,7 +66,9 @@ namespace ShaoLu.Models
         Contains,
         NotContains,
         IsEmpty,
-        IsNotEmpty
+        IsNotEmpty,
+        /// <summary>正则表达式匹配（右值为正则模式）</summary>
+        RegexMatch,
     }
 
     /// <summary>
@@ -168,6 +172,7 @@ namespace ShaoLu.Models
                             ConditionVariable.Step_ClickY,
                             ConditionVariable.Step_OCRText,
                             ConditionVariable.Step_PopupResult,
+                            ConditionVariable.Step_Triggered,
                         });
                         break;
                     case StepType.Popup:
@@ -179,6 +184,7 @@ namespace ShaoLu.Models
                             ConditionVariable.Step_IsTrue,
                             ConditionVariable.Step_PopupResult,
                             ConditionVariable.Step_ExecutionTimeMs,
+                            ConditionVariable.Step_Triggered,
                         });
                         break;
                     case StepType.GetInput:
@@ -190,6 +196,7 @@ namespace ShaoLu.Models
                             ConditionVariable.Step_IsTrue,
                             ConditionVariable.Step_OCRText,
                             ConditionVariable.Step_ExecutionTimeMs,
+                            ConditionVariable.Step_Triggered,
                         });
                         break;
                     default: // 文本步骤及其他
@@ -203,6 +210,7 @@ namespace ShaoLu.Models
                             ConditionVariable.Step_ExecutionTimeMs,
                             ConditionVariable.Step_OCRText,
                             ConditionVariable.Step_PopupResult,
+                            ConditionVariable.Step_Triggered,
                         });
                         break;
                 }

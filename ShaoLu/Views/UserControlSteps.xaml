@@ -61,6 +61,18 @@
                 <ToolBarTray Orientation="Horizontal">
                     <ToolBar>
                         <Button Content="{lex:Loc BtnRun_Content}" Margin="3" Command="{Binding RunCommand}"/>
+                        <Button Margin="3" Command="{Binding PauseCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Content" Value="{lex:Loc BtnPause_Content}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                                            <Setter Property="Content" Value="{lex:Loc BtnResume_Content}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                         <Button Content="{lex:Loc BtnStop_Content}" Margin="3" Command="{Binding StopCommand}"/>
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Edit}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
@@ -107,8 +119,9 @@
                               utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}"
                               IsReadOnly="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}, Converter={StaticResource BoolToInverseBoolConverter}}">
                         <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource WD.DefaultDataGridRow}">
                                 <Style.Setters>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
                                     <Setter Property="BorderThickness" Value="1"/>
                                 </Style.Setters>
                                 <Style.Triggers>
@@ -156,9 +169,22 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
+                    <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button x:Name="BtnRun" Content="{lex:Loc}" Margin="0,3,3,3" Command="{Binding RunCommand}"/>
-                <Button x:Name="BtnStop" Grid.Column="1" Content="{lex:Loc}" Margin="3,3,0,3" Command="{Binding StopCommand}"/>
+                <Button Grid.Column="1" Margin="0,3,3,3" Command="{Binding PauseCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource WD.DefaultButton}">
+                            <Setter Property="Content" Value="{lex:Loc BtnPause_Content}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                                    <Setter Property="Content" Value="{lex:Loc BtnResume_Content}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button x:Name="BtnStop" Grid.Column="2" Content="{lex:Loc}" Margin="3,3,0,3" Command="{Binding StopCommand}"/>
             </Grid>
         </Grid>
     </Grid>

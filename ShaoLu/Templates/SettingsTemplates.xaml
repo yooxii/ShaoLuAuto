@@ -73,8 +73,6 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="8"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="8"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc ShowErrorPopup}" VerticalAlignment="Center"/>
@@ -85,13 +83,6 @@
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="{lex:Loc ConfirmBeforeRun}" VerticalAlignment="Center"/>
                     <CheckBox Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding ConfirmBeforeRun}"/>
-
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="{lex:Loc DefaultSelfReferenceLimit}" VerticalAlignment="Center"/>
-                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
-                        <wd:NumericBox Value="{Binding DefaultSelfReferenceLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                       Minimum="-1" Maximum="9999" Width="80" HorizontalAlignment="Left"/>
-                        <TextBlock Text="{lex:Loc SelfReferenceLimitHint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"/>
-                    </StackPanel>
                 </Grid>
             </Expander>
 

@@ -1,6 +1,7 @@
 using ShaoLu.Models;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace ShaoLu.Services
 {
@@ -93,6 +94,21 @@ namespace ShaoLu.Services
             if (left == null)
             {
                 return op == ConditionOperator.NotEqual || op == ConditionOperator.NotContains;
+            }
+
+            // 正则表达式匹配（右值为正则模式）
+            if (op == ConditionOperator.RegexMatch)
+            {
+                string input = left.ToString() ?? string.Empty;
+                try
+                {
+                    return Regex.IsMatch(input, right ?? string.Empty);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Invalid regex pattern: {0}", right);
+                    return false;
+                }
             }
 
             // 布尔类型比较

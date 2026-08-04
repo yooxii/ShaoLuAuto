@@ -55,6 +55,17 @@ namespace ShaoLu.Models
         StepReached,
     }
 
+    /// <summary>
+    /// 弹出窗口样式
+    /// </summary>
+    public enum PopupWindowStyle
+    {
+        /// <summary>正常窗口</summary>
+        Normal,
+        /// <summary>紧凑窗口（未设置的部分不占空间，边距更小）</summary>
+        Compact,
+    }
+
     public class AutoPoint
     {
     }

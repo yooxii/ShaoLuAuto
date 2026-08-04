@@ -298,7 +298,7 @@
     <value>內容</value>
   </data>
   <data name="PopupType" xml:space="preserve">
-    <value>類型</value>
+    <value>圖示</value>
   </data>
   <data name="Title" xml:space="preserve">
     <value>標題</value>
@@ -935,5 +935,62 @@
   </data>
   <data name="Close" xml:space="preserve">
     <value>關閉</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>另存新檔...</value>
+  </data>
+  <data name="SaveFailed" xml:space="preserve">
+    <value>儲存失敗</value>
+  </data>
+  <data name="FileLockedByOther" xml:space="preserve">
+    <value>該檔案已被其他處理程序鎖定，無法開啟</value>
+  </data>
+  <data name="BtnPause_Content" xml:space="preserve">
+    <value>暫停</value>
+  </data>
+  <data name="BtnResume_Content" xml:space="preserve">
+    <value>繼續</value>
+  </data>
+  <data name="PopupWindowPos" xml:space="preserve">
+    <value>視窗位置</value>
+  </data>
+  <data name="PopupOpacity" xml:space="preserve">
+    <value>背景不透明度</value>
+  </data>
+  <data name="StatsItemName" xml:space="preserve">
+    <value>名稱</value>
+  </data>
+  <data name="StatsAddConditionCount" xml:space="preserve">
+    <value>+ 新增條件計數</value>
+  </data>
+  <data name="StatsCustomConditions" xml:space="preserve">
+    <value>自訂條件</value>
+  </data>
+  <data name="PopupBgColor" xml:space="preserve">
+    <value>背景顏色</value>
+  </data>
+  <data name="OpenFileFailed" xml:space="preserve">
+    <value>開啟檔案失敗</value>
+  </data>
+  <data name="PopupWindowStyle" xml:space="preserve">
+    <value>視窗樣式</value>
+  </data>
+  <data name="PopupWindowStyle_Normal" xml:space="preserve">
+    <value>正常視窗</value>
+  </data>
+  <data name="PopupWindowStyle_Compact" xml:space="preserve">
+    <value>緊湊視窗</value>
+  </data>
+  <data name="SelfReferenceLimit" xml:space="preserve">
+    <value>自引用上限</value>
+  </data>
+  <data name="ConditionVariable_Step_Triggered" xml:space="preserve">
+    <value>引用步驟 → 本次被執行</value>
+  </data>
+  <data name="ConditionVariable_Step_Triggered_Tooltip" xml:space="preserve">
+    <value>僅當引用步驟剛被執行時為 true（可用於統計執行次數）</value>
+  </data>
+  <data name="ConditionOperator_RegexMatch" xml:space="preserve">
+    <value>正規表達式匹配</value>
   </data>
 </root>

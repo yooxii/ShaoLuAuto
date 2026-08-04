@@ -328,6 +328,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
             };
         }
         #endregion
@@ -456,6 +457,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
             };
         }
         #endregion
@@ -575,6 +577,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 IsNeed = IsNeed,
                 Index = Index,
                 EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
             };
         }
         #endregion
@@ -692,6 +695,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _popupType = "Information";
         public string PopupType { get => _popupType; set => SetProperty(ref _popupType, value); }
 
+        private PopupWindowStyle _popupWindowStyle = PopupWindowStyle.Normal;
+        /// <summary>窗口样式（正常/紧凑）</summary>
+        public PopupWindowStyle PopupWindowStyle { get => _popupWindowStyle; set => SetProperty(ref _popupWindowStyle, value); }
+
         private PopupButtons _popupButtons = PopupButtons.OK;
         public PopupButtons PopupButtons { get => _popupButtons; set => SetProperty(ref _popupButtons, value); }
 
@@ -709,6 +716,73 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>StepReached 模式下，到达此步骤时关闭弹窗</summary>
         public Guid? CloseOnStepUid { get => _closeOnStepUid; set => SetProperty(ref _closeOnStepUid, value); }
 
+        #endregion
+
+        #region 窗口外观
+
+        private double _windowX = -1;
+        /// <summary>窗口 X 位置（-1 表示居中显示）</summary>
+        public double WindowX { get => _windowX; set => SetProperty(ref _windowX, value); }
+
+        private double _windowY = -1;
+        /// <summary>窗口 Y 位置（-1 表示居中显示）</summary>
+        public double WindowY { get => _windowY; set => SetProperty(ref _windowY, value); }
+
+        private double _windowOpacity = 100;
+        /// <summary>窗口背景不透明度（百分比 0~100）</summary>
+        public double WindowOpacity
+        {
+            get => _windowOpacity;
+            set => SetProperty(ref _windowOpacity, Math.Min(100.0, Math.Max(1.0, value)));
+        }
+
+        private string _backgroundColor = "#FFFFFF";
+        /// <summary>窗口背景颜色（十六进制）</summary>
+        public string BackgroundColor { get => _backgroundColor; set => SetProperty(ref _backgroundColor, value); }
+
+        [JsonIgnore]
+        private ICommand selectPositionCommand;
+        [JsonIgnore]
+        public ICommand SelectPositionCommand => selectPositionCommand ??= new RelayCommand(SelectPosition);
+
+        [JsonIgnore]
+        private ICommand selectBackgroundColorCommand;
+        [JsonIgnore]
+        public ICommand SelectBackgroundColorCommand => selectBackgroundColorCommand ??= new RelayCommand(SelectBackgroundColor);
+
+        private void SelectPosition()
+        {
+            var point = Views.WindowSelectPoint.ShowAndSelect();
+            if (point.HasValue)
+            {
+                WindowX = point.Value.X;
+                WindowY = point.Value.Y;
+            }
+        }
+
+        private void SelectBackgroundColor()
+        {
+            try
+            {
+                var c = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(BackgroundColor ?? "#FFFFFF");
+                ColorDialog dialog = new() { Color = System.Drawing.Color.FromArgb(c.R, c.G, c.B) };
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    BackgroundColor = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+                }
+            }
+            catch
+            {
+                ColorDialog dialog = new() { Color = System.Drawing.Color.White };
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    BackgroundColor = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+                }
+            }
+        }
+
+        #endregion
+
         [JsonIgnore]
         public List<PopupCloseMode> CloseModes { get; } = [PopupCloseMode.ButtonClick, PopupCloseMode.Timeout, PopupCloseMode.StepReached];
 
@@ -716,12 +790,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         internal WindowAsyncPopup ActivePopupWindow { get; set; }
 
-        #endregion
-
         #region 命令
 
         [JsonIgnore]
-        public List<string> PopupTypes { get; set; } = ["Information", "Warning", "Error", "Question"];
+        public List<string> PopupTypes { get; set; } = ["None", "Information", "Warning", "Error", "Question"];
+
+        [JsonIgnore]
+        public List<PopupWindowStyle> PopupWindowStyles { get; } = [PopupWindowStyle.Normal, PopupWindowStyle.Compact];
 
         [JsonIgnore]
         private RelayCommand fontSelectCommand;
@@ -781,14 +856,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 IsTrue = IsTrue,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
+                EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
                 Title = Title,
                 PopupText = PopupText,
                 PopupFont = PopupFont?.Clone(),
                 PopupType = PopupType,
+                PopupWindowStyle = PopupWindowStyle,
                 PopupButtons = new PopupButtons(PopupButtons),
                 CloseMode = CloseMode,
                 AutoCloseSeconds = AutoCloseSeconds,
                 CloseOnStepUid = CloseOnStepUid,
+                WindowX = WindowX,
+                WindowY = WindowY,
+                WindowOpacity = WindowOpacity,
+                BackgroundColor = BackgroundColor,
                 WaitTime = WaitTime,
                 IsNeed = IsNeed,
             };
@@ -798,6 +880,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             var iconType = PopupType switch
             {
+                "None" => MessageBoxImage.None,
                 "Information" => MessageBoxImage.Information,
                 "Warning" => MessageBoxImage.Warning,
                 "Error" => MessageBoxImage.Error,
@@ -805,13 +888,39 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _ => MessageBoxImage.Information
             };
 
-            // 1. 启动异步弹窗任务
-            var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, PopupButtons, iconType);
+            // 1. 启动异步弹窗任务（应用自定义位置、背景颜色、背景不透明度与窗口样式）
+            System.Windows.Point? position = (WindowX >= 0 && WindowY >= 0) ? new System.Windows.Point(WindowX, WindowY) : null;
+            var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, PopupButtons, iconType, position, WindowOpacity / 100.0, BackgroundColor, PopupWindowStyle);
 
             // 保存活跃窗口引用（供 StepReached 模式使用）
             if (popupWindow is WindowAsyncPopup asyncPopup)
             {
                 ActivePopupWindow = asyncPopup;
+            }
+
+            // StepReached 模式：不等待窗口关闭，直接继续执行；到达目标步骤时由执行引擎关闭弹窗
+            if (CloseMode == PopupCloseMode.StepReached)
+            {
+                // 停止运行时关闭弹窗，防止窗口残留
+                cancellationToken.Register(() =>
+                {
+                    if (popupWindow != null && !popupWindow.Dispatcher.HasShutdownStarted)
+                    {
+                        popupWindow.Dispatcher.InvokeAsync(() =>
+                        {
+                            if (popupWindow.IsVisible)
+                                popupWindow.Close();
+                        });
+                    }
+                });
+
+                IsTrue = true;
+                LastResult = new StepExecutionResult
+                {
+                    IsTrue = true,
+                    ExecutedAt = DateTime.Now,
+                };
+                return IsTrue;
             }
 
             // 2. 根据关闭模式处理
@@ -987,6 +1096,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
+                EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
             };
         }
 

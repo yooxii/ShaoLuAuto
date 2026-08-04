@@ -8,41 +8,56 @@
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
         SizeToContent="WidthAndHeight"
-        MinHeight="180" MinWidth="300" 
+        MinHeight="100" MinWidth="100" 
         MaxWidth="500" MaxHeight="500"
-        Topmost="True">
-    <Grid Margin="20">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Topmost="True"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+    <Border BorderBrush="#CCCCCC" BorderThickness="1">
+        <Grid x:Name="ContentGrid" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- 图标显示区域 -->
-        <Image x:Name="IconImage" 
-               Grid.Row="0" Grid.Column="0" 
-               Width="48" Height="48" 
-               Margin="0,0,15,10" 
-               VerticalAlignment="Top"/>
+            <!-- 标题栏（可拖拽移动窗口） -->
+            <TextBlock x:Name="TitleText" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                       FontSize="14" FontWeight="Bold" Margin="0,0,0,10"
+                       Visibility="Collapsed"/>
+            <Button x:Name="CloseButton" Grid.Row="0" Grid.Column="1" Content="✕"
+                    Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Background="Transparent" BorderThickness="0" Cursor="Hand"
+                    Click="CloseButton_Click" Visibility="Collapsed"/>
 
-        <!-- 消息内容（支持富文本，可滚动） -->
-        <ScrollViewer Grid.Row="0" Grid.Column="1" 
-                      VerticalScrollBarVisibility="Auto" 
-                      MaxHeight="300"
-                      VerticalAlignment="Center">
-            <FlowDocumentScrollViewer x:Name="MessageViewer" 
-                                      Margin="0,0,10,0"
-                                      IsToolBarVisible="False"/>
-        </ScrollViewer>
+            <!-- 图标显示区域 -->
+            <Image x:Name="IconImage" 
+                   Grid.Row="1" Grid.Column="0" 
+                   Width="48" Height="48" 
+                   Margin="0,0,15,10" 
+                   VerticalAlignment="Top"/>
 
-        <!-- 按钮区域 -->
-        <StackPanel x:Name="ButtonPanel" 
-                    Grid.Row="1" Grid.ColumnSpan="2" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
-                    Margin="0,15,0,0"/>
-    </Grid>
+            <!-- 消息内容（支持富文本，可滚动） -->
+            <ScrollViewer Grid.Row="1" Grid.Column="1" 
+                          VerticalScrollBarVisibility="Auto" 
+                          MaxHeight="300"
+                          VerticalAlignment="Center">
+                <FlowDocumentScrollViewer x:Name="MessageViewer" 
+                                          Margin="0,0,10,0"
+                                          IsToolBarVisible="False"/>
+            </ScrollViewer>
+
+            <!-- 按钮区域 -->
+            <StackPanel x:Name="ButtonPanel" 
+                        Grid.Row="2" Grid.ColumnSpan="2" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Right" 
+                        Margin="0,15,0,0"/>
+        </Grid>
+    </Border>
 </Window>

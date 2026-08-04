@@ -378,6 +378,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
+                EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
                 ImagePath = ImagePath,
                 CroppedImg = clonedImg,
                 CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
@@ -521,6 +523,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 EnableOCR = EnableOCR,
                 OCRRect = new(OCRRect.X, OCRRect.Y, OCRRect.Width, OCRRect.Height),
                 EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };

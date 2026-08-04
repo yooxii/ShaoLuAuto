@@ -1,6 +1,7 @@
 ﻿using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
+using ShaoLu.Viewmodels;
 using ShaoLu.Viewmodels.AutomationStep;
 using ShaoLu.Views;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -188,6 +189,9 @@ namespace ShaoLu
         {
             if (!EnsureLoggedIn()) return;
             stepsViewModel.AutomationStepBases.Clear();
+            // 清空文件路径
+            mainViewModel.StepFilePath = null;
+            mainViewModel.StepImageWorkDir = null;
         }
 
         private void Open_Click(object sender, RoutedEventArgs e)
@@ -197,35 +201,76 @@ namespace ShaoLu
                 $"AutoStep Files|*.autostep|{LanguageService.GetLocalizedString("StepFile")}|*.json");
             if (filePath != null)
             {
-                var ext = Path.GetExtension(filePath).ToLower();
-                ObservableCollection<AutomationStepBase> loadedSteps;
-
-                if (ext == ".autostep")
+                try
                 {
-                    loadedSteps = StepsFile.LoadFromAutoStepPackage(filePath);
-                }
-                else
-                {
-                    // 兼容旧版 JSON 格式
-                    loadedSteps = StepsFile.LoadStepsFromJson(filePath);
-                    mainViewModel.StepFilePath = filePath;
-                    mainViewModel.StepImageWorkDir = Path.GetDirectoryName(filePath);
-                }
+                    var ext = Path.GetExtension(filePath).ToLower();
+                    ObservableCollection<AutomationStepBase> loadedSteps;
 
-                stepsViewModel.AutomationStepBases.Clear();
-                stepsViewModel.InsertSteps(loadedSteps);
+                    if (ext == ".autostep")
+                    {
+                        loadedSteps = StepsFile.LoadFromAutoStepPackage(filePath);
+                        mainViewModel.StepFilePath = filePath;
+                        mainViewModel.StepImageWorkDir = StepsFile.GetWorkDirPath(filePath);
+                    }
+                    else
+                    {
+                        // 兼容旧版 JSON 格式
+                        loadedSteps = StepsFile.LoadStepsFromJson(filePath);
+                        mainViewModel.StepFilePath = filePath;
+                        mainViewModel.StepImageWorkDir = Path.GetDirectoryName(filePath);
+                    }
+
+                    stepsViewModel.AutomationStepBases.Clear();
+                    stepsViewModel.InsertSteps(loadedSteps);
+                }
+                catch (Exception ex)
+                {
+                    NLog.LogManager.GetCurrentClassLogger().Error(ex, "Open file failed: {0}", filePath);
+                    WindowAsyncPopup.Show(
+                        $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {ex.Message}",
+                        LanguageService.GetLocalizedString("OpenFile"),
+                        PopupButtons.OK, MessageBoxImage.Error);
+                }
             }
         }
 
+        /// <summary>
+        /// 保存：已有文件路径时直接覆盖原文件，否则弹出另存为对话框
+        /// </summary>
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;
 
+            string filePath = mainViewModel.StepFilePath;
+            if (string.IsNullOrEmpty(filePath))
+            {
+                SaveAs_Click(sender, e);
+                return;
+            }
+
+            DoSave(filePath);
+        }
+
+        /// <summary>
+        /// 另存为：始终弹出对话框选择新路径
+        /// </summary>
+        private void SaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            if (!EnsureLoggedIn()) return;
+
             var filePath = PathServices.SavePathDialog(
-                LanguageService.GetLocalizedString("SaveFile"),
+                LanguageService.GetLocalizedString("SaveAs"),
                 "AutoStep Files|*.autostep",
                 saveName: "NewSteps.autostep");
             if (filePath != null)
+            {
+                DoSave(filePath);
+            }
+        }
+
+        private void DoSave(string filePath)
+        {
+            try
             {
                 foreach (var step in stepsViewModel.AutomationStepBases)
                 {
@@ -237,6 +282,13 @@ namespace ShaoLu
                 // 更新当前文件路径和工作目录
                 mainViewModel.StepFilePath = filePath;
                 mainViewModel.StepImageWorkDir = StepsFile.GetWorkDirPath(filePath);
+            }
+            catch (Exception ex)
+            {
+                WindowAsyncPopup.Show(
+                    $"{LanguageService.GetLocalizedString("SaveFailed")}: {ex.Message}",
+                    LanguageService.GetLocalizedString("Save"),
+                    PopupButtons.OK, MessageBoxImage.Error);
             }
         }
 

@@ -103,6 +103,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };

@@ -298,7 +298,7 @@
     <value>内容</value>
   </data>
   <data name="PopupType" xml:space="preserve">
-    <value>类型</value>
+    <value>图标</value>
   </data>
   <data name="Title" xml:space="preserve">
     <value>标题</value>
@@ -941,5 +941,62 @@
   </data>
   <data name="Close" xml:space="preserve">
     <value>关闭</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>另存为...</value>
+  </data>
+  <data name="SaveFailed" xml:space="preserve">
+    <value>保存失败</value>
+  </data>
+  <data name="FileLockedByOther" xml:space="preserve">
+    <value>该文件已被其他进程锁定，无法打开</value>
+  </data>
+  <data name="BtnPause_Content" xml:space="preserve">
+    <value>暂停</value>
+  </data>
+  <data name="BtnResume_Content" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="PopupWindowPos" xml:space="preserve">
+    <value>窗口位置</value>
+  </data>
+  <data name="PopupOpacity" xml:space="preserve">
+    <value>背景不透明度</value>
+  </data>
+  <data name="StatsItemName" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="StatsAddConditionCount" xml:space="preserve">
+    <value>+ 添加条件计数</value>
+  </data>
+  <data name="StatsCustomConditions" xml:space="preserve">
+    <value>自定义条件</value>
+  </data>
+  <data name="PopupBgColor" xml:space="preserve">
+    <value>背景颜色</value>
+  </data>
+  <data name="OpenFileFailed" xml:space="preserve">
+    <value>打开文件失败</value>
+  </data>
+  <data name="PopupWindowStyle" xml:space="preserve">
+    <value>窗口样式</value>
+  </data>
+  <data name="PopupWindowStyle_Normal" xml:space="preserve">
+    <value>正常窗口</value>
+  </data>
+  <data name="PopupWindowStyle_Compact" xml:space="preserve">
+    <value>紧凑窗口</value>
+  </data>
+  <data name="SelfReferenceLimit" xml:space="preserve">
+    <value>自引用上限</value>
+  </data>
+  <data name="ConditionVariable_Step_Triggered" xml:space="preserve">
+    <value>引用步骤 → 本次被执行</value>
+  </data>
+  <data name="ConditionVariable_Step_Triggered_Tooltip" xml:space="preserve">
+    <value>仅当引用步骤刚刚被执行时为 true（可用于统计执行次数）</value>
+  </data>
+  <data name="ConditionOperator_RegexMatch" xml:space="preserve">
+    <value>正则匹配</value>
   </data>
 </root>

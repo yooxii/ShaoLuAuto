@@ -2,15 +2,55 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        xmlns:utils="clr-namespace:ShaoLu.Utils"
         lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
         lex:ResxLocalizationProvider.DefaultDictionary="Strings"
         SizeToContent="WidthAndHeight"
+        MinWidth="220"
         MaxWidth="500" MaxHeight="600"
-        WindowStyle="ToolWindow"
-        ShowInTaskbar="False">
-    <Grid Margin="8">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-            <StackPanel x:Name="ContentPanel"/>
-        </ScrollViewer>
-    </Grid>
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ShowInTaskbar="False"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+    <Window.Resources>
+        <utils:SingletonLocator x:Key="VMLocator"/>
+    </Window.Resources>
+    <Border BorderBrush="#CCCCCC" BorderThickness="1">
+        <Grid Margin="8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <!-- 标题栏（可拖拽移动窗口） -->
+            <Grid Grid.Row="0" Margin="0,0,0,4">
+                <TextBlock x:Name="TitleText" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Button x:Name="CloseButton" Content="✕" Width="22" Height="22"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Background="Transparent" BorderThickness="0" Cursor="Hand"
+                        Click="CloseButton_Click"/>
+            </Grid>
+            <!-- 运行控制按钮 -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8"
+                        DataContext="{Binding Steps, Source={StaticResource VMLocator}}">
+                <Button Content="{lex:Loc BtnRun_Content}" Command="{Binding RunCommand}" MinWidth="50" Margin="0,0,5,0" Padding="8,2"/>
+                <Button Command="{Binding PauseCommand}" MinWidth="50" Margin="0,0,5,0" Padding="8,2">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Content" Value="{lex:Loc BtnPause_Content}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                                    <Setter Property="Content" Value="{lex:Loc BtnResume_Content}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{lex:Loc BtnStop_Content}" Command="{Binding StopCommand}" MinWidth="50" Padding="8,2"/>
+            </StackPanel>
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <StackPanel x:Name="ContentPanel"/>
+            </ScrollViewer>
+        </Grid>
+    </Border>
 </Window>

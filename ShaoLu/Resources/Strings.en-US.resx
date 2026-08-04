@@ -298,7 +298,7 @@
     <value>Popup Text</value>
   </data>
   <data name="PopupType" xml:space="preserve">
-    <value>Popup Type</value>
+    <value>Icon</value>
   </data>
   <data name="Title" xml:space="preserve">
     <value>Title</value>
@@ -935,5 +935,62 @@
   </data>
   <data name="Close" xml:space="preserve">
     <value>Close</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Save As...</value>
+  </data>
+  <data name="SaveFailed" xml:space="preserve">
+    <value>Save failed</value>
+  </data>
+  <data name="FileLockedByOther" xml:space="preserve">
+    <value>This file is locked by another process and cannot be opened</value>
+  </data>
+  <data name="BtnPause_Content" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="BtnResume_Content" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="PopupWindowPos" xml:space="preserve">
+    <value>Window Position</value>
+  </data>
+  <data name="PopupOpacity" xml:space="preserve">
+    <value>Background Opacity</value>
+  </data>
+  <data name="StatsItemName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="StatsAddConditionCount" xml:space="preserve">
+    <value>+ Add Condition Count</value>
+  </data>
+  <data name="StatsCustomConditions" xml:space="preserve">
+    <value>Custom Conditions</value>
+  </data>
+  <data name="PopupBgColor" xml:space="preserve">
+    <value>Background Color</value>
+  </data>
+  <data name="OpenFileFailed" xml:space="preserve">
+    <value>Failed to open file</value>
+  </data>
+  <data name="PopupWindowStyle" xml:space="preserve">
+    <value>Window Style</value>
+  </data>
+  <data name="PopupWindowStyle_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="PopupWindowStyle_Compact" xml:space="preserve">
+    <value>Compact</value>
+  </data>
+  <data name="SelfReferenceLimit" xml:space="preserve">
+    <value>Self-Reference Limit</value>
+  </data>
+  <data name="ConditionVariable_Step_Triggered" xml:space="preserve">
+    <value>Ref Step → Executed This Time</value>
+  </data>
+  <data name="ConditionVariable_Step_Triggered_Tooltip" xml:space="preserve">
+    <value>True only when the referenced step has just been executed (can be used to count executions)</value>
+  </data>
+  <data name="ConditionOperator_RegexMatch" xml:space="preserve">
+    <value>Regex Match</value>
   </data>
 </root>

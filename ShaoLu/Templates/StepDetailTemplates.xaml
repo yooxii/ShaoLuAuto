@@ -25,6 +25,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="5"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Label Content="{lex:Loc StepTrueGoto}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                 <ComboBox Grid.Column="1" 
@@ -60,6 +62,12 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <Label Grid.Row="4" Content="{lex:Loc SelfReferenceLimit}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                    <wd:NumericBox Value="{Binding SelfReferenceLimit, Mode=TwoWay}" Minimum="-1" Maximum="9999" Width="80"
+                                   ToolTip="{lex:Loc SelfReferenceLimitHint}"/>
+                    <TextBlock Text="{lex:Loc SelfReferenceLimitHint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray" FontSize="11"/>
+                </StackPanel>
             </Grid>
         </GroupBox>
     </DataTemplate>
@@ -117,6 +125,7 @@
                         <models:ConditionOperator>LessOrEqual</models:ConditionOperator>
                         <models:ConditionOperator>Contains</models:ConditionOperator>
                         <models:ConditionOperator>NotContains</models:ConditionOperator>
+                        <models:ConditionOperator>RegexMatch</models:ConditionOperator>
                         <models:ConditionOperator>IsEmpty</models:ConditionOperator>
                         <models:ConditionOperator>IsNotEmpty</models:ConditionOperator>
                     </ComboBox>
@@ -391,6 +400,42 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc PopupWindowStyle}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding PopupWindowStyles}" SelectedItem="{Binding PopupWindowStyle}" MinWidth="150">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc PopupWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc PopupOpacity}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Slider Value="{Binding WindowOpacity, Mode=TwoWay}" Minimum="1" Maximum="100" Width="120" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowOpacity, Mode=TwoWay}" Width="60" Minimum="1" Maximum="100" Precision="0" Margin="5,0,0,0"/>
+                <TextBlock Text="%" VerticalAlignment="Center" Margin="3,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc PopupBgColor}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Border Width="22" Height="22" BorderBrush="Gray" BorderThickness="1" VerticalAlignment="Center" Margin="0,0,5,0">
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <SolidColorBrush Color="{Binding BackgroundColor}"/>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </Border>
+                <TextBox Text="{Binding BackgroundColor, UpdateSourceTrigger=LostFocus}" Width="80" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc Select}" Command="{Binding SelectBackgroundColorCommand}"/>
+            </StackPanel>
             <GroupBox Header="{lex:Loc Buttons}" Margin="0,5,0,0">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
@@ -572,7 +617,7 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
                                     <ComboBox ItemsSource="{x:Static models:MouseActionItem.AllTypes}" SelectedItem="{Binding ActionType}" MinWidth="100" Margin="0,0,5,0"/>
                                     <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="0" Maximum="99" Margin="0,0,5,0" ToolTip="{lex:Loc MouseActionCountHint}"/>
-                                    <wd:NumericBox Value="{Binding Interval, Mode=TwoWay}" MinWidth="60" Minimum="0" Precision="3" Interval="0.05" Margin="0,0,5,0"/>
+                                    <wd:NumericBox Value="{Binding Interval, Mode=TwoWay}" MinWidth="60" Minimum="0" Precision="3" Interval="0.05" Margin="0,0,5,0" ToolTip="{lex:Loc ClickIntervalHint}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -581,6 +626,59 @@
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 统计项行模板（默认统计项与自定义条件共用） -->
+    <DataTemplate x:Key="StatsItemTemplate">
+        <StackPanel Margin="0,2">
+            <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding DisplayName}"/>
+            <!-- 自定义条件：重命名 + 删除 -->
+            <StackPanel Orientation="Horizontal" Margin="18,2,0,0"
+                        Visibility="{Binding ShowConditionSettings, Converter={StaticResource BoolToVis}}">
+                <Label Content="{lex:Loc StatsItemName}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding CustomName, UpdateSourceTrigger=LostFocus}" MinWidth="120" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc Delete}"
+                        Command="{Binding DataContext.RemoveCustomConditionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                        CommandParameter="{Binding}"/>
+            </StackPanel>
+            <!-- 范围子设置 -->
+            <StackPanel Orientation="Horizontal" Margin="18,2,0,0"
+                        Visibility="{Binding ShowScopeSettings, Converter={StaticResource BoolToVis}}">
+                <Label Content="{lex:Loc StatsScope}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding AllScopes}" SelectedItem="{Binding Scope}" MinWidth="120">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <!-- 自选步骤列表 -->
+            <ListBox Margin="18,2,0,0" MaxHeight="120"
+                     SelectionMode="Extended"
+                     ItemsSource="{Binding DataContext.AllSteps, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                     utils:ListBoxSelectedUidsBehavior.SelectedUids="{Binding CustomStepUids}"
+                     Visibility="{Binding ShowCustomList, Converter={StaticResource BoolToVis}}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock>
+                            <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                            <Run Text=" - "/>
+                            <Run Text="{Binding Name, Mode=OneWay}"/>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <!-- 自定义条件：判断条件编辑 -->
+            <StackPanel Margin="18,2,0,0"
+                        Visibility="{Binding ShowConditionSettings, Converter={StaticResource BoolToVis}}">
+                <ItemsControl ItemsSource="{Binding Conditions}" ItemTemplate="{StaticResource ConditionRowTemplate}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                    <Button Content="{lex:Loc Condition_Add}" Command="{Binding AddConditionCommand}" Margin="0,0,5,0"/>
+                    <Button Content="{lex:Loc Condition_Remove}" Command="{Binding RemoveConditionCommand}"/>
+                </StackPanel>
+            </StackPanel>
         </StackPanel>
     </DataTemplate>
 
@@ -597,7 +695,8 @@
                 <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
-                <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="0"/>
+                <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectWindowPositionCommand}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <CheckBox IsChecked="{Binding AlwaysOnTop}" Content="{lex:Loc StatsAlwaysOnTop}" VerticalAlignment="Center"/>
@@ -610,53 +709,34 @@
                 <wd:NumericBox Value="{Binding AutoCloseSeconds, Mode=TwoWay}" Width="70" Minimum="0" Precision="1" Interval="1"/>
                 <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="5,0,0,0" Foreground="Gray"/>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc PopupBgColor}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Border Width="22" Height="22" BorderBrush="Gray" BorderThickness="1" VerticalAlignment="Center" Margin="0,0,5,0">
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <SolidColorBrush Color="{Binding BackgroundColor}"/>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                </Border>
+                <TextBox Text="{Binding BackgroundColor, UpdateSourceTrigger=LostFocus}" Width="80" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc Select}" Command="{Binding SelectBackgroundColorCommand}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc PopupOpacity}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Slider Value="{Binding BackgroundOpacity, Mode=TwoWay}" Minimum="1" Maximum="100" Width="120" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding BackgroundOpacity, Mode=TwoWay}" Width="60" Minimum="1" Maximum="100" Precision="0" Margin="5,0,0,0"/>
+                <TextBlock Text="%" VerticalAlignment="Center" Margin="3,0,0,0"/>
+            </StackPanel>
             <GroupBox Header="{lex:Loc StatsItems}" Margin="0,5,0,0">
-                <ItemsControl ItemsSource="{Binding StatisticsItems}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,2">
-                                <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding DisplayName}"/>
-                                <!-- 范围子设置 -->
-                                <StackPanel Orientation="Horizontal" Margin="18,2,0,0"
-                                            Visibility="{Binding ShowScopeSettings, Converter={StaticResource BoolToVis}}">
-                                    <Label Content="{lex:Loc StatsScope}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                                    <ComboBox ItemsSource="{Binding AllScopes}" SelectedItem="{Binding Scope}" MinWidth="120">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </StackPanel>
-                                <!-- 自选步骤列表 -->
-                                <ListBox Margin="18,2,0,0" MaxHeight="120"
-                                         SelectionMode="Extended"
-                                         ItemsSource="{Binding DataContext.AllSteps, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                         utils:ListBoxSelectedUidsBehavior.SelectedUids="{Binding CustomStepUids}"
-                                         Visibility="{Binding ShowCustomList, Converter={StaticResource BoolToVis}}">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock>
-                                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
-                                                <Run Text=" - "/>
-                                                <Run Text="{Binding Name, Mode=OneWay}"/>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                                <!-- 条件计数：判断条件编辑 -->
-                                <StackPanel Margin="18,2,0,0"
-                                            Visibility="{Binding ShowConditionSettings, Converter={StaticResource BoolToVis}}">
-                                    <ItemsControl ItemsSource="{Binding Conditions}" ItemTemplate="{StaticResource ConditionRowTemplate}"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                        <Button Content="{lex:Loc Condition_Add}" Command="{Binding AddConditionCommand}" Margin="0,0,5,0"/>
-                                        <Button Content="{lex:Loc Condition_Remove}" Command="{Binding RemoveConditionCommand}"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding StatisticsItems}" ItemTemplate="{StaticResource StatsItemTemplate}"/>
+                    <Expander Header="{lex:Loc StatsCustomConditions}" Margin="0,5,0,0">
+                        <StackPanel>
+                            <Button Content="+" Command="{Binding AddCustomConditionCommand}" MinWidth="30" HorizontalAlignment="Left" Margin="0,0,0,3"/>
+                            <ItemsControl ItemsSource="{Binding CustomConditions}" ItemTemplate="{StaticResource StatsItemTemplate}"/>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
         </StackPanel>

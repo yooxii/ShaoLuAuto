@@ -21,6 +21,9 @@ namespace ShaoLu.Services
         /// <summary>总执行时间(ms)</summary>
         public double TotalElapsedMs => _totalStopwatch.ElapsedMilliseconds;
 
+        /// <summary>刚刚执行完成的步骤 Uid（供 Step_Triggered 变量使用）</summary>
+        public Guid? CurrentStepUid { get; set; }
+
         /// <summary>开始计时</summary>
         public void StartTimer() => _totalStopwatch.Restart();
 
@@ -71,6 +74,7 @@ namespace ShaoLu.Services
             _resultsByUid.Clear();
             _executionCounts.Clear();
             _totalStopwatch.Reset();
+            CurrentStepUid = null;
         }
 
         /// <summary>获取步骤执行时间</summary>
@@ -142,6 +146,9 @@ namespace ShaoLu.Services
                     return GetResultByUid(stepUid)?.OCRText ?? string.Empty;
                 case ConditionVariable.Step_PopupResult:
                     return GetResultByUid(stepUid)?.PopupResult ?? string.Empty;
+                case ConditionVariable.Step_Triggered:
+                    // 仅当引用步骤是刚刚执行完成的步骤时为 true（每次步骤执行后只成立一次）
+                    return stepUid.HasValue && CurrentStepUid.HasValue && stepUid.Value == CurrentStepUid.Value;
 
                 default:
                     return null;

@@ -23,6 +23,8 @@ namespace ShaoLu.Converters
                 return ConvertLogicConnector(connector);
             if (value is PopupCloseMode closeMode)
                 return ConvertPopupCloseMode(closeMode);
+            if (value is PopupWindowStyle winStyle)
+                return ConvertPopupWindowStyle(winStyle);
             if (value is StepScope scope)
                 return ConvertStepScope(scope);
             if (value is PositionMode posMode)
@@ -62,6 +64,7 @@ namespace ShaoLu.Converters
             ConditionVariable.Step_ClickY => "引用步骤 → 点击Y坐标",
             ConditionVariable.Step_OCRText => "引用步骤 → OCR识别文本",
             ConditionVariable.Step_PopupResult => "引用步骤 → 弹窗选择结果",
+            ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered"),
             _ => v.ToString(),
         };
 
@@ -75,6 +78,7 @@ namespace ShaoLu.Converters
             ConditionOperator.LessOrEqual => "小于等于 (<=)",
             ConditionOperator.Contains => "包含",
             ConditionOperator.NotContains => "不包含",
+            ConditionOperator.RegexMatch => Services.LanguageService.GetLocalizedString("ConditionOperator_RegexMatch"),
             ConditionOperator.IsEmpty => "为空",
             ConditionOperator.IsNotEmpty => "不为空",
             _ => op.ToString(),
@@ -85,6 +89,13 @@ namespace ShaoLu.Converters
             LogicConnector.And => "并且 (AND)",
             LogicConnector.Or => "或者 (OR)",
             _ => c.ToString(),
+        };
+
+        public static string ConvertPopupWindowStyle(PopupWindowStyle s) => s switch
+        {
+            PopupWindowStyle.Normal => Services.LanguageService.GetLocalizedString("PopupWindowStyle_Normal"),
+            PopupWindowStyle.Compact => Services.LanguageService.GetLocalizedString("PopupWindowStyle_Compact"),
+            _ => s.ToString(),
         };
 
         public static string ConvertPopupCloseMode(PopupCloseMode m) => m switch
@@ -138,6 +149,7 @@ namespace ShaoLu.Converters
             ConditionVariable.Step_ClickY => "指定行号步骤的点击Y坐标",
             ConditionVariable.Step_OCRText => "指定行号步骤的OCR识别文本",
             ConditionVariable.Step_PopupResult => "指定行号步骤的弹出框选择结果",
+            ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered_Tooltip"),
             _ => string.Empty,
         };
     }

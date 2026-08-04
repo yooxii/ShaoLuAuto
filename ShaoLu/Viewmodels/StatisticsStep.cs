@@ -49,6 +49,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private StepScope _scope = StepScope.All;
         private ObservableCollection<Guid> _customStepUids = new();
         private ObservableCollection<StepCondition> _conditions = new();
+        private string _customName;
+
+        /// <summary>用户自定义名称（为空时显示默认类型名）</summary>
+        public string CustomName { get => _customName; set { if (SetProperty(ref _customName, value)) OnPropertyChanged(nameof(DisplayName)); } }
 
         public bool IsEnabled
         {
@@ -127,17 +131,24 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public List<StepScope> AllScopes { get; } = new() { StepScope.All, StepScope.LoggedOnly, StepScope.Custom };
 
-        /// <summary>统计项显示名称（国际化）</summary>
+        /// <summary>统计项显示名称（优先使用自定义名称，否则国际化类型名）</summary>
         [JsonIgnore]
-        public string DisplayName => Type switch
+        public string DisplayName
         {
-            StatisticsItemType.TotalExecutionTime => LanguageService.GetLocalizedString("Stats_TotalTime"),
-            StatisticsItemType.StepExecutionTime => LanguageService.GetLocalizedString("Stats_StepTime"),
-            StatisticsItemType.StepExecutionCount => LanguageService.GetLocalizedString("Stats_StepCount"),
-            StatisticsItemType.StepExecutionResult => LanguageService.GetLocalizedString("Stats_StepResult"),
-            StatisticsItemType.ConditionCount => LanguageService.GetLocalizedString("Stats_ConditionCount"),
-            _ => Type.ToString(),
-        };
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(CustomName)) return CustomName;
+                return Type switch
+                {
+                    StatisticsItemType.TotalExecutionTime => LanguageService.GetLocalizedString("Stats_TotalTime"),
+                    StatisticsItemType.StepExecutionTime => LanguageService.GetLocalizedString("Stats_StepTime"),
+                    StatisticsItemType.StepExecutionCount => LanguageService.GetLocalizedString("Stats_StepCount"),
+                    StatisticsItemType.StepExecutionResult => LanguageService.GetLocalizedString("Stats_StepResult"),
+                    StatisticsItemType.ConditionCount => LanguageService.GetLocalizedString("Stats_ConditionCount"),
+                    _ => Type.ToString(),
+                };
+            }
+        }
 
         #region 条件编辑命令
 
@@ -198,6 +209,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private bool _alwaysOnTop = true;
         private double _autoCloseSeconds = 0;
         private bool _closeOnStop = true;
+        private string _backgroundColor = "#FFFFFF";
+        private double _backgroundOpacity = 100;
 
         private ObservableCollection<StatisticsItemConfig> _statisticsItems = new()
         {
@@ -205,8 +218,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
             new StatisticsItemConfig { Type = StatisticsItemType.StepExecutionTime, IsEnabled = false },
             new StatisticsItemConfig { Type = StatisticsItemType.StepExecutionCount, IsEnabled = false },
             new StatisticsItemConfig { Type = StatisticsItemType.StepExecutionResult, IsEnabled = false },
-            new StatisticsItemConfig { Type = StatisticsItemType.ConditionCount, IsEnabled = false },
         };
+
+        /// <summary>自定义条件集合（默认空，用户可添加/删除）</summary>
+        private ObservableCollection<StatisticsItemConfig> _customConditions = new();
 
         /// <summary>窗口标题</summary>
         public string WindowTitle { get => _windowTitle; set => SetProperty(ref _windowTitle, value); }
@@ -226,8 +241,77 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>运行停止后是否自动关闭统计窗口</summary>
         public bool CloseOnStop { get => _closeOnStop; set => SetProperty(ref _closeOnStop, value); }
 
-        /// <summary>统计项配置集合</summary>
+        /// <summary>窗口背景颜色（十六进制）</summary>
+        public string BackgroundColor { get => _backgroundColor; set => SetProperty(ref _backgroundColor, value); }
+
+        /// <summary>窗口背景不透明度（百分比 0~100）</summary>
+        public double BackgroundOpacity
+        {
+            get => _backgroundOpacity;
+            set => SetProperty(ref _backgroundOpacity, Math.Min(100.0, Math.Max(1.0, value)));
+        }
+
+        /// <summary>统计项配置集合（默认统计项）</summary>
         public ObservableCollection<StatisticsItemConfig> StatisticsItems { get => _statisticsItems; set => SetProperty(ref _statisticsItems, value); }
+
+        /// <summary>自定义条件集合</summary>
+        public ObservableCollection<StatisticsItemConfig> CustomConditions { get => _customConditions; set => SetProperty(ref _customConditions, value); }
+
+        [JsonIgnore]
+        private ICommand selectWindowPositionCommand;
+        [JsonIgnore]
+        public ICommand SelectWindowPositionCommand => selectWindowPositionCommand ??= new RelayCommand(SelectWindowPosition);
+
+        [JsonIgnore]
+        private ICommand selectBackgroundColorCommand;
+        [JsonIgnore]
+        public ICommand SelectBackgroundColorCommand => selectBackgroundColorCommand ??= new RelayCommand(SelectBackgroundColor);
+
+        private void SelectBackgroundColor()
+        {
+            try
+            {
+                var c = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(BackgroundColor ?? "#FFFFFF");
+                var dialog = new System.Windows.Forms.ColorDialog { Color = System.Drawing.Color.FromArgb(c.R, c.G, c.B) };
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    BackgroundColor = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+                }
+            }
+            catch
+            {
+                var dialog = new System.Windows.Forms.ColorDialog { Color = System.Drawing.Color.White };
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    BackgroundColor = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+                }
+            }
+        }
+
+        [JsonIgnore]
+        private ICommand addCustomConditionCommand;
+        [JsonIgnore]
+        public ICommand AddCustomConditionCommand => addCustomConditionCommand ??= new RelayCommand(() =>
+            CustomConditions.Add(new StatisticsItemConfig { Type = StatisticsItemType.ConditionCount, IsEnabled = true }));
+
+        [JsonIgnore]
+        private RelayParameterCommand removeCustomConditionCommand;
+        [JsonIgnore]
+        public RelayParameterCommand RemoveCustomConditionCommand => removeCustomConditionCommand ??= new RelayParameterCommand(p =>
+        {
+            if (p is StatisticsItemConfig item)
+                CustomConditions.Remove(item);
+        });
+
+        private void SelectWindowPosition()
+        {
+            var point = Views.WindowSelectPoint.ShowAndSelect();
+            if (point.HasValue)
+            {
+                WindowX = point.Value.X;
+                WindowY = point.Value.Y;
+            }
+        }
 
         #region 构造
 
@@ -261,32 +345,46 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 AlwaysOnTop = AlwaysOnTop,
                 AutoCloseSeconds = AutoCloseSeconds,
                 CloseOnStop = CloseOnStop,
+                BackgroundColor = BackgroundColor,
+                BackgroundOpacity = BackgroundOpacity,
                 WaitTime = WaitTime,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
+                SelfReferenceLimit = SelfReferenceLimit,
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };
             foreach (var item in StatisticsItems)
             {
-                clone.StatisticsItems.Add(new StatisticsItemConfig
-                {
-                    Type = item.Type,
-                    IsEnabled = item.IsEnabled,
-                    Scope = item.Scope,
-                    CustomStepUids = new ObservableCollection<Guid>(item.CustomStepUids),
-                    Conditions = new ObservableCollection<StepCondition>(item.Conditions.Select(c => c.Clone())),
-                });
+                clone.StatisticsItems.Add(CloneItem(item));
+            }
+            foreach (var item in CustomConditions)
+            {
+                clone.CustomConditions.Add(CloneItem(item));
             }
             return clone;
         }
+
+        private static StatisticsItemConfig CloneItem(StatisticsItemConfig item) => new()
+        {
+            Type = item.Type,
+            IsEnabled = item.IsEnabled,
+            Scope = item.Scope,
+            CustomName = item.CustomName,
+            CustomStepUids = new ObservableCollection<Guid>(item.CustomStepUids),
+            Conditions = new ObservableCollection<StepCondition>(item.Conditions.Select(c => c.Clone())),
+        };
 
         /// <summary>重置所有条件计数（每次运行前调用）</summary>
         public void ResetCounters()
         {
             foreach (var item in StatisticsItems)
+            {
+                item.ResetCounters();
+            }
+            foreach (var item in CustomConditions)
             {
                 item.ResetCounters();
             }
@@ -298,6 +396,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public void UpdateConditionCounts(StepExecutionContext context, StepExecutionResult currentResult)
         {
             foreach (var item in StatisticsItems)
+            {
+                item.EvaluateAndCount(context, currentResult);
+            }
+            foreach (var item in CustomConditions)
             {
                 item.EvaluateAndCount(context, currentResult);
             }

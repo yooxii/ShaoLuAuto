@@ -5,6 +5,7 @@ using ShaoLu.Services;
 using ShaoLu.Viewmodels;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace ShaoLu
@@ -21,6 +22,25 @@ namespace ShaoLu
             {
                 Logger.Info("Program start...");
                 base.OnStartup(e);
+
+                // 全局异常兜底：捕获未处理异常，避免程序直接崩溃退出
+                DispatcherUnhandledException += (s, args) =>
+                {
+                    Logger.Error(args.Exception, "Unhandled UI exception");
+                    try
+                    {
+                        MessageBox.Show(args.Exception.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    catch { /* 提示失败时仅记录日志 */ }
+                    args.Handled = true;
+                };
+                AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+                    Logger.Fatal(args.ExceptionObject as Exception, "Unhandled AppDomain exception");
+                TaskScheduler.UnobservedTaskException += (s, args) =>
+                {
+                    Logger.Error(args.Exception, "Unobserved task exception");
+                    args.SetObserved();
+                };
 
                 Logger.Info("Init LanguageService...");
                 // 1. 初始化语言

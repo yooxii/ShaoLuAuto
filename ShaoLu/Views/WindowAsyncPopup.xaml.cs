@@ -17,6 +17,9 @@ namespace ShaoLu.Views
     {
         private TaskCompletionSource<string> _tcs;
 
+        // 是否为紧凑模式（影响按钮尺寸等）
+        private bool _compact;
+
         // 缓存系统图标，避免重复进行 GDI+ 到 WPF 的转换，提升性能
         private static readonly Dictionary<MessageBoxImage, ImageSource> IconCache = [];
 
@@ -38,18 +41,21 @@ namespace ShaoLu.Views
         /// <summary>
         /// 异步显示弹窗，不阻塞调用线程，允许主窗口响应其他事件（如停止按钮）
         /// </summary>
-        public static (Window Window, Task<string> Task) Show(string message, string title, FontModel font, PopupButtons buttons, MessageBoxImage icon)
+        /// <param name="opacity">背景不透明度（0~1）</param>
+        /// <param name="backgroundColor">背景颜色（十六进制，null 使用默认白色）</param>
+        /// <param name="windowStyle">窗口样式（正常/紧凑）</param>
+        public static (Window Window, Task<string> Task) Show(string message, string title, FontModel font, PopupButtons buttons, MessageBoxImage icon, System.Windows.Point? position = null, double opacity = 1.0, string backgroundColor = null, ShaoLu.Models.PopupWindowStyle windowStyle = ShaoLu.Models.PopupWindowStyle.Normal)
         {
             var tcs = new TaskCompletionSource<string>();
 
             if (Application.Current.Dispatcher.CheckAccess())
             {
-                return CreateAndShow(message, title, font, buttons, icon, tcs);
+                return CreateAndShow(message, title, font, buttons, icon, tcs, position, opacity, backgroundColor, windowStyle);
             }
             else
             {
                 // 必须在 UI 线程创建
-                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, font, buttons, icon, tcs));
+                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, font, buttons, icon, tcs, position, opacity, backgroundColor, windowStyle));
             }
         }
 
@@ -59,19 +65,19 @@ namespace ShaoLu.Views
 
             if (Application.Current.Dispatcher.CheckAccess())
             {
-                return CreateAndShow(message, title, null, buttons, icon, tcs);
+                return CreateAndShow(message, title, null, buttons, icon, tcs, null, 1.0, null, ShaoLu.Models.PopupWindowStyle.Normal);
             }
             else
             {
                 // 必须在 UI 线程创建
-                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, null, buttons, icon, tcs));
+                return Application.Current.Dispatcher.Invoke(() => CreateAndShow(message, title, null, buttons, icon, tcs, null, 1.0, null, ShaoLu.Models.PopupWindowStyle.Normal));
             }
         }
 
         /// <summary>
         /// 核心创建逻辑，统一处理窗口初始化和显示
         /// </summary>
-        private static (Window Window, Task<string> Task) CreateAndShow(string message, string title, FontModel font, PopupButtons buttons, MessageBoxImage icon, TaskCompletionSource<string> tcs)
+        private static (Window Window, Task<string> Task) CreateAndShow(string message, string title, FontModel font, PopupButtons buttons, MessageBoxImage icon, TaskCompletionSource<string> tcs, System.Windows.Point? position = null, double opacity = 1.0, string backgroundColor = null, ShaoLu.Models.PopupWindowStyle windowStyle = ShaoLu.Models.PopupWindowStyle.Normal)
         {
             var popup = new WindowAsyncPopup
             {
@@ -79,10 +85,46 @@ namespace ShaoLu.Views
                 _tcs = tcs
             };
 
+            // 应用自定义位置
+            if (position.HasValue)
+            {
+                popup.WindowStartupLocation = WindowStartupLocation.Manual;
+                popup.Left = position.Value.X;
+                popup.Top = position.Value.Y;
+            }
+
+            // 应用背景颜色与背景不透明度（仅影响背景，不影响内容）
+            var bgColor = System.Windows.Media.Colors.White;
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(backgroundColor))
+                    bgColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(backgroundColor);
+            }
+            catch { /* 解析失败使用默认白色 */ }
+            popup.Background = new System.Windows.Media.SolidColorBrush(bgColor)
+            {
+                Opacity = Math.Min(1.0, Math.Max(0.01, opacity))
+            };
+
+            // 无边框窗口：显示自定义标题和关闭按钮
+            if (!string.IsNullOrWhiteSpace(title) && popup.TitleText != null)
+            {
+                popup.TitleText.Text = title;
+                popup.TitleText.Visibility = Visibility.Visible;
+            }
+            if (popup.CloseButton != null)
+                popup.CloseButton.Visibility = Visibility.Visible;
+
+            popup._compact = windowStyle == ShaoLu.Models.PopupWindowStyle.Compact;
+
             // 1. 设置消息内容（支持富文本）
             if (popup.MessageViewer != null)
             {
                 var doc = Utils.RichTextHelper.Deserialize(message ?? string.Empty);
+
+                // 紧凑模式：去除文档内边距
+                if (popup._compact)
+                    doc.PagePadding = new Thickness(0);
 
                 // 如果提供了字体模型，应用字体设置到 FlowDocument 级别
                 if (font != null)
@@ -98,10 +140,43 @@ namespace ShaoLu.Views
                 popup.MessageViewer.Document = doc;
             }
 
-            // 2. 设置图标 (从缓存获取)
+            // 紧凑窗口：全面缩小尺寸与边距
+            if (popup._compact)
+            {
+                popup.MinWidth = 100;
+                popup.MinHeight = 0;
+                if (popup.ContentGrid != null)
+                    popup.ContentGrid.Margin = new Thickness(6);
+                if (popup.TitleText != null)
+                {
+                    popup.TitleText.FontSize = 12;
+                    popup.TitleText.Margin = new Thickness(0, 0, 20, 2);
+                }
+                if (popup.CloseButton != null)
+                {
+                    popup.CloseButton.Width = 18;
+                    popup.CloseButton.Height = 18;
+                }
+                if (popup.IconImage != null)
+                {
+                    popup.IconImage.Width = 24;
+                    popup.IconImage.Height = 24;
+                    popup.IconImage.Margin = new Thickness(0, 0, 6, 0);
+                }
+                if (popup.MessageViewer != null)
+                    popup.MessageViewer.Margin = new Thickness(0);
+                if (popup.ButtonPanel != null)
+                    popup.ButtonPanel.Margin = new Thickness(0, 6, 0, 0);
+            }
+            
+            // 2. 设置图标（无图标时不占空间）
             if (popup.IconImage != null)
             {
-                if (IconCache.TryGetValue(icon, out var source))
+                if (icon == MessageBoxImage.None)
+                {
+                    popup.IconImage.Visibility = Visibility.Collapsed;
+                }
+                else if (IconCache.TryGetValue(icon, out var source))
                 {
                     popup.IconImage.Source = source;
                 }
@@ -111,9 +186,13 @@ namespace ShaoLu.Views
                     popup.IconImage.Source = GetIconSourceDynamic(icon);
                 }
             }
-
-            // 3. 生成按钮
+            
+            // 3. 生成按钮（未设置按钮时不占空间）
             popup.CreateButtons(buttons);
+            if ((buttons?.Buttons?.Count ?? 0) == 0 && popup.ButtonPanel != null)
+            {
+                popup.ButtonPanel.Visibility = Visibility.Collapsed;
+            }
 
             // 4. 处理窗口关闭事件（防止用户通过 Alt+F4 或右上角 X 关闭时任务挂起）
             popup.Closed += (s, e) =>
@@ -146,9 +225,9 @@ namespace ShaoLu.Views
                 var btn = new Button
                 {
                     Content = content,
-                    Width = 80,
-                    Height = 30,
-                    Margin = new Thickness(5, 0, 0, 0),
+                    Width = _compact ? 60 : 80,
+                    Height = _compact ? 24 : 30,
+                    Margin = new Thickness(_compact ? 3 : 5, 0, 0, 0),
                     IsDefault = isDefault // 设置默认按钮，响应 Enter 键
                 };
 
@@ -207,6 +286,22 @@ namespace ShaoLu.Views
             {
                 Close();
             }
+        }
+
+        /// <summary>
+        /// 无边框窗口：按住左键拖拽移动窗口
+        /// </summary>
+        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == MouseButtonState.Pressed && e.Source is not System.Windows.Controls.Primitives.ButtonBase)
+            {
+                try { DragMove(); } catch { }
+            }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseWithResult(string.Empty);
         }
     }
 

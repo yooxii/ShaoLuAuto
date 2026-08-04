@@ -29,6 +29,10 @@ namespace ShaoLu.Viewmodels
         private volatile bool _stopSignal = false;
         public bool StopSignal { get => _stopSignal; set { _stopSignal = value; IsRunning = !value; } }
 
+        private volatile bool _isPaused = false;
+        /// <summary>是否处于暂停状态</summary>
+        public bool IsPaused { get => _isPaused; set => SetProperty(ref _isPaused, value); }
+
 
         public bool _isRunning = false;
         public bool IsRunning
@@ -78,6 +82,16 @@ namespace ShaoLu.Viewmodels
 
         private RelayCommand stopCommand;
         public RelayCommand StopCommand => stopCommand ??= new RelayCommand(Stop);
+
+        private RelayCommand pauseCommand;
+        public RelayCommand PauseCommand => pauseCommand ??= new RelayCommand(TogglePause);
+
+        private void TogglePause()
+        {
+            if (!_isRunning) return;
+            IsPaused = !IsPaused;
+            logger.Info(IsPaused ? "Pause Auto" : "Resume Auto");
+        }
 
 
         private RelayParameterCommand addStepCommand;
@@ -441,8 +455,9 @@ namespace ShaoLu.Viewmodels
 
         private void PreRun()
         {
-            // 重置停止信号
+            // 重置停止信号和暂停状态
             StopSignal = false;
+            IsPaused = false;
             // 初始化自动化引擎
             Autogui.StartAuto();
             // 清空执行上下文并启动总计时
@@ -504,6 +519,16 @@ namespace ShaoLu.Viewmodels
                     {
                         break;
                     }
+
+                    // 暂停等待：处于暂停状态时在每个步骤间等待，直到恢复或停止
+                    while (IsPaused && !StopSignal)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        await Task.Delay(100, token);
+                    }
+                    if (StopSignal)
+                        break;
+
                     var step = AutomationStepBases[i];
 
                     // StepReached 模式：检查是否有弹窗需要在到达此步骤时关闭
@@ -534,6 +559,7 @@ namespace ShaoLu.Viewmodels
                         // 存入执行上下文
                         _executionContext.SetResult(step.LineNo, result);
                         _executionContext.SetResultByUid(step.Uid, result);
+                        _executionContext.CurrentStepUid = step.Uid;
 
                         // 统计步骤的条件计数累计
                         foreach (var s in AutomationStepBases)
@@ -611,11 +637,22 @@ namespace ShaoLu.Viewmodels
                             // SelfReferenceLimit: -1=无限制, 0=禁止自引用, >0=限制次数
                             if (step.SelfReferenceLimit >= 0 && step.SelfReferenceCount >= step.SelfReferenceLimit)
                             {
-                                step.IsError = true;
-                                step.ErrorType = StepErrorType.SelfReferenceLimit;
+                                // 达到自引用上限：自身结果强制为 false
+                                step.IsTrue = false;
                                 step.ErrorMessage = string.Format(LanguageService.GetLocalizedString("Msg_SelfReferenceLimit"), step.Name, step.SelfReferenceLimit);
                                 step.SelfReferenceCount = 0;
-                                // 不跳转，继续下一步
+
+                                // 按 false 结果重新解析跳转目标
+                                if (step.FalseGotoUid.HasValue && step.FalseGotoUid.Value != Guid.Empty)
+                                {
+                                    int falseIndex = FindIndexByUid(step.FalseGotoUid.Value);
+                                    if (falseIndex >= 0 && falseIndex != i)
+                                    {
+                                        i = falseIndex - 1; // -1 因为 for 循环会 i++
+                                    }
+                                    // 目标仍指向自身时不跳转，继续下一步
+                                }
+                                // FalseGoto 为空时不跳转，继续下一步
                             }
                             else
                             {

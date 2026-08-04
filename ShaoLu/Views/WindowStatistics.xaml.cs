@@ -56,6 +56,21 @@ namespace ShaoLu.Views
             Left = step.WindowX;
             Top = step.WindowY;
             Topmost = step.AlwaysOnTop;
+            if (TitleText != null)
+                TitleText.Text = step.WindowTitle;
+
+            // 应用背景颜色与背景不透明度（仅影响背景，不影响内容）
+            var bgColor = System.Windows.Media.Colors.White;
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(step.BackgroundColor))
+                    bgColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(step.BackgroundColor);
+            }
+            catch { /* 解析失败使用默认白色 */ }
+            Background = new System.Windows.Media.SolidColorBrush(bgColor)
+            {
+                Opacity = Math.Min(1.0, Math.Max(0.01, step.BackgroundOpacity / 100.0))
+            };
 
             // 构建初始内容
             BuildContent();
@@ -98,6 +113,13 @@ namespace ShaoLu.Views
                 {
                     AddStepTable(item, context, steps);
                 }
+            }
+
+            // 自定义条件（与默认统计项分开展示）
+            foreach (var item in _step.CustomConditions)
+            {
+                if (!item.IsEnabled) continue;
+                AddConditionCountSection(item);
             }
         }
 
@@ -219,6 +241,22 @@ namespace ShaoLu.Views
             _refreshTimer?.Stop();
             OpenWindows.Remove(this);
             base.OnClosed(e);
+        }
+
+        /// <summary>
+        /// 无边框窗口：按住左键拖拽移动窗口
+        /// </summary>
+        private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed && e.Source is not Button)
+            {
+                try { DragMove(); } catch { }
+            }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }

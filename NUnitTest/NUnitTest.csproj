@@ -50,6 +50,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StepExecutionContextTests.cs" />
     <Compile Include="StepsFileTests.cs" />
+    <Compile Include="BurnInServiceTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FlaUI.UIA3">

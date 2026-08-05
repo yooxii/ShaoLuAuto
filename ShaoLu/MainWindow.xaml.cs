@@ -317,6 +317,11 @@ namespace ShaoLu
             window.Show();
         }
 
+        private void BurnInStatistics_Click(object sender, RoutedEventArgs e)
+        {
+            WindowBurnInStatistics.ShowSingleton();
+        }
+
         private void UserManagement_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;

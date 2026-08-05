@@ -492,6 +492,7 @@ namespace ShaoLu.Viewmodels
         /// </summary>
         public async void Run()
         {
+            BurnInSession burnInSession = null;
             try
             {
                 // 运行前确认
@@ -503,6 +504,18 @@ namespace ShaoLu.Viewmodels
                     var confirmResult = await confirmTask;
                     if (confirmResult != PopupButton.YesValue)
                         return;
+                }
+
+                // 烧录统计：收集本次运行的工令/操作者/零件名
+                try
+                {
+                    if (!BurnInService.BeginSession())
+                        return; // 用户取消
+                    burnInSession = BurnInService.CurrentSession;
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "BurnIn BeginSession failed, skip tracking");
                 }
 
                 PreRun();
@@ -691,6 +704,20 @@ namespace ShaoLu.Viewmodels
             {
                 logger.Error(ex, "Run Error: ");
             }
+            finally
+            {
+                // 烧录统计：无论正常结束、取消或异常，都记录本次运行（若已开启会话）
+                try
+                {
+                    if (burnInSession != null)
+                        RecordBurnIn(burnInSession);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "RecordBurnIn failed");
+                }
+                BurnInService.EndSession();
+            }
         }
 
         /// <summary>
@@ -707,6 +734,72 @@ namespace ShaoLu.Viewmodels
                 TimeoutException => StepErrorType.ExecutionTimeout,
                 _ => StepErrorType.Unknown
             };
+        }
+
+        /// <summary>
+        /// 将本次运行记入烧录统计表（由 Run() 的 finally 块调用）
+        /// 根据 BurnInService.Config 中配置的判定步骤/关键字/图像步骤综合判定良/不良
+        /// </summary>
+        private void RecordBurnIn(BurnInSession session)
+        {
+            var finishedAt = DateTime.Now;
+            var config = BurnInService.Config;
+            string stepFileName = Path.GetFileNameWithoutExtension(
+                SingletonLocator.Main.StepFilePath ?? "unsaved");
+
+            // 若尚未配置，记录为"未判定"
+            if (config == null || !config.BurnFinishStepUid.HasValue)
+            {
+                BurnInService.Record(new BurnInRecord
+                {
+                    OrderNo = session.OrderNo,
+                    Operator = session.Operator,
+                    PartName = session.PartName,
+                    StepFileName = stepFileName,
+                    BurnStartedAt = session.StartedAt,
+                    BurnFinishedAt = finishedAt,
+                    BurnDurationMs = (finishedAt - session.StartedAt).TotalMilliseconds,
+                    IsGood = false,
+                    Remark = "NotConfigured",
+                });
+                return;
+            }
+
+            // 查找判定步骤
+            var burnFinishStep = FindStepByUid(config.BurnFinishStepUid.Value);
+            var goodImageStep = config.GoodImageStepUid.HasValue ? FindStepByUid(config.GoodImageStepUid.Value) : null;
+            var badImageStep = config.BadImageStepUid.HasValue ? FindStepByUid(config.BadImageStepUid.Value) : null;
+
+            string ocrText = burnFinishStep?.LastResult?.OCRText;
+            bool goodImageHit = goodImageStep?.IsTrue ?? false;
+            bool badImageHit = badImageStep?.IsTrue ?? false;
+
+            var (isGood, goodText, badText, remark, screenshotPath) =
+                BurnInService.EvaluateAndCapture(ocrText, goodImageHit, badImageHit, session.OrderNo);
+
+            BurnInService.Record(new BurnInRecord
+            {
+                OrderNo = session.OrderNo,
+                Operator = session.Operator,
+                PartName = session.PartName,
+                StepFileName = stepFileName,
+                BurnStartedAt = session.StartedAt,
+                BurnFinishedAt = finishedAt,
+                BurnDurationMs = (finishedAt - session.StartedAt).TotalMilliseconds,
+                IsGood = isGood,
+                GoodText = goodText,
+                BadText = badText,
+                ScreenshotPath = screenshotPath,
+                Remark = remark,
+            });
+        }
+
+        private AutomationStepBase FindStepByUid(Guid uid)
+        {
+            if (AutomationStepBases == null) return null;
+            foreach (var s in AutomationStepBases)
+                if (s.Uid == uid) return s;
+            return null;
         }
 
         /// <summary>

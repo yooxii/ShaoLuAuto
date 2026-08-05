@@ -1053,4 +1053,127 @@
   <data name="ConditionOperator_RegexMatch" xml:space="preserve">
     <value>Regex Match</value>
   </data>
+  <data name="BurnInStatistics" xml:space="preserve">
+    <value>Burn-In Statistics</value>
+  </data>
+  <data name="BurnIn_Title" xml:space="preserve">
+    <value>Burn-In Information</value>
+  </data>
+  <data name="BurnIn_InputHint" xml:space="preserve">
+    <value>Please enter the work order, operator and part name for this run.</value>
+  </data>
+  <data name="BurnIn_OrderNo" xml:space="preserve">
+    <value>Order No.</value>
+  </data>
+  <data name="BurnIn_OrderNoRequired" xml:space="preserve">
+    <value>Order No. is required.</value>
+  </data>
+  <data name="BurnIn_Operator" xml:space="preserve">
+    <value>Operator</value>
+  </data>
+  <data name="BurnIn_PartName" xml:space="preserve">
+    <value>Part Name</value>
+  </data>
+  <data name="BurnIn_TabSummary" xml:space="preserve">
+    <value>Order Summary</value>
+  </data>
+  <data name="BurnIn_TabDetail" xml:space="preserve">
+    <value>Burn-In Details</value>
+  </data>
+  <data name="BurnIn_TabConfig" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="BurnIn_TimeRange" xml:space="preserve">
+    <value>Time Range</value>
+  </data>
+  <data name="BurnIn_GoodCount" xml:space="preserve">
+    <value>Good</value>
+  </data>
+  <data name="BurnIn_BadCount" xml:space="preserve">
+    <value>Bad</value>
+  </data>
+  <data name="BurnIn_TotalCount" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="BurnIn_GoodRate" xml:space="preserve">
+    <value>Good Rate</value>
+  </data>
+  <data name="BurnIn_FirstAt" xml:space="preserve">
+    <value>First Burn</value>
+  </data>
+  <data name="BurnIn_LastAt" xml:space="preserve">
+    <value>Last Burn</value>
+  </data>
+  <data name="BurnIn_Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="BurnIn_DurationMs" xml:space="preserve">
+    <value>Duration(ms)</value>
+  </data>
+  <data name="BurnIn_GoodOrBad" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="BurnIn_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="BurnIn_Good" xml:space="preserve">
+    <value>Good</value>
+  </data>
+  <data name="BurnIn_Bad" xml:space="preserve">
+    <value>Bad</value>
+  </data>
+  <data name="BurnIn_MatchedText" xml:space="preserve">
+    <value>Matched Text</value>
+  </data>
+  <data name="BurnIn_Screenshot" xml:space="preserve">
+    <value>Screenshot</value>
+  </data>
+  <data name="BurnIn_OpenScreenshot" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="BurnIn_ExportCsv" xml:space="preserve">
+    <value>Export CSV</value>
+  </data>
+  <data name="BurnIn_ExportExcel" xml:space="preserve">
+    <value>Export Excel</value>
+  </data>
+  <data name="BurnIn_Exported" xml:space="preserve">
+    <value>Exported</value>
+  </data>
+  <data name="BurnIn_SelectBurnFinishStep" xml:space="preserve">
+    <value>Burn finish step</value>
+  </data>
+  <data name="BurnIn_GoodKeywords" xml:space="preserve">
+    <value>Good keywords</value>
+  </data>
+  <data name="BurnIn_GoodKeywords_Hint" xml:space="preserve">
+    <value>Comma separated; matched against the OCR text of the burn finish step.</value>
+  </data>
+  <data name="BurnIn_BadKeywords" xml:space="preserve">
+    <value>Bad keywords</value>
+  </data>
+  <data name="BurnIn_GoodImageStep" xml:space="preserve">
+    <value>Good image step</value>
+  </data>
+  <data name="BurnIn_BadImageStep" xml:space="preserve">
+    <value>Bad image step</value>
+  </data>
+  <data name="BurnIn_EnableScreenshot" xml:space="preserve">
+    <value>Capture screenshot for evidence</value>
+  </data>
+  <data name="BurnIn_ScreenshotRegion" xml:space="preserve">
+    <value>Screenshot region</value>
+  </data>
+  <data name="BurnIn_SelectRegion" xml:space="preserve">
+    <value>Select Region</value>
+  </data>
+  <data name="BurnIn_ConfigSaved" xml:space="preserve">
+    <value>Configuration saved</value>
+  </data>
+  <data name="BurnIn_TotalOrders" xml:space="preserve">
+    <value>Total orders</value>
+  </data>
+  <data name="BurnIn_TotalRecords" xml:space="preserve">
+    <value>Total records</value>
+  </data>
 </root>

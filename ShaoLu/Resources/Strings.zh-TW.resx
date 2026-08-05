@@ -1053,4 +1053,127 @@
   <data name="ConditionOperator_RegexMatch" xml:space="preserve">
     <value>正規表達式匹配</value>
   </data>
+  <data name="BurnInStatistics" xml:space="preserve">
+    <value>燒錄統計</value>
+  </data>
+  <data name="BurnIn_Title" xml:space="preserve">
+    <value>燒錄資訊</value>
+  </data>
+  <data name="BurnIn_InputHint" xml:space="preserve">
+    <value>請輸入本次運行的工令、操作者和零件名稱。</value>
+  </data>
+  <data name="BurnIn_OrderNo" xml:space="preserve">
+    <value>工令</value>
+  </data>
+  <data name="BurnIn_OrderNoRequired" xml:space="preserve">
+    <value>工令不能為空。</value>
+  </data>
+  <data name="BurnIn_Operator" xml:space="preserve">
+    <value>操作者</value>
+  </data>
+  <data name="BurnIn_PartName" xml:space="preserve">
+    <value>零件名稱</value>
+  </data>
+  <data name="BurnIn_TabSummary" xml:space="preserve">
+    <value>工令彙總</value>
+  </data>
+  <data name="BurnIn_TabDetail" xml:space="preserve">
+    <value>燒錄明細</value>
+  </data>
+  <data name="BurnIn_TabConfig" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="BurnIn_TimeRange" xml:space="preserve">
+    <value>時間範圍</value>
+  </data>
+  <data name="BurnIn_GoodCount" xml:space="preserve">
+    <value>良品數</value>
+  </data>
+  <data name="BurnIn_BadCount" xml:space="preserve">
+    <value>不良數</value>
+  </data>
+  <data name="BurnIn_TotalCount" xml:space="preserve">
+    <value>總數</value>
+  </data>
+  <data name="BurnIn_GoodRate" xml:space="preserve">
+    <value>良品率</value>
+  </data>
+  <data name="BurnIn_FirstAt" xml:space="preserve">
+    <value>首次燒錄</value>
+  </data>
+  <data name="BurnIn_LastAt" xml:space="preserve">
+    <value>最近燒錄</value>
+  </data>
+  <data name="BurnIn_Time" xml:space="preserve">
+    <value>時間</value>
+  </data>
+  <data name="BurnIn_DurationMs" xml:space="preserve">
+    <value>耗时(ms)</value>
+  </data>
+  <data name="BurnIn_GoodOrBad" xml:space="preserve">
+    <value>結果</value>
+  </data>
+  <data name="BurnIn_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="BurnIn_Good" xml:space="preserve">
+    <value>良品</value>
+  </data>
+  <data name="BurnIn_Bad" xml:space="preserve">
+    <value>不良</value>
+  </data>
+  <data name="BurnIn_MatchedText" xml:space="preserve">
+    <value>命中文字</value>
+  </data>
+  <data name="BurnIn_Screenshot" xml:space="preserve">
+    <value>截圖</value>
+  </data>
+  <data name="BurnIn_OpenScreenshot" xml:space="preserve">
+    <value>開啟</value>
+  </data>
+  <data name="BurnIn_ExportCsv" xml:space="preserve">
+    <value>匯出 CSV</value>
+  </data>
+  <data name="BurnIn_ExportExcel" xml:space="preserve">
+    <value>匯出 Excel</value>
+  </data>
+  <data name="BurnIn_Exported" xml:space="preserve">
+    <value>已匯出</value>
+  </data>
+  <data name="BurnIn_SelectBurnFinishStep" xml:space="preserve">
+    <value>燒錄完成步驟</value>
+  </data>
+  <data name="BurnIn_GoodKeywords" xml:space="preserve">
+    <value>良品關鍵字</value>
+  </data>
+  <data name="BurnIn_GoodKeywords_Hint" xml:space="preserve">
+    <value>逗號分隔；與燒錄完成步驟的辨識文字匹配。</value>
+  </data>
+  <data name="BurnIn_BadKeywords" xml:space="preserve">
+    <value>不良關鍵字</value>
+  </data>
+  <data name="BurnIn_GoodImageStep" xml:space="preserve">
+    <value>良品圖像步驟</value>
+  </data>
+  <data name="BurnIn_BadImageStep" xml:space="preserve">
+    <value>不良圖像步驟</value>
+  </data>
+  <data name="BurnIn_EnableScreenshot" xml:space="preserve">
+    <value>截圖留痕</value>
+  </data>
+  <data name="BurnIn_ScreenshotRegion" xml:space="preserve">
+    <value>截圖区域</value>
+  </data>
+  <data name="BurnIn_SelectRegion" xml:space="preserve">
+    <value>選擇區域</value>
+  </data>
+  <data name="BurnIn_ConfigSaved" xml:space="preserve">
+    <value>設定已儲存</value>
+  </data>
+  <data name="BurnIn_TotalOrders" xml:space="preserve">
+    <value>工令總數</value>
+  </data>
+  <data name="BurnIn_TotalRecords" xml:space="preserve">
+    <value>记录總數</value>
+  </data>
 </root>

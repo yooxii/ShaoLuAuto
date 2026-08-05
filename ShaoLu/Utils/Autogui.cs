@@ -186,6 +186,32 @@ namespace ShaoLu.Utils
         }
 
         /// <summary>
+        /// 截取屏幕指定区域
+        /// </summary>
+        /// <param name="region">屏幕绝对坐标区域（逻辑像素）</param>
+        /// <returns> 截取的 Bitmap，若区域为空或非法则返回 null </returns>
+        public static Bitmap CaptureScreenRegion(Rectangle region)
+        {
+            if (region.Width <= 0 || region.Height <= 0) return null;
+            try
+            {
+                var bounds = Screen.PrimaryScreen.Bounds;
+                // 将区域裁剪到屏幕范围内，防止越界
+                region = Rectangle.Intersect(region, bounds);
+                if (region.Width <= 0 || region.Height <= 0) return null;
+
+                Bitmap bmp = new(region.Width, region.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                using Graphics g = Graphics.FromImage(bmp);
+                g.CopyFromScreen(region.X, region.Y, 0, 0, region.Size, CopyPixelOperation.SourceCopy);
+                return bmp;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 将鼠标移动到指定的屏幕坐标位置。
         /// </summary>
         /// <param name="x"> 横坐标 </param>

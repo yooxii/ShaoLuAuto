@@ -18,7 +18,7 @@
     <ProductName>AutoShaoLu%28自動化燒録%29</ProductName>
     <PublisherName>ORT</PublisherName>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>0.6.1.%2a</ApplicationVersion>
+    <ApplicationVersion>0.6.2.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -138,6 +138,7 @@
     <Compile Include="Converters\ConditionEnumToStringConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\BoolToInverseBoolConverter.cs" />
+    <Compile Include="Converters\BoolToGoodBadConverter.cs" />
     <Compile Include="Converters\SettingsTemplateSelector.cs" />
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
@@ -148,6 +149,9 @@
     <Compile Include="Models\StepExecutionResult.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\StepExecutionLog.cs" />
+    <Compile Include="Models\BurnInRecord.cs" />
+    <Compile Include="Models\BurnInSession.cs" />
+    <Compile Include="Models\BurnInConfig.cs" />
     <Compile Include="Utils\NativeMethods.cs" />
     <Compile Include="Viewmodels\ImagesRecognition.cs" />
     <Compile Include="Viewmodels\ImageRecognition.cs" />
@@ -176,6 +180,7 @@
     <Compile Include="Services\IConfigurationService.cs" />
     <Compile Include="Services\ConditionEvaluator.cs" />
     <Compile Include="Services\ExecutionLogService.cs" />
+    <Compile Include="Services\BurnInService.cs" />
     <Compile Include="Services\OCRService.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\IUserService.cs" />
@@ -198,6 +203,7 @@
     <Compile Include="Viewmodels\AutomationStep.cs" />
     <Compile Include="Viewmodels\EditImageViewModel.cs" />
     <Compile Include="Viewmodels\ExecutionLogViewModel.cs" />
+    <Compile Include="Viewmodels\BurnInViewModel.cs" />
     <Compile Include="Viewmodels\MainViewModel.cs" />
     <Compile Include="Viewmodels\LoginViewModel.cs" />
     <Compile Include="Viewmodels\GetInputStep.cs" />
@@ -229,6 +235,12 @@
     </Compile>
     <Compile Include="Views\WindowExecutionLog.xaml.cs">
       <DependentUpon>WindowExecutionLog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowBurnInInput.xaml.cs">
+      <DependentUpon>WindowBurnInInput.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowBurnInStatistics.xaml.cs">
+      <DependentUpon>WindowBurnInStatistics.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowRegionOverlay.xaml.cs">
       <DependentUpon>WindowRegionOverlay.xaml</DependentUpon>
@@ -316,6 +328,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowExecutionLog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowBurnInInput.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowBurnInStatistics.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

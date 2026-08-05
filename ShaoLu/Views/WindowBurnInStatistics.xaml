@@ -1,0 +1,227 @@
+<Window x:Class="ShaoLu.Views.WindowBurnInStatistics"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        xmlns:vm="clr-namespace:ShaoLu.Viewmodels"
+        xmlns:conv="clr-namespace:ShaoLu.Converters"
+        xmlns:models="clr-namespace:ShaoLu.Models"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        Title="{lex:Loc BurnIn_MenuItem}"
+        Height="600" Width="980"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <conv:NullToVisibilityConverter x:Key="NullToVis"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:TruncateTextConverter x:Key="TruncateText"/>
+        <conv:BoolToGoodBadConverter x:Key="BoolToGoodBad"/>
+    </Window.Resources>
+    <Grid Margin="10">
+        <TabControl SelectedIndex="{Binding SelectedTabIndex}">
+            <!-- 页签 1：工令汇总 -->
+            <TabItem Header="{lex:Loc BurnIn_TabSummary}">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="{lex:Loc BurnIn_TimeRange}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <DatePicker SelectedDate="{Binding FilterFrom}" Width="110"/>
+                        <TextBlock Text="~" VerticalAlignment="Center" Margin="5,0"/>
+                        <DatePicker SelectedDate="{Binding FilterTo}" Width="110"/>
+                        <Button Content="{lex:Loc Refresh}" Command="{Binding RefreshSummariesCommand}" Padding="12,3" Margin="8,0,0,0"/>
+                        <Button Content="{lex:Loc Reset}" Command="{Binding ResetFilterCommand}" Padding="12,3" Margin="8,0,0,0"/>
+                    </StackPanel>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding OrderSummaries}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserSortColumns="True"
+                              SelectionMode="Single"
+                              GridLinesVisibility="Horizontal"
+                              AlternatingRowBackground="#F5F5F5"
+                              MouseDoubleClick="SummaryGrid_DoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_OrderNo}" Binding="{Binding OrderNo}" Width="140"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_GoodCount}" Binding="{Binding GoodCount}" Width="90"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_BadCount}" Binding="{Binding BadCount}" Width="90"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_TotalCount}" Binding="{Binding TotalCount}" Width="90"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_GoodRate}" Binding="{Binding GoodRate, StringFormat=P1}" Width="90"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_FirstAt}" Binding="{Binding FirstAt, StringFormat=yyyy-MM-dd HH:mm}" Width="140"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_LastAt}" Binding="{Binding LastAt, StringFormat=yyyy-MM-dd HH:mm}" Width="140"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- 页签 2：烧录明细 -->
+            <TabItem Header="{lex:Loc BurnIn_TabDetail}">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,12,5">
+                            <TextBlock Text="{lex:Loc BurnIn_OrderNo}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox ItemsSource="{Binding OrderNoOptions}"
+                                      SelectedItem="{Binding FilterOrderNo}"
+                                      IsEditable="True"
+                                      MinWidth="140" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,12,5">
+                            <TextBlock Text="{lex:Loc BurnIn_TimeRange}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <DatePicker SelectedDate="{Binding FilterFrom}" Width="110"/>
+                            <TextBlock Text="~" VerticalAlignment="Center" Margin="5,0"/>
+                            <DatePicker SelectedDate="{Binding FilterTo}" Width="110"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,12,5">
+                            <TextBlock Text="{lex:Loc BurnIn_GoodOrBad}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox ItemsSource="{Binding GoodBadOptions}"
+                                      SelectedItem="{Binding SelectedGoodBad}"
+                                      MinWidth="80" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <Button Content="{lex:Loc Search}" Command="{Binding RefreshRecordsCommand}" Padding="12,3" Margin="0,0,5,5"/>
+                        <Button Content="{lex:Loc Reset}" Command="{Binding ResetFilterCommand}" Padding="12,3" Margin="0,0,5,5"/>
+                        <Button Content="{lex:Loc BurnIn_ExportCsv}" Command="{Binding ExportCsvCommand}" Padding="12,3" Margin="0,0,5,5"/>
+                        <Button Content="{lex:Loc BurnIn_ExportExcel}" Command="{Binding ExportExcelCommand}" Padding="12,3" Margin="0,0,5,5"/>
+                    </WrapPanel>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Records}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserSortColumns="True"
+                              SelectionMode="Single"
+                              GridLinesVisibility="Horizontal"
+                              AlternatingRowBackground="#F5F5F5">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_Time}" Binding="{Binding BurnFinishedAt, StringFormat=yyyy-MM-dd HH:mm:ss}" Width="150"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_Operator}" Binding="{Binding Operator}" Width="90"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_PartName}" Binding="{Binding PartName}" Width="120"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_OrderNo}" Binding="{Binding OrderNo}" Width="120"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_DurationMs}" Binding="{Binding BurnDurationMs, StringFormat=F0}" Width="90"/>
+                            <DataGridTextColumn Header="{lex:Loc BurnIn_GoodOrBad}" Binding="{Binding IsGood, Converter={StaticResource BoolToGoodBad}}" Width="80"/>
+                            <DataGridTemplateColumn Header="{lex:Loc BurnIn_MatchedText}" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayMatchedText}" ToolTip="{Binding DisplayMatchedText}"
+                                                   TextTrimming="CharacterEllipsis" Cursor="Hand"
+                                                   MouseLeftButtonUp="MatchedText_Click"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{lex:Loc BurnIn_Screenshot}" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{lex:Loc BurnIn_OpenScreenshot}"
+                                                   Visibility="{Binding HasScreenshot, Converter={StaticResource BoolToVis}}"
+                                                   Foreground="#1890FF" Cursor="Hand"
+                                                   Tag="{Binding ScreenshotPath}"
+                                                   MouseLeftButtonUp="Screenshot_Click"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- 页签 3：配置 -->
+            <TabItem Header="{lex:Loc BurnIn_TabConfig}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10" MaxWidth="720">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="{lex:Loc BurnIn_SelectBurnFinishStep}" VerticalAlignment="Center" Margin="0,0,8,0" Width="160"/>
+                            <ComboBox ItemsSource="{Binding AllSteps}"
+                                      SelectedValue="{Binding Config.BurnFinishStepUid}"
+                                      SelectedValuePath="Uid"
+                                      MinWidth="260" VerticalContentAlignment="Center">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding Name, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="{lex:Loc BurnIn_GoodKeywords}" VerticalAlignment="Center" Margin="0,0,8,0" Width="160"/>
+                            <TextBox Text="{Binding Config.GoodTextContains, UpdateSourceTrigger=PropertyChanged}"
+                                     MinWidth="260" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{lex:Loc BurnIn_GoodKeywords_Hint}" Foreground="Gray" FontSize="11" Margin="168,-6,0,10"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="{lex:Loc BurnIn_BadKeywords}" VerticalAlignment="Center" Margin="0,0,8,0" Width="160"/>
+                            <TextBox Text="{Binding Config.BadTextContains, UpdateSourceTrigger=PropertyChanged}"
+                                     MinWidth="260" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="{lex:Loc BurnIn_GoodImageStep}" VerticalAlignment="Center" Margin="0,0,8,0" Width="160"/>
+                            <ComboBox ItemsSource="{Binding AllSteps}"
+                                      SelectedValue="{Binding Config.GoodImageStepUid}"
+                                      SelectedValuePath="Uid"
+                                      MinWidth="260" VerticalContentAlignment="Center">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding Name, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="{lex:Loc BurnIn_BadImageStep}" VerticalAlignment="Center" Margin="0,0,8,0" Width="160"/>
+                            <ComboBox ItemsSource="{Binding AllSteps}"
+                                      SelectedValue="{Binding Config.BadImageStepUid}"
+                                      SelectedValuePath="Uid"
+                                      MinWidth="260" VerticalContentAlignment="Center">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding Name, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <CheckBox IsChecked="{Binding Config.CaptureScreenshot}"
+                                  Content="{lex:Loc BurnIn_EnableScreenshot}" Margin="0,0,0,10"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10"
+                                    Visibility="{Binding Config.CaptureScreenshot, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{lex:Loc BurnIn_ScreenshotRegion}" VerticalAlignment="Center" Margin="0,0,8,0" Width="160"/>
+                            <Button Content="{lex:Loc BurnIn_SelectRegion}" Command="{Binding SelectRegionCommand}" Padding="12,3"/>
+                            <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Foreground="Gray">
+                                <Run Text="X:"/><Run Text="{Binding Config.RegionX, Mode=OneWay, StringFormat=F0}"/>
+                                <Run Text=" Y:"/><Run Text="{Binding Config.RegionY, Mode=OneWay, StringFormat=F0}"/>
+                                <Run Text=" W:"/><Run Text="{Binding Config.RegionW, Mode=OneWay, StringFormat=F0}"/>
+                                <Run Text=" H:"/><Run Text="{Binding Config.RegionH, Mode=OneWay, StringFormat=F0}"/>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <Button Content="{lex:Loc Save}" Command="{Binding SaveConfigCommand}" MinWidth="120" Padding="16,6" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- 状态栏 -->
+        <TextBlock VerticalAlignment="Bottom" Margin="10,0,10,5" Foreground="Gray" FontSize="11"
+                   Text="{Binding StatusText}"/>
+    </Grid>
+</Window>

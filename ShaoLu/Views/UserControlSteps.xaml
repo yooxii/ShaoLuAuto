@@ -110,7 +110,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MinWidth="400"/>
                     <ColumnDefinition Width="3"/>
-                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="400"/>
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
                     <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}"

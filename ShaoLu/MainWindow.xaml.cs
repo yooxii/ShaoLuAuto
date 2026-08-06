@@ -31,6 +31,15 @@ namespace ShaoLu
         private const int HOTKEY_STOP_ID = 9002;
         private HwndSource _source;
 
+        #region 文件操作快捷键命令（仅主窗口内有效）
+
+        public static readonly RoutedUICommand NewCommand = new RoutedUICommand("New", nameof(NewCommand), typeof(MainWindow));
+        public static readonly RoutedUICommand OpenCommand = new RoutedUICommand("Open", nameof(OpenCommand), typeof(MainWindow));
+        public static readonly RoutedUICommand SaveCommand = new RoutedUICommand("Save", nameof(SaveCommand), typeof(MainWindow));
+        public static readonly RoutedUICommand SaveAsCommand = new RoutedUICommand("SaveAs", nameof(SaveAsCommand), typeof(MainWindow));
+
+        #endregion
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);

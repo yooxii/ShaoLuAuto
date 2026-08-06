@@ -1060,7 +1060,7 @@
     <value>Burn-In Information</value>
   </data>
   <data name="AddBurnInConfigStep" xml:space="preserve">
-    <value>Add Burn-In Config</value>
+    <value>Burn-In Config</value>
   </data>
   <data name="BurnInConfig_StepName" xml:space="preserve">
     <value>Burn-In Config</value>
@@ -1078,7 +1078,7 @@
     <value>Burn-Failed Template</value>
   </data>
   <data name="BurnIn_CropFromScreen" xml:space="preserve">
-    <value>Crop from Screen</value>
+    <value>Select Image &amp; Crop</value>
   </data>
   <data name="BurnIn_ClearTemplate" xml:space="preserve">
     <value>Clear</value>

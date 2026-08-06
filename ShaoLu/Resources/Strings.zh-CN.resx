@@ -1066,7 +1066,7 @@
     <value>烧录信息</value>
   </data>
   <data name="AddBurnInConfigStep" xml:space="preserve">
-    <value>添加烧录配置</value>
+    <value>烧录配置</value>
   </data>
   <data name="BurnInConfig_StepName" xml:space="preserve">
     <value>烧录配置</value>
@@ -1084,7 +1084,7 @@
     <value>烧录失败判据图</value>
   </data>
   <data name="BurnIn_CropFromScreen" xml:space="preserve">
-    <value>从屏幕框选裁剪</value>
+    <value>选择图片裁剪</value>
   </data>
   <data name="BurnIn_ClearTemplate" xml:space="preserve">
     <value>清除</value>

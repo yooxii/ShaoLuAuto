@@ -1060,7 +1060,7 @@
     <value>燒錄資訊</value>
   </data>
   <data name="AddBurnInConfigStep" xml:space="preserve">
-    <value>新增燒錄設定</value>
+    <value>燒錄設定</value>
   </data>
   <data name="BurnInConfig_StepName" xml:space="preserve">
     <value>燒錄設定</value>
@@ -1078,7 +1078,7 @@
     <value>燒錄失敗判據圖</value>
   </data>
   <data name="BurnIn_CropFromScreen" xml:space="preserve">
-    <value>從螢幕框選裁剪</value>
+    <value>選擇圖片裁剪</value>
   </data>
   <data name="BurnIn_ClearTemplate" xml:space="preserve">
     <value>清除</value>

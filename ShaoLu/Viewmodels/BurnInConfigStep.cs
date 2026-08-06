@@ -217,7 +217,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         [JsonIgnore]
         private ICommand selectTemplateCommand;
-        /// <summary>框选屏幕区域并裁剪为指定类型判据模板（参数：Good/Bad/Fail）</summary>
+        /// <summary>选择原图并通过裁剪窗口裁剪为指定类型判据模板（参数：Good/Bad/Fail）</summary>
         [JsonIgnore]
         public ICommand SelectTemplateCommand => selectTemplateCommand ??= new RelayCommand<object>(SelectTemplate, null);
 
@@ -231,46 +231,89 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             if (!(parameter is string kind)) return;
 
-            var win = new Views.WindowSelectRegion();
-            if (win.ShowDialog() != true || win.SelectedRegion == Rect.Empty) return;
+            // 1. 选择原图
+            string title = LanguageService.GetLocalizedString("Select_target_pic", "Open Image File");
+            string filter = LanguageService.GetLocalizedString("Image_File", "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
+            string imagePath = PathServices.OpenPathDialog(title, filter);
+            if (string.IsNullOrEmpty(imagePath)) return;
 
+            var imgSrc = LoadFrozenBitmap(imagePath);
+            if (imgSrc == null) return;
+
+            // 2. 打开裁剪窗口，裁剪完成后保存为判据模板
+            var editWindow = new Views.WindowEditImage();
+            editWindow.Show();
+            // 使用 Background 优先级，确保裁剪控件完成内部布局和渲染后再设置图片
+            editWindow.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                editWindow.editImageViewModel.ImgSrc = imgSrc;
+                editWindow.UpdateLayout();
+            }), System.Windows.Threading.DispatcherPriority.Background);
+            editWindow.editImageViewModel.OnImageSaved += (img, rect, clickThumbs, ocrRect) =>
+            {
+                SaveTemplate(img, kind);
+            };
+        }
+
+        /// <summary>将裁剪图保存为指定类型判据模板（{工作目录}\images\burnin_{Uid}_{kind}.png）</summary>
+        private void SaveTemplate(System.Windows.Media.ImageSource imageSource, string kind)
+        {
             try
             {
-                // 截取框选区域（逻辑像素，与截图留痕一致）
-                var region = new System.Drawing.Rectangle(
-                    (int)win.SelectedRegion.X, (int)win.SelectedRegion.Y,
-                    (int)win.SelectedRegion.Width, (int)win.SelectedRegion.Height);
-                using (var bmp = Utils.Autogui.CaptureScreenRegion(region))
+                if (!(imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource)) return;
+
+                var mainVM = Utils.SingletonLocator.Main;
+                string workDir = mainVM?.StepImageWorkDir;
+                if (string.IsNullOrEmpty(workDir))
                 {
-                    if (bmp == null) return;
+                    workDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AutoShaoLu", "images");
+                    if (mainVM != null) mainVM.StepImageWorkDir = workDir;
+                }
+                string imagesDir = System.IO.Path.Combine(workDir, "images");
+                System.IO.Directory.CreateDirectory(imagesDir);
 
-                    // 保存到 {工作目录}\images\burnin_{Uid}_{kind}.png（工作目录为空时回退临时目录）
-                    var mainVM = Utils.SingletonLocator.Main;
-                    string workDir = mainVM?.StepImageWorkDir;
-                    if (string.IsNullOrEmpty(workDir))
-                    {
-                        workDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AutoShaoLu", "images");
-                        if (mainVM != null) mainVM.StepImageWorkDir = workDir;
-                    }
-                    string imagesDir = System.IO.Path.Combine(workDir, "images");
-                    System.IO.Directory.CreateDirectory(imagesDir);
+                string fileName = $"burnin_{Uid}_{kind.ToLower()}.png";
+                string fullPath = System.IO.Path.Combine(imagesDir, fileName);
 
-                    string fileName = $"burnin_{Uid}_{kind.ToLower()}.png";
-                    string fullPath = System.IO.Path.Combine(imagesDir, fileName);
-                    bmp.Save(fullPath, System.Drawing.Imaging.ImageFormat.Png);
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                using (var stream = new System.IO.FileStream(fullPath, System.IO.FileMode.Create))
+                {
+                    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmapSource));
+                    encoder.Save(stream);
+                }
 
-                    string relativeName = $"images/{fileName}";
-                    switch (kind)
-                    {
-                        case "Good": GoodTemplateName = relativeName; break;
-                        case "Bad": BadTemplateName = relativeName; break;
-                        case "Fail": FailTemplateName = relativeName; break;
-                    }
+                string relativeName = $"images/{fileName}";
+                switch (kind)
+                {
+                    case "Good": GoodTemplateName = relativeName; break;
+                    case "Bad": BadTemplateName = relativeName; break;
+                    case "Fail": FailTemplateName = relativeName; break;
                 }
             }
             catch (Exception ex)
             {
-                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "SelectTemplate failed");
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "SaveTemplate failed");
+            }
+        }
+
+        /// <summary>加载图片文件为冻结的 BitmapImage；失败返回 null</summary>
+        private System.Windows.Media.ImageSource LoadFrozenBitmap(string path)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(path)) return null;
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(path);
+                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                return bitmap;
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "LoadFrozenBitmap failed");
+                return null;
             }
         }
 
@@ -293,15 +336,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 if (string.IsNullOrEmpty(templateName) || string.IsNullOrEmpty(workDir)) return null;
                 string fullPath = System.IO.Path.Combine(workDir,
                     templateName.Replace('/', System.IO.Path.DirectorySeparatorChar));
-                if (!System.IO.File.Exists(fullPath)) return null;
-
-                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(fullPath);
-                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                return bitmap;
+                return LoadFrozenBitmap(fullPath);
             }
             catch { return null; }
         }

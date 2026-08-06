@@ -562,7 +562,7 @@
     <value>No account?</value>
   </data>
   <data name="Login_RegisterNow" xml:space="preserve">
-    <value>Register now</value>
+    <value>Register</value>
   </data>
   <data name="RegisterTitle" xml:space="preserve">
     <value>User Registration</value>
@@ -1058,6 +1058,30 @@
   </data>
   <data name="BurnIn_Title" xml:space="preserve">
     <value>Burn-In Information</value>
+  </data>
+  <data name="AddBurnInConfigStep" xml:space="preserve">
+    <value>Add Burn-In Config Step</value>
+  </data>
+  <data name="BurnIn_FailKeywords" xml:space="preserve">
+    <value>Burn-Failed Keywords</value>
+  </data>
+  <data name="BurnIn_FailImageStep" xml:space="preserve">
+    <value>Burn-Failed Image Step</value>
+  </data>
+  <data name="BurnIn_BurnFailed" xml:space="preserve">
+    <value>Burn Failed</value>
+  </data>
+  <data name="BurnIn_FailCount" xml:space="preserve">
+    <value>Burn-Failed Count</value>
+  </data>
+  <data name="BurnIn_OnlyOneAllowed" xml:space="preserve">
+    <value>Only one Burn-In Config step is allowed.</value>
+  </data>
+  <data name="BurnIn_FinishStepHint" xml:space="preserve">
+    <value>The judgment method is chosen automatically by the finish step type: a Get-Input step uses keywords, an image step uses image steps. Each run is judged once as Good / Bad / Burn-Failed.</value>
+  </data>
+  <data name="BurnIn_SessionCancelled" xml:space="preserve">
+    <value>Burn-in information input was cancelled.</value>
   </data>
   <data name="BurnIn_InputHint" xml:space="preserve">
     <value>Please enter the work order, operator and part name for this run.</value>

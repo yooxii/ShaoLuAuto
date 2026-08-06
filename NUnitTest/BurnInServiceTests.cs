@@ -8,32 +8,22 @@ using System.IO;
 namespace NUnitTest
 {
     /// <summary>
-    /// BurnInService 的单元测试（仅覆盖纯逻辑：良品判定、关键字拆分、CSV 导出、配置默认值）
+    /// BurnInService 的单元测试（仅覆盖纯逻辑：三态判定、关键字拆分、CSV 导出、配置默认值）
     /// 不触碰真实统计数据库，避免污染生产留痕数据
     /// </summary>
     [TestFixture]
     public class BurnInServiceTests
     {
-        private BurnInConfig _originalConfig;
-
-        [SetUp]
-        public void Setup()
-        {
-            _originalConfig = BurnInService.Config;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            BurnInService.Config = _originalConfig;
-        }
-
-        private static BurnInConfig MakeConfig(string goodKeywords = "PASS,OK", string badKeywords = "FAIL,NG")
+        private static BurnInConfig MakeConfig(
+            string goodKeywords = "PASS,OK",
+            string badKeywords = "FAIL,NG",
+            string failKeywords = "ERROR,ERR")
         {
             return new BurnInConfig
             {
                 GoodTextContains = goodKeywords,
                 BadTextContains = badKeywords,
+                FailTextContains = failKeywords,
                 CaptureScreenshot = false,
             };
         }
@@ -41,9 +31,9 @@ namespace NUnitTest
         [Test]
         public void Evaluate_GoodKeywordHit_IsGood()
         {
-            BurnInService.Config = MakeConfig();
-            var (isGood, goodText, badText, _, _) = BurnInService.EvaluateAndCapture("result: PASS", false, false, "WO-001");
-            Assert.That(isGood, Is.True);
+            var (result, goodText, badText, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), "result: PASS", false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.Good));
             Assert.That(goodText, Is.EqualTo("result: PASS"));
             Assert.That(badText, Is.Null);
         }
@@ -51,19 +41,30 @@ namespace NUnitTest
         [Test]
         public void Evaluate_BadKeywordHit_IsBad()
         {
-            BurnInService.Config = MakeConfig();
-            var (isGood, goodText, badText, _, _) = BurnInService.EvaluateAndCapture("check FAIL here", false, false, "WO-001");
-            Assert.That(isGood, Is.False);
+            var (result, goodText, badText, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), "check FAIL here", false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.Bad));
             Assert.That(goodText, Is.Null);
             Assert.That(badText, Is.EqualTo("check FAIL here"));
         }
 
         [Test]
-        public void Evaluate_NoKeywordHit_DefaultBad()
+        public void Evaluate_FailKeywordHit_IsBurnFailed()
         {
-            BurnInService.Config = MakeConfig();
-            var (isGood, goodText, badText, remark, _) = BurnInService.EvaluateAndCapture("no keyword here", false, false, "WO-001");
-            Assert.That(isGood, Is.False);
+            var (result, goodText, badText, remark, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), "burn ERROR occurred", false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.BurnFailed));
+            Assert.That(goodText, Is.Null);
+            Assert.That(badText, Is.Null);
+            Assert.That(remark, Is.EqualTo("burn ERROR occurred"));
+        }
+
+        [Test]
+        public void Evaluate_NoKeywordHit_BurnFailed()
+        {
+            var (result, goodText, badText, remark, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), "no keyword here", false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.BurnFailed));
             Assert.That(goodText, Is.Null);
             Assert.That(badText, Is.Null);
             // 未命中时原始文本写入备注供追溯
@@ -71,44 +72,70 @@ namespace NUnitTest
         }
 
         [Test]
+        public void Evaluate_BadTakesPriorityOverGood()
+        {
+            // 同时命中良品与不良关键字：不良品优先（一次性判定唯一结果）
+            var (result, _, _, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), "PASS but also FAIL", false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.Bad));
+        }
+
+        [Test]
+        public void Evaluate_FailTakesPriorityOverGood()
+        {
+            // 同时命中良品与失败关键字：烧录失败优先于良品
+            var (result, _, _, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), "PASS but also ERROR", false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.BurnFailed));
+        }
+
+        [Test]
         public void Evaluate_GoodImageHit_IsGood()
         {
-            BurnInService.Config = MakeConfig();
-            var (isGood, _, _, _, _) = BurnInService.EvaluateAndCapture(null, goodImageHit: true, badImageHit: false, "WO-001");
-            Assert.That(isGood, Is.True);
+            var (result, _, _, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), null, goodImageHit: true, badImageHit: false, failImageHit: false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.Good));
         }
 
         [Test]
         public void Evaluate_BadImageHit_IsBad()
         {
-            BurnInService.Config = MakeConfig();
-            var (isGood, _, _, _, _) = BurnInService.EvaluateAndCapture(null, goodImageHit: false, badImageHit: true, "WO-001");
-            Assert.That(isGood, Is.False);
+            var (result, _, _, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), null, goodImageHit: true, badImageHit: true, failImageHit: false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.Bad));
+        }
+
+        [Test]
+        public void Evaluate_FailImageHit_IsBurnFailed()
+        {
+            var (result, _, _, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), null, goodImageHit: true, badImageHit: false, failImageHit: true, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.BurnFailed));
+        }
+
+        [Test]
+        public void Evaluate_NoImageHit_IsBurnFailed()
+        {
+            var (result, _, _, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(), null, false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.BurnFailed));
         }
 
         [Test]
         public void Evaluate_KeywordCaseInsensitive()
         {
-            BurnInService.Config = MakeConfig(goodKeywords: "pass");
-            var (isGood, _, _, _, _) = BurnInService.EvaluateAndCapture("RESULT: PASS", false, false, "WO-001");
-            Assert.That(isGood, Is.True);
+            var (result, _, _, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(goodKeywords: "pass"), "RESULT: PASS", false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.Good));
         }
 
         [Test]
         public void Evaluate_FullWidthCommaSeparatedKeywords()
         {
             // 支持全角逗号分隔
-            BurnInService.Config = MakeConfig(goodKeywords: "良品，合格");
-            var (isGood, _, _, _, _) = BurnInService.EvaluateAndCapture("判定：合格", false, false, "WO-001");
-            Assert.That(isGood, Is.True);
-        }
-
-        [Test]
-        public void Evaluate_NullOcrText_WithGoodImageHit()
-        {
-            BurnInService.Config = MakeConfig();
-            var (isGood, _, _, _, _) = BurnInService.EvaluateAndCapture(null, true, false, "WO-001");
-            Assert.That(isGood, Is.True);
+            var (result, _, _, _, _) = BurnInService.EvaluateAndCapture(
+                MakeConfig(goodKeywords: "良品，合格"), "判定：合格", false, false, false, "WO-001");
+            Assert.That(result, Is.EqualTo(BurnResult.Good));
         }
 
         [Test]
@@ -145,6 +172,20 @@ namespace NUnitTest
                         IsGood = false,
                         BadText = "FAIL",
                     },
+                    new BurnInRecord
+                    {
+                        Id = 3,
+                        OrderNo = "WO-001",
+                        Operator = "王五",
+                        PartName = "PartA",
+                        StepFileName = "demo",
+                        BurnStartedAt = new DateTime(2026, 1, 1, 10, 0, 0),
+                        BurnFinishedAt = new DateTime(2026, 1, 1, 10, 2, 0),
+                        BurnDurationMs = 120000,
+                        IsGood = false,
+                        IsBurnFailed = true,
+                        Remark = "no keyword",
+                    },
                 };
 
                 BurnInService.ExportCsv(path, rows);
@@ -156,6 +197,7 @@ namespace NUnitTest
                 Assert.That(content, Does.Contain("张三"));
                 Assert.That(content, Does.Contain("Good"));
                 Assert.That(content, Does.Contain("Bad"));
+                Assert.That(content, Does.Contain("BurnFailed"));
             }
             finally
             {
@@ -176,6 +218,15 @@ namespace NUnitTest
             Assert.That(config.HasRegion, Is.False);
             config.RegionX = 0; config.RegionY = 0; config.RegionW = 100; config.RegionH = 100;
             Assert.That(config.HasRegion, Is.True);
+        }
+
+        [Test]
+        public void BurnInRecord_ResultDisplay_ThreeStates()
+        {
+            // 三态由 IsGood/IsBurnFailed 组合得出
+            Assert.That(new BurnInRecord { IsGood = true }.Result, Is.EqualTo(BurnResult.Good));
+            Assert.That(new BurnInRecord { IsGood = false, IsBurnFailed = false }.Result, Is.EqualTo(BurnResult.Bad));
+            Assert.That(new BurnInRecord { IsBurnFailed = true }.Result, Is.EqualTo(BurnResult.BurnFailed));
         }
     }
 }

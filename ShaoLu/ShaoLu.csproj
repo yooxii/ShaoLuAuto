@@ -209,6 +209,7 @@
     <Compile Include="Viewmodels\GetInputStep.cs" />
     <Compile Include="Viewmodels\MouseActionStep.cs" />
     <Compile Include="Viewmodels\StatisticsStep.cs" />
+    <Compile Include="Viewmodels\BurnInConfigStep.cs" />
     <Compile Include="Viewmodels\UserManagementViewModel.cs" />
     <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />

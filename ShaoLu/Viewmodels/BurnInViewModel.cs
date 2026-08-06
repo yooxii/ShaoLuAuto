@@ -22,14 +22,14 @@ namespace ShaoLu.Viewmodels
         private string _filterOrderNo;
         private DateTime? _filterFrom;
         private DateTime? _filterTo;
-        private bool? _filterIsGood;
+        private BurnResult? _filterResult;
         private string _statusText;
 
         public int SelectedTabIndex { get => _selectedTabIndex; set => SetProperty(ref _selectedTabIndex, value); }
         public string FilterOrderNo { get => _filterOrderNo; set => SetProperty(ref _filterOrderNo, value); }
         public DateTime? FilterFrom { get => _filterFrom; set => SetProperty(ref _filterFrom, value); }
         public DateTime? FilterTo { get => _filterTo; set => SetProperty(ref _filterTo, value); }
-        public bool? FilterIsGood { get => _filterIsGood; set => SetProperty(ref _filterIsGood, value); }
+        public BurnResult? FilterResult { get => _filterResult; set => SetProperty(ref _filterResult, value); }
         public string StatusText { get => _statusText; set => SetProperty(ref _statusText, value); }
 
         /// <summary>工令汇总</summary>
@@ -41,38 +41,27 @@ namespace ShaoLu.Viewmodels
         /// <summary>工令下拉列表（供汇总页双击跳转与明细页过滤）</summary>
         public ObservableCollection<string> OrderNoOptions { get; } = new();
 
-        /// <summary>良/不良过滤选项</summary>
-        public ObservableCollection<string> GoodBadOptions { get; } = new()
+        /// <summary>结果过滤选项（全部/良品/不良品/烧录失败）</summary>
+        public ObservableCollection<string> ResultOptions { get; } = new()
         {
             LanguageService.GetLocalizedString("BurnIn_All"),
             LanguageService.GetLocalizedString("BurnIn_Good"),
             LanguageService.GetLocalizedString("BurnIn_Bad"),
+            LanguageService.GetLocalizedString("BurnIn_BurnFailed"),
         };
-        private string _selectedGoodBad;
-        public string SelectedGoodBad
+        private string _selectedResult;
+        public string SelectedResult
         {
-            get => _selectedGoodBad;
+            get => _selectedResult;
             set
             {
-                if (SetProperty(ref _selectedGoodBad, value))
+                if (SetProperty(ref _selectedResult, value))
                 {
-                    if (value == GoodBadOptions[1]) FilterIsGood = true;
-                    else if (value == GoodBadOptions[2]) FilterIsGood = false;
-                    else FilterIsGood = null;
+                    if (value == ResultOptions[1]) FilterResult = BurnResult.Good;
+                    else if (value == ResultOptions[2]) FilterResult = BurnResult.Bad;
+                    else if (value == ResultOptions[3]) FilterResult = BurnResult.BurnFailed;
+                    else FilterResult = null;
                 }
-            }
-        }
-
-        /// <summary>当前配置（绑定到 Config 页签）</summary>
-        public BurnInConfig Config { get; private set; } = BurnInService.Config ?? new BurnInConfig();
-
-        /// <summary>所有步骤集合（供 ComboBox 绑定选择判定步骤）</summary>
-        public ObservableCollection<AutomationStep.AutomationStepBase> AllSteps
-        {
-            get
-            {
-                try { return SingletonLocator.Steps.AutomationStepBases; }
-                catch { return null; }
             }
         }
 
@@ -83,8 +72,6 @@ namespace ShaoLu.Viewmodels
         public ICommand ResetFilterCommand { get; }
         public ICommand ExportCsvCommand { get; }
         public ICommand ExportExcelCommand { get; }
-        public ICommand SaveConfigCommand { get; }
-        public ICommand SelectRegionCommand { get; }
 
         #endregion
 
@@ -95,11 +82,9 @@ namespace ShaoLu.Viewmodels
             ResetFilterCommand = new RelayCommand(ResetFilter);
             ExportCsvCommand = new RelayCommand(ExportCsv);
             ExportExcelCommand = new RelayCommand(ExportExcel);
-            SaveConfigCommand = new RelayCommand(SaveConfig);
-            SelectRegionCommand = new RelayCommand(SelectRegion);
 
-            _selectedGoodBad = GoodBadOptions[0];
-            OnPropertyChanged(nameof(SelectedGoodBad));
+            _selectedResult = ResultOptions[0];
+            OnPropertyChanged(nameof(SelectedResult));
 
             // 初始加载
             RefreshSummaries();
@@ -130,7 +115,7 @@ namespace ShaoLu.Viewmodels
                     orderNo: string.IsNullOrWhiteSpace(FilterOrderNo) ? null : FilterOrderNo,
                     from: FilterFrom,
                     to: FilterTo?.AddDays(1),
-                    isGood: FilterIsGood,
+                    result: FilterResult,
                     pageSize: 1000))
                     Records.Add(r);
                 StatusText = $"{LanguageService.GetLocalizedString("BurnIn_TotalRecords")}: {Records.Count}";
@@ -158,7 +143,7 @@ namespace ShaoLu.Viewmodels
             FilterOrderNo = string.Empty;
             FilterFrom = null;
             FilterTo = null;
-            SelectedGoodBad = GoodBadOptions[0];
+            SelectedResult = ResultOptions[0];
             RefreshSummaries();
             RefreshRecords();
         }
@@ -219,27 +204,8 @@ namespace ShaoLu.Viewmodels
                 orderNo: string.IsNullOrWhiteSpace(FilterOrderNo) ? null : FilterOrderNo,
                 from: FilterFrom,
                 to: FilterTo?.AddDays(1),
-                isGood: FilterIsGood,
+                result: FilterResult,
                 pageSize: 10000);
-        }
-
-        private void SaveConfig()
-        {
-            BurnInService.SaveConfig(Config);
-            StatusText = LanguageService.GetLocalizedString("BurnIn_ConfigSaved");
-        }
-
-        private void SelectRegion()
-        {
-            var win = new WindowSelectRegion();
-            if (win.ShowDialog() == true && win.SelectedRegion != Rect.Empty)
-            {
-                Config.RegionX = win.SelectedRegion.X;
-                Config.RegionY = win.SelectedRegion.Y;
-                Config.RegionW = win.SelectedRegion.Width;
-                Config.RegionH = win.SelectedRegion.Height;
-                OnPropertyChanged(nameof(Config));
-            }
         }
     }
 }

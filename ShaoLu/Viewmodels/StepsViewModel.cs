@@ -191,6 +191,15 @@ namespace ShaoLu.Viewmodels
             if (parameter is string param)
             {
                 AutomationStepBases ??= [];
+                // 烧录配置步骤全局仅允许一个
+                if (param == "BurnInConfig" && AutomationStepBases.Any(t => t.Type == StepType.BurnInConfig))
+                {
+                    WindowAsyncPopup.Show(
+                        LanguageService.GetLocalizedString("BurnIn_OnlyOneAllowed"),
+                        LanguageService.GetLocalizedString("Warning"),
+                        PopupButtons.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 step = param switch
                 {
                     "ClickImage" => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
@@ -204,6 +213,7 @@ namespace ShaoLu.Viewmodels
                     "GetInput" => new GetInputStep($"GetInput_{AutomationStepBases.Count(t => t.Type == StepType.GetInput) + 1}"),
                     "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
+                    "BurnInConfig" => new BurnInConfigStep("BurnInConfig"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
                 ApplyDefaultSettings(step);
@@ -372,31 +382,66 @@ namespace ShaoLu.Viewmodels
         public void InsertSteps(ObservableCollection<AutomationStepBase> steps, int index = -1)
         {
             AutomationStepBases ??= [];
+
+            // 烧录配置步骤全局仅允许一个：跳过多余的 BurnInConfigStep
+            var toInsert = new List<AutomationStepBase>(steps);
+            bool hasExistingBurnIn = AutomationStepBases.Any(s => s.Type == StepType.BurnInConfig);
+            bool skipped = false;
+            for (int i = toInsert.Count - 1; i >= 0; i--)
+            {
+                if (toInsert[i] is not BurnInConfigStep) continue;
+                if (hasExistingBurnIn)
+                {
+                    toInsert.RemoveAt(i);
+                    skipped = true;
+                }
+                else
+                {
+                    hasExistingBurnIn = true; // 保留第一个，后续同类型跳过
+                }
+            }
+            // 保留第一个后若仍有多个（列表内重复），继续去重
+            bool seen = false;
+            for (int i = 0; i < toInsert.Count; i++)
+            {
+                if (toInsert[i] is not BurnInConfigStep) continue;
+                if (seen) { toInsert.RemoveAt(i); i--; skipped = true; }
+                else seen = true;
+            }
+            if (skipped)
+            {
+                WindowAsyncPopup.Show(
+                    LanguageService.GetLocalizedString("BurnIn_OnlyOneAllowed"),
+                    LanguageService.GetLocalizedString("Warning"),
+                    PopupButtons.OK, MessageBoxImage.Warning);
+            }
+            if (toInsert.Count == 0) return;
+
             if (index >= 0 && index < AutomationStepBases.Count)
             {
-                for (int i = 0; i < steps.Count; i++)
+                for (int i = 0; i < toInsert.Count; i++)
                 {
-                    if (AutomationStepBases.Contains(steps[i]))
+                    if (AutomationStepBases.Contains(toInsert[i]))
                     {
-                        AutomationStepBases.Insert(index + i, steps[i].Clone());
+                        AutomationStepBases.Insert(index + i, toInsert[i].Clone());
                     }
                     else
                     {
-                        AutomationStepBases.Insert(index + i, steps[i]);
+                        AutomationStepBases.Insert(index + i, toInsert[i]);
                     }
                 }
             }
             else
             {
-                for (int i = 0; i < steps.Count; i++)
+                for (int i = 0; i < toInsert.Count; i++)
                 {
-                    if (AutomationStepBases.Contains(steps[i]))
+                    if (AutomationStepBases.Contains(toInsert[i]))
                     {
-                        AutomationStepBases.Add(steps[i].Clone());
+                        AutomationStepBases.Add(toInsert[i].Clone());
                     }
                     else
                     {
-                        AutomationStepBases.Add(steps[i]);
+                        AutomationStepBases.Add(toInsert[i]);
                     }
                 }
             }
@@ -492,7 +537,6 @@ namespace ShaoLu.Viewmodels
         /// </summary>
         public async void Run()
         {
-            BurnInSession burnInSession = null;
             try
             {
                 // 运行前确认
@@ -504,18 +548,6 @@ namespace ShaoLu.Viewmodels
                     var confirmResult = await confirmTask;
                     if (confirmResult != PopupButton.YesValue)
                         return;
-                }
-
-                // 烧录统计：收集本次运行的工令/操作者/零件名
-                try
-                {
-                    if (!BurnInService.BeginSession())
-                        return; // 用户取消
-                    burnInSession = BurnInService.CurrentSession;
-                }
-                catch (Exception ex)
-                {
-                    logger.Warn(ex, "BurnIn BeginSession failed, skip tracking");
                 }
 
                 PreRun();
@@ -706,11 +738,11 @@ namespace ShaoLu.Viewmodels
             }
             finally
             {
-                // 烧录统计：无论正常结束、取消或异常，都记录本次运行（若已开启会话）
+                // 烧录统计：无论正常结束、取消或异常，都记录本次运行（若已由烧录配置步骤开启会话）
                 try
                 {
-                    if (burnInSession != null)
-                        RecordBurnIn(burnInSession);
+                    if (BurnInService.CurrentSession != null)
+                        RecordBurnIn(BurnInService.CurrentSession);
                 }
                 catch (Exception ex)
                 {
@@ -738,16 +770,18 @@ namespace ShaoLu.Viewmodels
 
         /// <summary>
         /// 将本次运行记入烧录统计表（由 Run() 的 finally 块调用）
-        /// 根据 BurnInService.Config 中配置的判定步骤/关键字/图像步骤综合判定良/不良
+        /// 配置取自唯一的烧录配置步骤；判定方式按烧录完成步骤类型自动选择：
+        /// 获取输入型→关键字判定，图像型→图像步骤判定，一次得出 良品/不良品/烧录失败
         /// </summary>
         private void RecordBurnIn(BurnInSession session)
         {
             var finishedAt = DateTime.Now;
-            var config = BurnInService.Config;
             string stepFileName = Path.GetFileNameWithoutExtension(
                 SingletonLocator.Main.StepFilePath ?? "unsaved");
 
-            // 若尚未配置，记录为"未判定"
+            // 未添加烧录配置步骤时不记录
+            var configStep = AutomationStepBases?.FirstOrDefault(s => s is BurnInConfigStep) as BurnInConfigStep;
+            var config = configStep?.Config;
             if (config == null || !config.BurnFinishStepUid.HasValue)
             {
                 BurnInService.Record(new BurnInRecord
@@ -760,22 +794,31 @@ namespace ShaoLu.Viewmodels
                     BurnFinishedAt = finishedAt,
                     BurnDurationMs = (finishedAt - session.StartedAt).TotalMilliseconds,
                     IsGood = false,
+                    IsBurnFailed = true,
                     Remark = "NotConfigured",
                 });
                 return;
             }
 
-            // 查找判定步骤
+            // 根据烧录完成步骤类型选择判定方式
             var burnFinishStep = FindStepByUid(config.BurnFinishStepUid.Value);
-            var goodImageStep = config.GoodImageStepUid.HasValue ? FindStepByUid(config.GoodImageStepUid.Value) : null;
-            var badImageStep = config.BadImageStepUid.HasValue ? FindStepByUid(config.BadImageStepUid.Value) : null;
+            string ocrText = null;
+            bool goodImageHit = false, badImageHit = false, failImageHit = false;
+            if (burnFinishStep is GetInputStep)
+            {
+                // 关键字模式：只用完成步骤的识别文本
+                ocrText = burnFinishStep.LastResult?.OCRText;
+            }
+            else
+            {
+                // 图像模式：只用图像判定步骤
+                goodImageHit = config.GoodImageStepUid.HasValue && (FindStepByUid(config.GoodImageStepUid.Value)?.IsTrue ?? false);
+                badImageHit = config.BadImageStepUid.HasValue && (FindStepByUid(config.BadImageStepUid.Value)?.IsTrue ?? false);
+                failImageHit = config.FailImageStepUid.HasValue && (FindStepByUid(config.FailImageStepUid.Value)?.IsTrue ?? false);
+            }
 
-            string ocrText = burnFinishStep?.LastResult?.OCRText;
-            bool goodImageHit = goodImageStep?.IsTrue ?? false;
-            bool badImageHit = badImageStep?.IsTrue ?? false;
-
-            var (isGood, goodText, badText, remark, screenshotPath) =
-                BurnInService.EvaluateAndCapture(ocrText, goodImageHit, badImageHit, session.OrderNo);
+            var (result, goodText, badText, remark, screenshotPath) =
+                BurnInService.EvaluateAndCapture(config, ocrText, goodImageHit, badImageHit, failImageHit, session.OrderNo);
 
             BurnInService.Record(new BurnInRecord
             {
@@ -786,7 +829,8 @@ namespace ShaoLu.Viewmodels
                 BurnStartedAt = session.StartedAt,
                 BurnFinishedAt = finishedAt,
                 BurnDurationMs = (finishedAt - session.StartedAt).TotalMilliseconds,
-                IsGood = isGood,
+                IsGood = result == BurnResult.Good,
+                IsBurnFailed = result == BurnResult.BurnFailed,
                 GoodText = goodText,
                 BadText = badText,
                 ScreenshotPath = screenshotPath,

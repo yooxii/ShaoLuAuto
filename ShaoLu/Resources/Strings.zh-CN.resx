@@ -562,7 +562,7 @@
     <value>没有账号？</value>
   </data>
   <data name="Login_RegisterNow" xml:space="preserve">
-    <value>立即注册</value>
+    <value>注册</value>
   </data>
   <data name="RegisterTitle" xml:space="preserve">
     <value>用户注册</value>
@@ -1064,6 +1064,30 @@
   </data>
   <data name="BurnIn_Title" xml:space="preserve">
     <value>烧录信息</value>
+  </data>
+  <data name="AddBurnInConfigStep" xml:space="preserve">
+    <value>添加烧录配置步骤</value>
+  </data>
+  <data name="BurnIn_FailKeywords" xml:space="preserve">
+    <value>烧录失败关键字</value>
+  </data>
+  <data name="BurnIn_FailImageStep" xml:space="preserve">
+    <value>烧录失败图像步骤</value>
+  </data>
+  <data name="BurnIn_BurnFailed" xml:space="preserve">
+    <value>烧录失败</value>
+  </data>
+  <data name="BurnIn_FailCount" xml:space="preserve">
+    <value>烧录失败数</value>
+  </data>
+  <data name="BurnIn_OnlyOneAllowed" xml:space="preserve">
+    <value>只能添加一个烧录配置步骤。</value>
+  </data>
+  <data name="BurnIn_FinishStepHint" xml:space="preserve">
+    <value>判定方式由烧录完成步骤类型自动决定：获取输入步骤使用关键字判定，图像步骤使用图像判定。每次运行一次性判定为良品/不良品/烧录失败。</value>
+  </data>
+  <data name="BurnIn_SessionCancelled" xml:space="preserve">
+    <value>已取消烧录信息输入。</value>
   </data>
   <data name="BurnIn_InputHint" xml:space="preserve">
     <value>请输入本次运行的工令、操作者和零件名称。</value>

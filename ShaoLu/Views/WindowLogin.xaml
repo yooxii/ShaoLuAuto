@@ -90,7 +90,6 @@
                             Background="#F5F5F5" BorderBrush="#DDDDDD" Foreground="#666666"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
-                        <TextBlock Text="{lex:Loc Login_NoAccount}" FontSize="12" Foreground="#666666" VerticalAlignment="Center"/>
                         <TextBlock FontSize="12" VerticalAlignment="Center">
                             <Hyperlink Command="{Binding SwitchToRegisterCommand}" TextDecorations="None" Foreground="#1890FF">
                                 <Run Text="{lex:Loc Login_RegisterNow}"/>

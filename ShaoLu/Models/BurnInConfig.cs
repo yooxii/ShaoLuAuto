@@ -17,11 +17,17 @@ namespace ShaoLu.Models
         /// <summary>不良品关键字（逗号分隔，任一命中即为不良品）</summary>
         public string BadTextContains { get; set; } = string.Empty;
 
+        /// <summary>烧录失败关键字（逗号分隔，任一命中即为烧录失败）</summary>
+        public string FailTextContains { get; set; } = string.Empty;
+
         /// <summary>良品截图命中步骤（FindImage）Uid；该步骤 IsTrue 时记为良品</summary>
         public Guid? GoodImageStepUid { get; set; }
 
         /// <summary>不良截图命中步骤（FindImage）Uid；该步骤 IsTrue 时记为不良</summary>
         public Guid? BadImageStepUid { get; set; }
+
+        /// <summary>烧录失败判定步骤（图像类）Uid；该步骤 IsTrue 时记为烧录失败</summary>
+        public Guid? FailImageStepUid { get; set; }
 
         /// <summary>是否启用截图留痕</summary>
         public bool CaptureScreenshot { get; set; }

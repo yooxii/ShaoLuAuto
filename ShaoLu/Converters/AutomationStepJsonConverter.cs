@@ -99,6 +99,7 @@ namespace ShaoLu.Converters
                 StepType.GetInput => typeof(GetInputStep),
                 StepType.MouseAction => typeof(MouseActionStep),
                 StepType.Statistics => typeof(StatisticsStep),
+                StepType.BurnInConfig => typeof(BurnInConfigStep),
                 // 添加其他映射...
                 _ => throw new JsonException($"No mapping found for StepType: {stepType}"),
             };

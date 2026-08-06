@@ -68,10 +68,14 @@ namespace ShaoLu.Services
         /// <summary>
         /// 开始一次烧录会话：弹出输入窗口收集工令/操作者/零件名。
         /// 成功返回 true；用户取消返回 false。
+        /// 当前已有会话时直接返回 true（不重复弹窗）。
         /// 注意：必须在 UI 线程调用。
         /// </summary>
         public static bool BeginSession()
         {
+            if (CurrentSession != null)
+                return true;
+
             try
             {
                 var window = new Views.WindowBurnInInput();
@@ -191,7 +195,7 @@ namespace ShaoLu.Services
             string orderNo = null,
             DateTime? from = null,
             DateTime? to = null,
-            bool? isGood = null,
+            BurnResult? result = null,
             int page = 1,
             int pageSize = 200,
             bool descending = true)
@@ -203,8 +207,8 @@ namespace ShaoLu.Services
                 q = q.Where(x => x.BurnFinishedAt >= from.Value);
             if (to.HasValue)
                 q = q.Where(x => x.BurnFinishedAt <= to.Value);
-            if (isGood.HasValue)
-                q = q.Where(x => x.IsGood == isGood.Value);
+            if (result.HasValue)
+                q = q.Where(ResultFilter(result.Value));
 
             return q.OrderBy(descending ? "BurnFinishedAt DESC" : "BurnFinishedAt ASC")
                     .Page(page, pageSize).ToList();
@@ -214,15 +218,26 @@ namespace ShaoLu.Services
             string orderNo = null,
             DateTime? from = null,
             DateTime? to = null,
-            bool? isGood = null)
+            BurnResult? result = null)
         {
             var q = Fsql.Select<BurnInRecord>();
             if (!string.IsNullOrWhiteSpace(orderNo))
                 q = q.Where(x => x.OrderNo == orderNo);
             if (from.HasValue) q = q.Where(x => x.BurnFinishedAt >= from.Value);
             if (to.HasValue) q = q.Where(x => x.BurnFinishedAt <= to.Value);
-            if (isGood.HasValue) q = q.Where(x => x.IsGood == isGood.Value);
+            if (result.HasValue) q = q.Where(ResultFilter(result.Value));
             return q.Count();
+        }
+
+        /// <summary>构造三态结果的过滤表达式</summary>
+        private static System.Linq.Expressions.Expression<Func<BurnInRecord, bool>> ResultFilter(BurnResult result)
+        {
+            return result switch
+            {
+                BurnResult.Good => x => x.IsGood,
+                BurnResult.BurnFailed => x => x.IsBurnFailed,
+                _ => x => !x.IsGood && !x.IsBurnFailed,
+            };
         }
 
         public static List<string> GetDistinctOrderNos()
@@ -245,6 +260,7 @@ namespace ShaoLu.Services
             public string OrderNo { get; set; }
             public int GoodCount { get; set; }
             public int BadCount { get; set; }
+            public int FailCount { get; set; }
             public int TotalCount { get; set; }
             public double GoodRate => TotalCount > 0 ? (double)GoodCount / TotalCount : 0;
             public DateTime LastAt { get; set; }
@@ -265,7 +281,8 @@ namespace ShaoLu.Services
                 {
                     OrderNo = g.Key,
                     GoodCount = g.Count(r => r.IsGood),
-                    BadCount = g.Count(r => !r.IsGood),
+                    BadCount = g.Count(r => !r.IsGood && !r.IsBurnFailed),
+                    FailCount = g.Count(r => r.IsBurnFailed),
                     TotalCount = g.Count(),
                     FirstAt = g.Min(r => r.BurnFinishedAt),
                     LastAt = g.Max(r => r.BurnFinishedAt),
@@ -279,45 +296,72 @@ namespace ShaoLu.Services
         #region 良品判定与截图
 
         /// <summary>
-        /// 根据用户配置对一次烧录判定良品/不良品，并可选截图。
-        /// 返回 (isGood, goodText, badText, remark, screenshotPath)。
-        /// 未命中任何关键字/图像时按不良处理，原始文本写入 remark 供追溯。
+        /// 根据配置对一次烧录一次性判定 良品/不良品/烧录失败，并可选截图。
+        /// 判定优先级：不良品 > 烧录失败 > 良品，命中即返回唯一结果。
+        /// 关键字模式：ocrText 为完成步骤识别文本，依次匹配 不良/失败/良品 关键字；
+        /// 图像模式：ocrText 传 null，按 不良/失败/良品 图像步骤命中情况判定；
+        /// 均未命中时记为烧录失败，原始文本写入 remark 供追溯。
         /// </summary>
-        public static (bool IsGood, string GoodText, string BadText, string Remark, string ScreenshotPath)
-            EvaluateAndCapture(string ocrText, bool goodImageHit, bool badImageHit, string orderNoForFile)
+        public static (BurnResult Result, string GoodText, string BadText, string Remark, string ScreenshotPath)
+            EvaluateAndCapture(BurnInConfig config, string ocrText, bool goodImageHit, bool badImageHit, bool failImageHit, string orderNoForFile)
         {
             string goodText = null, badText = null, remark = string.Empty;
-            bool goodByKeyword = false, badByKeyword = false;
+            BurnResult result;
 
-            // 关键字判定
             if (!string.IsNullOrEmpty(ocrText))
             {
-                var goodKeywords = SplitKeywords(Config?.GoodTextContains);
-                var badKeywords = SplitKeywords(Config?.BadTextContains);
-                foreach (var kw in goodKeywords)
-                    if (ocrText.IndexOf(kw, StringComparison.OrdinalIgnoreCase) >= 0)
-                    { goodByKeyword = true; goodText = ocrText; break; }
-                foreach (var kw in badKeywords)
-                    if (ocrText.IndexOf(kw, StringComparison.OrdinalIgnoreCase) >= 0)
-                    { badByKeyword = true; badText = ocrText; break; }
-
-                // 均未命中时保留原始文本供追溯
-                if (!goodByKeyword && !badByKeyword)
+                // 关键字模式
+                if (AnyKeywordHit(ocrText, config?.BadTextContains))
+                {
+                    result = BurnResult.Bad;
+                    badText = ocrText;
+                }
+                else if (AnyKeywordHit(ocrText, config?.FailTextContains))
+                {
+                    result = BurnResult.BurnFailed;
                     remark = ocrText;
+                }
+                else if (AnyKeywordHit(ocrText, config?.GoodTextContains))
+                {
+                    result = BurnResult.Good;
+                    goodText = ocrText;
+                }
+                else
+                {
+                    // 均未命中：记为烧录失败，保留原文供追溯
+                    result = BurnResult.BurnFailed;
+                    remark = ocrText;
+                }
+            }
+            else
+            {
+                // 图像模式（或无识别文本）
+                if (badImageHit)
+                    result = BurnResult.Bad;
+                else if (failImageHit)
+                    result = BurnResult.BurnFailed;
+                else if (goodImageHit)
+                    result = BurnResult.Good;
+                else
+                    result = BurnResult.BurnFailed;
             }
 
-            // 综合判定：文本或图像任一命中良品且未命中不良 => 良品
-            bool goodHit = goodByKeyword || goodImageHit;
-            bool badHit = badByKeyword || badImageHit;
-            bool isGood = goodHit && !badHit;
-
             string screenshotPath = null;
-            if (Config?.CaptureScreenshot == true && Config.HasRegion)
+            if (config?.CaptureScreenshot == true && config.HasRegion)
             {
                 screenshotPath = CaptureAndSave(orderNoForFile);
             }
 
-            return (isGood, goodText, badText, remark, screenshotPath);
+            return (result, goodText, badText, remark, screenshotPath);
+        }
+
+        /// <summary>判断文本是否命中任一关键字（忽略大小写）</summary>
+        private static bool AnyKeywordHit(string text, string joinedKeywords)
+        {
+            foreach (var kw in SplitKeywords(joinedKeywords))
+                if (text.IndexOf(kw, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            return false;
         }
 
         private static string[] SplitKeywords(string joined)
@@ -387,7 +431,7 @@ namespace ShaoLu.Services
                     r.BurnStartedAt.ToString("yyyy-MM-dd HH:mm:ss"),
                     r.BurnFinishedAt.ToString("yyyy-MM-dd HH:mm:ss"),
                     r.BurnDurationMs.ToString("F0"),
-                    r.IsGood ? "Good" : "Bad",
+                    r.Result.ToString(),
                     CsvEscape(r.GoodText),
                     CsvEscape(r.BadText),
                     CsvEscape(r.ScreenshotPath),
@@ -431,7 +475,7 @@ namespace ShaoLu.Services
                 ws.Cells[row, 6].Value = r.BurnStartedAt.ToString("yyyy-MM-dd HH:mm:ss");
                 ws.Cells[row, 7].Value = r.BurnFinishedAt.ToString("yyyy-MM-dd HH:mm:ss");
                 ws.Cells[row, 8].Value = r.BurnDurationMs;
-                ws.Cells[row, 9].Value = r.IsGood ? "Good" : "Bad";
+                ws.Cells[row, 9].Value = r.Result.ToString();
                 ws.Cells[row, 10].Value = r.GoodText;
                 ws.Cells[row, 11].Value = r.BadText;
                 ws.Cells[row, 12].Value = r.ScreenshotPath;

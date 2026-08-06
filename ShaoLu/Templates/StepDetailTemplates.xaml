@@ -780,6 +780,109 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 烧录配置步骤 -->
+    <DataTemplate x:Key="BurnInConfigStepTemplate" DataType="{x:Type AutoVM:BurnInConfigStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc BurnIn_SelectBurnFinishStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding BurnSteps}"
+                          SelectedValue="{Binding BurnFinishStepUid}"
+                          SelectedValuePath="Uid"
+                          MinWidth="180" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text=" - "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <TextBlock Text="{lex:Loc BurnIn_FinishStepHint}" Foreground="Gray" FontSize="11" Margin="0,2,0,5" TextWrapping="Wrap"/>
+            <!-- 关键字判定（烧录完成步骤为获取输入类型） -->
+            <StackPanel Visibility="{Binding ShowKeywordSettings, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <Label Content="{lex:Loc BurnIn_GoodKeywords}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding GoodTextContains, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <Label Content="{lex:Loc BurnIn_BadKeywords}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding BadTextContains, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <Label Content="{lex:Loc BurnIn_FailKeywords}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding FailTextContains, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+                </StackPanel>
+            </StackPanel>
+            <!-- 图像判定（烧录完成步骤为图像类型） -->
+            <StackPanel Visibility="{Binding ShowImageSettings, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <Label Content="{lex:Loc BurnIn_GoodImageStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding BurnSteps}" SelectedValue="{Binding GoodImageStepUid}" SelectedValuePath="Uid" MinWidth="180" VerticalContentAlignment="Center">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                    <Run Text=" - "/>
+                                    <Run Text="{Binding Name, Mode=OneWay}"/>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <Label Content="{lex:Loc BurnIn_BadImageStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding BurnSteps}" SelectedValue="{Binding BadImageStepUid}" SelectedValuePath="Uid" MinWidth="180" VerticalContentAlignment="Center">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                    <Run Text=" - "/>
+                                    <Run Text="{Binding Name, Mode=OneWay}"/>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <Label Content="{lex:Loc BurnIn_FailImageStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding BurnSteps}" SelectedValue="{Binding FailImageStepUid}" SelectedValuePath="Uid" MinWidth="180" VerticalContentAlignment="Center">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                    <Run Text=" - "/>
+                                    <Run Text="{Binding Name, Mode=OneWay}"/>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+            <!-- 截图留痕 -->
+            <CheckBox IsChecked="{Binding CaptureScreenshot}" Content="{lex:Loc BurnIn_EnableScreenshot}" Margin="0,5,0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2"
+                        Visibility="{Binding CaptureScreenshot, Converter={StaticResource BoolToVis}}">
+                <Label Content="{lex:Loc BurnIn_ScreenshotRegion}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc BurnIn_SelectRegion}" Command="{Binding SelectRegionCommand}" Padding="12,3"/>
+                <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Foreground="Gray">
+                    <Run Text="X:"/><Run Text="{Binding Config.RegionX, Mode=OneWay, StringFormat=F0}"/>
+                    <Run Text=" Y:"/><Run Text="{Binding Config.RegionY, Mode=OneWay, StringFormat=F0}"/>
+                    <Run Text=" W:"/><Run Text="{Binding Config.RegionW, Mode=OneWay, StringFormat=F0}"/>
+                    <Run Text=" H:"/><Run Text="{Binding Config.RegionH, Mode=OneWay, StringFormat=F0}"/>
+                </TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.01"/>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
                      FindImageTemplate="{StaticResource FindImageStepTemplate}"
@@ -789,5 +892,6 @@
                      PopupTemplate="{StaticResource PopupStepTemplate}"
                      GetInputTemplate="{StaticResource GetInputStepTemplate}"
                      MouseActionTemplate="{StaticResource MouseActionStepTemplate}"
-                     StatisticsTemplate="{StaticResource StatisticsStepTemplate}"/>
+                     StatisticsTemplate="{StaticResource StatisticsStepTemplate}"
+                     BurnInConfigTemplate="{StaticResource BurnInConfigStepTemplate}"/>
 </ResourceDictionary>

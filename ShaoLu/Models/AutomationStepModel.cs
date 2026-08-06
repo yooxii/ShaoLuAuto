@@ -19,6 +19,7 @@ namespace ShaoLu.Models
         GetInput = 200,
         MouseAction = 201,
         Statistics = 202,
+        BurnInConfig = 203,
         Popup = 1000,
         // 其他步骤类型...
     }

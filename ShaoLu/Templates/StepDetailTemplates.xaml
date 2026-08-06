@@ -817,49 +817,29 @@
                     <TextBox Text="{Binding FailTextContains, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
                 </StackPanel>
             </StackPanel>
-            <!-- 图像判定（烧录完成步骤为图像类型） -->
+            <!-- 图像判定：直接框选屏幕裁剪判据模板（配置后优先于关键字判定） -->
             <StackPanel Visibility="{Binding ShowImageSettings, Converter={StaticResource BoolToVis}}">
                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                    <Label Content="{lex:Loc BurnIn_GoodImageStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                    <ComboBox ItemsSource="{Binding BurnSteps}" SelectedValue="{Binding GoodImageStepUid}" SelectedValuePath="Uid" MinWidth="180" VerticalContentAlignment="Center">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <Run Text="{Binding LineNo, Mode=OneWay}"/>
-                                    <Run Text=" - "/>
-                                    <Run Text="{Binding Name, Mode=OneWay}"/>
-                                </TextBlock>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                    <Label Content="{lex:Loc BurnIn_GoodTemplate}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <Button Content="{lex:Loc BurnIn_CropFromScreen}" Command="{Binding SelectTemplateCommand}" CommandParameter="Good" Padding="12,3" VerticalAlignment="Center"/>
+                    <Image Source="{Binding GoodTemplateThumb}" MaxHeight="30" Margin="8,0" VerticalAlignment="Center"/>
+                    <Button Content="{lex:Loc BurnIn_ClearTemplate}" Command="{Binding ClearTemplateCommand}" CommandParameter="Good" Padding="8,3" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                    <Label Content="{lex:Loc BurnIn_BadImageStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                    <ComboBox ItemsSource="{Binding BurnSteps}" SelectedValue="{Binding BadImageStepUid}" SelectedValuePath="Uid" MinWidth="180" VerticalContentAlignment="Center">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <Run Text="{Binding LineNo, Mode=OneWay}"/>
-                                    <Run Text=" - "/>
-                                    <Run Text="{Binding Name, Mode=OneWay}"/>
-                                </TextBlock>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                    <Label Content="{lex:Loc BurnIn_BadTemplate}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <Button Content="{lex:Loc BurnIn_CropFromScreen}" Command="{Binding SelectTemplateCommand}" CommandParameter="Bad" Padding="12,3" VerticalAlignment="Center"/>
+                    <Image Source="{Binding BadTemplateThumb}" MaxHeight="30" Margin="8,0" VerticalAlignment="Center"/>
+                    <Button Content="{lex:Loc BurnIn_ClearTemplate}" Command="{Binding ClearTemplateCommand}" CommandParameter="Bad" Padding="8,3" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                    <Label Content="{lex:Loc BurnIn_FailImageStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                    <ComboBox ItemsSource="{Binding BurnSteps}" SelectedValue="{Binding FailImageStepUid}" SelectedValuePath="Uid" MinWidth="180" VerticalContentAlignment="Center">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <Run Text="{Binding LineNo, Mode=OneWay}"/>
-                                    <Run Text=" - "/>
-                                    <Run Text="{Binding Name, Mode=OneWay}"/>
-                                </TextBlock>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                    <Label Content="{lex:Loc BurnIn_FailTemplate}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <Button Content="{lex:Loc BurnIn_CropFromScreen}" Command="{Binding SelectTemplateCommand}" CommandParameter="Fail" Padding="12,3" VerticalAlignment="Center"/>
+                    <Image Source="{Binding FailTemplateThumb}" MaxHeight="30" Margin="8,0" VerticalAlignment="Center"/>
+                    <Button Content="{lex:Loc BurnIn_ClearTemplate}" Command="{Binding ClearTemplateCommand}" CommandParameter="Fail" Padding="8,3" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2">
+                    <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding SimilarityThreshold}" Width="70" Minimum="0" Maximum="1" Precision="2" Interval="0.01"/>
                 </StackPanel>
             </StackPanel>
             <!-- 截图留痕 -->

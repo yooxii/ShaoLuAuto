@@ -98,29 +98,73 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set { if (Config.FailTextContains != value) { Config.FailTextContains = value; OnPropertyChanged(nameof(FailTextContains)); } }
         }
 
-        /// <summary>良品图像判定步骤 Uid（代理属性）</summary>
+        /// <summary>良品判据模板图相对路径（代理属性）</summary>
         [JsonIgnore]
-        public Guid? GoodImageStepUid
+        public string GoodTemplateName
         {
-            get => Config.GoodImageStepUid;
-            set { if (Config.GoodImageStepUid != value) { Config.GoodImageStepUid = value; OnPropertyChanged(nameof(GoodImageStepUid)); } }
+            get => Config.GoodTemplateName;
+            set
+            {
+                if (Config.GoodTemplateName != value)
+                {
+                    Config.GoodTemplateName = value;
+                    OnPropertyChanged(nameof(GoodTemplateName));
+                    OnPropertyChanged(nameof(GoodTemplateThumb));
+                }
+            }
         }
 
-        /// <summary>不良图像判定步骤 Uid（代理属性）</summary>
+        /// <summary>不良品判据模板图相对路径（代理属性）</summary>
         [JsonIgnore]
-        public Guid? BadImageStepUid
+        public string BadTemplateName
         {
-            get => Config.BadImageStepUid;
-            set { if (Config.BadImageStepUid != value) { Config.BadImageStepUid = value; OnPropertyChanged(nameof(BadImageStepUid)); } }
+            get => Config.BadTemplateName;
+            set
+            {
+                if (Config.BadTemplateName != value)
+                {
+                    Config.BadTemplateName = value;
+                    OnPropertyChanged(nameof(BadTemplateName));
+                    OnPropertyChanged(nameof(BadTemplateThumb));
+                }
+            }
         }
 
-        /// <summary>烧录失败图像判定步骤 Uid（代理属性）</summary>
+        /// <summary>烧录失败判据模板图相对路径（代理属性）</summary>
         [JsonIgnore]
-        public Guid? FailImageStepUid
+        public string FailTemplateName
         {
-            get => Config.FailImageStepUid;
-            set { if (Config.FailImageStepUid != value) { Config.FailImageStepUid = value; OnPropertyChanged(nameof(FailImageStepUid)); } }
+            get => Config.FailTemplateName;
+            set
+            {
+                if (Config.FailTemplateName != value)
+                {
+                    Config.FailTemplateName = value;
+                    OnPropertyChanged(nameof(FailTemplateName));
+                    OnPropertyChanged(nameof(FailTemplateThumb));
+                }
+            }
         }
+
+        /// <summary>模板匹配相似度阈值（代理属性）</summary>
+        [JsonIgnore]
+        public double SimilarityThreshold
+        {
+            get => Config.SimilarityThreshold;
+            set { if (Config.SimilarityThreshold != value) { Config.SimilarityThreshold = value; OnPropertyChanged(nameof(SimilarityThreshold)); } }
+        }
+
+        /// <summary>良品判据模板缩略图</summary>
+        [JsonIgnore]
+        public System.Windows.Media.ImageSource GoodTemplateThumb => LoadThumb(Config.GoodTemplateName);
+
+        /// <summary>不良品判据模板缩略图</summary>
+        [JsonIgnore]
+        public System.Windows.Media.ImageSource BadTemplateThumb => LoadThumb(Config.BadTemplateName);
+
+        /// <summary>烧录失败判据模板缩略图</summary>
+        [JsonIgnore]
+        public System.Windows.Media.ImageSource FailTemplateThumb => LoadThumb(Config.FailTemplateName);
 
         /// <summary>是否启用截图留痕（代理属性）</summary>
         [JsonIgnore]
@@ -134,17 +178,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public bool ShowKeywordSettings => GetFinishStep() is GetInputStep;
 
-        /// <summary>烧录完成步骤是否为图像类型（判定方式=图像步骤）</summary>
+        /// <summary>模板区始终显示；是否采用图像判定按模板有无触发</summary>
         [JsonIgnore]
-        public bool ShowImageSettings
-        {
-            get
-            {
-                var step = GetFinishStep();
-                return step is ClickImageStep || step is FindImageStep
-                    || step is ClickImagesStep || step is FindImagesStep;
-            }
-        }
+        public bool ShowImageSettings => true;
 
         private AutomationStepBase GetFinishStep()
         {
@@ -179,6 +215,97 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        [JsonIgnore]
+        private ICommand selectTemplateCommand;
+        /// <summary>框选屏幕区域并裁剪为指定类型判据模板（参数：Good/Bad/Fail）</summary>
+        [JsonIgnore]
+        public ICommand SelectTemplateCommand => selectTemplateCommand ??= new RelayCommand<object>(SelectTemplate, null);
+
+        [JsonIgnore]
+        private ICommand clearTemplateCommand;
+        /// <summary>清除指定类型判据模板（参数：Good/Bad/Fail）</summary>
+        [JsonIgnore]
+        public ICommand ClearTemplateCommand => clearTemplateCommand ??= new RelayCommand<object>(ClearTemplate, null);
+
+        private void SelectTemplate(object parameter)
+        {
+            if (!(parameter is string kind)) return;
+
+            var win = new Views.WindowSelectRegion();
+            if (win.ShowDialog() != true || win.SelectedRegion == Rect.Empty) return;
+
+            try
+            {
+                // 截取框选区域（逻辑像素，与截图留痕一致）
+                var region = new System.Drawing.Rectangle(
+                    (int)win.SelectedRegion.X, (int)win.SelectedRegion.Y,
+                    (int)win.SelectedRegion.Width, (int)win.SelectedRegion.Height);
+                using (var bmp = Utils.Autogui.CaptureScreenRegion(region))
+                {
+                    if (bmp == null) return;
+
+                    // 保存到 {工作目录}\images\burnin_{Uid}_{kind}.png（工作目录为空时回退临时目录）
+                    var mainVM = Utils.SingletonLocator.Main;
+                    string workDir = mainVM?.StepImageWorkDir;
+                    if (string.IsNullOrEmpty(workDir))
+                    {
+                        workDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AutoShaoLu", "images");
+                        if (mainVM != null) mainVM.StepImageWorkDir = workDir;
+                    }
+                    string imagesDir = System.IO.Path.Combine(workDir, "images");
+                    System.IO.Directory.CreateDirectory(imagesDir);
+
+                    string fileName = $"burnin_{Uid}_{kind.ToLower()}.png";
+                    string fullPath = System.IO.Path.Combine(imagesDir, fileName);
+                    bmp.Save(fullPath, System.Drawing.Imaging.ImageFormat.Png);
+
+                    string relativeName = $"images/{fileName}";
+                    switch (kind)
+                    {
+                        case "Good": GoodTemplateName = relativeName; break;
+                        case "Bad": BadTemplateName = relativeName; break;
+                        case "Fail": FailTemplateName = relativeName; break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "SelectTemplate failed");
+            }
+        }
+
+        private void ClearTemplate(object parameter)
+        {
+            switch (parameter as string)
+            {
+                case "Good": GoodTemplateName = null; break;
+                case "Bad": BadTemplateName = null; break;
+                case "Fail": FailTemplateName = null; break;
+            }
+        }
+
+        /// <summary>从工作目录加载模板缩略图；文件不存在或加载失败返回 null</summary>
+        private System.Windows.Media.ImageSource LoadThumb(string templateName)
+        {
+            try
+            {
+                string workDir = Utils.SingletonLocator.Main?.StepImageWorkDir;
+                if (string.IsNullOrEmpty(templateName) || string.IsNullOrEmpty(workDir)) return null;
+                string fullPath = System.IO.Path.Combine(workDir,
+                    templateName.Replace('/', System.IO.Path.DirectorySeparatorChar));
+                if (!System.IO.File.Exists(fullPath)) return null;
+
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(fullPath);
+                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                return bitmap;
+            }
+            catch { return null; }
+        }
+
         #endregion
 
         public override AutomationStepBase Clone()
@@ -208,9 +335,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 GoodTextContains = src.GoodTextContains,
                 BadTextContains = src.BadTextContains,
                 FailTextContains = src.FailTextContains,
-                GoodImageStepUid = src.GoodImageStepUid,
-                BadImageStepUid = src.BadImageStepUid,
-                FailImageStepUid = src.FailImageStepUid,
+                GoodTemplateName = src.GoodTemplateName,
+                BadTemplateName = src.BadTemplateName,
+                FailTemplateName = src.FailTemplateName,
+                SimilarityThreshold = src.SimilarityThreshold,
                 CaptureScreenshot = src.CaptureScreenshot,
                 RegionX = src.RegionX,
                 RegionY = src.RegionY,
@@ -227,18 +355,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
             bool success = true;
             if (BurnInService.CurrentSession == null)
             {
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                try
                 {
-                    try
-                    {
-                        success = BurnInService.BeginSession();
-                    }
-                    catch (Exception ex)
-                    {
-                        NLog.LogManager.GetCurrentClassLogger().Warn(ex, "BurnIn BeginSession failed");
-                        success = false;
-                    }
-                });
+                    // UI 线程创建非属主输入窗口，后台等待用户输入（主窗口最小化不影响该窗口）
+                    var sessionTask = Application.Current.Dispatcher.Invoke(() => BurnInService.BeginSession());
+                    success = await sessionTask;
+                }
+                catch (Exception ex)
+                {
+                    NLog.LogManager.GetCurrentClassLogger().Warn(ex, "BurnIn BeginSession failed");
+                    success = false;
+                }
             }
 
             IsTrue = success;

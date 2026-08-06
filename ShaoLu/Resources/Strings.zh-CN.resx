@@ -1066,13 +1066,28 @@
     <value>烧录信息</value>
   </data>
   <data name="AddBurnInConfigStep" xml:space="preserve">
-    <value>添加烧录配置步骤</value>
+    <value>添加烧录配置</value>
+  </data>
+  <data name="BurnInConfig_StepName" xml:space="preserve">
+    <value>烧录配置</value>
   </data>
   <data name="BurnIn_FailKeywords" xml:space="preserve">
     <value>烧录失败关键字</value>
   </data>
-  <data name="BurnIn_FailImageStep" xml:space="preserve">
-    <value>烧录失败图像步骤</value>
+  <data name="BurnIn_GoodTemplate" xml:space="preserve">
+    <value>良品判据图</value>
+  </data>
+  <data name="BurnIn_BadTemplate" xml:space="preserve">
+    <value>不良品判据图</value>
+  </data>
+  <data name="BurnIn_FailTemplate" xml:space="preserve">
+    <value>烧录失败判据图</value>
+  </data>
+  <data name="BurnIn_CropFromScreen" xml:space="preserve">
+    <value>从屏幕框选裁剪</value>
+  </data>
+  <data name="BurnIn_ClearTemplate" xml:space="preserve">
+    <value>清除</value>
   </data>
   <data name="BurnIn_BurnFailed" xml:space="preserve">
     <value>烧录失败</value>
@@ -1084,7 +1099,7 @@
     <value>只能添加一个烧录配置步骤。</value>
   </data>
   <data name="BurnIn_FinishStepHint" xml:space="preserve">
-    <value>判定方式由烧录完成步骤类型自动决定：获取输入步骤使用关键字判定，图像步骤使用图像判定。每次运行一次性判定为良品/不良品/烧录失败。</value>
+    <value>已裁剪判据图时采用图像判定（运行结束时截屏比对），否则按获取输入步骤的识别文本与关键字判定。每次运行一次性判定为良品/不良品/烧录失败。</value>
   </data>
   <data name="BurnIn_SessionCancelled" xml:space="preserve">
     <value>已取消烧录信息输入。</value>
@@ -1181,12 +1196,6 @@
   </data>
   <data name="BurnIn_BadKeywords" xml:space="preserve">
     <value>不良关键字</value>
-  </data>
-  <data name="BurnIn_GoodImageStep" xml:space="preserve">
-    <value>良品图像步骤</value>
-  </data>
-  <data name="BurnIn_BadImageStep" xml:space="preserve">
-    <value>不良图像步骤</value>
   </data>
   <data name="BurnIn_EnableScreenshot" xml:space="preserve">
     <value>截图留痕</value>

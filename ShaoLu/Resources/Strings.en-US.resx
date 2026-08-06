@@ -1060,13 +1060,28 @@
     <value>Burn-In Information</value>
   </data>
   <data name="AddBurnInConfigStep" xml:space="preserve">
-    <value>Add Burn-In Config Step</value>
+    <value>Add Burn-In Config</value>
+  </data>
+  <data name="BurnInConfig_StepName" xml:space="preserve">
+    <value>Burn-In Config</value>
   </data>
   <data name="BurnIn_FailKeywords" xml:space="preserve">
     <value>Burn-Failed Keywords</value>
   </data>
-  <data name="BurnIn_FailImageStep" xml:space="preserve">
-    <value>Burn-Failed Image Step</value>
+  <data name="BurnIn_GoodTemplate" xml:space="preserve">
+    <value>Good Template</value>
+  </data>
+  <data name="BurnIn_BadTemplate" xml:space="preserve">
+    <value>Bad Template</value>
+  </data>
+  <data name="BurnIn_FailTemplate" xml:space="preserve">
+    <value>Burn-Failed Template</value>
+  </data>
+  <data name="BurnIn_CropFromScreen" xml:space="preserve">
+    <value>Crop from Screen</value>
+  </data>
+  <data name="BurnIn_ClearTemplate" xml:space="preserve">
+    <value>Clear</value>
   </data>
   <data name="BurnIn_BurnFailed" xml:space="preserve">
     <value>Burn Failed</value>
@@ -1078,7 +1093,7 @@
     <value>Only one Burn-In Config step is allowed.</value>
   </data>
   <data name="BurnIn_FinishStepHint" xml:space="preserve">
-    <value>The judgment method is chosen automatically by the finish step type: a Get-Input step uses keywords, an image step uses image steps. Each run is judged once as Good / Bad / Burn-Failed.</value>
+    <value>When criterion templates are cropped, image judgment is used (screen is captured and matched at the end of the run); otherwise keywords are matched against the Get-Input step's recognized text. Each run is judged once as Good / Bad / Burn-Failed.</value>
   </data>
   <data name="BurnIn_SessionCancelled" xml:space="preserve">
     <value>Burn-in information input was cancelled.</value>
@@ -1175,12 +1190,6 @@
   </data>
   <data name="BurnIn_BadKeywords" xml:space="preserve">
     <value>Bad keywords</value>
-  </data>
-  <data name="BurnIn_GoodImageStep" xml:space="preserve">
-    <value>Good image step</value>
-  </data>
-  <data name="BurnIn_BadImageStep" xml:space="preserve">
-    <value>Bad image step</value>
   </data>
   <data name="BurnIn_EnableScreenshot" xml:space="preserve">
     <value>Capture screenshot for evidence</value>

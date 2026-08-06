@@ -13,6 +13,9 @@ namespace ShaoLu.Views
         /// <summary>用户确认后的输入结果</summary>
         public BurnInSession Result { get; private set; }
 
+        /// <summary>用户是否点击了确定（本窗口为非模态显示，不使用 DialogResult）</summary>
+        public bool Confirmed { get; private set; }
+
         public WindowBurnInInput()
         {
             InitializeComponent();
@@ -55,14 +58,14 @@ namespace ShaoLu.Views
                 Operator = (OperatorBox.Text ?? string.Empty).Trim(),
                 PartName = (PartNameBox.Text ?? string.Empty).Trim(),
             };
-            DialogResult = true;
+            Confirmed = true;
             Close();
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             Result = null;
-            DialogResult = false;
+            Confirmed = false;
             Close();
         }
 

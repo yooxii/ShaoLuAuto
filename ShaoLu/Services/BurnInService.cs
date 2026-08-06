@@ -8,6 +8,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ShaoLu.Services
 {
@@ -69,9 +70,10 @@ namespace ShaoLu.Services
         /// 开始一次烧录会话：弹出输入窗口收集工令/操作者/零件名。
         /// 成功返回 true；用户取消返回 false。
         /// 当前已有会话时直接返回 true（不重复弹窗）。
+        /// 窗口以非属主方式显示，主窗口最小化不会连带最小化输入窗口。
         /// 注意：必须在 UI 线程调用。
         /// </summary>
-        public static bool BeginSession()
+        public static async Task<bool> BeginSession()
         {
             if (CurrentSession != null)
                 return true;
@@ -79,7 +81,12 @@ namespace ShaoLu.Services
             try
             {
                 var window = new Views.WindowBurnInInput();
-                if (window.ShowDialog() == true && window.Result != null)
+                var tcs = new TaskCompletionSource<bool>();
+                window.Closed += (s, e) => tcs.TrySetResult(window.Confirmed);
+                window.Show();
+                window.Activate();
+
+                if (await tcs.Task && window.Result != null)
                 {
                     CurrentSession = new BurnInSession
                     {

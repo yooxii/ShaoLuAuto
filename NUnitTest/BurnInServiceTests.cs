@@ -221,6 +221,26 @@ namespace NUnitTest
         }
 
         [Test]
+        public void BurnInConfig_TemplateFields_Defaults()
+        {
+            // 默认无模板，相似度阈值 0.8
+            var config = new BurnInConfig();
+            Assert.That(config.HasAnyTemplate, Is.False);
+            Assert.That(config.SimilarityThreshold, Is.EqualTo(0.8));
+            Assert.That(config.GoodTemplateName, Is.Null);
+            Assert.That(config.BadTemplateName, Is.Null);
+            Assert.That(config.FailTemplateName, Is.Null);
+
+            // 任一判据模板配置后即触发图像判定
+            config.GoodTemplateName = "images/burnin_1_good.png";
+            Assert.That(config.HasAnyTemplate, Is.True);
+            config.GoodTemplateName = null;
+            Assert.That(config.HasAnyTemplate, Is.False);
+            config.FailTemplateName = "images/burnin_1_fail.png";
+            Assert.That(config.HasAnyTemplate, Is.True);
+        }
+
+        [Test]
         public void BurnInRecord_ResultDisplay_ThreeStates()
         {
             // 三态由 IsGood/IsBurnFailed 组合得出

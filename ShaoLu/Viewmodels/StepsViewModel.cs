@@ -213,7 +213,7 @@ namespace ShaoLu.Viewmodels
                     "GetInput" => new GetInputStep($"GetInput_{AutomationStepBases.Count(t => t.Type == StepType.GetInput) + 1}"),
                     "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
-                    "BurnInConfig" => new BurnInConfigStep("BurnInConfig"),
+                    "BurnInConfig" => new BurnInConfigStep(LanguageService.GetLocalizedString("BurnInConfig_StepName")),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
                 ApplyDefaultSettings(step);
@@ -770,8 +770,9 @@ namespace ShaoLu.Viewmodels
 
         /// <summary>
         /// 将本次运行记入烧录统计表（由 Run() 的 finally 块调用）
-        /// 配置取自唯一的烧录配置步骤；判定方式按烧录完成步骤类型自动选择：
-        /// 获取输入型→关键字判定，图像型→图像步骤判定，一次得出 良品/不良品/烧录失败
+        /// 配置取自唯一的烧录配置步骤；判定方式：
+        /// 已裁剪判据模板→截屏模板匹配，否则按获取输入步骤识别文本+关键字，
+        /// 一次得出 良品/不良品/烧录失败
         /// </summary>
         private void RecordBurnIn(BurnInSession session)
         {
@@ -782,7 +783,10 @@ namespace ShaoLu.Viewmodels
             // 未添加烧录配置步骤时不记录
             var configStep = AutomationStepBases?.FirstOrDefault(s => s is BurnInConfigStep) as BurnInConfigStep;
             var config = configStep?.Config;
-            if (config == null || !config.BurnFinishStepUid.HasValue)
+            bool hasTemplate = config?.HasAnyTemplate == true;
+            var burnFinishStep = config?.BurnFinishStepUid.HasValue == true
+                ? FindStepByUid(config.BurnFinishStepUid.Value) : null;
+            if (config == null || (!hasTemplate && !(burnFinishStep is GetInputStep)))
             {
                 BurnInService.Record(new BurnInRecord
                 {
@@ -800,21 +804,19 @@ namespace ShaoLu.Viewmodels
                 return;
             }
 
-            // 根据烧录完成步骤类型选择判定方式
-            var burnFinishStep = FindStepByUid(config.BurnFinishStepUid.Value);
             string ocrText = null;
             bool goodImageHit = false, badImageHit = false, failImageHit = false;
-            if (burnFinishStep is GetInputStep)
+            if (hasTemplate)
             {
-                // 关键字模式：只用完成步骤的识别文本
-                ocrText = burnFinishStep.LastResult?.OCRText;
+                // 图像模式：运行结束时截屏与判据模板逐一比对
+                goodImageHit = MatchTemplate(config.GoodTemplateName, config.SimilarityThreshold);
+                badImageHit = MatchTemplate(config.BadTemplateName, config.SimilarityThreshold);
+                failImageHit = MatchTemplate(config.FailTemplateName, config.SimilarityThreshold);
             }
             else
             {
-                // 图像模式：只用图像判定步骤
-                goodImageHit = config.GoodImageStepUid.HasValue && (FindStepByUid(config.GoodImageStepUid.Value)?.IsTrue ?? false);
-                badImageHit = config.BadImageStepUid.HasValue && (FindStepByUid(config.BadImageStepUid.Value)?.IsTrue ?? false);
-                failImageHit = config.FailImageStepUid.HasValue && (FindStepByUid(config.FailImageStepUid.Value)?.IsTrue ?? false);
+                // 关键字模式：只用完成步骤的识别文本
+                ocrText = burnFinishStep.LastResult?.OCRText;
             }
 
             var (result, goodText, badText, remark, screenshotPath) =
@@ -844,6 +846,34 @@ namespace ShaoLu.Viewmodels
             foreach (var s in AutomationStepBases)
                 if (s.Uid == uid) return s;
             return null;
+        }
+
+        /// <summary>
+        /// 截屏并与判据模板图比对（单次匹配，不重试）；模板未配置或文件缺失返回 false
+        /// </summary>
+        private static bool MatchTemplate(string templateName, double threshold)
+        {
+            if (string.IsNullOrEmpty(templateName)) return false;
+            try
+            {
+                string workDir = SingletonLocator.Main?.StepImageWorkDir;
+                if (string.IsNullOrEmpty(workDir)) return false;
+                string fullPath = Path.Combine(workDir,
+                    templateName.Replace('/', Path.DirectorySeparatorChar));
+                if (!File.Exists(fullPath)) return false;
+
+                using (var template = new System.Drawing.Bitmap(fullPath))
+                {
+                    // timeout=0 单次匹配；未命中时 FindImageOnScreen 抛异常，同样视为未命中
+                    var rect = Autogui.FindImageOnScreen(template, threshold, gaptime: 0, timeout: 0);
+                    return !rect.IsEmpty;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "BurnIn MatchTemplate failed");
+                return false;
+            }
         }
 
         /// <summary>

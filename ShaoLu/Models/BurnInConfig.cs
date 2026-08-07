@@ -20,19 +20,19 @@ namespace ShaoLu.Models
         /// <summary>烧录失败关键字（逗号分隔，任一命中即为烧录失败）</summary>
         public string FailTextContains { get; set; } = string.Empty;
 
-        /// <summary>良品判据模板图（步骤包内相对路径，如 images/burnin_{Uid}_good.png）；配置后采用图像判定</summary>
+        /// <summary>良品判据模板图（步骤包内相对路径，如 images/burnin_{Uid}_good.png）；图像判定模式下使用</summary>
         public string GoodTemplateName { get; set; }
 
-        /// <summary>不良品判据模板图（步骤包内相对路径）；配置后采用图像判定</summary>
+        /// <summary>不良品判据模板图（步骤包内相对路径）；图像判定模式下使用</summary>
         public string BadTemplateName { get; set; }
 
-        /// <summary>烧录失败判据模板图（步骤包内相对路径）；配置后采用图像判定</summary>
+        /// <summary>烧录失败判据模板图（步骤包内相对路径）；图像判定模式下使用</summary>
         public string FailTemplateName { get; set; }
 
         /// <summary>模板匹配相似度阈值（0-1）</summary>
         public double SimilarityThreshold { get; set; } = 0.8;
 
-        /// <summary>是否已配置任一判据模板（配置后优先采用图像判定）</summary>
+        /// <summary>是否已配置任一判据模板（图像判定模式下使用）</summary>
         public bool HasAnyTemplate =>
             !string.IsNullOrEmpty(GoodTemplateName)
             || !string.IsNullOrEmpty(BadTemplateName)
@@ -40,6 +40,9 @@ namespace ShaoLu.Models
 
         /// <summary>是否启用截图留痕</summary>
         public bool CaptureScreenshot { get; set; }
+
+        /// <summary>截图保存目录（留空使用默认位置：AppData\AutoShaoLu\screenshots）</summary>
+        public string ScreenshotDir { get; set; } = string.Empty;
 
         /// <summary>截图区域（屏幕绝对坐标，逻辑像素）</summary>
         public double? RegionX { get; set; }

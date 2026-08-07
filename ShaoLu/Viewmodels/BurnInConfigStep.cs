@@ -174,13 +174,40 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set { if (Config.CaptureScreenshot != value) { Config.CaptureScreenshot = value; OnPropertyChanged(nameof(CaptureScreenshot)); } }
         }
 
-        /// <summary>烧录完成步骤是否为获取输入类型（判定方式=关键字）</summary>
+        /// <summary>截图保存目录（代理属性，留空使用默认位置）</summary>
+        [JsonIgnore]
+        public string ScreenshotDir
+        {
+            get => Config.ScreenshotDir;
+            set
+            {
+                if (Config.ScreenshotDir != value)
+                {
+                    Config.ScreenshotDir = value;
+                    OnPropertyChanged(nameof(ScreenshotDir));
+                    OnPropertyChanged(nameof(EffectiveScreenshotDir));
+                }
+            }
+        }
+
+        /// <summary>当前实际生效的截图保存目录（供展示）</summary>
+        [JsonIgnore]
+        public string EffectiveScreenshotDir => Services.BurnInService.GetEffectiveScreenshotDir(Config);
+
+        /// <summary>烧录完成步骤是否为获取输入类型（判定方式=关键字，与图像判定互斥）</summary>
         [JsonIgnore]
         public bool ShowKeywordSettings => GetFinishStep() is GetInputStep;
 
-        /// <summary>模板区始终显示；是否采用图像判定按模板有无触发</summary>
+        /// <summary>已选择完成步骤且非获取输入类型时显示图像判定区（与关键字判定互斥）</summary>
         [JsonIgnore]
-        public bool ShowImageSettings => true;
+        public bool ShowImageSettings
+        {
+            get
+            {
+                var finishStep = GetFinishStep();
+                return finishStep != null && !(finishStep is GetInputStep);
+            }
+        }
 
         private AutomationStepBase GetFinishStep()
         {
@@ -201,6 +228,25 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>选择截图区域</summary>
         [JsonIgnore]
         public ICommand SelectRegionCommand => selectRegionCommand ??= new RelayCommand(SelectRegion);
+
+        [JsonIgnore]
+        private ICommand browseScreenshotDirCommand;
+        /// <summary>浏览选择截图保存目录</summary>
+        [JsonIgnore]
+        public ICommand BrowseScreenshotDirCommand => browseScreenshotDirCommand ??= new RelayCommand(BrowseScreenshotDir);
+
+        private void BrowseScreenshotDir()
+        {
+            using var dialog = new System.Windows.Forms.FolderBrowserDialog
+            {
+                Description = LanguageService.GetLocalizedString("BurnIn_ScreenshotDir", "Screenshot Save Directory"),
+                SelectedPath = string.IsNullOrWhiteSpace(ScreenshotDir) ? EffectiveScreenshotDir : ScreenshotDir,
+            };
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                ScreenshotDir = dialog.SelectedPath;
+            }
+        }
 
         private void SelectRegion()
         {
@@ -288,6 +334,24 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     case "Good": GoodTemplateName = relativeName; break;
                     case "Bad": BadTemplateName = relativeName; break;
                     case "Fail": FailTemplateName = relativeName; break;
+                }
+
+                // 二次裁剪时文件名不变，代理属性的变更通知不会触发，
+                // 此处强制刷新缩略图，避免界面显示旧图
+                switch (kind)
+                {
+                    case "Good":
+                        OnPropertyChanged(nameof(GoodTemplateName));
+                        OnPropertyChanged(nameof(GoodTemplateThumb));
+                        break;
+                    case "Bad":
+                        OnPropertyChanged(nameof(BadTemplateName));
+                        OnPropertyChanged(nameof(BadTemplateThumb));
+                        break;
+                    case "Fail":
+                        OnPropertyChanged(nameof(FailTemplateName));
+                        OnPropertyChanged(nameof(FailTemplateThumb));
+                        break;
                 }
             }
             catch (Exception ex)

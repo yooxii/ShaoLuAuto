@@ -44,9 +44,16 @@ namespace ShaoLu.Services
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "AutoShaoLu", "burn_in.db");
 
-        private static string ScreenshotDir => Path.Combine(
+        private static string DefaultScreenshotDir => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "AutoShaoLu", "screenshots");
+
+        /// <summary>实际生效的截图保存目录（指定配置为空时使用默认位置）</summary>
+        public static string GetEffectiveScreenshotDir(BurnInConfig config) =>
+            string.IsNullOrWhiteSpace(config?.ScreenshotDir) ? DefaultScreenshotDir : config.ScreenshotDir.Trim();
+
+        /// <summary>实际生效的截图保存目录（基于全局配置，供展示用）</summary>
+        public static string EffectiveScreenshotDir => GetEffectiveScreenshotDir(Config);
 
         private static string ConfigPath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -356,7 +363,7 @@ namespace ShaoLu.Services
             string screenshotPath = null;
             if (config?.CaptureScreenshot == true && config.HasRegion)
             {
-                screenshotPath = CaptureAndSave(orderNoForFile);
+                screenshotPath = CaptureAndSave(config, orderNoForFile);
             }
 
             return (result, goodText, badText, remark, screenshotPath);
@@ -379,18 +386,18 @@ namespace ShaoLu.Services
         }
 
         /// <summary>截取配置的区域并保存为 PNG，返回文件路径；失败返回 null</summary>
-        public static string CaptureAndSave(string orderNo)
+        public static string CaptureAndSave(BurnInConfig config, string orderNo)
         {
-            if (Config == null || !Config.HasRegion) return null;
+            if (config == null || !config.HasRegion) return null;
             try
             {
                 var region = new System.Drawing.Rectangle(
-                    (int)Config.RegionX.Value, (int)Config.RegionY.Value,
-                    (int)Config.RegionW.Value, (int)Config.RegionH.Value);
+                    (int)config.RegionX.Value, (int)config.RegionY.Value,
+                    (int)config.RegionW.Value, (int)config.RegionH.Value);
                 using Bitmap bmp = Autogui.CaptureScreenRegion(region);
                 if (bmp == null) return null;
 
-                string dir = Path.Combine(ScreenshotDir, SanitizeFileName(orderNo ?? "unknown"));
+                string dir = Path.Combine(GetEffectiveScreenshotDir(config), SanitizeFileName(orderNo ?? "unknown"));
                 Directory.CreateDirectory(dir);
                 string file = Path.Combine(dir, $"{DateTime.Now:yyyyMMdd_HHmmss_fff}.png");
                 bmp.Save(file, ImageFormat.Png);

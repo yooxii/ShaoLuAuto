@@ -966,7 +966,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                                 {
                                     ap.CloseWithResult(defaultResult);
                                 }
-                                IsTrue = (defaultResult == PopupButton.YesValue);
+                                IsTrue = PopupResultToBool(defaultResult);
                                 LastResult = new StepExecutionResult
                                 {
                                     IsTrue = IsTrue,
@@ -990,7 +990,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
                         // 用户点击了弹窗按钮（或被外部关闭）
                         var popupResult = await popupTask;
-                        IsTrue = (popupResult == PopupButton.YesValue);
+                        IsTrue = PopupResultToBool(popupResult);
                         LastResult = new StepExecutionResult
                         {
                             IsTrue = IsTrue,
@@ -1012,6 +1012,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ActivePopupWindow = null;
             }
         }
+
+        /// <summary>
+        /// 弹窗返回值转布尔：点击按钮 OK/Yes 为 true，No/Cancel 为 false；
+        /// 右上角叉关闭时返回空字符串，同样为 false
+        /// </summary>
+        private static bool PopupResultToBool(string result) =>
+            result == PopupButton.OKValue || result == PopupButton.YesValue;
 
         private void FontSelect()
         {

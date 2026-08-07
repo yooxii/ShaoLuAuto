@@ -1053,6 +1053,12 @@
   <data name="ConditionOperator_RegexMatch" xml:space="preserve">
     <value>Regex Match</value>
   </data>
+  <data name="BurnIn_ScreenshotDir" xml:space="preserve">
+    <value>Screenshot Save Directory</value>
+  </data>
+  <data name="BurnIn_ScreenshotDirHint" xml:space="preserve">
+    <value>Leave empty to use the default location: %APPDATA%\AutoShaoLu\screenshots</value>
+  </data>
   <data name="BurnInStatistics" xml:space="preserve">
     <value>Burn-In Statistics</value>
   </data>
@@ -1093,7 +1099,7 @@
     <value>Only one Burn-In Config step is allowed.</value>
   </data>
   <data name="BurnIn_FinishStepHint" xml:space="preserve">
-    <value>When criterion templates are cropped, image judgment is used (screen is captured and matched at the end of the run); otherwise keywords are matched against the Get-Input step's recognized text. Each run is judged once as Good / Bad / Burn-Failed.</value>
+    <value>The judgment method is determined by the burn-finish step type (mutually exclusive): selecting a Get-Input step uses keyword judgment (recognized text matched against keywords); selecting any other step type uses image criteria (the screen is captured and matched against the templates as soon as that step executes). Judgment runs each time the finish step executes, producing Good / Bad / Burn-Failed per round (each loop iteration is recorded separately).</value>
   </data>
   <data name="BurnIn_SessionCancelled" xml:space="preserve">
     <value>Burn-in information input was cancelled.</value>

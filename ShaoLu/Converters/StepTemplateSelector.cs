@@ -18,6 +18,7 @@ namespace ShaoLu.Converters
         public DataTemplate MouseActionTemplate { get; set; }
         public DataTemplate StatisticsTemplate { get; set; }
         public DataTemplate BurnInConfigTemplate { get; set; }
+        public DataTemplate TopmostWindowTemplate { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
@@ -38,6 +39,7 @@ namespace ShaoLu.Converters
                     StepType.MouseAction => MouseActionTemplate,
                     StepType.Statistics => StatisticsTemplate,
                     StepType.BurnInConfig => BurnInConfigTemplate,
+                    StepType.TopmostWindow => TopmostWindowTemplate,
                     _ => ClickImageTemplate,
                 };
             }

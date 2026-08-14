@@ -353,6 +353,23 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [System.Text.Json.Serialization.JsonIgnore]
         public RelayCommand RemoveMouseActionCommand => removeMouseActionCommand ??= new RelayCommand(() => { if (MouseActions.Count > 1) MouseActions.RemoveAt(MouseActions.Count - 1); });
 
+        [System.Text.Json.Serialization.JsonIgnore]
+        private RelayCommand<object> editDragPathCommand;
+        /// <summary>编辑指定动作的拖拽路径（参数：MouseActionItem）</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public RelayCommand<object> EditDragPathCommand => editDragPathCommand ??= new RelayCommand<object>(EditDragPath, null);
+
+        private void EditDragPath(object parameter)
+        {
+            // 图像步骤的拖拽：预览原图与点击点，按住左键在相邻点击点间绘制移动轨迹
+            if (parameter is Models.MouseActionItem item)
+            {
+                var window = new Views.WindowDragPathClick(ImgSrc, ClickThumbs, CroppedRect, item);
+                window.Show();
+                window.Activate();
+            }
+        }
+
         public ClickImageStep() : base()
         {
             Type = StepType.ClickImage;

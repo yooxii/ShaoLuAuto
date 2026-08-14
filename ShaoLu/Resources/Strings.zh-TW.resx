@@ -189,6 +189,93 @@
   <data name="UserDocNotFound" xml:space="preserve">
     <value>未找到使用文件</value>
   </data>
+  <data name="Playground_Header" xml:space="preserve">
+    <value>控制項試驗場</value>
+  </data>
+  <data name="Playground_WindowTitle" xml:space="preserve">
+    <value>控制項試驗場</value>
+  </data>
+  <data name="Playground_ScreenName" xml:space="preserve">
+    <value>螢幕名稱</value>
+  </data>
+  <data name="Playground_RefreshRate" xml:space="preserve">
+    <value>重新整理率</value>
+  </data>
+  <data name="Playground_Resolution" xml:space="preserve">
+    <value>解析度</value>
+  </data>
+  <data name="Playground_MousePosition" xml:space="preserve">
+    <value>滑鼠位置</value>
+  </data>
+  <data name="Playground_ClickLog" xml:space="preserve">
+    <value>點擊記錄</value>
+  </data>
+  <data name="Playground_ClickHint" xml:space="preserve">
+    <value>點擊左側任意控制項，其資訊將顯示在這裡</value>
+  </data>
+  <data name="Playground_CatButtons" xml:space="preserve">
+    <value>按鈕類</value>
+  </data>
+  <data name="Playground_CatText" xml:space="preserve">
+    <value>文字類</value>
+  </data>
+  <data name="Playground_CatSelection" xml:space="preserve">
+    <value>選擇類</value>
+  </data>
+  <data name="Playground_CatOther" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="MouseActionHeader_Action" xml:space="preserve">
+    <value>動作</value>
+  </data>
+  <data name="MouseActionHeader_Count" xml:space="preserve">
+    <value>次數</value>
+  </data>
+  <data name="MouseActionHeader_Interval" xml:space="preserve">
+    <value>間隔時間(s)</value>
+  </data>
+  <data name="MouseAction_EditDragPath" xml:space="preserve">
+    <value>編輯拖拽路徑</value>
+  </data>
+  <data name="DragPathClick_Title" xml:space="preserve">
+    <value>編輯拖拽路徑（點擊點）</value>
+  </data>
+  <data name="DragPathClick_Radius" xml:space="preserve">
+    <value>啟用半徑</value>
+  </data>
+  <data name="DragPathClick_Clear" xml:space="preserve">
+    <value>清除軌跡</value>
+  </data>
+  <data name="DragPathClick_Hint" xml:space="preserve">
+    <value>在某個點擊點上按住左鍵拖向下一個點擊點生成移動軌跡；最後一個點擊點不可拖動；中途鬆手將直接從目前位置連線到下一個點擊點。原圖與點擊點為唯讀。</value>
+  </data>
+  <data name="DragPathAbs_Hint" xml:space="preserve">
+    <value>按住左鍵拖拽生成移動軌跡；鬆手後再次按住將重新生成；點擊“確認”儲存退出，右鍵或 ESC 取消。</value>
+  </data>
+  <data name="DragPathAbs_Confirm" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="DragPathAbs_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="AddTopmostWindowStep" xml:space="preserve">
+    <value>新增視窗置頂</value>
+  </data>
+  <data name="Topmost_Action" xml:space="preserve">
+    <value>動作</value>
+  </data>
+  <data name="Topmost_SelectedWindow" xml:space="preserve">
+    <value>指定視窗</value>
+  </data>
+  <data name="Topmost_Refresh" xml:space="preserve">
+    <value>列舉視窗</value>
+  </data>
+  <data name="Topmost_Keyword" xml:space="preserve">
+    <value>標題關鍵字</value>
+  </data>
+  <data name="Topmost_Hint" xml:space="preserve">
+    <value>按“指定視窗”精確匹配優先尋找視窗，其次按“標題關鍵字”包含匹配（不區分大小寫）；未找到視窗時該次執行記為失敗。</value>
+  </data>
   <data name="Settings" xml:space="preserve">
     <value>設置</value>
   </data>
@@ -1067,6 +1154,12 @@
   </data>
   <data name="ConditionOperator_RegexMatch" xml:space="preserve">
     <value>正規表達式匹配</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>篩選</value>
+  </data>
+  <data name="Msg_DeleteReferenced" xml:space="preserve">
+    <value>以下步驟引用了待刪除的步驟，刪除後引用將被清空：</value>
   </data>
   <data name="BurnIn_ScreenshotDir" xml:space="preserve">
     <value>截圖保存目錄</value>

@@ -2,6 +2,7 @@ using NUnit.Framework;
 using ShaoLu.Models;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
+using System.Collections.Generic;
 
 namespace NUnitTest
 {
@@ -364,6 +365,100 @@ namespace NUnitTest
             {
                 var step = new TypeTextStep();
                 Assert.That(step.LastResult, Is.Null);
+            }
+        }
+
+        #endregion
+
+        #region MouseActionItem / DragPathPoint
+
+        [TestFixture]
+        public class MouseActionItemTests
+        {
+            [Test]
+            public void AllTypes_ContainsDrag()
+            {
+                Assert.That(MouseActionItem.AllTypes, Does.Contain(MouseActionType.Drag));
+            }
+
+            [Test]
+            public void DragPath_DefaultEmpty()
+            {
+                var item = new MouseActionItem();
+                Assert.That(item.DragPath, Is.Not.Null);
+                Assert.That(item.DragPath.Count, Is.EqualTo(0));
+                Assert.That(item.ClickDragTrajectories, Is.Not.Null);
+                Assert.That(item.ClickDragTrajectories.Count, Is.EqualTo(0));
+            }
+
+            [Test]
+            public void Clone_CopiesDragPath_Independent()
+            {
+                var item = new MouseActionItem { ActionType = MouseActionType.Drag, Count = 2, Interval = 0.5 };
+                item.DragPath.Add(new Point(100, 200));
+                item.DragPath.Add(new Point(150, 250));
+                item.ClickDragTrajectories.Add(new List<Point> { new Point(5, 6), new Point(7, 8) });
+
+                var clone = item.Clone();
+
+                Assert.That(clone.ActionType, Is.EqualTo(MouseActionType.Drag));
+                Assert.That(clone.Count, Is.EqualTo(2));
+                Assert.That(clone.Interval, Is.EqualTo(0.5));
+                Assert.That(clone.DragPath.Count, Is.EqualTo(2));
+                Assert.That(clone.DragPath[0].X, Is.EqualTo(100));
+                Assert.That(clone.DragPath[1].Y, Is.EqualTo(250));
+                Assert.That(clone.ClickDragTrajectories.Count, Is.EqualTo(1));
+                Assert.That(clone.ClickDragTrajectories[0].Count, Is.EqualTo(2));
+                Assert.That(clone.ClickDragTrajectories[0][0].X, Is.EqualTo(5));
+
+                // 修改克隆不影响原始对象
+                clone.DragPath[0].X = 999;
+                clone.ClickDragTrajectories[0][0].X = 999;
+                Assert.That(item.DragPath[0].X, Is.EqualTo(100));
+                Assert.That(item.ClickDragTrajectories[0][0].X, Is.EqualTo(5));
+            }
+        }
+
+        #endregion
+
+        #region TopmostWindowStep
+
+        [TestFixture]
+        public class TopmostWindowStepTests
+        {
+            [Test]
+            public void DefaultConstructor_SetsType()
+            {
+                var step = new TopmostWindowStep();
+                Assert.That(step.Type, Is.EqualTo(StepType.TopmostWindow));
+            }
+
+            [Test]
+            public void Defaults_AreCorrect()
+            {
+                var step = new TopmostWindowStep();
+                Assert.That(step.TopmostAction, Is.EqualTo(TopmostAction.SetTopmost));
+                Assert.That(step.WindowTitleKeyword, Is.EqualTo(string.Empty));
+                Assert.That(step.SelectedWindowTitle, Is.EqualTo(string.Empty));
+                Assert.That(step.TopmostActions.Count, Is.EqualTo(3));
+            }
+
+            [Test]
+            public void Clone_CopiesProperties()
+            {
+                var step = new TopmostWindowStep("Test")
+                {
+                    WindowTitleKeyword = "notepad",
+                    SelectedWindowTitle = "Untitled - Notepad",
+                    TopmostAction = TopmostAction.Toggle,
+                };
+                var clone = (TopmostWindowStep)step.Clone();
+
+                Assert.That(clone.Name, Is.EqualTo("Test"));
+                Assert.That(clone.WindowTitleKeyword, Is.EqualTo("notepad"));
+                Assert.That(clone.SelectedWindowTitle, Is.EqualTo("Untitled - Notepad"));
+                Assert.That(clone.TopmostAction, Is.EqualTo(TopmostAction.Toggle));
+                Assert.That(clone.Type, Is.EqualTo(StepType.TopmostWindow));
             }
         }
 

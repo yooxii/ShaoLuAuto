@@ -189,6 +189,93 @@
   <data name="UserDocNotFound" xml:space="preserve">
     <value>User guide not found</value>
   </data>
+  <data name="Playground_Header" xml:space="preserve">
+    <value>Control Playground</value>
+  </data>
+  <data name="Playground_WindowTitle" xml:space="preserve">
+    <value>Control Playground</value>
+  </data>
+  <data name="Playground_ScreenName" xml:space="preserve">
+    <value>Screen Name</value>
+  </data>
+  <data name="Playground_RefreshRate" xml:space="preserve">
+    <value>Refresh Rate</value>
+  </data>
+  <data name="Playground_Resolution" xml:space="preserve">
+    <value>Resolution</value>
+  </data>
+  <data name="Playground_MousePosition" xml:space="preserve">
+    <value>Mouse Position</value>
+  </data>
+  <data name="Playground_ClickLog" xml:space="preserve">
+    <value>Click Log</value>
+  </data>
+  <data name="Playground_ClickHint" xml:space="preserve">
+    <value>Click any control on the left and its info will be shown here</value>
+  </data>
+  <data name="Playground_CatButtons" xml:space="preserve">
+    <value>Buttons</value>
+  </data>
+  <data name="Playground_CatText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Playground_CatSelection" xml:space="preserve">
+    <value>Selection</value>
+  </data>
+  <data name="Playground_CatOther" xml:space="preserve">
+    <value>Others</value>
+  </data>
+  <data name="MouseActionHeader_Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="MouseActionHeader_Count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="MouseActionHeader_Interval" xml:space="preserve">
+    <value>Interval (s)</value>
+  </data>
+  <data name="MouseAction_EditDragPath" xml:space="preserve">
+    <value>Edit Drag Path</value>
+  </data>
+  <data name="DragPathClick_Title" xml:space="preserve">
+    <value>Edit Drag Path (Click Points)</value>
+  </data>
+  <data name="DragPathClick_Radius" xml:space="preserve">
+    <value>Activation Radius</value>
+  </data>
+  <data name="DragPathClick_Clear" xml:space="preserve">
+    <value>Clear Trajectories</value>
+  </data>
+  <data name="DragPathClick_Hint" xml:space="preserve">
+    <value>Press and hold the left button on a click point, then drag toward the next click point to generate the movement trajectory. The last click point cannot be dragged. If released midway, it connects directly from the current position to the next click point. The source image and click points are read-only.</value>
+  </data>
+  <data name="DragPathAbs_Hint" xml:space="preserve">
+    <value>Hold the left button and drag to generate the movement trajectory. After releasing, press and hold again to regenerate. Click "Confirm" to save and exit; right-click or ESC to cancel.</value>
+  </data>
+  <data name="DragPathAbs_Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="DragPathAbs_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="AddTopmostWindowStep" xml:space="preserve">
+    <value>Add Topmost Window</value>
+  </data>
+  <data name="Topmost_Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Topmost_SelectedWindow" xml:space="preserve">
+    <value>Target Window</value>
+  </data>
+  <data name="Topmost_Refresh" xml:space="preserve">
+    <value>Enumerate Windows</value>
+  </data>
+  <data name="Topmost_Keyword" xml:space="preserve">
+    <value>Title Keyword</value>
+  </data>
+  <data name="Topmost_Hint" xml:space="preserve">
+    <value>The window is searched first by exact match of the selected window title, then by title keyword containment (case-insensitive). If not found, the execution is marked as failed.</value>
+  </data>
   <data name="Settings" xml:space="preserve">
     <value>Setting</value>
   </data>
@@ -1067,6 +1154,12 @@
   </data>
   <data name="ConditionOperator_RegexMatch" xml:space="preserve">
     <value>Regex Match</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Msg_DeleteReferenced" xml:space="preserve">
+    <value>The following steps reference the step(s) to be deleted; the references will be cleared after deletion:</value>
   </data>
   <data name="BurnIn_ScreenshotDir" xml:space="preserve">
     <value>Screenshot Save Directory</value>

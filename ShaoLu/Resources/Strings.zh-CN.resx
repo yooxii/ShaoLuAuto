@@ -189,6 +189,93 @@
   <data name="UserDocNotFound" xml:space="preserve">
     <value>未找到使用文档</value>
   </data>
+  <data name="Playground_Header" xml:space="preserve">
+    <value>控件试验场</value>
+  </data>
+  <data name="Playground_WindowTitle" xml:space="preserve">
+    <value>控件试验场</value>
+  </data>
+  <data name="Playground_ScreenName" xml:space="preserve">
+    <value>屏幕名称</value>
+  </data>
+  <data name="Playground_RefreshRate" xml:space="preserve">
+    <value>刷新率</value>
+  </data>
+  <data name="Playground_Resolution" xml:space="preserve">
+    <value>分辨率</value>
+  </data>
+  <data name="Playground_MousePosition" xml:space="preserve">
+    <value>鼠标位置</value>
+  </data>
+  <data name="Playground_ClickLog" xml:space="preserve">
+    <value>点击记录</value>
+  </data>
+  <data name="Playground_ClickHint" xml:space="preserve">
+    <value>点击左侧任意控件，其信息将显示在这里</value>
+  </data>
+  <data name="Playground_CatButtons" xml:space="preserve">
+    <value>按钮类</value>
+  </data>
+  <data name="Playground_CatText" xml:space="preserve">
+    <value>文本类</value>
+  </data>
+  <data name="Playground_CatSelection" xml:space="preserve">
+    <value>选择类</value>
+  </data>
+  <data name="Playground_CatOther" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="MouseActionHeader_Action" xml:space="preserve">
+    <value>动作</value>
+  </data>
+  <data name="MouseActionHeader_Count" xml:space="preserve">
+    <value>次数</value>
+  </data>
+  <data name="MouseActionHeader_Interval" xml:space="preserve">
+    <value>间隔时间(s)</value>
+  </data>
+  <data name="MouseAction_EditDragPath" xml:space="preserve">
+    <value>编辑拖拽路径</value>
+  </data>
+  <data name="DragPathClick_Title" xml:space="preserve">
+    <value>编辑拖拽路径（点击点）</value>
+  </data>
+  <data name="DragPathClick_Radius" xml:space="preserve">
+    <value>激活半径</value>
+  </data>
+  <data name="DragPathClick_Clear" xml:space="preserve">
+    <value>清除轨迹</value>
+  </data>
+  <data name="DragPathClick_Hint" xml:space="preserve">
+    <value>在某个点击点上按住左键拖向下一个点击点生成移动轨迹；最后一个点击点不可拖动；中途松手将直接从当前位置连线到下一个点击点。原图与点击点为只读。</value>
+  </data>
+  <data name="DragPathAbs_Hint" xml:space="preserve">
+    <value>按住左键拖拽生成移动轨迹；松手后再次按住将重新生成；点击“确认”保存退出，右键或 ESC 取消。</value>
+  </data>
+  <data name="DragPathAbs_Confirm" xml:space="preserve">
+    <value>确认</value>
+  </data>
+  <data name="DragPathAbs_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="AddTopmostWindowStep" xml:space="preserve">
+    <value>添加窗口置顶</value>
+  </data>
+  <data name="Topmost_Action" xml:space="preserve">
+    <value>动作</value>
+  </data>
+  <data name="Topmost_SelectedWindow" xml:space="preserve">
+    <value>指定窗口</value>
+  </data>
+  <data name="Topmost_Refresh" xml:space="preserve">
+    <value>枚举窗口</value>
+  </data>
+  <data name="Topmost_Keyword" xml:space="preserve">
+    <value>标题关键字</value>
+  </data>
+  <data name="Topmost_Hint" xml:space="preserve">
+    <value>按“指定窗口”精确匹配优先查找窗口，其次按“标题关键字”包含匹配（不区分大小写）；未找到窗口时该次执行记为失败。</value>
+  </data>
   <data name="Settings" xml:space="preserve">
     <value>设置</value>
   </data>

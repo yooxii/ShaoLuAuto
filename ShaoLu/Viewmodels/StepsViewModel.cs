@@ -214,6 +214,7 @@ namespace ShaoLu.Viewmodels
                     "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
                     "BurnInConfig" => new BurnInConfigStep(LanguageService.GetLocalizedString("BurnInConfig_StepName")),
+                    "TopmostWindow" => new TopmostWindowStep($"TopmostWindow_{AutomationStepBases.Count(t => t.Type == StepType.TopmostWindow) + 1}"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
                 ApplyDefaultSettings(step);

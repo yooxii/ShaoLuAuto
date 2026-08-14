@@ -4,6 +4,7 @@ using ShaoLu.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,6 +67,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public ICommand SelectPositionCommand => selectPositionCommand ??= new RelayCommand(SelectPosition);
 
+        [JsonIgnore]
+        private ICommand editDragPathCommand;
+        /// <summary>编辑指定动作的拖拽路径（参数：MouseActionItem）</summary>
+        [JsonIgnore]
+        public ICommand EditDragPathCommand => editDragPathCommand ??= new RelayCommand<object>(EditDragPath, null);
+
         #endregion
 
         #region 构造
@@ -115,19 +122,28 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
             await Task.Run(() =>
             {
+                double dpiX = Services.OCRService.CachedDpiX;
+                double dpiY = Services.OCRService.CachedDpiY;
+
                 // 移动到目标位置
                 if (PositionMode == PositionMode.Absolute)
                 {
-                    double dpiX = Services.OCRService.CachedDpiX;
-                    double dpiY = Services.OCRService.CachedDpiY;
                     int physX = (int)(TargetX * dpiX);
                     int physY = (int)(TargetY * dpiY);
                     Autogui.MoveMouseTo(physX, physY);
                 }
                 // CurrentMouse 模式：不移动，直接在当前位置执行
 
-                // 执行动作序列
-                Autogui.ExecuteMouseActions(new List<MouseActionItem>(MouseActions));
+                // 执行动作序列（绝对位置拖拽路径：逻辑像素转物理像素）
+                Autogui.ExecuteMouseActions(
+                    new List<MouseActionItem>(MouseActions),
+                    act =>
+                    {
+                        var path = new List<System.Drawing.Point>();
+                        foreach (var p in act.DragPath)
+                            path.Add(new System.Drawing.Point((int)(p.X * dpiX), (int)(p.Y * dpiY)));
+                        return path;
+                    });
             }, cancellationToken);
 
             IsTrue = true;
@@ -153,6 +169,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 TargetX = point.Value.X;
                 TargetY = point.Value.Y;
+            }
+        }
+
+        private void EditDragPath(object parameter)
+        {
+            // 鼠标操作步骤的拖拽：全屏按住左键绘制移动轨迹
+            if (parameter is MouseActionItem item)
+            {
+                var existing = item.DragPath.Select(p => new System.Windows.Point(p.X, p.Y)).ToList();
+                var trajectory = Views.WindowDragPathAbsolute.ShowAndCapture(existing.Count > 0 ? existing : null);
+                if (trajectory == null) return; // 取消不改动
+
+                item.DragPath.Clear();
+                foreach (var p in trajectory)
+                    item.DragPath.Add(new Models.Point((int)p.X, (int)p.Y));
             }
         }
 

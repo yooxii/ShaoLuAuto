@@ -241,6 +241,12 @@
                         <Button Content="+" Command="{Binding AddMouseActionCommand}" MinWidth="30" Margin="0,0,5,0"/>
                         <Button Content="-" Command="{Binding RemoveMouseActionCommand}" MinWidth="30"/>
                     </StackPanel>
+                    <!-- 标题栏：动作|次数|间隔时间(s)|（预留编辑按钮位） -->
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{lex:Loc MouseActionHeader_Action}" MinWidth="100" Margin="0,0,5,0" FontWeight="Bold"/>
+                        <TextBlock Text="{lex:Loc MouseActionHeader_Count}" MinWidth="50" Margin="0,0,5,0" FontWeight="Bold"/>
+                        <TextBlock Text="{lex:Loc MouseActionHeader_Interval}" MinWidth="60" FontWeight="Bold"/>
+                    </StackPanel>
                     <ItemsControl ItemsSource="{Binding MouseActions}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -248,6 +254,21 @@
                                     <ComboBox ItemsSource="{x:Static models:MouseActionItem.AllTypes}" SelectedItem="{Binding ActionType}" MinWidth="100" Margin="0,0,5,0"/>
                                     <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="0" Maximum="99" Margin="0,0,5,0"/>
                                     <wd:NumericBox Value="{Binding Interval, Mode=TwoWay}" MinWidth="60" Minimum="0" Precision="3" Interval="0.05" Margin="0,0,5,0"/>
+                                    <!-- 拖拽路径编辑按钮（仅 Drag 动作显示） -->
+                                    <Button Content="{lex:Loc MouseAction_EditDragPath}" Margin="5,0,0,0" Padding="6,1"
+                                            Command="{Binding DataContext.EditDragPathCommand, RelativeSource={RelativeSource AncestorType=GroupBox}}"
+                                            CommandParameter="{Binding}">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ActionType}" Value="{x:Static models:MouseActionType.Drag}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -649,6 +670,12 @@
                         <Button Content="+" Command="{Binding AddMouseActionCommand}" MinWidth="30" Margin="0,0,5,0"/>
                         <Button Content="-" Command="{Binding RemoveMouseActionCommand}" MinWidth="30"/>
                     </StackPanel>
+                    <!-- 标题栏：动作|次数|间隔时间(s)|（预留编辑按钮位） -->
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="{lex:Loc MouseActionHeader_Action}" MinWidth="100" Margin="0,0,5,0" FontWeight="Bold"/>
+                        <TextBlock Text="{lex:Loc MouseActionHeader_Count}" MinWidth="50" Margin="0,0,5,0" FontWeight="Bold"/>
+                        <TextBlock Text="{lex:Loc MouseActionHeader_Interval}" MinWidth="60" FontWeight="Bold"/>
+                    </StackPanel>
                     <ItemsControl ItemsSource="{Binding MouseActions}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -656,6 +683,21 @@
                                     <ComboBox ItemsSource="{x:Static models:MouseActionItem.AllTypes}" SelectedItem="{Binding ActionType}" MinWidth="100" Margin="0,0,5,0"/>
                                     <wd:NumericBox Value="{Binding Count, Mode=TwoWay}" MinWidth="50" Minimum="0" Maximum="99" Margin="0,0,5,0" ToolTip="{lex:Loc MouseActionCountHint}"/>
                                     <wd:NumericBox Value="{Binding Interval, Mode=TwoWay}" MinWidth="60" Minimum="0" Precision="3" Interval="0.05" Margin="0,0,5,0" ToolTip="{lex:Loc ClickIntervalHint}"/>
+                                    <!-- 拖拽路径编辑按钮（仅 Drag 动作显示） -->
+                                    <Button Content="{lex:Loc MouseAction_EditDragPath}" Margin="5,0,0,0" Padding="6,1"
+                                            Command="{Binding DataContext.EditDragPathCommand, RelativeSource={RelativeSource AncestorType=GroupBox}}"
+                                            CommandParameter="{Binding}">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ActionType}" Value="{x:Static models:MouseActionType.Drag}">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -875,6 +917,33 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 窗口置顶步骤 -->
+    <DataTemplate x:Key="TopmostWindowStepTemplate" DataType="{x:Type AutoVM:TopmostWindowStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Topmost_Action}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding TopmostActions}" SelectedItem="{Binding TopmostAction}" MinWidth="120" VerticalContentAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Topmost_SelectedWindow}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding WindowTitles}" SelectedItem="{Binding SelectedWindowTitle}" MinWidth="240" VerticalContentAlignment="Center"/>
+                <Button Content="{lex:Loc Topmost_Refresh}" Command="{Binding RefreshWindowsCommand}" Margin="5,0,0,0" Padding="12,3"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Topmost_Keyword}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding WindowTitleKeyword, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+            </StackPanel>
+            <TextBlock Text="{lex:Loc Topmost_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,5" TextWrapping="Wrap"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.01"/>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
                      FindImageTemplate="{StaticResource FindImageStepTemplate}"
@@ -885,5 +954,6 @@
                      GetInputTemplate="{StaticResource GetInputStepTemplate}"
                      MouseActionTemplate="{StaticResource MouseActionStepTemplate}"
                      StatisticsTemplate="{StaticResource StatisticsStepTemplate}"
-                     BurnInConfigTemplate="{StaticResource BurnInConfigStepTemplate}"/>
+                     BurnInConfigTemplate="{StaticResource BurnInConfigStepTemplate}"
+                     TopmostWindowTemplate="{StaticResource TopmostWindowStepTemplate}"/>
 </ResourceDictionary>

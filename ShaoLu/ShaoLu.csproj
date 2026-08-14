@@ -155,6 +155,7 @@
     <Compile Include="Models\BurnInSession.cs" />
     <Compile Include="Models\BurnInConfig.cs" />
     <Compile Include="Utils\NativeMethods.cs" />
+    <Compile Include="Utils\WindowServices.cs" />
     <Compile Include="Viewmodels\ImagesRecognition.cs" />
     <Compile Include="Viewmodels\ImageRecognition.cs" />
     <Compile Include="Viewmodels\PopupButton.cs" />
@@ -212,6 +213,7 @@
     <Compile Include="Viewmodels\MouseActionStep.cs" />
     <Compile Include="Viewmodels\StatisticsStep.cs" />
     <Compile Include="Viewmodels\BurnInConfigStep.cs" />
+    <Compile Include="Viewmodels\TopmostWindowStep.cs" />
     <Compile Include="Viewmodels\UserManagementViewModel.cs" />
     <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />
@@ -229,6 +231,15 @@
     </Compile>
     <Compile Include="Views\WindowDocumentViewer.xaml.cs">
       <DependentUpon>WindowDocumentViewer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowDragPathClick.xaml.cs">
+      <DependentUpon>WindowDragPathClick.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowDragPathAbsolute.xaml.cs">
+      <DependentUpon>WindowDragPathAbsolute.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowPlayground.xaml.cs">
+      <DependentUpon>WindowPlayground.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowSettings.xaml.cs">
       <DependentUpon>WindowSettings.xaml</DependentUpon>
@@ -322,6 +333,18 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowDocumentViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowDragPathClick.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowDragPathAbsolute.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowPlayground.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

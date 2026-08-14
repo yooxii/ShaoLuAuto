@@ -58,6 +58,7 @@
             <MenuItem x:Name="Help" Header="{lex:Loc}">
                 <MenuItem x:Name="Examples" Header="{lex:Loc}"/>
                 <MenuItem x:Name="UserDoc" Header="{lex:Loc}" Click="UserDoc_Click"/>
+                <MenuItem x:Name="Playground" Header="{lex:Loc}" Click="Playground_Click"/>
                 <Separator/>
                 <MenuItem x:Name="About" Header="{lex:Loc}" Click="About_Click"/>
             </MenuItem>

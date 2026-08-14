@@ -1,0 +1,116 @@
+<Window x:Class="ShaoLu.Views.WindowPlayground"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        Title="{lex:Loc Playground_WindowTitle}" Height="560" Width="900"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 左侧：靶子控件区（按类别分行） -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,8,0">
+            <StackPanel x:Name="TargetPanel" PreviewMouseLeftButtonDown="TargetPanel_PreviewMouseLeftButtonDown">
+
+                <GroupBox Header="{lex:Loc Playground_CatButtons}" Margin="0,0,0,6">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <Button x:Name="pgButton" Content="Button" MinWidth="80" Margin="0,0,8,0"/>
+                            <ToggleButton x:Name="pgToggleButton" Content="ToggleButton" MinWidth="100" Margin="0,0,8,0"/>
+                            <RepeatButton x:Name="pgRepeatButton" Content="RepeatButton" MinWidth="100" Margin="0,0,8,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <CheckBox x:Name="pgCheckBox" Content="CheckBox" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <RadioButton x:Name="pgRadio1" Content="Radio A" Margin="0,0,8,0" GroupName="pgRadio" VerticalAlignment="Center"/>
+                            <RadioButton x:Name="pgRadio2" Content="Radio B" GroupName="pgRadio" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="{lex:Loc Playground_CatText}" Margin="0,0,0,6">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBox x:Name="pgTextBox" Text="TextBox" MinWidth="160" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <PasswordBox x:Name="pgPasswordBox" Password="123456" MinWidth="140" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <Label x:Name="pgLabel" Content="Label" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="pgTextBlock" Text="TextBlock" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="{lex:Loc Playground_CatSelection}" Margin="0,0,0,6">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <ComboBox x:Name="pgComboBox" MinWidth="140" SelectedIndex="0" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <ComboBoxItem Content="Item 1"/>
+                                <ComboBoxItem Content="Item 2"/>
+                                <ComboBoxItem Content="Item 3"/>
+                            </ComboBox>
+                            <ListBox x:Name="pgListBox" Width="140" Height="70" SelectedIndex="0">
+                                <ListBoxItem Content="List A"/>
+                                <ListBoxItem Content="List B"/>
+                                <ListBoxItem Content="List C"/>
+                            </ListBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <Slider x:Name="pgSlider" Width="180" Minimum="0" Maximum="100" Value="30" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <ProgressBar x:Name="pgProgressBar" Width="180" Height="16" Minimum="0" Maximum="100" Value="60" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="{lex:Loc Playground_CatOther}" Margin="0,0,0,6">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <DatePicker x:Name="pgDatePicker" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <Expander x:Name="pgExpander" Header="Expander" VerticalAlignment="Center">
+                                <TextBlock Text="Expander Content" Padding="8"/>
+                            </Expander>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 右侧：信息栏 -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,6">
+                <StackPanel Orientation="Horizontal" Margin="0,1">
+                    <TextBlock Text="{lex:Loc Playground_ScreenName}" MinWidth="90"/>
+                    <TextBlock Text="{Binding ScreenNameText}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,1">
+                    <TextBlock Text="{lex:Loc Playground_RefreshRate}" MinWidth="90"/>
+                    <TextBlock Text="{Binding RefreshRateText}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,1">
+                    <TextBlock Text="{lex:Loc Playground_Resolution}" MinWidth="90"/>
+                    <TextBlock Text="{Binding ResolutionText}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,1">
+                    <TextBlock Text="{lex:Loc Playground_MousePosition}" MinWidth="90"/>
+                    <TextBlock Text="{Binding MousePosText}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <TextBlock Grid.Row="1" Text="{lex:Loc Playground_ClickLog}" FontWeight="Bold" Margin="0,0,0,3"/>
+            <TextBox Grid.Row="2" Text="{Binding ClickLog, Mode=OneWay}" IsReadOnly="True"
+                     TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                     FontFamily="Consolas" FontSize="11"
+                     ToolTip="{lex:Loc Playground_ClickHint}"/>
+        </Grid>
+    </Grid>
+</Window>

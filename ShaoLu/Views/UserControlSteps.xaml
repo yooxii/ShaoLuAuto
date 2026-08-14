@@ -33,6 +33,7 @@
                     <MenuItem Header="{lex:Loc AddMouseActionStep}" Command="{Binding AddStepCommand}" CommandParameter="MouseAction"/>
                     <MenuItem Header="{lex:Loc AddStatisticsStep}" Command="{Binding AddStepCommand}" CommandParameter="Statistics"/>
                     <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Command="{Binding AddStepCommand}" CommandParameter="BurnInConfig"/>
+                    <MenuItem Header="{lex:Loc AddTopmostWindowStep}" Command="{Binding AddStepCommand}" CommandParameter="TopmostWindow"/>
                 </MenuItem>
                 <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
                 <Separator/>
@@ -102,6 +103,7 @@
                             <MenuItem Header="{lex:Loc AddMouseActionStep}" Click="MenuItemAddTextStep_Click" CommandParameter="MouseAction"/>
                             <MenuItem Header="{lex:Loc AddStatisticsStep}" Click="MenuItemAddTextStep_Click" CommandParameter="Statistics"/>
                             <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Click="MenuItemAddTextStep_Click" CommandParameter="BurnInConfig"/>
+                            <MenuItem Header="{lex:Loc AddTopmostWindowStep}" Click="MenuItemAddTextStep_Click" CommandParameter="TopmostWindow"/>
                         </wd:SplitButton>
                         <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
                     </ToolBar>

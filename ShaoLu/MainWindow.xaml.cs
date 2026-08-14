@@ -301,6 +301,12 @@ namespace ShaoLu
             }
         }
 
+        private void Playground_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new WindowPlayground();
+            window.Show();
+        }
+
         private void UserDoc_Click(object sender, RoutedEventArgs e)
         {
             try

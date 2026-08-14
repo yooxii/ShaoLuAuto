@@ -229,10 +229,20 @@ namespace ShaoLu.Utils
         /// <param name="clickoffset">相对于锚点的像素偏移量</param>
         public static void MoveMouseTo(AutoRect rect, Position position = Position.Center, Point? clickoffset = null)
         {
+            var target = ComputeScreenTarget(rect, position, clickoffset);
+            if (target.HasValue)
+                MoveMouseTo(target.Value.X, target.Value.Y);
+        }
+
+        /// <summary>
+        /// 计算锚点+偏移对应的屏幕物理坐标；rect 无效时返回 null
+        /// </summary>
+        public static System.Drawing.Point? ComputeScreenTarget(AutoRect rect, Position position = Position.Center, Point? clickoffset = null)
+        {
             // 1. 防御性检查：如果点无效或为空，直接返回
             if (rect == null || rect.IsEmpty)
             {
-                return;
+                return null;
             }
 
             int targetX;
@@ -274,9 +284,7 @@ namespace ShaoLu.Utils
                 targetY += clickoffset.Y;
             }
 
-            // 4. 执行移动
-            // 注意：此处假设 MoveMouseTo(double, double) 是已存在的底层实现
-            MoveMouseTo(targetX, targetY);
+            return new System.Drawing.Point(targetX, targetY);
         }
 
         public static bool ClickImageOnScreen(Bitmap templateImage, Position position = 0, List<Point>? clickposition = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3)
@@ -334,7 +342,9 @@ namespace ShaoLu.Utils
         /// <summary>
         /// 顺序执行鼠标动作列表
         /// </summary>
-        public static void ExecuteMouseActions(System.Collections.Generic.List<Models.MouseActionItem> actions)
+        /// <param name="actions">动作列表</param>
+        /// <param name="resolveDragPath">拖拽路径解析回调（返回完整路径的屏幕物理坐标序列；不足两点时跳过）</param>
+        public static void ExecuteMouseActions(System.Collections.Generic.List<Models.MouseActionItem> actions, Func<Models.MouseActionItem, System.Collections.Generic.List<System.Drawing.Point>> resolveDragPath = null)
         {
             if (actions == null || actions.Count == 0) return;
             foreach (var action in actions)
@@ -358,10 +368,63 @@ namespace ShaoLu.Utils
                         case Models.MouseActionType.ScrollDown:
                             sim.Mouse.VerticalScroll(-1);
                             break;
+                        case Models.MouseActionType.Drag:
+                            ExecuteDrag(action, resolveDragPath);
+                            break;
                     }
                     Thread.Sleep((int)(action.Interval * 1000));
                 }
             }
+        }
+
+        /// <summary>
+        /// 执行一次拖拽：移动到首个路径点→按下左键→依次经过各路径点→释放左键
+        /// </summary>
+        private static void ExecuteDrag(Models.MouseActionItem action, Func<Models.MouseActionItem, System.Collections.Generic.List<System.Drawing.Point>> resolveDragPath)
+        {
+            if (resolveDragPath == null) return;
+
+            var points = resolveDragPath(action);
+            if (points == null || points.Count < 2) return; // 至少两点才能构成拖拽
+
+            MoveMouseTo(points[0].X, points[0].Y);
+            Thread.Sleep(50);
+            sim.Mouse.LeftButtonDown();
+            Thread.Sleep(50);
+            for (int i = 1; i < points.Count; i++)
+            {
+                MoveMouseTo(points[i].X, points[i].Y);
+                Thread.Sleep(30);
+            }
+            Thread.Sleep(50);
+            sim.Mouse.LeftButtonUp();
+        }
+
+        /// <summary>
+        /// 构建图像步骤的完整拖拽路径：按顺序经过各点击点，相邻点击点之间插入手绘轨迹点
+        /// </summary>
+        private static System.Collections.Generic.List<System.Drawing.Point> BuildImageDragPath(Models.MouseActionItem action, AutoRect rect, Position position, List<Point> clickposition)
+        {
+            var result = new System.Collections.Generic.List<System.Drawing.Point>();
+            if (clickposition == null || clickposition.Count == 0) return result;
+
+            var trajs = action.ClickDragTrajectories;
+            for (int i = 0; i < clickposition.Count; i++)
+            {
+                var target = ComputeScreenTarget(rect, position, clickposition[i]);
+                if (target.HasValue) result.Add(target.Value);
+
+                // 相邻点击点之间的手绘轨迹（未绘制时自然直线连接）
+                if (i < clickposition.Count - 1 && trajs != null && i < trajs.Count)
+                {
+                    foreach (var t in trajs[i])
+                    {
+                        var tp = ComputeScreenTarget(rect, position, t);
+                        if (tp.HasValue) result.Add(tp.Value);
+                    }
+                }
+            }
+            return result;
         }
 
         /// <summary>
@@ -390,7 +453,7 @@ namespace ShaoLu.Utils
                         foreach (Point p in clickposition)
                         {
                             MoveMouseTo(rect, position, p);
-                            ExecuteMouseActions(actions);
+                            ExecuteMouseActions(actions, act => BuildImageDragPath(act, rect, position, clickposition));
                             Thread.Sleep(nextclickTimeMs);
                         }
                         return rect;

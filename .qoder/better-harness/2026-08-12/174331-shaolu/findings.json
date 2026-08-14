@@ -1,0 +1,164 @@
+{
+  "summary": {
+    "projectName": "ShaoLu",
+    "locale": "zh-CN",
+    "modelId": "agent-work-loop-v4",
+    "reportContractVersion": 26,
+    "overview": "本次为 session-limited 审查：会话历史来源根缺失或被禁用（0/6 个启用的来源根存在），30 天窗口内没有任何可用会话证据，验证习惯、重复工作流与执行摩擦均不可评估；行为类结论全部保持 Unobserved。项目机制层面：仓库实际拥有结构良好的 NUnit 测试套件（NUnitTest 项目，7 个测试文件，已纳入解决方案），但项目没有文档化的构建/测试执行路由，且静态检测将其判为无测试项目；当前未提交变更中的 csproj 将同一 XPS 文件同时以显式与通配符方式声明输出复制；NLog 异常日志仅记录消息文本而缺少堆栈信息。测试、日志、修改记录等机制均 Present，但尚未接线到代理与操作者可发现、可执行的路由上。",
+    "aiAgentPractice": {
+      "inspectedSurfaces": [],
+      "coverageRows": [
+        {
+          "surface": "Rules",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Skills",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Hooks",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Commands",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Custom Agents",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "MCP",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Workflows",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Memories",
+          "scopes": [
+            "Project"
+          ],
+          "count": 0
+        },
+        {
+          "surface": "Plugins",
+          "scopes": [
+            "Plugin"
+          ],
+          "count": 0
+        }
+      ],
+      "repositorySourceRows": []
+    },
+    "assignmentSummaries": [],
+    "dimensions": [
+      {
+        "id": "task-understanding",
+        "label": "任务理解",
+        "score": 42,
+        "summary": "根级 Readme 仅提供标题级身份证据，仓库无 AGENTS.md 等成文导航；untracked 的修改记录.md 实际承担任务入口与变更说明角色，但未被版本化，任务边界依赖人工约定。",
+        "findingRefs": []
+      },
+      {
+        "id": "controlled-execution",
+        "label": "可控执行",
+        "score": 40,
+        "summary": "老式 .NET Framework 4.8 csproj 要求 x64 与 MSBuild 工具链，但仓库未文档化任何 setup/run 命令；无入口候选与清单声明，可复现启动路由不可得。",
+        "findingRefs": []
+      },
+      {
+        "id": "change-validation",
+        "label": "改动验证",
+        "score": 40,
+        "summary": "NUnitTest 测试套件真实存在且已入解决方案，但检测器判为无测试、项目也未文档化测试执行命令；NLog 异常日志缺少堆栈，故障定位能力受限；本次窗口内未观察到任何已执行的检查。",
+        "findingRefs": [
+          "test-route-doc",
+          "csproj-duplicate-item",
+          "exception-log-stack"
+        ]
+      },
+      {
+        "id": "reliable-delivery",
+        "label": "可靠交付",
+        "score": 35,
+        "summary": "无 CI、合并或发布验收边界证据；当前变更为本地未提交状态，交付接受与回滚/恢复路径均不可观察。",
+        "findingRefs": []
+      },
+      {
+        "id": "learning-capture",
+        "label": "经验沉淀",
+        "score": 35,
+        "summary": "会话历史来源不可用（0/6 个启用来源根存在），重复工作与生命周期需求检测无可用证据，该缺口保留在证据边界内而非作为 finding 输出；项目作用域无任何已配置代理资产；人工维护修改记录的纪律存在但未接入代理工作回路。",
+        "findingRefs": []
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "test-route-doc",
+      "title": "既有 NUnit 测试套件缺少可执行的验证路由，变更无法被项目自有检查直接验证",
+      "severity": "Medium",
+      "reason": "事实：NUnitTest 项目含 7 个测试文件（NUnit 4.6.1 + NUnit3TestAdapter 6.2.0），已纳入 ShaoLu.slnx；但静态检测报 testFiles=0，仓库无 AGENTS.md、README 也未记录任何构建或测试执行命令，老式 .NET Framework 4.8 csproj 无法由 dotnet test 直接驱动。推断：代理与审查路由将本项目当作无测试项目，验证只能靠猜测工具链（历史经验表明 vstest 需显式指定 TestAdapterPath 且须 x64）。不确定性：测试当前能否实际通过未经验证。",
+      "expectedOutput": [
+        "Update the existing Document owner identified by the reviewed evidence and retain a focused validation result."
+      ],
+      "expectedArtifact": "Document",
+      "aiFixPrompt": "/better-harness fix this issue\n\n为 NUnitTest 套件建立并文档化可执行验证路由：先在本机探测可用的 MSBuild/vstest 工具链与 NUnit3TestAdapter 路径，实际运行一次测试并记录准确命令、退出码与结果；随后在仓库根创建 AGENTS.md，写明构建与测试的确切命令、x64 与 .NET Framework 4.8 前置要求及失败时的排查要点。\n\n## Validation\n\n- 按文档命令实际执行测试套件并确认输出\n- 确认 AGENTS.md 中的命令与实跑结果一致",
+      "dimensionRefs": [
+        "change-validation"
+      ]
+    },
+    {
+      "id": "csproj-duplicate-item",
+      "title": "XPS 说明书被显式与通配符条目重复声明输出复制，构建复制行为不确定且变更记录与实际不符",
+      "severity": "Medium",
+      "reason": "事实：当前未提交的 ShaoLu/ShaoLu.csproj 变更同时包含 <None Include=\"Docs\\AutoShaoLu（自动化烧录）使用说明书.xps\"> 与 <Content Include=\"Docs\\*.xps\">，两者均设 CopyToOutputDirectory=PreserveNewest，匹配同一文件；untracked 的修改记录.md 称该文件通过通配符 Content 包含，与实际的双条目不符。推断：老式项目系统中同文件双复制条目可能产生重复或冲突的复制清单，且后续维护者会依据错误的描述判断包含机制。不确定性：构建是否实际报错未验证（修改记录自述编译通过，UNVERIFIED）。",
+      "expectedOutput": [
+        "Update the existing Config owner identified by the reviewed evidence and retain a focused validation result."
+      ],
+      "expectedArtifact": "Config",
+      "aiFixPrompt": "/better-harness fix this issue\n\n消除 XPS 说明书的重复输出复制条目：在 ShaoLu/ShaoLu.csproj 中保留单一显式条目（或仅保留通配符），移除重复定义，并同步修正修改记录.md 中关于包含方式的描述；随后构建项目并检查输出目录。\n\n## Validation\n\n- 重新构建 ShaoLu 项目并确认无复制冲突告警\n- 确认输出目录中 XPS 说明书仅一份",
+      "dimensionRefs": [
+        "change-validation"
+      ]
+    },
+    {
+      "id": "exception-log-stack",
+      "title": "运行时异常只留下消息文本，故障定位缺少堆栈信息",
+      "severity": "Low",
+      "reason": "事实：NLog.config 的文件目标 layout 使用 ${exception:format=Message}，仅记录异常消息，不含堆栈，也无关联标识；本次变更在两个核心命中文件（MainWindow.xaml.cs、Views/WindowDocumentViewer.xaml.cs）上新增了 XPS 文档加载等故障路径。推断：异常类故障在日志中无法定位调用栈，排障需依赖复现与人工时间戳比对。不确定性：项目是否有其他崩溃转储渠道未知；本窗口未观察到实际故障。",
+      "expectedOutput": [
+        "Update the existing Config owner identified by the reviewed evidence and retain a focused validation result."
+      ],
+      "expectedArtifact": "Config",
+      "aiFixPrompt": "/better-harness fix this issue\n\n提升 NLog 异常日志的可诊断性：将 NLog.config 中文件目标的异常格式扩展为包含 ToString（含堆栈）的形式，保持现有日志文件布局的其余部分不变；确认各目标的 layout 一致更新。\n\n## Validation\n\n- 构造一次受控异常并确认日志文件包含完整堆栈\n- 确认既有日志目标的常规记录格式未被破坏",
+      "dimensionRefs": [
+        "change-validation"
+      ]
+    }
+  ]
+}

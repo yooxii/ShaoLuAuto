@@ -55,7 +55,12 @@
                 <MenuItem x:Name="SimplifiedChinese" Tag="zh-CN" Header="{lex:Loc}" IsChecked="{Binding Simplified}" Click="Language_Click"/>
                 <MenuItem x:Name="TraditionalChinese" Tag="zh-TW" Header="{lex:Loc}" IsChecked="{Binding Tranditional}" Click="Language_Click"/>
             </MenuItem>
-            <MenuItem x:Name="About" Header="{lex:Loc}" Click="About_Click"/>
+            <MenuItem x:Name="Help" Header="{lex:Loc}">
+                <MenuItem x:Name="Examples" Header="{lex:Loc}"/>
+                <MenuItem x:Name="UserDoc" Header="{lex:Loc}" Click="UserDoc_Click"/>
+                <Separator/>
+                <MenuItem x:Name="About" Header="{lex:Loc}" Click="About_Click"/>
+            </MenuItem>
             <MenuItem x:Name="Quit" Header="{lex:Loc}" Click="Quit_Click"/>
             <!--<MenuItem Header="测试裁剪" Click="TestCrop_Click"/>-->
         </Menu> <!--菜单-->

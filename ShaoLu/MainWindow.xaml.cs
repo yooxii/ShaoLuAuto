@@ -116,6 +116,8 @@ namespace ShaoLu
             FontSize = appSettings.App.WindowFont.FontSize;
 
             UpdateLoginStateUI();
+
+            BuildExamplesMenu();
         }
 
         #region 输入校验
@@ -210,36 +212,123 @@ namespace ShaoLu
                 $"AutoStep Files|*.autostep|{LanguageService.GetLocalizedString("StepFile")}|*.json");
             if (filePath != null)
             {
-                try
+                LoadStepFile(filePath);
+            }
+        }
+
+        /// <summary>
+        /// 加载步骤文件（支持 .autostep 与旧版 .json）
+        /// </summary>
+        private void LoadStepFile(string filePath)
+        {
+            try
+            {
+                var ext = Path.GetExtension(filePath).ToLower();
+                ObservableCollection<AutomationStepBase> loadedSteps;
+
+                if (ext == ".autostep")
                 {
-                    var ext = Path.GetExtension(filePath).ToLower();
-                    ObservableCollection<AutomationStepBase> loadedSteps;
-
-                    if (ext == ".autostep")
-                    {
-                        loadedSteps = StepsFile.LoadFromAutoStepPackage(filePath);
-                        mainViewModel.StepFilePath = filePath;
-                        mainViewModel.StepImageWorkDir = StepsFile.GetWorkDirPath(filePath);
-                    }
-                    else
-                    {
-                        // 兼容旧版 JSON 格式
-                        loadedSteps = StepsFile.LoadStepsFromJson(filePath);
-                        mainViewModel.StepFilePath = filePath;
-                        mainViewModel.StepImageWorkDir = Path.GetDirectoryName(filePath);
-                    }
-
-                    stepsViewModel.AutomationStepBases.Clear();
-                    stepsViewModel.InsertSteps(loadedSteps);
+                    loadedSteps = StepsFile.LoadFromAutoStepPackage(filePath);
+                    mainViewModel.StepFilePath = filePath;
+                    mainViewModel.StepImageWorkDir = StepsFile.GetWorkDirPath(filePath);
                 }
-                catch (Exception ex)
+                else
                 {
-                    NLog.LogManager.GetCurrentClassLogger().Error(ex, "Open file failed: {0}", filePath);
+                    // 兼容旧版 JSON 格式
+                    loadedSteps = StepsFile.LoadStepsFromJson(filePath);
+                    mainViewModel.StepFilePath = filePath;
+                    mainViewModel.StepImageWorkDir = Path.GetDirectoryName(filePath);
+                }
+
+                stepsViewModel.AutomationStepBases.Clear();
+                stepsViewModel.InsertSteps(loadedSteps);
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "Open file failed: {0}", filePath);
+                WindowAsyncPopup.Show(
+                    $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {ex.Message}",
+                    LanguageService.GetLocalizedString("OpenFile"),
+                    PopupButtons.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// 构建“示例”子菜单：扫描 Examples 目录下的 .autostep 文件
+        /// </summary>
+        private void BuildExamplesMenu()
+        {
+            Examples.Items.Clear();
+            string examplesDir = Path.Combine(AppContext.BaseDirectory, "Examples");
+            try
+            {
+                if (Directory.Exists(examplesDir))
+                {
+                    var files = Directory.GetFiles(examplesDir, "*.autostep")
+                        .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                    foreach (var file in files)
+                    {
+                        var item = new MenuItem
+                        {
+                            Header = Path.GetFileNameWithoutExtension(file),
+                            Tag = file
+                        };
+                        item.Click += Example_Click;
+                        Examples.Items.Add(item);
+                    }
+                    if (files.Count > 0) return;
+                }
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "Scan Examples folder failed");
+            }
+
+            // 目录不存在或无示例文件时，显示禁用占位项
+            Examples.Items.Add(new MenuItem
+            {
+                Header = LanguageService.GetLocalizedString("NoExamples"),
+                IsEnabled = false
+            });
+        }
+
+        private void Example_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item && item.Tag is string filePath)
+            {
+                LoadStepFile(filePath);
+            }
+        }
+
+        private void UserDoc_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string docsDir = Path.Combine(AppContext.BaseDirectory, "Docs");
+                string docPath = Directory.Exists(docsDir)
+                    ? Directory.GetFiles(docsDir, "*.xps").OrderBy(f => f).FirstOrDefault()
+                    : null;
+
+                if (docPath == null)
+                {
                     WindowAsyncPopup.Show(
-                        $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {ex.Message}",
-                        LanguageService.GetLocalizedString("OpenFile"),
-                        PopupButtons.OK, MessageBoxImage.Error);
+                        LanguageService.GetLocalizedString("UserDocNotFound"),
+                        LanguageService.GetLocalizedString("UserDoc"),
+                        PopupButtons.OK, MessageBoxImage.Warning);
+                    return;
                 }
+
+                var viewer = new WindowDocumentViewer(docPath);
+                viewer.Show();
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "Open user document failed");
+                WindowAsyncPopup.Show(
+                    $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {ex.Message}",
+                    LanguageService.GetLocalizedString("UserDoc"),
+                    PopupButtons.OK, MessageBoxImage.Error);
             }
         }
 

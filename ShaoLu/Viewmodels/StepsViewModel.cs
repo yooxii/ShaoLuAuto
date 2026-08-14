@@ -537,6 +537,14 @@ namespace ShaoLu.Viewmodels
         /// </summary>
         public async void Run()
         {
+            // 烧录完成判定的运行时状态（声明于 try 外，供 finally 访问）：
+            // burnFinishStepUid = 配置的烧录完成步骤；burnCycleStart = 本轮烧录起始时间；
+            // burnJudged = 本次运行是否至少判定过一次
+            Guid? burnFinishStepUid = (AutomationStepBases?.FirstOrDefault(s => s is BurnInConfigStep)
+                as BurnInConfigStep)?.Config?.BurnFinishStepUid;
+            DateTime? burnCycleStart = null;
+            bool burnJudged = false;
+
             try
             {
                 // 运行前确认
@@ -631,6 +639,24 @@ namespace ShaoLu.Viewmodels
                             if (result.Similarity >= 0)
                                 logContent += $" [Similarity:{result.Similarity:F3}]";
                             ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText);
+                        }
+
+                        // 烧录完成判定：当前步骤为配置的烧录完成步骤时立即判定并记录
+                        // （循环流程中每轮都会触发，每轮独立计时）
+                        if (burnFinishStepUid.HasValue && step.Uid == burnFinishStepUid.Value
+                            && BurnInService.CurrentSession != null)
+                        {
+                            burnCycleStart ??= BurnInService.CurrentSession.StartedAt;
+                            try
+                            {
+                                JudgeAndRecordBurnIn(BurnInService.CurrentSession, step, burnCycleStart.Value);
+                                burnJudged = true;
+                                burnCycleStart = DateTime.Now; // 下一轮烧录的起始时间
+                            }
+                            catch (Exception burnEx)
+                            {
+                                logger.Warn(burnEx, "JudgeAndRecordBurnIn failed");
+                            }
                         }
                     }
                     catch (OperationCanceledException)
@@ -738,15 +764,16 @@ namespace ShaoLu.Viewmodels
             }
             finally
             {
-                // 烧录统计：无论正常结束、取消或异常，都记录本次运行（若已由烧录配置步骤开启会话）
+                // 烧录统计：运行结束但从未到达烧录完成步骤时，补记一条未完成烧录供追溯
                 try
                 {
-                    if (BurnInService.CurrentSession != null)
-                        RecordBurnIn(BurnInService.CurrentSession);
+                    if (BurnInService.CurrentSession != null && !burnJudged)
+                        RecordBurnInNotFinished(BurnInService.CurrentSession,
+                            burnCycleStart ?? BurnInService.CurrentSession.StartedAt);
                 }
                 catch (Exception ex)
                 {
-                    logger.Warn(ex, "RecordBurnIn failed");
+                    logger.Warn(ex, "RecordBurnInNotFinished failed");
                 }
                 BurnInService.EndSession();
             }
@@ -769,24 +796,24 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
-        /// 将本次运行记入烧录统计表（由 Run() 的 finally 块调用）
-        /// 配置取自唯一的烧录配置步骤；判定方式：
-        /// 已裁剪判据模板→截屏模板匹配，否则按获取输入步骤识别文本+关键字，
-        /// 一次得出 良品/不良品/烧录失败
+        /// 烧录完成判定并记录（执行到烧录完成步骤时即时调用）。
+        /// 判定方式与完成步骤类型互斥：
+        /// 完成步骤为获取输入→按其识别文本+关键字判定；
+        /// 其他类型步骤→立即截屏与判据模板比对，一次得出 良品/不良品/烧录失败。
+        /// cycleStart 为本轮烧录的起始时间（循环流程中每轮独立计时）。
         /// </summary>
-        private void RecordBurnIn(BurnInSession session)
+        private void JudgeAndRecordBurnIn(BurnInSession session, AutomationStepBase finishStep, DateTime cycleStart)
         {
             var finishedAt = DateTime.Now;
             string stepFileName = Path.GetFileNameWithoutExtension(
                 SingletonLocator.Main.StepFilePath ?? "unsaved");
 
-            // 未添加烧录配置步骤时不记录
             var configStep = AutomationStepBases?.FirstOrDefault(s => s is BurnInConfigStep) as BurnInConfigStep;
             var config = configStep?.Config;
+            // 判定方式由完成步骤类型决定：获取输入→关键字模式；其他→图像模式
+            bool keywordMode = finishStep is GetInputStep;
             bool hasTemplate = config?.HasAnyTemplate == true;
-            var burnFinishStep = config?.BurnFinishStepUid.HasValue == true
-                ? FindStepByUid(config.BurnFinishStepUid.Value) : null;
-            if (config == null || (!hasTemplate && !(burnFinishStep is GetInputStep)))
+            if (config == null || (!keywordMode && !hasTemplate))
             {
                 BurnInService.Record(new BurnInRecord
                 {
@@ -794,9 +821,9 @@ namespace ShaoLu.Viewmodels
                     Operator = session.Operator,
                     PartName = session.PartName,
                     StepFileName = stepFileName,
-                    BurnStartedAt = session.StartedAt,
+                    BurnStartedAt = cycleStart,
                     BurnFinishedAt = finishedAt,
-                    BurnDurationMs = (finishedAt - session.StartedAt).TotalMilliseconds,
+                    BurnDurationMs = (finishedAt - cycleStart).TotalMilliseconds,
                     IsGood = false,
                     IsBurnFailed = true,
                     Remark = "NotConfigured",
@@ -806,17 +833,17 @@ namespace ShaoLu.Viewmodels
 
             string ocrText = null;
             bool goodImageHit = false, badImageHit = false, failImageHit = false;
-            if (hasTemplate)
+            if (keywordMode)
             {
-                // 图像模式：运行结束时截屏与判据模板逐一比对
-                goodImageHit = MatchTemplate(config.GoodTemplateName, config.SimilarityThreshold);
-                badImageHit = MatchTemplate(config.BadTemplateName, config.SimilarityThreshold);
-                failImageHit = MatchTemplate(config.FailTemplateName, config.SimilarityThreshold);
+                // 关键字模式：只用完成步骤的识别文本（判据模板不参与判定）
+                ocrText = finishStep.LastResult?.OCRText;
             }
             else
             {
-                // 关键字模式：只用完成步骤的识别文本
-                ocrText = burnFinishStep.LastResult?.OCRText;
+                // 图像模式：立即截屏与判据模板逐一比对（关键字不参与判定）
+                goodImageHit = MatchTemplate(config.GoodTemplateName, config.SimilarityThreshold);
+                badImageHit = MatchTemplate(config.BadTemplateName, config.SimilarityThreshold);
+                failImageHit = MatchTemplate(config.FailTemplateName, config.SimilarityThreshold);
             }
 
             var (result, goodText, badText, remark, screenshotPath) =
@@ -828,15 +855,41 @@ namespace ShaoLu.Viewmodels
                 Operator = session.Operator,
                 PartName = session.PartName,
                 StepFileName = stepFileName,
-                BurnStartedAt = session.StartedAt,
+                BurnStartedAt = cycleStart,
                 BurnFinishedAt = finishedAt,
-                BurnDurationMs = (finishedAt - session.StartedAt).TotalMilliseconds,
+                BurnDurationMs = (finishedAt - cycleStart).TotalMilliseconds,
                 IsGood = result == BurnResult.Good,
                 IsBurnFailed = result == BurnResult.BurnFailed,
                 GoodText = goodText,
                 BadText = badText,
                 ScreenshotPath = screenshotPath,
                 Remark = remark,
+            });
+        }
+
+        /// <summary>
+        /// 运行结束（正常/取消/异常）但从未到达烧录完成步骤时，
+        /// 补记一条未完成烧录供追溯（仅当存在烧录配置步骤时）
+        /// </summary>
+        private void RecordBurnInNotFinished(BurnInSession session, DateTime cycleStart)
+        {
+            var configStep = AutomationStepBases?.FirstOrDefault(s => s is BurnInConfigStep) as BurnInConfigStep;
+            if (configStep == null) return;
+
+            var finishedAt = DateTime.Now;
+            BurnInService.Record(new BurnInRecord
+            {
+                OrderNo = session.OrderNo,
+                Operator = session.Operator,
+                PartName = session.PartName,
+                StepFileName = Path.GetFileNameWithoutExtension(
+                    SingletonLocator.Main.StepFilePath ?? "unsaved"),
+                BurnStartedAt = cycleStart,
+                BurnFinishedAt = finishedAt,
+                BurnDurationMs = (finishedAt - cycleStart).TotalMilliseconds,
+                IsGood = false,
+                IsBurnFailed = true,
+                Remark = "NotFinished",
             });
         }
 

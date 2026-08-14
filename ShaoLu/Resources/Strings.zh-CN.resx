@@ -1074,6 +1074,12 @@
   <data name="ConditionOperator_RegexMatch" xml:space="preserve">
     <value>正则匹配</value>
   </data>
+  <data name="BurnIn_ScreenshotDir" xml:space="preserve">
+    <value>截图保存目录</value>
+  </data>
+  <data name="BurnIn_ScreenshotDirHint" xml:space="preserve">
+    <value>留空使用默认位置：%APPDATA%\AutoShaoLu\screenshots</value>
+  </data>
   <data name="BurnInStatistics" xml:space="preserve">
     <value>烧录统计</value>
   </data>
@@ -1114,7 +1120,7 @@
     <value>只能添加一个烧录配置步骤。</value>
   </data>
   <data name="BurnIn_FinishStepHint" xml:space="preserve">
-    <value>已裁剪判据图时采用图像判定（运行结束时截屏比对），否则按获取输入步骤的识别文本与关键字判定。每次运行一次性判定为良品/不良品/烧录失败。</value>
+    <value>判定方式由烧录完成步骤的类型决定，两者互斥：选择“获取输入”步骤时按关键字判定（识别文本匹配关键字）；选择其他类型步骤时按图像判据判定（执行到该步骤时立即截屏与判据图比对）。每次执行到完成步骤即判定一次为良品/不良品/烧录失败（循环流程中每轮分别记录）。</value>
   </data>
   <data name="BurnIn_SessionCancelled" xml:space="preserve">
     <value>已取消烧录信息输入。</value>

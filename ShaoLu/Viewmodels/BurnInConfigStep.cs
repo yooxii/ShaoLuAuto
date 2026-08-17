@@ -366,11 +366,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
             try
             {
                 if (!System.IO.File.Exists(path)) return null;
+                // 流式加载：避免 UriSource 按 URI 缓存导致同路径文件更新后仍返回旧图
                 var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(path);
-                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
+                using (var fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                {
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = fs;
+                    bitmap.EndInit();
+                }
                 bitmap.Freeze();
                 return bitmap;
             }

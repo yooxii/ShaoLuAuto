@@ -265,7 +265,7 @@
                                             Command="{Binding DataContext.EditDragPathCommand, RelativeSource={RelativeSource AncestorType=GroupBox}}"
                                             CommandParameter="{Binding}">
                                         <Button.Style>
-                                            <Style TargetType="Button">
+                                            <Style TargetType="Button" BasedOn="{StaticResource WD.DefaultButton}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding ActionType}" Value="{x:Static models:MouseActionType.Drag}">

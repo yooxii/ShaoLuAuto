@@ -282,12 +282,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     if (!string.IsNullOrEmpty(path) && File.Exists(path))
                     {
-                        // 添加 CacheOption.OnLoad 以允许文件在加载后被删除或移动（如果需要）
+                        // 用 StreamSource 流式加载：避免 UriSource 按 URI 缓存导致同路径文件更新后仍返回旧图，且不锁文件
                         var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                        bitmap.BeginInit();
-                        bitmap.UriSource = new Uri(path);
-                        bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                        bitmap.EndInit();
+                        using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+                        {
+                            bitmap.BeginInit();
+                            bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                            bitmap.StreamSource = fs;
+                            bitmap.EndInit();
+                        }
                         bitmap.Freeze(); // 冻结以提高性能并允许跨线程访问
                         IsError = false;
                         return bitmap;

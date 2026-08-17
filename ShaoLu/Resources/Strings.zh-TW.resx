@@ -226,7 +226,7 @@
     <value>其他</value>
   </data>
   <data name="MouseActionTypeHint" xml:space="preserve">
-    <value>動作類型：左鍵單擊 / 右鍵單擊 / 雙擊 / 長按（按住時長為右側“間隔時間”）/ 滾輪 / 拖拽</value>
+    <value>動作類型：左鍵單擊 / 右鍵單擊 / 雙擊 / 左鍵長按（按住時長為右側“間隔時間”）/ 滾輪 / 拖拽</value>
   </data>
   <data name="MouseAction_LeftClick" xml:space="preserve">
     <value>左鍵單擊</value>
@@ -238,7 +238,7 @@
     <value>雙擊</value>
   </data>
   <data name="MouseAction_LeftPress" xml:space="preserve">
-    <value>長按</value>
+    <value>左鍵長按</value>
   </data>
   <data name="MouseAction_ScrollUp" xml:space="preserve">
     <value>滾輪上滾</value>
@@ -250,7 +250,7 @@
     <value>拖拽</value>
   </data>
   <data name="AddEmptyStep" xml:space="preserve">
-    <value>新增空步驟</value>
+    <value>空步驟</value>
   </data>
   <data name="EmptyStep_Hint" xml:space="preserve">
     <value>空步驟用作分隔符號、預留位置或註解：執行時始終成功且不進行任何操作；可在下方註解框或清單“描述”欄填寫說明文字。</value>

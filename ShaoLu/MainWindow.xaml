@@ -48,8 +48,8 @@
                 <MenuItem x:Name="UserManagement" Header="{lex:Loc UserManagementTitle}" Click="UserManagement_Click"
                           IsEnabled="{Binding IsLoggedIn}"/>
             </MenuItem>
-            <MenuItem x:Name="ExecutionLog" Header="{lex:Loc}" Click="ExecutionLog_Click"/>
-            <MenuItem x:Name="BurnInStatistics" Header="{lex:Loc}" Click="BurnInStatistics_Click"/>
+            <MenuItem x:Name="ExecutionLog" Header="{lex:Loc ExecutionLog}" Click="ExecutionLog_Click"/>
+            <MenuItem x:Name="BurnInStatistics" Header="{lex:Loc BurnInStatistics}" Click="BurnInStatistics_Click"/>
             <MenuItem x:Name="Language" Header="{lex:Loc}">
                 <MenuItem x:Name="English" Tag="en-US"  Header="{lex:Loc}" IsChecked="{Binding English}" Click="Language_Click"/>
                 <MenuItem x:Name="SimplifiedChinese" Tag="zh-CN" Header="{lex:Loc}" IsChecked="{Binding Simplified}" Click="Language_Click"/>

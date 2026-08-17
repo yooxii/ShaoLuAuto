@@ -226,7 +226,7 @@
     <value>Others</value>
   </data>
   <data name="MouseActionTypeHint" xml:space="preserve">
-    <value>Action type: left click / right click / double click / long press (hold duration = "Interval") / scroll / drag</value>
+    <value>Action type: left click / right click / double click / left long press (hold duration = "Interval") / scroll / drag</value>
   </data>
   <data name="MouseAction_LeftClick" xml:space="preserve">
     <value>Left Click</value>
@@ -238,7 +238,7 @@
     <value>Double Click</value>
   </data>
   <data name="MouseAction_LeftPress" xml:space="preserve">
-    <value>Long Press</value>
+    <value>Left Long Press</value>
   </data>
   <data name="MouseAction_ScrollUp" xml:space="preserve">
     <value>Scroll Up</value>
@@ -250,7 +250,7 @@
     <value>Drag</value>
   </data>
   <data name="AddEmptyStep" xml:space="preserve">
-    <value>Add Empty Step</value>
+    <value>Empty Step</value>
   </data>
   <data name="EmptyStep_Hint" xml:space="preserve">
     <value>An empty step works as a separator, placeholder or comment: it always succeeds and performs no operation. Use the comment box below or the "Description" column in the list for notes.</value>

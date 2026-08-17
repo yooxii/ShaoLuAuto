@@ -258,23 +258,35 @@
   <data name="DragPathAbs_Cancel" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name="AddTopmostWindowStep" xml:space="preserve">
-    <value>新增視窗置頂</value>
+  <data name="AddFocusWindowStep" xml:space="preserve">
+    <value>視窗聚焦</value>
   </data>
-  <data name="Topmost_Action" xml:space="preserve">
-    <value>動作</value>
-  </data>
-  <data name="Topmost_SelectedWindow" xml:space="preserve">
+  <data name="Focus_SelectedWindow" xml:space="preserve">
     <value>指定視窗</value>
   </data>
-  <data name="Topmost_Refresh" xml:space="preserve">
+  <data name="Focus_Refresh" xml:space="preserve">
     <value>列舉視窗</value>
   </data>
-  <data name="Topmost_Keyword" xml:space="preserve">
+  <data name="Focus_Keyword" xml:space="preserve">
     <value>標題關鍵字</value>
   </data>
-  <data name="Topmost_Hint" xml:space="preserve">
-    <value>按“指定視窗”精確匹配優先尋找視窗，其次按“標題關鍵字”包含匹配（不區分大小寫）；未找到視窗時該次執行記為失敗。</value>
+  <data name="Focus_Hint" xml:space="preserve">
+    <value>按“指定視窗”精確匹配優先尋找視窗，其次按“標題關鍵字”包含匹配（不區分大小寫）；找到後將視窗置於最前並啟用（最小化時先恢復）。未找到視窗時該次執行記為失敗。</value>
+  </data>
+  <data name="Capture" xml:space="preserve">
+    <value>截圖</value>
+  </data>
+  <data name="Capture_FullScreen" xml:space="preserve">
+    <value>全螢幕截圖</value>
+  </data>
+  <data name="Capture_Window" xml:space="preserve">
+    <value>視窗截圖</value>
+  </data>
+  <data name="Capture_Region" xml:space="preserve">
+    <value>矩形截圖</value>
+  </data>
+  <data name="Capture_WindowTitle_Select" xml:space="preserve">
+    <value>選擇要截圖的視窗</value>
   </data>
   <data name="Settings" xml:space="preserve">
     <value>設置</value>

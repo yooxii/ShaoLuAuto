@@ -421,44 +421,41 @@ namespace NUnitTest
 
         #endregion
 
-        #region TopmostWindowStep
+        #region FocusWindowStep
 
         [TestFixture]
-        public class TopmostWindowStepTests
+        public class FocusWindowStepTests
         {
             [Test]
             public void DefaultConstructor_SetsType()
             {
-                var step = new TopmostWindowStep();
-                Assert.That(step.Type, Is.EqualTo(StepType.TopmostWindow));
+                var step = new FocusWindowStep();
+                Assert.That(step.Type, Is.EqualTo(StepType.FocusWindow));
             }
 
             [Test]
             public void Defaults_AreCorrect()
             {
-                var step = new TopmostWindowStep();
-                Assert.That(step.TopmostAction, Is.EqualTo(TopmostAction.SetTopmost));
+                var step = new FocusWindowStep();
                 Assert.That(step.WindowTitleKeyword, Is.EqualTo(string.Empty));
                 Assert.That(step.SelectedWindowTitle, Is.EqualTo(string.Empty));
-                Assert.That(step.TopmostActions.Count, Is.EqualTo(3));
+                Assert.That(step.WindowTitles, Is.Not.Null);
             }
 
             [Test]
             public void Clone_CopiesProperties()
             {
-                var step = new TopmostWindowStep("Test")
+                var step = new FocusWindowStep("Test")
                 {
                     WindowTitleKeyword = "notepad",
                     SelectedWindowTitle = "Untitled - Notepad",
-                    TopmostAction = TopmostAction.Toggle,
                 };
-                var clone = (TopmostWindowStep)step.Clone();
+                var clone = (FocusWindowStep)step.Clone();
 
                 Assert.That(clone.Name, Is.EqualTo("Test"));
                 Assert.That(clone.WindowTitleKeyword, Is.EqualTo("notepad"));
                 Assert.That(clone.SelectedWindowTitle, Is.EqualTo("Untitled - Notepad"));
-                Assert.That(clone.TopmostAction, Is.EqualTo(TopmostAction.Toggle));
-                Assert.That(clone.Type, Is.EqualTo(StepType.TopmostWindow));
+                Assert.That(clone.Type, Is.EqualTo(StepType.FocusWindow));
             }
         }
 

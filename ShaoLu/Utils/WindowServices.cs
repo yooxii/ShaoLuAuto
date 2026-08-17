@@ -59,23 +59,13 @@ namespace ShaoLu.Utils
         }
 
         /// <summary>
-        /// 查询窗口当前是否处于置顶状态
+        /// 聚焦窗口：最小化时先恢复，然后置于最前并激活
         /// </summary>
-        public static bool IsTopmost(IntPtr hwnd)
+        public static bool FocusWindow(IntPtr hwnd)
         {
-            return (NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE) & NativeMethods.WS_EX_TOPMOST) != 0;
-        }
-
-        /// <summary>
-        /// 设置或取消窗口置顶
-        /// </summary>
-        public static bool SetTopmost(IntPtr hwnd, bool topmost)
-        {
-            return NativeMethods.SetWindowPos(
-                hwnd,
-                topmost ? NativeMethods.HWND_TOPMOST : NativeMethods.HWND_NOTOPMOST,
-                0, 0, 0, 0,
-                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
+            if (NativeMethods.IsIconic(hwnd))
+                NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+            return NativeMethods.SetForegroundWindow(hwnd);
         }
     }
 }

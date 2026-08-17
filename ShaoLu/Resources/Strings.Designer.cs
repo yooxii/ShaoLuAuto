@@ -88,6 +88,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Burn-In Config 的本地化字符串。
+        /// </summary>
+        public static string AddBurnInConfigStep {
+            get {
+                return ResourceManager.GetString("AddBurnInConfigStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 AddClickPoint 的本地化字符串。
         /// </summary>
         public static string AddClickPoint {
@@ -111,6 +120,15 @@ namespace ShaoLu.Resources {
         public static string AddFindImageStep {
             get {
                 return ResourceManager.GetString("AddFindImageStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Window Focus 的本地化字符串。
+        /// </summary>
+        public static string AddFocusWindowStep {
+            get {
+                return ResourceManager.GetString("AddFocusWindowStep", resourceCulture);
             }
         }
         
@@ -331,6 +349,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Pause 的本地化字符串。
+        /// </summary>
+        public static string BtnPause_Content {
+            get {
+                return ResourceManager.GetString("BtnPause_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Resume 的本地化字符串。
+        /// </summary>
+        public static string BtnResume_Content {
+            get {
+                return ResourceManager.GetString("BtnResume_Content", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Run 的本地化字符串。
         /// </summary>
         public static string BtnRun_Content {
@@ -349,6 +385,483 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 All 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_All {
+            get {
+                return ResourceManager.GetString("BurnIn_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Bad 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_Bad {
+            get {
+                return ResourceManager.GetString("BurnIn_Bad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Bad 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_BadCount {
+            get {
+                return ResourceManager.GetString("BurnIn_BadCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Bad keywords 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_BadKeywords {
+            get {
+                return ResourceManager.GetString("BurnIn_BadKeywords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Bad Template 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_BadTemplate {
+            get {
+                return ResourceManager.GetString("BurnIn_BadTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn Failed 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_BurnFailed {
+            get {
+                return ResourceManager.GetString("BurnIn_BurnFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Clear 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_ClearTemplate {
+            get {
+                return ResourceManager.GetString("BurnIn_ClearTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Configuration saved 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_ConfigSaved {
+            get {
+                return ResourceManager.GetString("BurnIn_ConfigSaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Select Image &amp; Crop 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_CropFromScreen {
+            get {
+                return ResourceManager.GetString("BurnIn_CropFromScreen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Duration(ms) 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_DurationMs {
+            get {
+                return ResourceManager.GetString("BurnIn_DurationMs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Capture screenshot for evidence 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_EnableScreenshot {
+            get {
+                return ResourceManager.GetString("BurnIn_EnableScreenshot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export CSV 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_ExportCsv {
+            get {
+                return ResourceManager.GetString("BurnIn_ExportCsv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Exported 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_Exported {
+            get {
+                return ResourceManager.GetString("BurnIn_Exported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Export Excel 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_ExportExcel {
+            get {
+                return ResourceManager.GetString("BurnIn_ExportExcel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn-Failed Count 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_FailCount {
+            get {
+                return ResourceManager.GetString("BurnIn_FailCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn-Failed Keywords 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_FailKeywords {
+            get {
+                return ResourceManager.GetString("BurnIn_FailKeywords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn-Failed Template 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_FailTemplate {
+            get {
+                return ResourceManager.GetString("BurnIn_FailTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The judgment method is determined by the burn-finish step type (mutually exclusive): selecting a Get-Input step uses keyword judgment (recognized text matched against keywords); selecting any other step type uses image criteria (the screen is captured and matched against the templates as soon as that step executes). Judgment runs each time the finish step executes, producing Good / Bad / Burn-Failed per round (each loop iteration is recorded separately). 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_FinishStepHint {
+            get {
+                return ResourceManager.GetString("BurnIn_FinishStepHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 First Burn 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_FirstAt {
+            get {
+                return ResourceManager.GetString("BurnIn_FirstAt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Good 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_Good {
+            get {
+                return ResourceManager.GetString("BurnIn_Good", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Good 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_GoodCount {
+            get {
+                return ResourceManager.GetString("BurnIn_GoodCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Good keywords 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_GoodKeywords {
+            get {
+                return ResourceManager.GetString("BurnIn_GoodKeywords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Comma separated; matched against the OCR text of the burn finish step. 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_GoodKeywords_Hint {
+            get {
+                return ResourceManager.GetString("BurnIn_GoodKeywords_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Result 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_GoodOrBad {
+            get {
+                return ResourceManager.GetString("BurnIn_GoodOrBad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Good Rate 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_GoodRate {
+            get {
+                return ResourceManager.GetString("BurnIn_GoodRate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Good Template 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_GoodTemplate {
+            get {
+                return ResourceManager.GetString("BurnIn_GoodTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Please enter the work order, operator and part name for this run. 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_InputHint {
+            get {
+                return ResourceManager.GetString("BurnIn_InputHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Last Burn 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_LastAt {
+            get {
+                return ResourceManager.GetString("BurnIn_LastAt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Matched Text 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_MatchedText {
+            get {
+                return ResourceManager.GetString("BurnIn_MatchedText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Only one Burn-In Config step is allowed. 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_OnlyOneAllowed {
+            get {
+                return ResourceManager.GetString("BurnIn_OnlyOneAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Open 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_OpenScreenshot {
+            get {
+                return ResourceManager.GetString("BurnIn_OpenScreenshot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Operator 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_Operator {
+            get {
+                return ResourceManager.GetString("BurnIn_Operator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Order No. 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_OrderNo {
+            get {
+                return ResourceManager.GetString("BurnIn_OrderNo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Order No. is required. 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_OrderNoRequired {
+            get {
+                return ResourceManager.GetString("BurnIn_OrderNoRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Part Name 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_PartName {
+            get {
+                return ResourceManager.GetString("BurnIn_PartName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Screenshot 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_Screenshot {
+            get {
+                return ResourceManager.GetString("BurnIn_Screenshot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Screenshot Save Directory 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_ScreenshotDir {
+            get {
+                return ResourceManager.GetString("BurnIn_ScreenshotDir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Leave empty to use the default location: %APPDATA%\AutoShaoLu\screenshots 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_ScreenshotDirHint {
+            get {
+                return ResourceManager.GetString("BurnIn_ScreenshotDirHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Screenshot region 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_ScreenshotRegion {
+            get {
+                return ResourceManager.GetString("BurnIn_ScreenshotRegion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn finish step 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_SelectBurnFinishStep {
+            get {
+                return ResourceManager.GetString("BurnIn_SelectBurnFinishStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Select Region 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_SelectRegion {
+            get {
+                return ResourceManager.GetString("BurnIn_SelectRegion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn-in information input was cancelled. 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_SessionCancelled {
+            get {
+                return ResourceManager.GetString("BurnIn_SessionCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Configuration 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_TabConfig {
+            get {
+                return ResourceManager.GetString("BurnIn_TabConfig", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn-In Details 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_TabDetail {
+            get {
+                return ResourceManager.GetString("BurnIn_TabDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Order Summary 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_TabSummary {
+            get {
+                return ResourceManager.GetString("BurnIn_TabSummary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Time 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_Time {
+            get {
+                return ResourceManager.GetString("BurnIn_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Time Range 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_TimeRange {
+            get {
+                return ResourceManager.GetString("BurnIn_TimeRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn-In Information 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_Title {
+            get {
+                return ResourceManager.GetString("BurnIn_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Total 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_TotalCount {
+            get {
+                return ResourceManager.GetString("BurnIn_TotalCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Total orders 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_TotalOrders {
+            get {
+                return ResourceManager.GetString("BurnIn_TotalOrders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Total records 的本地化字符串。
+        /// </summary>
+        public static string BurnIn_TotalRecords {
+            get {
+                return ResourceManager.GetString("BurnIn_TotalRecords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn-In Config 的本地化字符串。
+        /// </summary>
+        public static string BurnInConfig_StepName {
+            get {
+                return ResourceManager.GetString("BurnInConfig_StepName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Burn-In Statistics 的本地化字符串。
+        /// </summary>
+        public static string BurnInStatistics {
+            get {
+                return ResourceManager.GetString("BurnInStatistics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Buttons 的本地化字符串。
         /// </summary>
         public static string Buttons {
@@ -363,6 +876,51 @@ namespace ShaoLu.Resources {
         public static string Cancel {
             get {
                 return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Capture 的本地化字符串。
+        /// </summary>
+        public static string Capture {
+            get {
+                return ResourceManager.GetString("Capture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Full Screen 的本地化字符串。
+        /// </summary>
+        public static string Capture_FullScreen {
+            get {
+                return ResourceManager.GetString("Capture_FullScreen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Region 的本地化字符串。
+        /// </summary>
+        public static string Capture_Region {
+            get {
+                return ResourceManager.GetString("Capture_Region", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Window 的本地化字符串。
+        /// </summary>
+        public static string Capture_Window {
+            get {
+                return ResourceManager.GetString("Capture_Window", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Select Window to Capture 的本地化字符串。
+        /// </summary>
+        public static string Capture_WindowTitle_Select {
+            get {
+                return ResourceManager.GetString("Capture_WindowTitle_Select", resourceCulture);
             }
         }
         
@@ -493,7 +1051,7 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
-        ///   查找类似 + Add Condition 的本地化字符串。
+        ///   查找类似 + Add Expression 的本地化字符串。
         /// </summary>
         public static string Condition_Add {
             get {
@@ -502,7 +1060,7 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
-        ///   查找类似 - Remove Condition 的本地化字符串。
+        ///   查找类似 - Remove Expression 的本地化字符串。
         /// </summary>
         public static string Condition_Remove {
             get {
@@ -565,11 +1123,74 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Regex Match 的本地化字符串。
+        /// </summary>
+        public static string ConditionOperator_RegexMatch {
+            get {
+                return ResourceManager.GetString("ConditionOperator_RegexMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Condition 的本地化字符串。
         /// </summary>
         public static string ConditionPanel {
             get {
                 return ResourceManager.GetString("ConditionPanel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 This Step → Recognized Text 的本地化字符串。
+        /// </summary>
+        public static string ConditionVariable_Self_Text {
+            get {
+                return ResourceManager.GetString("ConditionVariable_Self_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Text content recognized by the current step 的本地化字符串。
+        /// </summary>
+        public static string ConditionVariable_Self_Text_Tooltip {
+            get {
+                return ResourceManager.GetString("ConditionVariable_Self_Text_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Referenced Step → Recognized Text 的本地化字符串。
+        /// </summary>
+        public static string ConditionVariable_Step_Text {
+            get {
+                return ResourceManager.GetString("ConditionVariable_Step_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Recognized text of the referenced step 的本地化字符串。
+        /// </summary>
+        public static string ConditionVariable_Step_Text_Tooltip {
+            get {
+                return ResourceManager.GetString("ConditionVariable_Step_Text_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Ref Step → Executed This Time 的本地化字符串。
+        /// </summary>
+        public static string ConditionVariable_Step_Triggered {
+            get {
+                return ResourceManager.GetString("ConditionVariable_Step_Triggered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 True only when the referenced step has just been executed (can be used to count executions) 的本地化字符串。
+        /// </summary>
+        public static string ConditionVariable_Step_Triggered_Tooltip {
+            get {
+                return ResourceManager.GetString("ConditionVariable_Step_Triggered_Tooltip", resourceCulture);
             }
         }
         
@@ -808,6 +1429,69 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Cancel 的本地化字符串。
+        /// </summary>
+        public static string DragPathAbs_Cancel {
+            get {
+                return ResourceManager.GetString("DragPathAbs_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Confirm 的本地化字符串。
+        /// </summary>
+        public static string DragPathAbs_Confirm {
+            get {
+                return ResourceManager.GetString("DragPathAbs_Confirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Hold the left button and drag to generate the movement trajectory. After releasing, press and hold again to regenerate. Click &quot;Confirm&quot; to save and exit; right-click or ESC to cancel. 的本地化字符串。
+        /// </summary>
+        public static string DragPathAbs_Hint {
+            get {
+                return ResourceManager.GetString("DragPathAbs_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Clear Trajectories 的本地化字符串。
+        /// </summary>
+        public static string DragPathClick_Clear {
+            get {
+                return ResourceManager.GetString("DragPathClick_Clear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Press and hold the left button on a click point, then drag toward the next click point to generate the movement trajectory. The last click point cannot be dragged. If released midway, it connects directly from the current position to the next click point. The source image and click points are read-only. 的本地化字符串。
+        /// </summary>
+        public static string DragPathClick_Hint {
+            get {
+                return ResourceManager.GetString("DragPathClick_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Activation Radius 的本地化字符串。
+        /// </summary>
+        public static string DragPathClick_Radius {
+            get {
+                return ResourceManager.GetString("DragPathClick_Radius", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Edit Drag Path (Click Points) 的本地化字符串。
+        /// </summary>
+        public static string DragPathClick_Title {
+            get {
+                return ResourceManager.GetString("DragPathClick_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Edit 的本地化字符串。
         /// </summary>
         public static string Edit {
@@ -943,6 +1627,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Examples 的本地化字符串。
+        /// </summary>
+        public static string Examples_Header {
+            get {
+                return ResourceManager.GetString("Examples_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Executed At 的本地化字符串。
         /// </summary>
         public static string ExecutedAt {
@@ -979,6 +1672,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 This file is locked by another process and cannot be opened 的本地化字符串。
+        /// </summary>
+        public static string FileLockedByOther {
+            get {
+                return ResourceManager.GetString("FileLockedByOther", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Filter 的本地化字符串。
+        /// </summary>
+        public static string Filter {
+            get {
+                return ResourceManager.GetString("Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Perform OCR after image found 的本地化字符串。
         /// </summary>
         public static string FindImage_EnableOCR {
@@ -1011,6 +1722,42 @@ namespace ShaoLu.Resources {
         public static string FindTimeInterval {
             get {
                 return ResourceManager.GetString("FindTimeInterval", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The window is searched first by exact match of the selected window title, then by title keyword containment (case-insensitive). Once found, it is brought to the front and activated (restored first if minimized). If not found, the execution is marked as failed. 的本地化字符串。
+        /// </summary>
+        public static string Focus_Hint {
+            get {
+                return ResourceManager.GetString("Focus_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Title Keyword 的本地化字符串。
+        /// </summary>
+        public static string Focus_Keyword {
+            get {
+                return ResourceManager.GetString("Focus_Keyword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Enumerate Windows 的本地化字符串。
+        /// </summary>
+        public static string Focus_Refresh {
+            get {
+                return ResourceManager.GetString("Focus_Refresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Target Window 的本地化字符串。
+        /// </summary>
+        public static string Focus_SelectedWindow {
+            get {
+                return ResourceManager.GetString("Focus_SelectedWindow", resourceCulture);
             }
         }
         
@@ -1065,6 +1812,15 @@ namespace ShaoLu.Resources {
         public static string GotoPanel {
             get {
                 return ResourceManager.GetString("GotoPanel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Help 的本地化字符串。
+        /// </summary>
+        public static string Help_Header {
+            get {
+                return ResourceManager.GetString("Help_Header", resourceCulture);
             }
         }
         
@@ -1195,7 +1951,7 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
-        ///   查找类似 Register now 的本地化字符串。
+        ///   查找类似 Register 的本地化字符串。
         /// </summary>
         public static string Login_RegisterNow {
             get {
@@ -1258,11 +2014,47 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Edit Drag Path 的本地化字符串。
+        /// </summary>
+        public static string MouseAction_EditDragPath {
+            get {
+                return ResourceManager.GetString("MouseAction_EditDragPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 0 = move to position only (no action) 的本地化字符串。
         /// </summary>
         public static string MouseActionCountHint {
             get {
                 return ResourceManager.GetString("MouseActionCountHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Action 的本地化字符串。
+        /// </summary>
+        public static string MouseActionHeader_Action {
+            get {
+                return ResourceManager.GetString("MouseActionHeader_Action", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Count 的本地化字符串。
+        /// </summary>
+        public static string MouseActionHeader_Count {
+            get {
+                return ResourceManager.GetString("MouseActionHeader_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Interval (s) 的本地化字符串。
+        /// </summary>
+        public static string MouseActionHeader_Interval {
+            get {
+                return ResourceManager.GetString("MouseActionHeader_Interval", resourceCulture);
             }
         }
         
@@ -1308,6 +2100,15 @@ namespace ShaoLu.Resources {
         public static string Msg_ConfirmRun {
             get {
                 return ResourceManager.GetString("Msg_ConfirmRun", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The following steps reference the step(s) to be deleted; the references will be cleared after deletion: 的本地化字符串。
+        /// </summary>
+        public static string Msg_DeleteReferenced {
+            get {
+                return ResourceManager.GetString("Msg_DeleteReferenced", resourceCulture);
             }
         }
         
@@ -1434,6 +2235,15 @@ namespace ShaoLu.Resources {
         public static string NoCropImage {
             get {
                 return ResourceManager.GetString("NoCropImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 (No examples) 的本地化字符串。
+        /// </summary>
+        public static string NoExamples {
+            get {
+                return ResourceManager.GetString("NoExamples", resourceCulture);
             }
         }
         
@@ -1591,6 +2401,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Failed to open file 的本地化字符串。
+        /// </summary>
+        public static string OpenFileFailed {
+            get {
+                return ResourceManager.GetString("OpenFileFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Paste 的本地化字符串。
         /// </summary>
         public static string Paste {
@@ -1609,11 +2428,137 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Buttons 的本地化字符串。
+        /// </summary>
+        public static string Playground_CatButtons {
+            get {
+                return ResourceManager.GetString("Playground_CatButtons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Others 的本地化字符串。
+        /// </summary>
+        public static string Playground_CatOther {
+            get {
+                return ResourceManager.GetString("Playground_CatOther", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Selection 的本地化字符串。
+        /// </summary>
+        public static string Playground_CatSelection {
+            get {
+                return ResourceManager.GetString("Playground_CatSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Text 的本地化字符串。
+        /// </summary>
+        public static string Playground_CatText {
+            get {
+                return ResourceManager.GetString("Playground_CatText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Click any control on the left and its info will be shown here 的本地化字符串。
+        /// </summary>
+        public static string Playground_ClickHint {
+            get {
+                return ResourceManager.GetString("Playground_ClickHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Click Log 的本地化字符串。
+        /// </summary>
+        public static string Playground_ClickLog {
+            get {
+                return ResourceManager.GetString("Playground_ClickLog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Control Playground 的本地化字符串。
+        /// </summary>
+        public static string Playground_Header {
+            get {
+                return ResourceManager.GetString("Playground_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Mouse Position 的本地化字符串。
+        /// </summary>
+        public static string Playground_MousePosition {
+            get {
+                return ResourceManager.GetString("Playground_MousePosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Refresh Rate 的本地化字符串。
+        /// </summary>
+        public static string Playground_RefreshRate {
+            get {
+                return ResourceManager.GetString("Playground_RefreshRate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Resolution 的本地化字符串。
+        /// </summary>
+        public static string Playground_Resolution {
+            get {
+                return ResourceManager.GetString("Playground_Resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Screen Name 的本地化字符串。
+        /// </summary>
+        public static string Playground_ScreenName {
+            get {
+                return ResourceManager.GetString("Playground_ScreenName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Control Playground 的本地化字符串。
+        /// </summary>
+        public static string Playground_WindowTitle {
+            get {
+                return ResourceManager.GetString("Playground_WindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Background Color 的本地化字符串。
+        /// </summary>
+        public static string PopupBgColor {
+            get {
+                return ResourceManager.GetString("PopupBgColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Close Mode 的本地化字符串。
         /// </summary>
         public static string PopupCloseMode {
             get {
                 return ResourceManager.GetString("PopupCloseMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Background Opacity 的本地化字符串。
+        /// </summary>
+        public static string PopupOpacity {
+            get {
+                return ResourceManager.GetString("PopupOpacity", resourceCulture);
             }
         }
         
@@ -1627,11 +2572,47 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
-        ///   查找类似 Popup Type 的本地化字符串。
+        ///   查找类似 Icon 的本地化字符串。
         /// </summary>
         public static string PopupType {
             get {
                 return ResourceManager.GetString("PopupType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Window Position 的本地化字符串。
+        /// </summary>
+        public static string PopupWindowPos {
+            get {
+                return ResourceManager.GetString("PopupWindowPos", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Window Style 的本地化字符串。
+        /// </summary>
+        public static string PopupWindowStyle {
+            get {
+                return ResourceManager.GetString("PopupWindowStyle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Compact 的本地化字符串。
+        /// </summary>
+        public static string PopupWindowStyle_Compact {
+            get {
+                return ResourceManager.GetString("PopupWindowStyle_Compact", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Normal 的本地化字符串。
+        /// </summary>
+        public static string PopupWindowStyle_Normal {
+            get {
+                return ResourceManager.GetString("PopupWindowStyle_Normal", resourceCulture);
             }
         }
         
@@ -1861,6 +2842,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Save As... 的本地化字符串。
+        /// </summary>
+        public static string SaveAs {
+            get {
+                return ResourceManager.GetString("SaveAs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Saved 的本地化字符串。
         /// </summary>
         public static string Saved {
@@ -1870,11 +2860,29 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Save failed 的本地化字符串。
+        /// </summary>
+        public static string SaveFailed {
+            get {
+                return ResourceManager.GetString("SaveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Save File 的本地化字符串。
         /// </summary>
         public static string SaveFile {
             get {
                 return ResourceManager.GetString("SaveFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Save succeeded 的本地化字符串。
+        /// </summary>
+        public static string SaveSuccess {
+            get {
+                return ResourceManager.GetString("SaveSuccess", resourceCulture);
             }
         }
         
@@ -1938,6 +2946,15 @@ namespace ShaoLu.Resources {
         public static string SelectPointHint {
             get {
                 return ResourceManager.GetString("SelectPointHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Self-Reference Limit 的本地化字符串。
+        /// </summary>
+        public static string SelfReferenceLimit {
+            get {
+                return ResourceManager.GetString("SelfReferenceLimit", resourceCulture);
             }
         }
         
@@ -2104,6 +3121,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Current Executing Step 的本地化字符串。
+        /// </summary>
+        public static string Stats_CurrentStep {
+            get {
+                return ResourceManager.GetString("Stats_CurrentStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Step Execution Count 的本地化字符串。
         /// </summary>
         public static string Stats_StepCount {
@@ -2140,6 +3166,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 + Add Expression Count 的本地化字符串。
+        /// </summary>
+        public static string StatsAddConditionCount {
+            get {
+                return ResourceManager.GetString("StatsAddConditionCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Always on Top 的本地化字符串。
         /// </summary>
         public static string StatsAlwaysOnTop {
@@ -2167,11 +3202,47 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Custom Conditions 的本地化字符串。
+        /// </summary>
+        public static string StatsCustomConditions {
+            get {
+                return ResourceManager.GetString("StatsCustomConditions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Name 的本地化字符串。
+        /// </summary>
+        public static string StatsItemName {
+            get {
+                return ResourceManager.GetString("StatsItemName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Statistics Items 的本地化字符串。
         /// </summary>
         public static string StatsItems {
             get {
                 return ResourceManager.GetString("StatsItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Reset Statistics 的本地化字符串。
+        /// </summary>
+        public static string StatsReset {
+            get {
+                return ResourceManager.GetString("StatsReset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Are you sure you want to clear all statistics? 的本地化字符串。
+        /// </summary>
+        public static string StatsResetConfirm {
+            get {
+                return ResourceManager.GetString("StatsResetConfirm", resourceCulture);
             }
         }
         
@@ -2374,6 +3445,114 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Read From End 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_FromEnd {
+            get {
+                return ResourceManager.GetString("TextExtract_FromEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Read From Start 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_FromStart {
+            get {
+                return ResourceManager.GetString("TextExtract_FromStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Read From Substring 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_FromSubstring {
+            get {
+                return ResourceManager.GetString("TextExtract_FromSubstring", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Length 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Length {
+            get {
+                return ResourceManager.GetString("TextExtract_Length", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Amount to read, unit on the right (0 = until end) 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Length_Tooltip {
+            get {
+                return ResourceManager.GetString("TextExtract_Length_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Read Specified Lines 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Lines {
+            get {
+                return ResourceManager.GetString("TextExtract_Lines", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Line numbers to read (1-based), supports comma and range, e.g. 1,3,5-8 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Lines_Tooltip {
+            get {
+                return ResourceManager.GetString("TextExtract_Lines_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Start reading after the first occurrence of this substring 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Marker_Tooltip {
+            get {
+                return ResourceManager.GetString("TextExtract_Marker_Tooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Text Extraction 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Mode {
+            get {
+                return ResourceManager.GetString("TextExtract_Mode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Characters 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Unit_Char {
+            get {
+                return ResourceManager.GetString("TextExtract_Unit_Char", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Lines 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Unit_Line {
+            get {
+                return ResourceManager.GetString("TextExtract_Unit_Line", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Full Text 的本地化字符串。
+        /// </summary>
+        public static string TextExtract_Whole {
+            get {
+                return ResourceManager.GetString("TextExtract_Whole", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Text Preview 的本地化字符串。
         /// </summary>
         public static string TextPreviewTitle {
@@ -2442,6 +3621,24 @@ namespace ShaoLu.Resources {
         public static string Up {
             get {
                 return ResourceManager.GetString("Up", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 User Guide 的本地化字符串。
+        /// </summary>
+        public static string UserDoc_Header {
+            get {
+                return ResourceManager.GetString("UserDoc_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 User guide not found 的本地化字符串。
+        /// </summary>
+        public static string UserDocNotFound {
+            get {
+                return ResourceManager.GetString("UserDocNotFound", resourceCulture);
             }
         }
         

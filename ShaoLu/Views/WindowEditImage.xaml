@@ -131,10 +131,12 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Button x:Name="CropImage" Margin="5" Content="{lex:Loc Crop}" Click="CropImage_Click"/>
             <Button x:Name="SaveImage" Margin="5" Grid.Column="1" Content="{lex:Loc Save}" Click="SaveImage_Click"/>
-            <Button x:Name="Back" Margin="5" Grid.Column="2" Content="{lex:Loc Back}" Click="Back_Click"/>
+            <Button x:Name="SaveAsImage" Margin="5" Grid.Column="2" Content="{lex:Loc SaveAs}" Click="SaveAsImage_Click"/>
+            <Button x:Name="Back" Margin="5" Grid.Column="3" Content="{lex:Loc Back}" Click="Back_Click"/>
         </Grid>
     </Grid>
 </Window>

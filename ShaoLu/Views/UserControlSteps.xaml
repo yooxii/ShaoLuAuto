@@ -33,7 +33,7 @@
                     <MenuItem Header="{lex:Loc AddMouseActionStep}" Command="{Binding AddStepCommand}" CommandParameter="MouseAction"/>
                     <MenuItem Header="{lex:Loc AddStatisticsStep}" Command="{Binding AddStepCommand}" CommandParameter="Statistics"/>
                     <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Command="{Binding AddStepCommand}" CommandParameter="BurnInConfig"/>
-                    <MenuItem Header="{lex:Loc AddTopmostWindowStep}" Command="{Binding AddStepCommand}" CommandParameter="TopmostWindow"/>
+                    <MenuItem Header="{lex:Loc AddFocusWindowStep}" Command="{Binding AddStepCommand}" CommandParameter="FocusWindow"/>
                 </MenuItem>
                 <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
                 <Separator/>
@@ -91,19 +91,16 @@
                                        >
                             <MenuItem Header="{lex:Loc AddImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImage"/>
                             <MenuItem Header="{lex:Loc AddFindImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FindImage"/>
-                        </wd:SplitButton>
-                        <wd:SplitButton x:Name="AddTextStep" Content="{lex:Loc AddTextStep}" CommandParameter="TypeText" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
-                                       >
-                            <MenuItem Header="{lex:Loc AddTextStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeText"/>
-                            <MenuItem Header="{lex:Loc AddTextMoreStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeTextMore"/>
-                            <MenuItem Header="{lex:Loc AddTextFromFileStep}" Margin="3" Click="MenuItemAddTextStep_Click" CommandParameter="TypeTextFromFile"/>
+                            <MenuItem Header="{lex:Loc AddTextStep}" Click="MenuItemAddImageStep_Click" CommandParameter="TypeText"/>
+                            <MenuItem Header="{lex:Loc AddTextMoreStep}" Click="MenuItemAddImageStep_Click" CommandParameter="TypeTextMore"/>
+                            <MenuItem Header="{lex:Loc AddTextFromFileStep}" Click="MenuItemAddImageStep_Click" CommandParameter="TypeTextFromFile"/>
+                            <MenuItem Header="{lex:Loc AddMouseActionStep}" Click="MenuItemAddImageStep_Click" CommandParameter="MouseAction"/>
                         </wd:SplitButton>
                         <wd:SplitButton x:Name="AddOCRStep" Content="{lex:Loc AddGetInputStep}" CommandParameter="GetInput" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
-                            <MenuItem Header="{lex:Loc AddGetInputStep}" Click="MenuItemAddTextStep_Click" CommandParameter="GetInput"/>
-                            <MenuItem Header="{lex:Loc AddMouseActionStep}" Click="MenuItemAddTextStep_Click" CommandParameter="MouseAction"/>
-                            <MenuItem Header="{lex:Loc AddStatisticsStep}" Click="MenuItemAddTextStep_Click" CommandParameter="Statistics"/>
-                            <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Click="MenuItemAddTextStep_Click" CommandParameter="BurnInConfig"/>
-                            <MenuItem Header="{lex:Loc AddTopmostWindowStep}" Click="MenuItemAddTextStep_Click" CommandParameter="TopmostWindow"/>
+                            <MenuItem Header="{lex:Loc AddGetInputStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="GetInput"/>
+                            <MenuItem Header="{lex:Loc AddStatisticsStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Statistics"/>
+                            <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="BurnInConfig"/>
+                            <MenuItem Header="{lex:Loc AddFocusWindowStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="FocusWindow"/>
                         </wd:SplitButton>
                         <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
                     </ToolBar>

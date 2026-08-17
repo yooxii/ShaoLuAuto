@@ -1,11 +1,14 @@
 ﻿using ShaoLu.Services;
 using ShaoLu.Viewmodels;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Point = ShaoLu.Models.Point;
 
 namespace ShaoLu.Views
@@ -58,6 +61,50 @@ namespace ShaoLu.Views
         private void Back_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        /// <summary>
+        /// 另存为：有裁剪结果保存裁剪图，否则保存原图
+        /// </summary>
+        private void SaveAsImage_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = editImageViewModel;
+            bool hasCrop = vm.ImgDst != null
+                && vm.CropRect != Rect.Empty
+                && vm.CropRect.Width > 0 && vm.CropRect.Height > 0;
+            ImageSource source = hasCrop ? vm.ImgDst : vm.ImgSrc;
+
+            if (!(source is BitmapSource bitmapSource))
+            {
+                WindowAsyncPopup.Show(LanguageService.GetLocalizedString("No_img_Warning", "No picture"), "Error", PopupButtons.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string filter = "PNG (*.png)|*.png|JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|BMP (*.bmp)|*.bmp";
+            string path = PathServices.SavePathDialog(
+                LanguageService.GetLocalizedString("SaveAs", "Save As"), filter, "image.png");
+            if (string.IsNullOrEmpty(path)) return;
+
+            try
+            {
+                BitmapEncoder encoder = Path.GetExtension(path).ToLower() switch
+                {
+                    ".jpg" or ".jpeg" => new JpegBitmapEncoder(),
+                    ".bmp" => new BmpBitmapEncoder(),
+                    ".gif" => new GifBitmapEncoder(),
+                    _ => new PngBitmapEncoder(),
+                };
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+                    encoder.Save(stream);
+                }
+                WindowAsyncPopup.Show(LanguageService.GetLocalizedString("Saved"), LanguageService.GetLocalizedString("Success"), PopupButtons.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                WindowAsyncPopup.Show(ex.Message, "Error", PopupButtons.OK, MessageBoxImage.Error);
+            }
         }
 
         #region OCR 矩形绘制

@@ -32,10 +32,10 @@ namespace ShaoLu.Views
             }
         }
 
-        private void MenuItemAddTextStep_Click(object sender, RoutedEventArgs e)
+        private void MenuItemAddOtherStep_Click(object sender, RoutedEventArgs e)
         {
             var menuItem = (MenuItem)sender;
-            AddTextStep.CommandParameter = menuItem.CommandParameter;
+            AddOCRStep.CommandParameter = menuItem.CommandParameter;
             if (menuItem.CommandParameter is string type)
             {
                 stepsViewModel.AddStepCommand.Execute(type);

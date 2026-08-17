@@ -100,7 +100,7 @@ namespace ShaoLu.Converters
                 StepType.MouseAction => typeof(MouseActionStep),
                 StepType.Statistics => typeof(StatisticsStep),
                 StepType.BurnInConfig => typeof(BurnInConfigStep),
-                StepType.TopmostWindow => typeof(TopmostWindowStep),
+                StepType.FocusWindow => typeof(FocusWindowStep),
                 // 添加其他映射...
                 _ => throw new JsonException($"No mapping found for StepType: {stepType}"),
             };

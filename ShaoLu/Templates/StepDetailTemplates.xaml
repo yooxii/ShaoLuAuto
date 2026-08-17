@@ -223,6 +223,12 @@
                 <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Capture}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc Capture_FullScreen}" Command="{Binding CaptureFullScreenCommand}" Margin="0,0,3,0" Padding="8,2"/>
+                <Button Content="{lex:Loc Capture_Window}" Command="{Binding CaptureWindowCommand}" Margin="0,0,3,0" Padding="8,2"/>
+                <Button Content="{lex:Loc Capture_Region}" Command="{Binding CaptureRegionCommand}" Padding="8,2"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
                 <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
@@ -289,6 +295,12 @@
                 <TextBox Text="{Binding ImagePath}" IsReadOnly="True" MinWidth="120" MaxWidth="200" ToolTip="{Binding ImagePath}" VerticalAlignment="Center"/>
                 <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
                 <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Capture}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc Capture_FullScreen}" Command="{Binding CaptureFullScreenCommand}" Margin="0,0,3,0" Padding="8,2"/>
+                <Button Content="{lex:Loc Capture_Window}" Command="{Binding CaptureWindowCommand}" Margin="0,0,3,0" Padding="8,2"/>
+                <Button Content="{lex:Loc Capture_Region}" Command="{Binding CaptureRegionCommand}" Padding="8,2"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
@@ -917,24 +929,20 @@
         </StackPanel>
     </DataTemplate>
 
-    <!-- 窗口置顶步骤 -->
-    <DataTemplate x:Key="TopmostWindowStepTemplate" DataType="{x:Type AutoVM:TopmostWindowStep}">
+    <!-- 窗口聚焦步骤 -->
+    <DataTemplate x:Key="FocusWindowStepTemplate" DataType="{x:Type AutoVM:FocusWindowStep}">
         <StackPanel>
             <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
             <StackPanel Orientation="Horizontal" Margin="0,2">
-                <Label Content="{lex:Loc Topmost_Action}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                <ComboBox ItemsSource="{Binding TopmostActions}" SelectedItem="{Binding TopmostAction}" MinWidth="120" VerticalContentAlignment="Center"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <Label Content="{lex:Loc Topmost_SelectedWindow}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Label Content="{lex:Loc Focus_SelectedWindow}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding WindowTitles}" SelectedItem="{Binding SelectedWindowTitle}" MinWidth="240" VerticalContentAlignment="Center"/>
-                <Button Content="{lex:Loc Topmost_Refresh}" Command="{Binding RefreshWindowsCommand}" Margin="5,0,0,0" Padding="12,3"/>
+                <Button Content="{lex:Loc Focus_Refresh}" Command="{Binding RefreshWindowsCommand}" Margin="5,0,0,0" Padding="12,3"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
-                <Label Content="{lex:Loc Topmost_Keyword}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Label Content="{lex:Loc Focus_Keyword}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding WindowTitleKeyword, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
             </StackPanel>
-            <TextBlock Text="{lex:Loc Topmost_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,5" TextWrapping="Wrap"/>
+            <TextBlock Text="{lex:Loc Focus_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,5" TextWrapping="Wrap"/>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.01"/>
@@ -955,5 +963,5 @@
                      MouseActionTemplate="{StaticResource MouseActionStepTemplate}"
                      StatisticsTemplate="{StaticResource StatisticsStepTemplate}"
                      BurnInConfigTemplate="{StaticResource BurnInConfigStepTemplate}"
-                     TopmostWindowTemplate="{StaticResource TopmostWindowStepTemplate}"/>
+                     FocusWindowTemplate="{StaticResource FocusWindowStepTemplate}"/>
 </ResourceDictionary>

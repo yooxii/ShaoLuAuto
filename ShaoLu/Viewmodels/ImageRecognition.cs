@@ -194,6 +194,84 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        [RelayCommand]
+        private void CaptureFullScreen()
+        {
+            using var bmp = Autogui.CaptureScreen();
+            ApplyCapture(bmp);
+        }
+
+        [RelayCommand]
+        private void CaptureRegion()
+        {
+            var win = new WindowSelectRegion();
+            if (win.ShowDialog() != true || win.SelectedRegion == Rect.Empty) return;
+
+            var region = new System.Drawing.Rectangle(
+                (int)win.SelectedRegion.X, (int)win.SelectedRegion.Y,
+                (int)win.SelectedRegion.Width, (int)win.SelectedRegion.Height);
+            using var bmp = Autogui.CaptureScreenRegion(region);
+            ApplyCapture(bmp);
+        }
+
+        [RelayCommand]
+        private void CaptureWindow()
+        {
+            var win = new WindowSelectWindowTitle();
+            if (win.ShowDialog() != true || win.SelectedHandle == IntPtr.Zero) return;
+
+            // 将目标窗口前置后截取其区域
+            NativeMethods.SetForegroundWindow(win.SelectedHandle);
+            Thread.Sleep(300);
+            if (!NativeMethods.GetWindowRect(win.SelectedHandle, out var rect)) return;
+
+            double dpiX = OCRService.CachedDpiX;
+            double dpiY = OCRService.CachedDpiY;
+            var region = new System.Drawing.Rectangle(
+                (int)(rect.Left / dpiX), (int)(rect.Top / dpiY),
+                (int)((rect.Right - rect.Left) / dpiX), (int)((rect.Bottom - rect.Top) / dpiY));
+            using var bmp = Autogui.CaptureScreenRegion(region);
+            ApplyCapture(bmp);
+        }
+
+        /// <summary>
+        /// 截图落地为新原图：保存到工作目录、重置裁剪/点击点状态并打开图片编辑窗口
+        /// </summary>
+        private void ApplyCapture(System.Drawing.Bitmap bmp)
+        {
+            if (bmp == null) return;
+            try
+            {
+                string workDir = mainVM.StepImageWorkDir;
+                if (string.IsNullOrEmpty(workDir))
+                {
+                    workDir = Path.Combine(Path.GetTempPath(), "AutoShaoLu", "images");
+                    mainVM.StepImageWorkDir = workDir;
+                }
+                string imagesDir = Path.Combine(workDir, "images");
+                Directory.CreateDirectory(imagesDir);
+
+                string fullPath = Path.Combine(imagesDir, $"{Uid}_src.png");
+                bmp.Save(fullPath, System.Drawing.Imaging.ImageFormat.Png);
+
+                // 重置裁剪与点击点状态，截图作为新原图
+                CroppedImageName = null;
+                _croppedImg = null;
+                CroppedRect = new Rect();
+                ClickThumbs = [];
+                ImagePath = fullPath;
+                IsError = false;
+                OnPropertyChanged(nameof(ImgSrc));
+
+                // 截图后直接打开图片编辑窗口进行裁剪
+                EditImage();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Capture failed");
+            }
+        }
+
         #endregion
 
         private ImageSource LoadImage(params string[] paths)

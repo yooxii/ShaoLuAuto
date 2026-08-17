@@ -258,23 +258,35 @@
   <data name="DragPathAbs_Cancel" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name="AddTopmostWindowStep" xml:space="preserve">
-    <value>添加窗口置顶</value>
+  <data name="AddFocusWindowStep" xml:space="preserve">
+    <value>窗口聚焦</value>
   </data>
-  <data name="Topmost_Action" xml:space="preserve">
-    <value>动作</value>
-  </data>
-  <data name="Topmost_SelectedWindow" xml:space="preserve">
+  <data name="Focus_SelectedWindow" xml:space="preserve">
     <value>指定窗口</value>
   </data>
-  <data name="Topmost_Refresh" xml:space="preserve">
+  <data name="Focus_Refresh" xml:space="preserve">
     <value>枚举窗口</value>
   </data>
-  <data name="Topmost_Keyword" xml:space="preserve">
+  <data name="Focus_Keyword" xml:space="preserve">
     <value>标题关键字</value>
   </data>
-  <data name="Topmost_Hint" xml:space="preserve">
-    <value>按“指定窗口”精确匹配优先查找窗口，其次按“标题关键字”包含匹配（不区分大小写）；未找到窗口时该次执行记为失败。</value>
+  <data name="Focus_Hint" xml:space="preserve">
+    <value>按“指定窗口”精确匹配优先查找窗口，其次按“标题关键字”包含匹配（不区分大小写）；找到后将窗口置于最前并激活（最小化时先恢复）。未找到窗口时该次执行记为失败。</value>
+  </data>
+  <data name="Capture" xml:space="preserve">
+    <value>截图</value>
+  </data>
+  <data name="Capture_FullScreen" xml:space="preserve">
+    <value>全屏截图</value>
+  </data>
+  <data name="Capture_Window" xml:space="preserve">
+    <value>窗口截图</value>
+  </data>
+  <data name="Capture_Region" xml:space="preserve">
+    <value>矩形截图</value>
+  </data>
+  <data name="Capture_WindowTitle_Select" xml:space="preserve">
+    <value>选择要截图的窗口</value>
   </data>
   <data name="Settings" xml:space="preserve">
     <value>设置</value>
@@ -1095,12 +1107,6 @@
   <data name="StatsScope_Custom" xml:space="preserve">
     <value>自选步骤</value>
   </data>
-  <data name="Filter" xml:space="preserve">
-    <value>筛选</value>
-  </data>
-  <data name="Msg_DeleteReferenced" xml:space="preserve">
-    <value>以下步骤引用了待删除的步骤，删除后引用将被清空：</value>
-  </data>
   <data name="Close" xml:space="preserve">
     <value>关闭</value>
   </data>
@@ -1160,6 +1166,12 @@
   </data>
   <data name="ConditionOperator_RegexMatch" xml:space="preserve">
     <value>正则匹配</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>筛选</value>
+  </data>
+  <data name="Msg_DeleteReferenced" xml:space="preserve">
+    <value>以下步骤引用了待删除的步骤，删除后引用将被清空：</value>
   </data>
   <data name="BurnIn_ScreenshotDir" xml:space="preserve">
     <value>截图保存目录</value>

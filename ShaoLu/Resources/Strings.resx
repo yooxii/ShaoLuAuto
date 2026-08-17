@@ -258,23 +258,35 @@
   <data name="DragPathAbs_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
-  <data name="AddTopmostWindowStep" xml:space="preserve">
-    <value>Add Topmost Window</value>
+  <data name="AddFocusWindowStep" xml:space="preserve">
+    <value>Window Focus</value>
   </data>
-  <data name="Topmost_Action" xml:space="preserve">
-    <value>Action</value>
-  </data>
-  <data name="Topmost_SelectedWindow" xml:space="preserve">
+  <data name="Focus_SelectedWindow" xml:space="preserve">
     <value>Target Window</value>
   </data>
-  <data name="Topmost_Refresh" xml:space="preserve">
+  <data name="Focus_Refresh" xml:space="preserve">
     <value>Enumerate Windows</value>
   </data>
-  <data name="Topmost_Keyword" xml:space="preserve">
+  <data name="Focus_Keyword" xml:space="preserve">
     <value>Title Keyword</value>
   </data>
-  <data name="Topmost_Hint" xml:space="preserve">
-    <value>The window is searched first by exact match of the selected window title, then by title keyword containment (case-insensitive). If not found, the execution is marked as failed.</value>
+  <data name="Focus_Hint" xml:space="preserve">
+    <value>The window is searched first by exact match of the selected window title, then by title keyword containment (case-insensitive). Once found, it is brought to the front and activated (restored first if minimized). If not found, the execution is marked as failed.</value>
+  </data>
+  <data name="Capture" xml:space="preserve">
+    <value>Capture</value>
+  </data>
+  <data name="Capture_FullScreen" xml:space="preserve">
+    <value>Full Screen</value>
+  </data>
+  <data name="Capture_Window" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="Capture_Region" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="Capture_WindowTitle_Select" xml:space="preserve">
+    <value>Select Window to Capture</value>
   </data>
   <data name="Settings" xml:space="preserve">
     <value>Setting</value>

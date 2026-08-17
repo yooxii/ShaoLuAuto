@@ -20,7 +20,7 @@ namespace ShaoLu.Models
         MouseAction = 201,
         Statistics = 202,
         BurnInConfig = 203,
-        TopmostWindow = 204,
+        FocusWindow = 204,
         Popup = 1000,
         // 其他步骤类型...
     }

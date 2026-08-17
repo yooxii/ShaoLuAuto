@@ -36,6 +36,8 @@ namespace ShaoLu.Converters
                 return ConvertTextExtractMode(extractMode);
             if (value is ExtractUnit unit)
                 return ConvertExtractUnit(unit);
+            if (value is MouseActionType actionType)
+                return ConvertMouseActionType(actionType);
             return value?.ToString() ?? string.Empty;
         }
 
@@ -148,6 +150,18 @@ namespace ShaoLu.Converters
             ExtractUnit.Character => Services.LanguageService.GetLocalizedString("TextExtract_Unit_Char"),
             ExtractUnit.Line => Services.LanguageService.GetLocalizedString("TextExtract_Unit_Line"),
             _ => u.ToString(),
+        };
+
+        public static string ConvertMouseActionType(MouseActionType t) => t switch
+        {
+            MouseActionType.LeftClick => Services.LanguageService.GetLocalizedString("MouseAction_LeftClick"),
+            MouseActionType.RightClick => Services.LanguageService.GetLocalizedString("MouseAction_RightClick"),
+            MouseActionType.DoubleClick => Services.LanguageService.GetLocalizedString("MouseAction_DoubleClick"),
+            MouseActionType.LeftPress => Services.LanguageService.GetLocalizedString("MouseAction_LeftPress"),
+            MouseActionType.ScrollUp => Services.LanguageService.GetLocalizedString("MouseAction_ScrollUp"),
+            MouseActionType.ScrollDown => Services.LanguageService.GetLocalizedString("MouseAction_ScrollDown"),
+            MouseActionType.Drag => Services.LanguageService.GetLocalizedString("MouseAction_Drag"),
+            _ => t.ToString(),
         };
 
         /// <summary>

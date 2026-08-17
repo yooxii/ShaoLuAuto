@@ -215,6 +215,7 @@ namespace ShaoLu.Viewmodels
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
                     "BurnInConfig" => new BurnInConfigStep(LanguageService.GetLocalizedString("BurnInConfig_StepName")),
                     "FocusWindow" => new FocusWindowStep($"FocusWindow_{AutomationStepBases.Count(t => t.Type == StepType.FocusWindow) + 1}"),
+                    "Empty" => new EmptyStep($"Empty_{AutomationStepBases.Count(t => t.Type == StepType.Empty) + 1}"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
                 ApplyDefaultSettings(step);

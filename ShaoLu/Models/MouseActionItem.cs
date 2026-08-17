@@ -12,6 +12,8 @@ namespace ShaoLu.Models
         LeftClick,
         RightClick,
         DoubleClick,
+        /// <summary>长按：按下左键保持“间隔时间”后释放</summary>
+        LeftPress,
         ScrollUp,
         ScrollDown,
         /// <summary>沿路径拖拽（按下左键经过各路径点后释放）</summary>
@@ -38,7 +40,7 @@ namespace ShaoLu.Models
         /// <summary>执行次数（点击次数/滚动格数/拖拽次数），最小为0</summary>
         public int Count { get => _count; set => SetProperty(ref _count, value < 0 ? 0 : value); }
 
-        /// <summary>动作间隔(秒)</summary>
+        /// <summary>动作间隔(秒)；长按动作下为按住时长</summary>
         public double Interval { get => _interval; set => SetProperty(ref _interval, value); }
 
         /// <summary>绝对位置拖拽路径（屏幕绝对坐标序列，逻辑像素；仅鼠标操作步骤使用）</summary>
@@ -56,6 +58,7 @@ namespace ShaoLu.Models
             MouseActionType.LeftClick,
             MouseActionType.RightClick,
             MouseActionType.DoubleClick,
+            MouseActionType.LeftPress,
             MouseActionType.ScrollUp,
             MouseActionType.ScrollDown,
             MouseActionType.Drag,

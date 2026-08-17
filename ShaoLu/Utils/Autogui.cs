@@ -362,6 +362,12 @@ namespace ShaoLu.Utils
                         case Models.MouseActionType.DoubleClick:
                             sim.Mouse.LeftButtonDoubleClick();
                             break;
+                        case Models.MouseActionType.LeftPress:
+                            // 长按：按下左键保持“间隔时间”后释放
+                            sim.Mouse.LeftButtonDown();
+                            Thread.Sleep((int)(action.Interval * 1000));
+                            sim.Mouse.LeftButtonUp();
+                            break;
                         case Models.MouseActionType.ScrollUp:
                             sim.Mouse.VerticalScroll(1);
                             break;

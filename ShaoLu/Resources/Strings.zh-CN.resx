@@ -225,14 +225,38 @@
   <data name="Playground_CatOther" xml:space="preserve">
     <value>其他</value>
   </data>
-  <data name="MouseActionHeader_Action" xml:space="preserve">
-    <value>动作</value>
+  <data name="MouseActionTypeHint" xml:space="preserve">
+    <value>动作类型：左键单击 / 右键单击 / 双击 / 长按（按住时长为右侧“间隔时间”）/ 滚轮 / 拖拽</value>
   </data>
-  <data name="MouseActionHeader_Count" xml:space="preserve">
-    <value>次数</value>
+  <data name="MouseAction_LeftClick" xml:space="preserve">
+    <value>左键单击</value>
   </data>
-  <data name="MouseActionHeader_Interval" xml:space="preserve">
-    <value>间隔时间(s)</value>
+  <data name="MouseAction_RightClick" xml:space="preserve">
+    <value>右键单击</value>
+  </data>
+  <data name="MouseAction_DoubleClick" xml:space="preserve">
+    <value>双击</value>
+  </data>
+  <data name="MouseAction_LeftPress" xml:space="preserve">
+    <value>长按</value>
+  </data>
+  <data name="MouseAction_ScrollUp" xml:space="preserve">
+    <value>滚轮上滚</value>
+  </data>
+  <data name="MouseAction_ScrollDown" xml:space="preserve">
+    <value>滚轮下滚</value>
+  </data>
+  <data name="MouseAction_Drag" xml:space="preserve">
+    <value>拖拽</value>
+  </data>
+  <data name="AddEmptyStep" xml:space="preserve">
+    <value>添加空步骤</value>
+  </data>
+  <data name="EmptyStep_Hint" xml:space="preserve">
+    <value>空步骤用作分割符、占位符或注释：执行时始终成功且不进行任何操作；可在下方注释框或列表“描述”列填写说明文字。</value>
+  </data>
+  <data name="EmptyStep_Comment" xml:space="preserve">
+    <value>注释</value>
   </data>
   <data name="MouseAction_EditDragPath" xml:space="preserve">
     <value>编辑拖拽路径</value>

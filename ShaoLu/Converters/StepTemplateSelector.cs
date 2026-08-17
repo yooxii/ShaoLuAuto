@@ -8,6 +8,7 @@ namespace ShaoLu.Converters
     public class StepTemplateSelector : DataTemplateSelector
     {
         public DataTemplate EmptyTemplate { get; set; }
+        public DataTemplate EmptyStepTemplate { get; set; }
         public DataTemplate ClickImageTemplate { get; set; }
         public DataTemplate TypeTextTemplate { get; set; }
         public DataTemplate FindImageTemplate { get; set; }
@@ -26,7 +27,7 @@ namespace ShaoLu.Converters
             {
                 return step.Type switch
                 {
-                    StepType.Empty => EmptyTemplate,
+                    StepType.Empty => EmptyStepTemplate,
                     StepType.ClickImage => ClickImageTemplate,
                     StepType.FindImage => FindImageTemplate,
                     StepType.ClickImages => EmptyTemplate,

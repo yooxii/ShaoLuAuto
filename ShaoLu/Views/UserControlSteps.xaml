@@ -34,6 +34,7 @@
                     <MenuItem Header="{lex:Loc AddStatisticsStep}" Command="{Binding AddStepCommand}" CommandParameter="Statistics"/>
                     <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Command="{Binding AddStepCommand}" CommandParameter="BurnInConfig"/>
                     <MenuItem Header="{lex:Loc AddFocusWindowStep}" Command="{Binding AddStepCommand}" CommandParameter="FocusWindow"/>
+                    <MenuItem Header="{lex:Loc AddEmptyStep}" Command="{Binding AddStepCommand}" CommandParameter="Empty"/>
                 </MenuItem>
                 <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
                 <Separator/>
@@ -101,6 +102,7 @@
                             <MenuItem Header="{lex:Loc AddStatisticsStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Statistics"/>
                             <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="BurnInConfig"/>
                             <MenuItem Header="{lex:Loc AddFocusWindowStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="FocusWindow"/>
+                            <MenuItem Header="{lex:Loc AddEmptyStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Empty"/>
                         </wd:SplitButton>
                         <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
                     </ToolBar>

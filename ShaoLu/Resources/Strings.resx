@@ -225,14 +225,38 @@
   <data name="Playground_CatOther" xml:space="preserve">
     <value>Others</value>
   </data>
-  <data name="MouseActionHeader_Action" xml:space="preserve">
-    <value>Action</value>
+  <data name="MouseActionTypeHint" xml:space="preserve">
+    <value>Action type: left click / right click / double click / long press (hold duration = "Interval") / scroll / drag</value>
   </data>
-  <data name="MouseActionHeader_Count" xml:space="preserve">
-    <value>Count</value>
+  <data name="MouseAction_LeftClick" xml:space="preserve">
+    <value>Left Click</value>
   </data>
-  <data name="MouseActionHeader_Interval" xml:space="preserve">
-    <value>Interval (s)</value>
+  <data name="MouseAction_RightClick" xml:space="preserve">
+    <value>Right Click</value>
+  </data>
+  <data name="MouseAction_DoubleClick" xml:space="preserve">
+    <value>Double Click</value>
+  </data>
+  <data name="MouseAction_LeftPress" xml:space="preserve">
+    <value>Long Press</value>
+  </data>
+  <data name="MouseAction_ScrollUp" xml:space="preserve">
+    <value>Scroll Up</value>
+  </data>
+  <data name="MouseAction_ScrollDown" xml:space="preserve">
+    <value>Scroll Down</value>
+  </data>
+  <data name="MouseAction_Drag" xml:space="preserve">
+    <value>Drag</value>
+  </data>
+  <data name="AddEmptyStep" xml:space="preserve">
+    <value>Add Empty Step</value>
+  </data>
+  <data name="EmptyStep_Hint" xml:space="preserve">
+    <value>An empty step works as a separator, placeholder or comment: it always succeeds and performs no operation. Use the comment box below or the "Description" column in the list for notes.</value>
+  </data>
+  <data name="EmptyStep_Comment" xml:space="preserve">
+    <value>Comment</value>
   </data>
   <data name="MouseAction_EditDragPath" xml:space="preserve">
     <value>Edit Drag Path</value>

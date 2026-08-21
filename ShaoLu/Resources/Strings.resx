@@ -1359,4 +1359,13 @@
   <data name="BurnIn_TotalRecords" xml:space="preserve">
     <value>Total records</value>
   </data>
+  <data name="Management" xml:space="preserve">
+    <value>Management</value>
+  </data>
+  <data name="RecentFiles" xml:space="preserve">
+    <value>Recent Files</value>
+  </data>
+  <data name="NoRecentFiles" xml:space="preserve">
+    <value>(None)</value>
+  </data>
 </root>

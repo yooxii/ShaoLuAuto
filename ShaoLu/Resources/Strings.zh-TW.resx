@@ -190,10 +190,10 @@
     <value>未找到使用文件</value>
   </data>
   <data name="Playground_Header" xml:space="preserve">
-    <value>控制項試驗場</value>
+    <value>靶場</value>
   </data>
   <data name="Playground_WindowTitle" xml:space="preserve">
-    <value>控制項試驗場</value>
+    <value>靶場</value>
   </data>
   <data name="Playground_ScreenName" xml:space="preserve">
     <value>螢幕名稱</value>
@@ -889,7 +889,7 @@
     <value>拖拽框選 OCR 區域，按 ESC 取消</value>
   </data>
   <data name="OCR_Test" xml:space="preserve">
-    <value>測試 OCR</value>
+    <value>測試抓取文本</value>
   </data>
   <data name="OCR_NoRegion" xml:space="preserve">
     <value>未選擇區域</value>
@@ -1358,5 +1358,14 @@
   </data>
   <data name="BurnIn_TotalRecords" xml:space="preserve">
     <value>记录總數</value>
+  </data>
+  <data name="Management" xml:space="preserve">
+    <value>管理</value>
+  </data>
+  <data name="RecentFiles" xml:space="preserve">
+    <value>最近開啟的檔案</value>
+  </data>
+  <data name="NoRecentFiles" xml:space="preserve">
+    <value>（無）</value>
   </data>
 </root>

@@ -30,6 +30,7 @@ namespace ShaoLu
         private const int HOTKEY_START_ID = 9001;
         private const int HOTKEY_STOP_ID = 9002;
         private HwndSource _source;
+        private WindowPlayground windowPlayground = new();
 
         #region 文件操作快捷键命令（仅主窗口内有效）
 
@@ -242,6 +243,9 @@ namespace ShaoLu
 
                 stepsViewModel.AutomationStepBases.Clear();
                 stepsViewModel.InsertSteps(loadedSteps);
+
+                // 记录到最近打开文件列表
+                RecentFilesService.AddRecent(filePath);
             }
             catch (Exception ex)
             {
@@ -251,6 +255,45 @@ namespace ShaoLu
                     LanguageService.GetLocalizedString("OpenFile"),
                     PopupButtons.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>
+        /// 展开“最近打开的文件”菜单时动态构建子菜单（最多 10 个）
+        /// </summary>
+        private void RecentFiles_SubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            RecentFiles.Items.Clear();
+            var files = RecentFilesService.Load();
+            if (files.Count == 0)
+            {
+                RecentFiles.Items.Add(new MenuItem
+                {
+                    Header = LanguageService.GetLocalizedString("NoRecentFiles"),
+                    IsEnabled = false,
+                });
+                return;
+            }
+            foreach (var path in files)
+            {
+                var item = new MenuItem { Header = path, ToolTip = path };
+                item.Click += (s, args) => OpenRecentFile(path);
+                RecentFiles.Items.Add(item);
+            }
+        }
+
+        /// <summary>打开最近文件列表中的文件；文件不存在时提示并从列表移除</summary>
+        private void OpenRecentFile(string filePath)
+        {
+            if (!System.IO.File.Exists(filePath))
+            {
+                RecentFilesService.Remove(filePath);
+                WindowAsyncPopup.Show(
+                    $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {filePath}",
+                    LanguageService.GetLocalizedString("OpenFile"),
+                    PopupButtons.OK, MessageBoxImage.Error);
+                return;
+            }
+            LoadStepFile(filePath);
         }
 
         /// <summary>
@@ -297,14 +340,32 @@ namespace ShaoLu
         {
             if (sender is MenuItem item && item.Tag is string filePath)
             {
+                if (windowPlayground == null || !windowPlayground.IsLoaded)
+                {
+                    windowPlayground = new WindowPlayground();
+                    windowPlayground.Closed += (s, e) => windowPlayground = null;
+                    windowPlayground.Show();
+                }
+                else
+                {
+                    windowPlayground.Activate();
+                }
                 LoadStepFile(filePath);
             }
         }
 
         private void Playground_Click(object sender, RoutedEventArgs e)
         {
-            var window = new WindowPlayground();
-            window.Show();
+            if (windowPlayground == null || !windowPlayground.IsLoaded)
+            {
+                windowPlayground = new WindowPlayground();
+                windowPlayground.Closed += (s, e) => windowPlayground = null;
+                windowPlayground.Show();
+            }
+            else
+            {
+                windowPlayground.Activate();
+            }
         }
 
         private void UserDoc_Click(object sender, RoutedEventArgs e)

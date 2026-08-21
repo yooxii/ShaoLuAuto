@@ -184,6 +184,7 @@
     <Compile Include="Services\ConditionEvaluator.cs" />
     <Compile Include="Services\ExecutionLogService.cs" />
     <Compile Include="Services\BurnInService.cs" />
+    <Compile Include="Services\RecentFilesService.cs" />
     <Compile Include="Services\OCRService.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\IUserService.cs" />

@@ -362,3 +362,20 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /ShaoLu/tessdata
+image/使用说明书/图1-主界面.png
+image/使用说明书/图2-登录.png
+image/使用说明书/图3-添加点击图像步骤.png
+image/使用说明书/图4-步骤列表右键菜单.png
+image/使用说明书/图5-跳转设置.png
+image/使用说明书/图6-选择自定义判断模式.png
+image/使用说明书/图7-添加表达式.png
+image/使用说明书/图8-设置表达式.png
+image/使用说明书/图9-输入步骤的参数面板.png
+image/使用说明书/图10-统计悬浮窗示例.png
+image/使用说明书/图11-图片编辑窗口.png
+image/使用说明书/图12-运行中的界面.png
+image/使用说明书/图13-autostep文件内部.png
+image/使用说明书/图14-设置窗口.png
+image/使用说明书/图15-执行日志查询窗口.png
+image/使用说明书/图16-烧录统计窗口.png
+image/使用说明书/图17-用户管理窗口.png

@@ -40,10 +40,11 @@
                 <MenuItem x:Name="Open" Header="{lex:Loc}" Click="Open_Click" InputGestureText="Ctrl+O"/>
                 <MenuItem x:Name="Save" Header="{lex:Loc Save}" Click="Save_Click" IsEnabled="{Binding IsLoggedIn}" InputGestureText="Ctrl+S"/>
                 <MenuItem x:Name="SaveAs" Header="{lex:Loc SaveAs}" Click="SaveAs_Click" IsEnabled="{Binding IsLoggedIn}" InputGestureText="Ctrl+Shift+S"/>
+                <MenuItem x:Name="RecentFiles" Header="{lex:Loc}" SubmenuOpened="RecentFiles_SubmenuOpened"/>
             </MenuItem>
             <MenuItem x:Name="Setting" Header="{lex:Loc}" Click="Setting_Click">
             </MenuItem>
-            <MenuItem x:Name="EditMenu" Header="{lex:Loc Edit}">
+            <MenuItem x:Name="ManagementMenu" Header="{lex:Loc Management}">
                 <MenuItem x:Name="LoginLogout" Header="{lex:Loc Menu_Login}" Click="LoginLogout_Click"/>
                 <MenuItem x:Name="UserManagement" Header="{lex:Loc UserManagementTitle}" Click="UserManagement_Click"
                           IsEnabled="{Binding IsLoggedIn}"/>

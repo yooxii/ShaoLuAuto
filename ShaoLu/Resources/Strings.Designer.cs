@@ -106,6 +106,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Empty Step 的本地化字符串。
+        /// </summary>
+        public static string AddEmptyStep {
+            get {
+                return ResourceManager.GetString("AddEmptyStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 AddFindImagesStep 的本地化字符串。
         /// </summary>
         public static string AddFindImagesStep {
@@ -1519,6 +1528,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Comment 的本地化字符串。
+        /// </summary>
+        public static string EmptyStep_Comment {
+            get {
+                return ResourceManager.GetString("EmptyStep_Comment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 An empty step works as a separator, placeholder or comment: it always succeeds and performs no operation. Use the comment box below or the &quot;Description&quot; column in the list for notes. 的本地化字符串。
+        /// </summary>
+        public static string EmptyStep_Hint {
+            get {
+                return ResourceManager.GetString("EmptyStep_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Enable Execution Log 的本地化字符串。
         /// </summary>
         public static string EnableLog {
@@ -1987,6 +2014,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Management 的本地化字符串。
+        /// </summary>
+        public static string Management {
+            get {
+                return ResourceManager.GetString("Management", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Login 的本地化字符串。
         /// </summary>
         public static string Menu_Login {
@@ -2014,11 +2050,74 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Double Click 的本地化字符串。
+        /// </summary>
+        public static string MouseAction_DoubleClick {
+            get {
+                return ResourceManager.GetString("MouseAction_DoubleClick", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Drag 的本地化字符串。
+        /// </summary>
+        public static string MouseAction_Drag {
+            get {
+                return ResourceManager.GetString("MouseAction_Drag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Edit Drag Path 的本地化字符串。
         /// </summary>
         public static string MouseAction_EditDragPath {
             get {
                 return ResourceManager.GetString("MouseAction_EditDragPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Left Click 的本地化字符串。
+        /// </summary>
+        public static string MouseAction_LeftClick {
+            get {
+                return ResourceManager.GetString("MouseAction_LeftClick", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Left Long Press 的本地化字符串。
+        /// </summary>
+        public static string MouseAction_LeftPress {
+            get {
+                return ResourceManager.GetString("MouseAction_LeftPress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Right Click 的本地化字符串。
+        /// </summary>
+        public static string MouseAction_RightClick {
+            get {
+                return ResourceManager.GetString("MouseAction_RightClick", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Scroll Down 的本地化字符串。
+        /// </summary>
+        public static string MouseAction_ScrollDown {
+            get {
+                return ResourceManager.GetString("MouseAction_ScrollDown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Scroll Up 的本地化字符串。
+        /// </summary>
+        public static string MouseAction_ScrollUp {
+            get {
+                return ResourceManager.GetString("MouseAction_ScrollUp", resourceCulture);
             }
         }
         
@@ -2032,38 +2131,20 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
-        ///   查找类似 Action 的本地化字符串。
-        /// </summary>
-        public static string MouseActionHeader_Action {
-            get {
-                return ResourceManager.GetString("MouseActionHeader_Action", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Count 的本地化字符串。
-        /// </summary>
-        public static string MouseActionHeader_Count {
-            get {
-                return ResourceManager.GetString("MouseActionHeader_Count", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Interval (s) 的本地化字符串。
-        /// </summary>
-        public static string MouseActionHeader_Interval {
-            get {
-                return ResourceManager.GetString("MouseActionHeader_Interval", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 Mouse Actions 的本地化字符串。
         /// </summary>
         public static string MouseActions {
             get {
                 return ResourceManager.GetString("MouseActions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Action type: left click / right click / double click / left long press (hold duration = &quot;Interval&quot;) / scroll / drag 的本地化字符串。
+        /// </summary>
+        public static string MouseActionTypeHint {
+            get {
+                return ResourceManager.GetString("MouseActionTypeHint", resourceCulture);
             }
         }
         

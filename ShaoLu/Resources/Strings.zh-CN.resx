@@ -249,6 +249,18 @@
   <data name="MouseAction_Drag" xml:space="preserve">
     <value>拖拽</value>
   </data>
+  <data name="TextPointSource_Absolute" xml:space="preserve">
+    <value>屏幕绝对坐标</value>
+  </data>
+  <data name="TextPointSource_Relative" xml:space="preserve">
+    <value>图像相对定位</value>
+  </data>
+  <data name="Input_TextPointsHint" xml:space="preserve">
+    <value>按列表顺序在各位置获取文本，结果以换行合并；相对定位先在屏幕上匹配图片，再按图片编辑窗口设置的点击点获取文本。</value>
+  </data>
+  <data name="Input_RelativeReady" xml:space="preserve">
+    <value>已设置</value>
+  </data>
   <data name="AddEmptyStep" xml:space="preserve">
     <value>空步骤</value>
   </data>

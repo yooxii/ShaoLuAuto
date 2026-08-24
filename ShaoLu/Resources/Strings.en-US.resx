@@ -249,6 +249,18 @@
   <data name="MouseAction_Drag" xml:space="preserve">
     <value>Drag</value>
   </data>
+  <data name="TextPointSource_Absolute" xml:space="preserve">
+    <value>Absolute Position</value>
+  </data>
+  <data name="TextPointSource_Relative" xml:space="preserve">
+    <value>Image Relative</value>
+  </data>
+  <data name="Input_TextPointsHint" xml:space="preserve">
+    <value>Read text at each point in list order; results are joined by newlines. A relative point matches its image on screen first, then reads text at the click positions set in the image edit window.</value>
+  </data>
+  <data name="Input_RelativeReady" xml:space="preserve">
+    <value>Configured</value>
+  </data>
   <data name="AddEmptyStep" xml:space="preserve">
     <value>Empty Step</value>
   </data>

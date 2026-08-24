@@ -372,12 +372,12 @@ namespace ShaoLu
         {
             try
             {
-                // 启动时已检测 OS 版本：Win10+ 用 WebView2 浏览 PDF，Win7 用 DocumentViewer 浏览 XPS；首选格式缺失时回退到另一格式
-                bool win10Plus = OsVersionHelper.IsWindows10OrLater;
+                // 启动时已检测 OS 版本：Win10+ 且已安装 WebView2 时用 WebView2 浏览 PDF，否则回退到 DocumentViewer 浏览 XPS
+                bool usePdf = OsVersionHelper.IsWindows10OrLater && OsVersionHelper.IsWebView2Installed;
                 string docsDir = Path.Combine(AppContext.BaseDirectory, "Docs");
-                string docPath = FindDoc(docsDir, win10Plus ? "*.pdf" : "*.xps");
+                string docPath = FindDoc(docsDir, usePdf ? "*.pdf" : "*.xps");
                 if (docPath == null)
-                    docPath = FindDoc(docsDir, win10Plus ? "*.xps" : "*.pdf");
+                    docPath = FindDoc(docsDir, usePdf ? "*.xps" : "*.pdf");
 
                 if (docPath == null)
                 {
@@ -388,7 +388,7 @@ namespace ShaoLu
                     return;
                 }
 
-                if (win10Plus && docPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                if (usePdf && docPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
                     new WindowPdfViewer(docPath).Show();
                 else
                     new WindowDocumentViewer(docPath).Show();
@@ -419,20 +419,34 @@ namespace ShaoLu
         }
 
         /// <summary>
-        /// 保存：已有文件路径时直接覆盖原文件，否则弹出另存为对话框
+        /// 保存：已有文件路径时直接覆盖原文件，否则弹出另存为对话框；示例文件只允许另存为，不可直接覆盖
         /// </summary>
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;
 
             string filePath = mainViewModel.StepFilePath;
-            if (string.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath) || IsExampleFile(filePath))
             {
                 SaveAs_Click(sender, e);
                 return;
             }
 
             DoSave(filePath);
+        }
+
+        /// <summary>判断文件是否位于程序自带的 Examples 目录（示例文件）</summary>
+        private static bool IsExampleFile(string filePath)
+        {
+            try
+            {
+                string examplesDir = Path.Combine(AppContext.BaseDirectory, "Examples");
+                return filePath.StartsWith(examplesDir, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

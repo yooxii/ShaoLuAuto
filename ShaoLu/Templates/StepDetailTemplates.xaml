@@ -626,8 +626,8 @@
                 <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" IsReadOnly="True" MinWidth="150" VerticalAlignment="Center"/>
                 <Button Content="{lex:Loc OCR_SelectRegion}" Command="{Binding SelectRegionCommand}" Margin="3,0,0,0"/>
             </StackPanel>
-            <!-- ScreenText 模式配置 -->
-            <StackPanel Orientation="Horizontal" Margin="0,2">
+            <!-- ScreenText 模式配置：文本获取点列表（按顺序获取，结果换行合并） -->
+            <StackPanel Margin="0,2">
                 <StackPanel.Style>
                     <Style TargetType="StackPanel">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -636,9 +636,59 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <Label Content="{lex:Loc InputTextPoint}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding TextPointText, Mode=OneWay}" IsReadOnly="True" MinWidth="120" VerticalAlignment="Center"/>
-                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectTextPointCommand}" Margin="3,0,0,0"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                    <Label Content="{lex:Loc InputTextPoint}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <Button Content="+" Command="{Binding AddTextPointCommand}" MinWidth="30"/>
+                </StackPanel>
+                <TextBlock Text="{lex:Loc Input_TextPointsHint}" Foreground="Gray" FontSize="11" Margin="0,0,0,3" TextWrapping="Wrap"/>
+                <ItemsControl ItemsSource="{Binding TextPoints}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                                <ComboBox ItemsSource="{Binding Sources}" SelectedItem="{Binding Source}" MinWidth="110" Margin="0,0,5,0">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <!-- 绝对坐标：X/Y + 点选 -->
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Source}" Value="{x:Static models:TextPointSource.Absolute}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <wd:NumericBox Value="{Binding X, Mode=TwoWay}" Width="65" Precision="0" Interval="1" Margin="0,0,3,0"/>
+                                    <wd:NumericBox Value="{Binding Y, Mode=TwoWay}" Width="65" Precision="0" Interval="1" Margin="0,0,5,0"/>
+                                    <Button Content="{lex:Loc SelectPoint}" Command="{Binding DataContext.SelectTextPointCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                </StackPanel>
+                                <!-- 相对定位：状态摘要 + 选图 + 编辑 -->
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Source}" Value="{x:Static models:TextPointSource.Relative}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBox Text="{Binding Summary, Mode=OneWay}" IsReadOnly="True" MinWidth="100" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                    <Button Content="{lex:Loc Select}" Command="{Binding DataContext.SelectPointImageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" Margin="0,0,3,0"/>
+                                    <Button Content="{lex:Loc Edit}" Command="{Binding DataContext.EditPointImageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                </StackPanel>
+                                <Button Content="{lex:Loc Delete}" Margin="5,0,0,0" Command="{Binding DataContext.RemoveTextPointCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>

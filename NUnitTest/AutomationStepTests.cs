@@ -460,5 +460,86 @@ namespace NUnitTest
         }
 
         #endregion
+
+        #region TextPointItem / GetInputStep 多点获取
+
+        [TestFixture]
+        public class TextPointItemTests
+        {
+            [Test]
+            public void Defaults_AreCorrect()
+            {
+                var item = new TextPointItem();
+                Assert.That(item.Source, Is.EqualTo(TextPointSource.Absolute));
+                Assert.That(item.SimilarityThreshold, Is.EqualTo(0.85));
+                Assert.That(item.ClickOffsets, Is.Not.Null);
+                Assert.That(item.Id, Is.Not.EqualTo(Guid.Empty));
+            }
+
+            [Test]
+            public void Clone_CreatesIndependentCopy()
+            {
+                var item = new TextPointItem
+                {
+                    Source = TextPointSource.Relative,
+                    X = 10,
+                    Y = 20,
+                    CroppedImageName = "images/test.png",
+                    SimilarityThreshold = 0.9,
+                };
+                item.ClickOffsets.Add(new Point(5, 6));
+
+                var clone = item.Clone();
+
+                Assert.That(clone.Source, Is.EqualTo(TextPointSource.Relative));
+                Assert.That(clone.CroppedImageName, Is.EqualTo("images/test.png"));
+                Assert.That(clone.SimilarityThreshold, Is.EqualTo(0.9));
+                Assert.That(clone.ClickOffsets.Count, Is.EqualTo(1));
+                Assert.That(clone.ClickOffsets[0].X, Is.EqualTo(5));
+
+                // 修改副本不影响原对象
+                clone.ClickOffsets[0].X = 999;
+                Assert.That(item.ClickOffsets[0].X, Is.EqualTo(5));
+            }
+        }
+
+        [TestFixture]
+        public class GetInputStepTextPointsTests
+        {
+            [Test]
+            public void LegacyTextPoint_MigratesToList()
+            {
+                var step = new GetInputStep
+                {
+                    InputMode = GetInputMode.ScreenText,
+                    TextPoint = new System.Windows.Point(100, 200),
+                };
+
+                var points = step.TextPoints;
+
+                Assert.That(points.Count, Is.EqualTo(1));
+                Assert.That(points[0].Source, Is.EqualTo(TextPointSource.Absolute));
+                Assert.That(points[0].X, Is.EqualTo(100));
+                Assert.That(points[0].Y, Is.EqualTo(200));
+                Assert.That(step.TextPoint, Is.EqualTo(new System.Windows.Point(0, 0)));
+            }
+
+            [Test]
+            public void Clone_CopiesTextPoints()
+            {
+                var step = new GetInputStep("Test") { InputMode = GetInputMode.ScreenText };
+                step.TextPoints.Add(new TextPointItem { X = 1, Y = 2 });
+                step.TextPoints.Add(new TextPointItem { Source = TextPointSource.Relative, CroppedImageName = "images/a.png" });
+
+                var clone = (GetInputStep)step.Clone();
+
+                Assert.That(clone.TextPoints.Count, Is.EqualTo(2));
+                Assert.That(clone.TextPoints[1].Source, Is.EqualTo(TextPointSource.Relative));
+                clone.TextPoints[0].X = 999;
+                Assert.That(step.TextPoints[0].X, Is.EqualTo(1));
+            }
+        }
+
+        #endregion
     }
 }

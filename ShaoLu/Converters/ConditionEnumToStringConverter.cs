@@ -38,6 +38,8 @@ namespace ShaoLu.Converters
                 return ConvertExtractUnit(unit);
             if (value is MouseActionType actionType)
                 return ConvertMouseActionType(actionType);
+            if (value is TextPointSource pointSource)
+                return ConvertTextPointSource(pointSource);
             return value?.ToString() ?? string.Empty;
         }
 
@@ -162,6 +164,13 @@ namespace ShaoLu.Converters
             MouseActionType.ScrollDown => Services.LanguageService.GetLocalizedString("MouseAction_ScrollDown"),
             MouseActionType.Drag => Services.LanguageService.GetLocalizedString("MouseAction_Drag"),
             _ => t.ToString(),
+        };
+
+        public static string ConvertTextPointSource(TextPointSource s) => s switch
+        {
+            TextPointSource.Absolute => Services.LanguageService.GetLocalizedString("TextPointSource_Absolute"),
+            TextPointSource.Relative => Services.LanguageService.GetLocalizedString("TextPointSource_Relative"),
+            _ => s.ToString(),
         };
 
         /// <summary>

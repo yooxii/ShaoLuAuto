@@ -13,6 +13,9 @@ namespace ShaoLu.Utils
         /// <summary>是否 Windows 10 及以上（含 Win11）</summary>
         public static readonly bool IsWindows10OrLater = DetectWindows10OrLater();
 
+        /// <summary>是否已安装 WebView2 Runtime</summary>
+        public static readonly bool IsWebView2Installed = DetectWebView2();
+
         /// <summary>完整版本文本，如 "Windows 10 (10.0.19045)"</summary>
         public static readonly string VersionText = BuildVersionText();
 
@@ -32,6 +35,20 @@ namespace ShaoLu.Utils
                 // 回退到 Environment.OSVersion
             }
             return Environment.OSVersion.Version.Major >= 10;
+        }
+
+        /// <summary>检测 WebView2 Runtime；未安装时 GetAvailableBrowserVersionString 抛异常</summary>
+        private static bool DetectWebView2()
+        {
+            try
+            {
+                Microsoft.Web.WebView2.Core.CoreWebView2Environment.GetAvailableBrowserVersionString();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static string BuildVersionText()

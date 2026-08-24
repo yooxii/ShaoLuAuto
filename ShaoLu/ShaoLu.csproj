@@ -154,6 +154,7 @@
     <Compile Include="Models\BurnInRecord.cs" />
     <Compile Include="Models\BurnInSession.cs" />
     <Compile Include="Models\BurnInConfig.cs" />
+    <Compile Include="Models\TextPointItem.cs" />
     <Compile Include="Utils\NativeMethods.cs" />
     <Compile Include="Utils\OsVersionHelper.cs" />
     <Compile Include="Utils\WindowServices.cs" />

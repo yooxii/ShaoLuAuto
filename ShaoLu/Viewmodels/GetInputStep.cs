@@ -4,6 +4,9 @@ using ShaoLu.Services;
 using ShaoLu.Views;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +35,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _ocrResultFull;
         private GetInputMode _inputMode = GetInputMode.OCR;
         private System.Windows.Point _textPoint = new();
+        private ObservableCollection<TextPointItem> _textPoints = new();
+        private bool _textPointsMigrated;
 
         /// <summary>
         /// 获取输入方式
@@ -43,9 +48,32 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public List<GetInputMode> InputModes { get; } = new() { GetInputMode.OCR, GetInputMode.ScreenText };
 
         /// <summary>
-        /// ScreenText 模式下的目标位置（屏幕逻辑像素）
+        /// ScreenText 模式下的目标位置（旧版单点，仅用于兼容迁移；新数据存 TextPoints）
         /// </summary>
         public System.Windows.Point TextPoint { get => _textPoint; set { if (SetProperty(ref _textPoint, value)) OnPropertyChanged(nameof(TextPointText)); } }
+
+        /// <summary>
+        /// ScreenText 模式的文本获取点列表：按顺序逐点获取，结果以换行合并。
+        /// 支持绝对坐标与图像相对定位（同点击图像步骤的裁剪+点击点方式）
+        /// </summary>
+        public ObservableCollection<TextPointItem> TextPoints
+        {
+            get
+            {
+                // 兼容旧数据：首次访问时将旧版单点 TextPoint 迁移为列表项
+                if (!_textPointsMigrated)
+                {
+                    _textPointsMigrated = true;
+                    if (_textPoints.Count == 0 && _textPoint != new System.Windows.Point(0, 0))
+                    {
+                        _textPoints.Add(new TextPointItem { Source = TextPointSource.Absolute, X = _textPoint.X, Y = _textPoint.Y });
+                        _textPoint = new System.Windows.Point(0, 0);
+                    }
+                }
+                return _textPoints;
+            }
+            set => SetProperty(ref _textPoints, value);
+        }
 
         /// <summary>
         /// ScreenText 目标位置描述文本（用于 UI 显示）
@@ -112,8 +140,33 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         [JsonIgnore]
         private ICommand selectTextPointCommand;
+        /// <summary>为指定获取点点选屏幕绝对坐标（参数：TextPointItem）</summary>
         [JsonIgnore]
-        public ICommand SelectTextPointCommand => selectTextPointCommand ??= new RelayCommand(SelectTextPoint);
+        public ICommand SelectTextPointCommand => selectTextPointCommand ??= new RelayCommand<object>(SelectTextPoint, null);
+
+        [JsonIgnore]
+        private ICommand addTextPointCommand;
+        /// <summary>添加一个文本获取点（默认绝对坐标）</summary>
+        [JsonIgnore]
+        public ICommand AddTextPointCommand => addTextPointCommand ??= new RelayCommand(() => TextPoints.Add(new TextPointItem()));
+
+        [JsonIgnore]
+        private ICommand removeTextPointCommand;
+        /// <summary>删除指定获取点（参数：TextPointItem）</summary>
+        [JsonIgnore]
+        public ICommand RemoveTextPointCommand => removeTextPointCommand ??= new RelayCommand<object>(p => { if (p is TextPointItem item) TextPoints.Remove(item); }, null);
+
+        [JsonIgnore]
+        private ICommand selectPointImageCommand;
+        /// <summary>为相对定位获取点选择原图并打开图片编辑窗口（参数：TextPointItem）</summary>
+        [JsonIgnore]
+        public ICommand SelectPointImageCommand => selectPointImageCommand ??= new RelayCommand<object>(SelectPointImage, null);
+
+        [JsonIgnore]
+        private ICommand editPointImageCommand;
+        /// <summary>打开相对定位获取点的图片编辑窗口（参数：TextPointItem）</summary>
+        [JsonIgnore]
+        public ICommand EditPointImageCommand => editPointImageCommand ??= new RelayCommand<object>(EditPointImage, null);
 
         [JsonIgnore]
         private ICommand previewResultCommand;
@@ -147,7 +200,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override AutomationStepBase Clone()
         {
-            return new GetInputStep(Name, Description)
+            var clone = new GetInputStep(Name, Description)
             {
                 InputMode = InputMode,
                 OCRRegion = new Rect(OCRRegion.X, OCRRegion.Y, OCRRegion.Width, OCRRegion.Height),
@@ -161,6 +214,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };
+            foreach (var p in TextPoints)
+                clone.TextPoints.Add(p.Clone());
+            return clone;
         }
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
@@ -171,13 +227,28 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
             if (InputMode == GetInputMode.ScreenText)
             {
-                // 读取屏幕指定位置的可选择文本
-                text = await Task.Run(() =>
+                // 按顺序逐点读取文本（绝对坐标 / 图像相对定位），结果以换行合并
+                if (TextPoints.Count == 0)
                 {
-                    double dpiX = OCRService.CachedDpiX;
-                    double dpiY = OCRService.CachedDpiY;
-                    return Utils.ScreenTextReader.ReadTextAtPoint(TextPoint.X * dpiX, TextPoint.Y * dpiY);
-                }, cancellationToken);
+                    IsError = true;
+                    ErrorType = StepErrorType.OCRError;
+                    ErrorMessage = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择位置");
+                    IsTrue = false;
+                    return false;
+                }
+
+                try
+                {
+                    text = await ReadScreenTextsAsync(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    IsError = true;
+                    ErrorType = StepErrorType.ImageNotFound;
+                    ErrorMessage = ex.Message;
+                    IsTrue = false;
+                    return false;
+                }
             }
             else
             {
@@ -233,13 +304,181 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
-        private void SelectTextPoint()
+        private void SelectTextPoint(object parameter)
         {
+            if (!(parameter is TextPointItem item)) return;
             var point = WindowSelectPoint.ShowAndSelect();
             if (point.HasValue)
             {
-                TextPoint = point.Value;
+                item.X = point.Value.X;
+                item.Y = point.Value.Y;
             }
+        }
+
+        private void SelectPointImage(object parameter)
+        {
+            if (!(parameter is TextPointItem item)) return;
+
+            var title = LanguageService.GetLocalizedString("Select_target_pic", "Open Image File");
+            var filter = LanguageService.GetLocalizedString("Image_File", "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
+            string imagePath = PathServices.OpenPathDialog(title, filter);
+            if (string.IsNullOrEmpty(imagePath)) return;
+
+            // 重新选图后重置裁剪与点击点状态
+            item.ImagePath = imagePath;
+            item.CroppedImageName = null;
+            item.CroppedRect = new Rect();
+            item.ClickOffsets = new List<Models.Point>();
+            OpenPointImageEditor(item);
+        }
+
+        private void EditPointImage(object parameter)
+        {
+            if (parameter is TextPointItem item)
+                OpenPointImageEditor(item);
+        }
+
+        /// <summary>打开图片编辑窗口：裁剪识别区域并设置点击点（同点击图像步骤）</summary>
+        private void OpenPointImageEditor(TextPointItem item)
+        {
+            if (string.IsNullOrEmpty(item.ImagePath) || !File.Exists(item.ImagePath)) return;
+
+            var imgSrc = LoadFrozenBitmap(item.ImagePath);
+            if (imgSrc == null) return;
+
+            var win = new WindowEditImage();
+            win.Show();
+            // 使用 Background 优先级，确保裁剪控件完成内部布局和渲染后再设置图片
+            win.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                win.editImageViewModel.ImgSrc = imgSrc;
+                win.UpdateLayout();
+                if (!item.CroppedRect.IsEmpty)
+                {
+                    win.editImageViewModel.SetCropRect(item.CroppedRect);
+                    win.editImageViewModel.CropRect = item.CroppedRect;
+                    // 还原已保存的点击点（偏移 → 原图坐标的缩略图位置）
+                    if (item.ClickOffsets != null && item.ClickOffsets.Count > 0)
+                    {
+                        var thumbs = item.ClickOffsets
+                            .Select(o => new ClickThumb(o.X + item.CroppedRect.X - 10, o.Y + item.CroppedRect.Y - 10, 20, Visibility.Visible))
+                            .ToList();
+                        win.editImageViewModel.SetThumbs(thumbs);
+                    }
+                }
+            }), System.Windows.Threading.DispatcherPriority.Background);
+            win.editImageViewModel.OnImageSaved += (img, rect, thumbs, ocrRect) => SavePointImage(item, img, rect, thumbs);
+        }
+
+        /// <summary>保存裁剪图到工作目录 images/{Id}.png，并记录裁剪区与点击点偏移</summary>
+        private void SavePointImage(TextPointItem item, System.Windows.Media.ImageSource img, Rect rect, List<ClickThumb> thumbs)
+        {
+            if (img == null) return;
+            try
+            {
+                string workDir = Utils.SingletonLocator.Main?.StepImageWorkDir;
+                if (string.IsNullOrEmpty(workDir))
+                {
+                    workDir = Path.Combine(Path.GetTempPath(), "AutoShaoLu", "images");
+                    Utils.SingletonLocator.Main.StepImageWorkDir = workDir;
+                }
+                Directory.CreateDirectory(Path.Combine(workDir, "images"));
+
+                string fileName = $"{item.Id}.png";
+                string fullPath = Path.Combine(workDir, "images", fileName);
+                if (img is System.Windows.Media.Imaging.BitmapSource bs)
+                {
+                    var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                    using (var fs = new FileStream(fullPath, FileMode.Create))
+                    {
+                        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bs));
+                        encoder.Save(fs);
+                    }
+                }
+
+                item.CroppedImageName = $"images/{fileName}";
+                item.CroppedRect = rect;
+                // 点击点转成相对裁剪区左上角的偏移；未设点击点时取裁剪图中心
+                item.ClickOffsets = thumbs != null && thumbs.Count > 0
+                    ? thumbs.Select(t => t.ClickPoint - new Models.Point((int)rect.X, (int)rect.Y)).ToList()
+                    : new List<Models.Point> { new Models.Point((int)(rect.Width / 2), (int)(rect.Height / 2)) };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "SavePointImage failed");
+            }
+        }
+
+        private System.Windows.Media.ImageSource LoadFrozenBitmap(string path)
+        {
+            try
+            {
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(path);
+                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                return bitmap;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "LoadFrozenBitmap failed: {0}", path);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 按 TextPoints 顺序逐点获取文本：绝对坐标直接读取；相对定位先匹配图像再按偏移读取。结果以换行合并。
+        /// 相对定位图像未找到时抛出异常。
+        /// </summary>
+        private async Task<string> ReadScreenTextsAsync(CancellationToken cancellationToken)
+        {
+            double dpiX = OCRService.CachedDpiX;
+            double dpiY = OCRService.CachedDpiY;
+            var results = new List<string>();
+
+            foreach (var item in TextPoints)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (item.Source == TextPointSource.Absolute)
+                {
+                    string text = await Task.Run(
+                        () => Utils.ScreenTextReader.ReadTextAtPoint(item.X * dpiX, item.Y * dpiY),
+                        cancellationToken);
+                    results.Add(text);
+                    continue;
+                }
+
+                // 相对定位：匹配裁剪图后按点击点偏移读取（物理像素）
+                string fullPath = item.CroppedImageFullPath;
+                if (string.IsNullOrEmpty(fullPath) || !File.Exists(fullPath))
+                    throw new Exception(LanguageService.GetLocalizedString("No_Cropimage_Warning", "No Croped picture"));
+
+                string relText = await Task.Run(() =>
+                {
+                    using (var template = new System.Drawing.Bitmap(fullPath))
+                    {
+                        var rect = Utils.Autogui.FindImageOnScreen(template, item.SimilarityThreshold, 0.1, 3);
+                        var offsets = item.ClickOffsets != null && item.ClickOffsets.Count > 0
+                            ? item.ClickOffsets
+                            : new List<Models.Point> { new Models.Point(template.Width / 2, template.Height / 2) };
+
+                        var sb = new System.Text.StringBuilder();
+                        foreach (var off in offsets)
+                        {
+                            string s = Utils.ScreenTextReader.ReadTextAtPoint(rect.LeftTop.X + off.X, rect.LeftTop.Y + off.Y);
+                            if (sb.Length > 0) sb.AppendLine();
+                            sb.Append(s);
+                        }
+                        return sb.ToString();
+                    }
+                }, cancellationToken);
+                results.Add(relText);
+            }
+
+            return string.Join("\r\n", results);
         }
 
         private void PreviewResult()
@@ -254,9 +493,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 if (InputMode == GetInputMode.ScreenText)
                 {
-                    double dpiX = OCRService.CachedDpiX;
-                    double dpiY = OCRService.CachedDpiY;
-                    string screenText = Utils.ScreenTextReader.ReadTextAtPoint(TextPoint.X * dpiX, TextPoint.Y * dpiY);
+                    if (TextPoints.Count == 0)
+                    {
+                        OCRResultFull = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择位置");
+                        return;
+                    }
+                    string screenText = ReadScreenTextsAsync(CancellationToken.None).GetAwaiter().GetResult();
                     OCRResultFull = string.IsNullOrWhiteSpace(screenText)
                         ? LanguageService.GetLocalizedString("OCR_NoResult", "未读取到文本")
                         : screenText;

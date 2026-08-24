@@ -145,6 +145,17 @@ namespace ShaoLu.Utils
                         WriteCroppedImageToArchive(image.CroppedImageFullPath, image.CroppedImageName, archive);
                 }
             }
+            else if (step is Viewmodels.AutomationStep.GetInputStep inputStep)
+            {
+                // 获取输入步骤相对定位获取点的裁剪图
+                foreach (var point in inputStep.TextPoints)
+                {
+                    if (point == null) continue;
+                    string fullPath = point.CroppedImageFullPath;
+                    if (!string.IsNullOrEmpty(fullPath) && !string.IsNullOrEmpty(point.CroppedImageName) && File.Exists(fullPath))
+                        WriteCroppedImageToArchive(fullPath, point.CroppedImageName, archive);
+                }
+            }
         }
 
         private static void WriteCroppedImageToArchive(string fullPath, string entryName, ZipArchive archive)

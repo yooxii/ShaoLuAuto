@@ -21,6 +21,9 @@ namespace ShaoLu
             try
             {
                 Logger.Info("Program start...");
+
+                // 启动时检测 OS 版本，决定“使用文档”的查看方式（Win10+ 用 WebView2 浏览 PDF，Win7 用 DocumentViewer 浏览 XPS）
+                Logger.Info("OS: {0}, IsWindows10OrLater: {1}", Utils.OsVersionHelper.VersionText, Utils.OsVersionHelper.IsWindows10OrLater);
                 base.OnStartup(e);
 
                 // 全局异常兜底：捕获未处理异常，避免程序直接崩溃退出

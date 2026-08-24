@@ -6,7 +6,7 @@ using System.Windows.Xps.Packaging;
 namespace ShaoLu.Views
 {
     /// <summary>
-    /// XPS 文档预览窗口
+    /// XPS 文档预览窗口（使用 WPF DocumentViewer，适用于 Win7）
     /// </summary>
     public partial class WindowDocumentViewer : Window
     {

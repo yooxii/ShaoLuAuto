@@ -372,10 +372,12 @@ namespace ShaoLu
         {
             try
             {
+                // 启动时已检测 OS 版本：Win10+ 用 WebView2 浏览 PDF，Win7 用 DocumentViewer 浏览 XPS；首选格式缺失时回退到另一格式
+                bool win10Plus = OsVersionHelper.IsWindows10OrLater;
                 string docsDir = Path.Combine(AppContext.BaseDirectory, "Docs");
-                string docPath = Directory.Exists(docsDir)
-                    ? Directory.GetFiles(docsDir, "*.xps").OrderBy(f => f).FirstOrDefault()
-                    : null;
+                string docPath = FindDoc(docsDir, win10Plus ? "*.pdf" : "*.xps");
+                if (docPath == null)
+                    docPath = FindDoc(docsDir, win10Plus ? "*.xps" : "*.pdf");
 
                 if (docPath == null)
                 {
@@ -386,8 +388,10 @@ namespace ShaoLu
                     return;
                 }
 
-                var viewer = new WindowDocumentViewer(docPath);
-                viewer.Show();
+                if (win10Plus && docPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                    new WindowPdfViewer(docPath).Show();
+                else
+                    new WindowDocumentViewer(docPath).Show();
             }
             catch (Exception ex)
             {
@@ -396,6 +400,21 @@ namespace ShaoLu
                     $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {ex.Message}",
                     LanguageService.GetLocalizedString("UserDoc"),
                     PopupButtons.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>在 Docs 目录下查找第一个指定扩展名的文档；目录不存在或为空返回 null</summary>
+        private static string FindDoc(string docsDir, string pattern)
+        {
+            try
+            {
+                return Directory.Exists(docsDir)
+                    ? Directory.GetFiles(docsDir, pattern).OrderBy(f => f).FirstOrDefault()
+                    : null;
+            }
+            catch
+            {
+                return null;
             }
         }
 

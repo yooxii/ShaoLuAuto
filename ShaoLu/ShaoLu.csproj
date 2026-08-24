@@ -155,6 +155,7 @@
     <Compile Include="Models\BurnInSession.cs" />
     <Compile Include="Models\BurnInConfig.cs" />
     <Compile Include="Utils\NativeMethods.cs" />
+    <Compile Include="Utils\OsVersionHelper.cs" />
     <Compile Include="Utils\WindowServices.cs" />
     <Compile Include="Viewmodels\ImagesRecognition.cs" />
     <Compile Include="Viewmodels\ImageRecognition.cs" />
@@ -241,6 +242,9 @@
     </Compile>
     <Compile Include="Views\WindowPlayground.xaml.cs">
       <DependentUpon>WindowPlayground.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowPdfViewer.xaml.cs">
+      <DependentUpon>WindowPdfViewer.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowSettings.xaml.cs">
       <DependentUpon>WindowSettings.xaml</DependentUpon>
@@ -352,6 +356,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\WindowPdfViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\WindowSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -447,6 +455,12 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Strings.zh-CN.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Docs\*.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Docs\*.xps">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -474,6 +488,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging">
       <Version>10.0.10</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <Version>1.0.4129.50</Version>
     </PackageReference>
     <PackageReference Include="NLog">
       <Version>6.1.4</Version>
@@ -525,6 +542,7 @@
   <ItemGroup>
     <Resource Include="Docs\README.txt" />
     <Resource Include="Examples\README.txt" />
+    <Content Include="Docs\AutoShaoLu（自动化烧录）使用说明书.xps" />
     <Content Include="tessdata\chi_sim.traineddata">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -550,9 +568,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Examples\*.autostep">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Docs\AutoShaoLu（自动化烧录）使用说明书.xps">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

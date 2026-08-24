@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -119,6 +120,7 @@ namespace ShaoLu
             UpdateLoginStateUI();
 
             BuildExamplesMenu();
+            BuildRecentFilesMenu();
         }
 
         #region 输入校验
@@ -258,9 +260,15 @@ namespace ShaoLu
         }
 
         /// <summary>
-        /// 展开“最近打开的文件”菜单时动态构建子菜单（最多 10 个）
+        /// 构建“最近打开的文件”子菜单（最多 10 个）。
+        /// 启动时预构建一次保证菜单可展开（无子项的 MenuItem 不会触发 SubmenuOpened），展开时再刷新。
         /// </summary>
         private void RecentFiles_SubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            BuildRecentFilesMenu();
+        }
+
+        private void BuildRecentFilesMenu()
         {
             RecentFiles.Items.Clear();
             var files = RecentFilesService.Load();
@@ -421,7 +429,7 @@ namespace ShaoLu
         /// <summary>
         /// 保存：已有文件路径时直接覆盖原文件，否则弹出另存为对话框；示例文件只允许另存为，不可直接覆盖
         /// </summary>
-        private void Save_Click(object sender, RoutedEventArgs e)
+        private async void Save_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;
 
@@ -432,7 +440,7 @@ namespace ShaoLu
                 return;
             }
 
-            DoSave(filePath);
+            DoSave(filePath, await AskIncludeSourceImages());
         }
 
         /// <summary>判断文件是否位于程序自带的 Examples 目录（示例文件）</summary>
@@ -452,7 +460,7 @@ namespace ShaoLu
         /// <summary>
         /// 另存为：始终弹出对话框选择新路径
         /// </summary>
-        private void SaveAs_Click(object sender, RoutedEventArgs e)
+        private async void SaveAs_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;
 
@@ -462,11 +470,22 @@ namespace ShaoLu
                 saveName: "NewSteps.autostep");
             if (filePath != null)
             {
-                DoSave(filePath);
+                DoSave(filePath, await AskIncludeSourceImages());
             }
         }
 
-        private void DoSave(string filePath)
+        /// <summary>询问保存时是否将原图一并打包（供其他电脑重新编辑图片）</summary>
+        private static async Task<bool> AskIncludeSourceImages()
+        {
+            var (_, popupTask) = WindowAsyncPopup.Show(
+                LanguageService.GetLocalizedString("SaveWithSourceImages"),
+                LanguageService.GetLocalizedString("Save"),
+                PopupButtons.YesNo, MessageBoxImage.Question);
+            string result = await popupTask;
+            return result == PopupButton.YesValue;
+        }
+
+        private void DoSave(string filePath, bool includeSourceImages = false)
         {
             try
             {
@@ -475,7 +494,7 @@ namespace ShaoLu
                     step.IsSave = true;
                 }
 
-                StepsFile.SaveAsAutoStepPackage(stepsViewModel.AutomationStepBases, filePath);
+                StepsFile.SaveAsAutoStepPackage(stepsViewModel.AutomationStepBases, filePath, includeSourceImages);
 
                 // 更新当前文件路径和工作目录
                 mainViewModel.StepFilePath = filePath;

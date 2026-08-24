@@ -35,9 +35,9 @@ namespace ShaoLu.Utils
 
         /// <summary>
         /// 将步骤保存为 .autostep 压缩包（zip 格式）
-        /// 包含 steps.json 和 images/ 目录下的裁剪图片
+        /// 包含 steps.json 和 images/ 目录下的裁剪图片；可选一并打包原图（供其他电脑重新编辑）
         /// </summary>
-        public static void SaveAsAutoStepPackage(ObservableCollection<AutomationStepBase> steps, string packagePath)
+        public static void SaveAsAutoStepPackage(ObservableCollection<AutomationStepBase> steps, string packagePath, bool includeSourceImages = false)
         {
             if (steps == null)
                 throw new ArgumentNullException(nameof(steps), "步骤列表不能为空");
@@ -63,10 +63,10 @@ namespace ShaoLu.Utils
                 entryStream.Write(jsonBytes, 0, jsonBytes.Length);
             }
 
-            // 2. 收集并写入裁剪图片
+            // 2. 收集并写入裁剪图片（可选含原图）
             foreach (var step in steps)
             {
-                CollectAndWriteImages(step, archive);
+                CollectAndWriteImages(step, archive, includeSourceImages);
             }
         }
 
@@ -128,12 +128,15 @@ namespace ShaoLu.Utils
             return Path.Combine(dir, $"{nameWithoutExt}_images");
         }
 
-        private static void CollectAndWriteImages(AutomationStepBase step, ZipArchive archive)
+        private static void CollectAndWriteImages(AutomationStepBase step, ZipArchive archive, bool includeSourceImages)
         {
             if (step is ImageRecognitionBase imageStep)
             {
                 if (!string.IsNullOrEmpty(imageStep.CroppedImageFullPath) && !string.IsNullOrEmpty(imageStep.CroppedImageName))
                     WriteCroppedImageToArchive(imageStep.CroppedImageFullPath, imageStep.CroppedImageName, archive);
+                // 可选打包原图：images/{Uid}_src{扩展名}，加载时按约定回退查找
+                if (includeSourceImages && !string.IsNullOrEmpty(imageStep.ImagePath) && File.Exists(imageStep.ImagePath))
+                    WriteCroppedImageToArchive(imageStep.ImagePath, $"images/{imageStep.Uid}_src{Path.GetExtension(imageStep.ImagePath)}", archive);
             }
             else if (step is ImagesRecognitionBase imagesStep)
             {
@@ -147,13 +150,15 @@ namespace ShaoLu.Utils
             }
             else if (step is Viewmodels.AutomationStep.GetInputStep inputStep)
             {
-                // 获取输入步骤相对定位获取点的裁剪图
+                // 获取输入步骤相对定位获取点的裁剪图（可选含原图）
                 foreach (var point in inputStep.TextPoints)
                 {
                     if (point == null) continue;
                     string fullPath = point.CroppedImageFullPath;
                     if (!string.IsNullOrEmpty(fullPath) && !string.IsNullOrEmpty(point.CroppedImageName) && File.Exists(fullPath))
                         WriteCroppedImageToArchive(fullPath, point.CroppedImageName, archive);
+                    if (includeSourceImages && !string.IsNullOrEmpty(point.ImagePath) && File.Exists(point.ImagePath))
+                        WriteCroppedImageToArchive(point.ImagePath, $"images/{point.Id}_src{Path.GetExtension(point.ImagePath)}", archive);
                 }
             }
         }

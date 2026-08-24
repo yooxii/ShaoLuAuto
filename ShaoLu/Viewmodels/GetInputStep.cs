@@ -341,9 +341,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>打开图片编辑窗口：裁剪识别区域并设置点击点（同点击图像步骤）</summary>
         private void OpenPointImageEditor(TextPointItem item)
         {
-            if (string.IsNullOrEmpty(item.ImagePath) || !File.Exists(item.ImagePath)) return;
+            // 优先原路径，失效时回退到包内打包的原图；并回填解析后的路径供下次使用
+            string srcPath = item.ResolveSourceImagePath();
+            if (string.IsNullOrEmpty(srcPath)) return;
+            item.ImagePath = srcPath;
 
-            var imgSrc = LoadFrozenBitmap(item.ImagePath);
+            var imgSrc = LoadFrozenBitmap(srcPath);
             if (imgSrc == null) return;
 
             var win = new WindowEditImage();

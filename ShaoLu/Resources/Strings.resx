@@ -1149,6 +1149,9 @@
   <data name="SaveAs" xml:space="preserve">
     <value>Save As...</value>
   </data>
+  <data name="SaveWithSourceImages" xml:space="preserve">
+    <value>Include the original images in the package? This allows re-editing images on other computers, but increases the file size.</value>
+  </data>
   <data name="SaveFailed" xml:space="preserve">
     <value>Save failed</value>
   </data>

@@ -78,12 +78,32 @@ namespace ShaoLu.Viewmodels.AutomationStep
             get
             {
                 var img = LoadImage(ImagePath);
+                // 原图路径失效时回退到包内打包的原图（images/{Uid}_src.*，保存时可选打包）
+                if (img == null)
+                    img = LoadImage(FindPackagedSourceImage());
                 if (img == null)
                 {
                     IsError = true;
                     ErrorMessage = LanguageService.GetLocalizedString("No_img_Warning", "No picture selected");
                 }
                 return img;
+            }
+        }
+
+        /// <summary>在工作目录中查找打包的原图（约定名 images/{Uid}_src.*）；未找到返回 null</summary>
+        private string FindPackagedSourceImage()
+        {
+            try
+            {
+                string workDir = mainVM?.StepImageWorkDir;
+                if (string.IsNullOrEmpty(workDir)) return null;
+                string imagesDir = Path.Combine(workDir, "images");
+                if (!Directory.Exists(imagesDir)) return null;
+                return Directory.GetFiles(imagesDir, $"{Uid}_src.*").FirstOrDefault();
+            }
+            catch
+            {
+                return null;
             }
         }
 

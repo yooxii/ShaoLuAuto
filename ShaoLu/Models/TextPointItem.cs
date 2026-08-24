@@ -75,6 +75,24 @@ namespace ShaoLu.Models
             }
         }
 
+        /// <summary>解析原图路径：优先 ImagePath，失效时回退到工作目录内打包的原图（约定名 images/{Id}_src.*）</summary>
+        public string ResolveSourceImagePath()
+        {
+            if (!string.IsNullOrEmpty(ImagePath) && System.IO.File.Exists(ImagePath)) return ImagePath;
+            try
+            {
+                string workDir = Utils.SingletonLocator.Main?.StepImageWorkDir;
+                if (string.IsNullOrEmpty(workDir)) return null;
+                string imagesDir = System.IO.Path.Combine(workDir, "images");
+                if (!System.IO.Directory.Exists(imagesDir)) return null;
+                return System.IO.Directory.GetFiles(imagesDir, $"{Id}_src.*").FirstOrDefault();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         /// <summary>UI 显示的设置状态摘要</summary>
         [JsonIgnore]
         public string Summary

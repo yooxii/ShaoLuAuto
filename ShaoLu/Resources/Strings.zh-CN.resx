@@ -1149,6 +1149,9 @@
   <data name="SaveAs" xml:space="preserve">
     <value>另存为...</value>
   </data>
+  <data name="SaveWithSourceImages" xml:space="preserve">
+    <value>是否将原图一并打包？打包后在其他电脑上也能重新编辑图片，但文件体积会增大。</value>
+  </data>
   <data name="SaveFailed" xml:space="preserve">
     <value>保存失败</value>
   </data>

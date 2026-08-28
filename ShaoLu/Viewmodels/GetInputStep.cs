@@ -306,7 +306,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void SelectTextPoint(object parameter)
         {
-            if (!(parameter is TextPointItem item)) return;
+            if (parameter is not TextPointItem item) return;
             var point = WindowSelectPoint.ShowAndSelect();
             if (point.HasValue)
             {
@@ -317,7 +317,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void SelectPointImage(object parameter)
         {
-            if (!(parameter is TextPointItem item)) return;
+            if (parameter is not TextPointItem item) return;
 
             var title = LanguageService.GetLocalizedString("Select_target_pic", "Open Image File");
             var filter = LanguageService.GetLocalizedString("Image_File", "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
@@ -490,7 +490,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             WindowTextPreview.Show(Name, OCRResultFull);
         }
 
-        private void TestOCR()
+        private async void TestOCR()
         {
             try
             {
@@ -501,7 +501,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         OCRResultFull = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择位置");
                         return;
                     }
-                    string screenText = ReadScreenTextsAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    // 必须异步等待：在 UI 线程上 GetAwaiter().GetResult() 会与回到调度器的延续死锁，导致界面卡死
+                    string screenText = await ReadScreenTextsAsync(CancellationToken.None);
                     OCRResultFull = string.IsNullOrWhiteSpace(screenText)
                         ? LanguageService.GetLocalizedString("OCR_NoResult", "未读取到文本")
                         : screenText;

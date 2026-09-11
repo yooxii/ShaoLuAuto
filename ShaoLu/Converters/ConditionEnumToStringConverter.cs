@@ -107,13 +107,27 @@ namespace ShaoLu.Converters
             _ => s.ToString(),
         };
 
-        public static string ConvertPopupCloseMode(PopupCloseMode m) => m switch
+        public static string ConvertPopupCloseMode(PopupCloseMode m)
         {
-            PopupCloseMode.ButtonClick => Services.LanguageService.GetLocalizedString("CloseMode_ButtonClick"),
-            PopupCloseMode.Timeout => Services.LanguageService.GetLocalizedString("CloseMode_Timeout"),
-            PopupCloseMode.StepReached => Services.LanguageService.GetLocalizedString("CloseMode_StepReached"),
-            _ => m.ToString(),
-        };
+            if (m == PopupCloseMode.None)
+                return Services.LanguageService.GetLocalizedString("CloseMode_None");
+            if (m == PopupCloseMode.ButtonClick)
+                return Services.LanguageService.GetLocalizedString("CloseMode_ButtonClick");
+            if (m == PopupCloseMode.Timeout)
+                return Services.LanguageService.GetLocalizedString("CloseMode_Timeout");
+            if (m == PopupCloseMode.StepReached)
+                return Services.LanguageService.GetLocalizedString("CloseMode_StepReached");
+
+            // 组合模式：拼接各方式的显示文本
+            var parts = new System.Collections.Generic.List<string>();
+            if (m.HasFlag(PopupCloseMode.ButtonClick))
+                parts.Add(Services.LanguageService.GetLocalizedString("CloseMode_ButtonClick"));
+            if (m.HasFlag(PopupCloseMode.Timeout))
+                parts.Add(Services.LanguageService.GetLocalizedString("CloseMode_Timeout"));
+            if (m.HasFlag(PopupCloseMode.StepReached))
+                parts.Add(Services.LanguageService.GetLocalizedString("CloseMode_StepReached"));
+            return string.Join(" + ", parts);
+        }
 
         public static string ConvertStepScope(StepScope s) => s switch
         {

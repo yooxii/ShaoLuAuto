@@ -203,6 +203,7 @@ namespace ShaoLu
         {
             if (!EnsureLoggedIn()) return;
             stepsViewModel.AutomationStepBases.Clear();
+            stepsViewModel.ClearUndoRedo();
             // 清空文件路径
             mainViewModel.StepFilePath = null;
             mainViewModel.StepImageWorkDir = null;
@@ -244,7 +245,8 @@ namespace ShaoLu
                 }
 
                 stepsViewModel.AutomationStepBases.Clear();
-                stepsViewModel.InsertSteps(loadedSteps);
+                stepsViewModel.InsertSteps(loadedSteps, cloneSteps: false);
+                stepsViewModel.ClearUndoRedo();
 
                 // 记录到最近打开文件列表
                 RecentFilesService.AddRecent(filePath);

@@ -43,7 +43,7 @@
                    VerticalAlignment="Top"/>
 
             <!-- 消息内容（支持富文本，可滚动） -->
-            <ScrollViewer Grid.Row="1" Grid.Column="1" 
+            <ScrollViewer x:Name="MessageScroll" Grid.Row="1" Grid.Column="1"
                           VerticalScrollBarVisibility="Auto" 
                           MaxHeight="300"
                           VerticalAlignment="Center">

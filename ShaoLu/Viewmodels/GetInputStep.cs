@@ -37,6 +37,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private System.Windows.Point _textPoint = new();
         private ObservableCollection<TextPointItem> _textPoints = new();
         private bool _textPointsMigrated;
+        private double _timeout = 3;
 
         /// <summary>
         /// 获取输入方式
@@ -46,6 +47,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>所有获取方式（供 ComboBox 绑定）</summary>
         [JsonIgnore]
         public List<GetInputMode> InputModes { get; } = new() { GetInputMode.OCR, GetInputMode.ScreenText };
+
+        /// <summary>
+        /// 获取输入的超时时间（秒），小于等于 0 表示不限制。
+        /// UI Automation 与 OCR 均为同步调用，目标程序无响应或识别区域过大时可能长时间阻塞，
+        /// 超时后本步骤按执行超时处理，避免整条流程被单步卡住。
+        /// </summary>
+        public double Timeout { get => _timeout; set => SetProperty(ref _timeout, value); }
 
         /// <summary>
         /// ScreenText 模式下的目标位置（旧版单点，仅用于兼容迁移；新数据存 TextPoints）
@@ -206,6 +214,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 OCRRegion = new Rect(OCRRegion.X, OCRRegion.Y, OCRRegion.Width, OCRRegion.Height),
                 TextPoint = new System.Windows.Point(TextPoint.X, TextPoint.Y),
                 WaitTime = WaitTime,
+                Timeout = Timeout,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
@@ -239,7 +248,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
                 try
                 {
-                    text = await ReadScreenTextsAsync(cancellationToken);
+                    // UI Automation 调用为同步阻塞，施加超时避免目标程序无响应时长时间卡住
+                    text = await RunWithTimeoutAsync(
+                        token => ReadScreenTextsAsync(token), cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // 用户停止运行时保持取消语义，交由执行引擎处理
+                    throw;
+                }
+                catch (TimeoutException)
+                {
+                    // 超时按执行错误处理，交由执行引擎统一记录为 ExecutionTimeout
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -270,10 +291,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         WindowRegionOverlay.ShowRegion(OCRRegion, overlay.Color, overlay.Duration));
                 }
 
-                text = await Task.Run(() =>
-                {
-                    return OCRService.RecognizeRegion(OCRRegion);
-                }, cancellationToken);
+                // OCR 识别可能因首次初始化引擎或区域过大而耗时，施加超时
+                text = await RunWithTimeoutAsync(
+                    token => Task.Run(() => OCRService.RecognizeRegion(OCRRegion), token),
+                    cancellationToken);
             }
 
             // 存储结果
@@ -293,6 +314,64 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         #region 私有方法
+
+        /// <summary>
+        /// 在 <see cref="Timeout"/> 秒内等待获取操作完成；超时抛出带本地化消息的 <see cref="TimeoutException"/>。
+        /// Timeout 小于等于 0 时不限制超时。
+        /// 说明：UI Automation 与 OCR 属于同步调用，无法被强制中断，超时后其后台任务仍会继续执行，
+        /// 但本步骤会立即结束，避免整条流程被单步卡住。
+        /// </summary>
+        private async Task<string> RunWithTimeoutAsync(Func<CancellationToken, Task<string>> operation, CancellationToken cancellationToken)
+        {
+            if (Timeout <= 0)
+                return await operation(cancellationToken);
+
+            var timeout = System.TimeSpan.FromSeconds(Timeout);
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(timeout);
+
+            var operationTask = operation(timeoutCts.Token);
+            // 计时任务只跟随外部取消令牌，确保外部取消与超时能够区分
+            var timeoutTask = Task.Delay(timeout, cancellationToken);
+
+            var completedTask = await Task.WhenAny(operationTask, timeoutTask);
+            if (completedTask != operationTask)
+            {
+                // 外部取消优先于超时
+                cancellationToken.ThrowIfCancellationRequested();
+                ObserveFault(operationTask);
+                throw CreateTimeoutException();
+            }
+
+            try
+            {
+                return await operationTask;
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // 操作因内部超时令牌被取消
+                throw CreateTimeoutException();
+            }
+        }
+
+        /// <summary>创建带本地化消息的获取输入超时异常</summary>
+        private TimeoutException CreateTimeoutException()
+        {
+            string message = string.Format(
+                LanguageService.GetLocalizedString("GetInput_Timeout", "Get input timed out ({0}s)"),
+                Timeout);
+            return new TimeoutException(message);
+        }
+
+        /// <summary>观察被放弃任务的异常，避免产生未观测的任务异常</summary>
+        private static void ObserveFault(Task task)
+        {
+            _ = task.ContinueWith(
+                t => { _ = t.Exception; },
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+        }
 
         private void SelectRegion()
         {
@@ -463,7 +542,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     using (var template = new System.Drawing.Bitmap(fullPath))
                     {
-                        var rect = Utils.Autogui.FindImageOnScreen(template, item.SimilarityThreshold, 0.1, 3);
+                        // 单点匹配超时同样使用步骤配置的超时时间（<=0 时保持原默认 3s）
+                        double searchTimeout = Timeout > 0 ? Timeout : 3;
+                        var rect = Utils.Autogui.FindImageOnScreen(template, item.SimilarityThreshold, 0.1, searchTimeout);
                         var offsets = item.ClickOffsets != null && item.ClickOffsets.Count > 0
                             ? item.ClickOffsets
                             : new List<Models.Point> { new Models.Point(template.Width / 2, template.Height / 2) };
@@ -502,7 +583,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         return;
                     }
                     // 必须异步等待：在 UI 线程上 GetAwaiter().GetResult() 会与回到调度器的延续死锁，导致界面卡死
-                    string screenText = await ReadScreenTextsAsync(CancellationToken.None);
+                    string screenText = await RunWithTimeoutAsync(
+                        token => ReadScreenTextsAsync(token), CancellationToken.None);
                     OCRResultFull = string.IsNullOrWhiteSpace(screenText)
                         ? LanguageService.GetLocalizedString("OCR_NoResult", "未读取到文本")
                         : screenText;
@@ -522,7 +604,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     WindowRegionOverlay.ShowRegion(OCRRegion, overlay.Color, overlay.Duration);
                 }
 
-                string text = OCRService.RecognizeRegion(OCRRegion);
+                string text = await RunWithTimeoutAsync(
+                    token => Task.Run(() => OCRService.RecognizeRegion(OCRRegion), token), CancellationToken.None);
                 OCRResultFull = string.IsNullOrWhiteSpace(text)
                     ? LanguageService.GetLocalizedString("OCR_NoResult", "未识别到文本")
                     : text;

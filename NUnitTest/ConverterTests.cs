@@ -313,5 +313,40 @@ namespace NUnitTest
         }
 
         #endregion
+
+        #region PopupCloseModeJsonConverter
+
+        [TestFixture]
+        public class PopupCloseModeJsonConverterTests
+        {
+            private static readonly System.Text.Json.JsonSerializerOptions Options = new System.Text.Json.JsonSerializerOptions()
+            {
+                Converters = { new PopupCloseModeJsonConverter() }
+            };
+
+            [Test]
+            public void Read_LegacyNumeric_MapsToSingleFlag()
+            {
+                Assert.That(System.Text.Json.JsonSerializer.Deserialize<PopupCloseMode>("0", Options), Is.EqualTo(PopupCloseMode.ButtonClick));
+                Assert.That(System.Text.Json.JsonSerializer.Deserialize<PopupCloseMode>("1", Options), Is.EqualTo(PopupCloseMode.Timeout));
+                Assert.That(System.Text.Json.JsonSerializer.Deserialize<PopupCloseMode>("2", Options), Is.EqualTo(PopupCloseMode.StepReached));
+            }
+
+            [Test]
+            public void Read_StringFlags_ParsesCombination()
+            {
+                var mode = System.Text.Json.JsonSerializer.Deserialize<PopupCloseMode>("\"ButtonClick, Timeout\"", Options);
+                Assert.That(mode, Is.EqualTo(PopupCloseMode.ButtonClick | PopupCloseMode.Timeout));
+            }
+
+            [Test]
+            public void Write_Combination_WritesStringFlags()
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(PopupCloseMode.Timeout | PopupCloseMode.StepReached, Options);
+                Assert.That(json, Is.EqualTo("\"Timeout, StepReached\""));
+            }
+        }
+
+        #endregion
     }
 }

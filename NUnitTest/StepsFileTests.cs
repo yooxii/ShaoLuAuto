@@ -142,6 +142,51 @@ namespace NUnitTest
         }
 
         [Test]
+        public void SaveAndLoad_PopupStep_CombinedCloseMode_RoundTrip()
+        {
+            var steps = new ObservableCollection<AutomationStepBase>
+            {
+                new PopupStep("弹窗")
+                {
+                    CloseMode = PopupCloseMode.Timeout | PopupCloseMode.StepReached,
+                    AutoCloseSeconds = 7,
+                }
+            };
+
+            string filePath = Path.Combine(_testDir, "popup_close_flags.json");
+
+            StepsFile.SaveStepsToJson(steps, filePath);
+            var loaded = StepsFile.LoadStepsFromJson(filePath);
+
+            Assert.That(loaded.Count, Is.EqualTo(1));
+            var popup = loaded[0] as PopupStep;
+            Assert.That(popup, Is.Not.Null);
+            Assert.That(popup.CloseMode, Is.EqualTo(PopupCloseMode.Timeout | PopupCloseMode.StepReached));
+            Assert.That(popup.CloseByTimeout, Is.True);
+            Assert.That(popup.CloseByStepReached, Is.True);
+            Assert.That(popup.CloseByButtonClick, Is.False);
+        }
+
+        [Test]
+        public void SaveAndLoad_GetInputStep_TimeoutRoundTrip()
+        {
+            var steps = new ObservableCollection<AutomationStepBase>
+            {
+                new GetInputStep("获取输入") { InputMode = GetInputMode.OCR, Timeout = 6.5 }
+            };
+
+            string filePath = Path.Combine(_testDir, "getinput_steps.json");
+
+            StepsFile.SaveStepsToJson(steps, filePath);
+            var loaded = StepsFile.LoadStepsFromJson(filePath);
+
+            Assert.That(loaded.Count, Is.EqualTo(1));
+            var getInput = loaded[0] as GetInputStep;
+            Assert.That(getInput, Is.Not.Null);
+            Assert.That(getInput.Timeout, Is.EqualTo(6.5));
+        }
+
+        [Test]
         public void SaveAndLoad_StepWithConditions_RoundTrip()
         {
             var step = new TypeTextStep("条件步骤")

@@ -441,6 +441,9 @@
   <data name="Timeout" xml:space="preserve">
     <value>Timeout</value>
   </data>
+  <data name="GetInput_Timeout" xml:space="preserve">
+    <value>Get input timed out ({0}s)</value>
+  </data>
   <data name="FindTimeInterval" xml:space="preserve">
     <value>Find Time Interval</value>
   </data>
@@ -534,8 +537,26 @@
   <data name="CloseMode_StepReached" xml:space="preserve">
     <value>Step Reached</value>
   </data>
+  <data name="CloseMode_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="CloseMode_Hint" xml:space="preserve">
+    <value>Select one or more conditions; the popup closes when any condition is met.</value>
+  </data>
   <data name="Refresh" xml:space="preserve">
     <value>Refresh</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Redo" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="UndoStepEdit" xml:space="preserve">
+    <value>Undo Step Edit</value>
+  </data>
+  <data name="RedoStepEdit" xml:space="preserve">
+    <value>Redo Step Edit</value>
   </data>
   <data name="ShowErrorPopup" xml:space="preserve">
     <value>ShowErrorPopup</value>
@@ -884,6 +905,15 @@
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>Condition</value>
+  </data>
+  <data name="Condition_EditConditions" xml:space="preserve">
+    <value>Edit Result Conditions</value>
+  </data>
+  <data name="Condition_SummaryDefault" xml:space="preserve">
+    <value>Default (use step result)</value>
+  </data>
+  <data name="Condition_SummaryCustom" xml:space="preserve">
+    <value>Custom ({0} rules)</value>
   </data>
   <data name="GotoPanel" xml:space="preserve">
     <value>Jump Settings</value>

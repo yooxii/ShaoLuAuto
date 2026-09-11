@@ -212,13 +212,60 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>
         /// 条件判断模式
         /// </summary>
-        public ConditionMode ConditionMode { get => _conditionMode; set => SetProperty(ref _conditionMode, value); }
+        public ConditionMode ConditionMode
+        {
+            get => _conditionMode;
+            set
+            {
+                if (SetProperty(ref _conditionMode, value))
+                    OnPropertyChanged(nameof(ConditionSummary));
+            }
+        }
 
         private ObservableCollection<StepCondition> _conditions = [];
         /// <summary>
         /// 自定义条件规则行列表
         /// </summary>
-        public ObservableCollection<StepCondition> Conditions { get => _conditions; set => SetProperty(ref _conditions, value); }
+        public ObservableCollection<StepCondition> Conditions
+        {
+            get => _conditions;
+            set
+            {
+                if (_conditions != null)
+                    _conditions.CollectionChanged -= OnConditionsCollectionChanged;
+                if (SetProperty(ref _conditions, value))
+                {
+                    if (_conditions != null)
+                        _conditions.CollectionChanged += OnConditionsCollectionChanged;
+                    OnPropertyChanged(nameof(ConditionSummary));
+                }
+            }
+        }
+
+        /// <summary>结果判断编辑入口的摘要文本（默认 / 自定义规则条数）</summary>
+        [JsonIgnore]
+        public string ConditionSummary
+        {
+            get
+            {
+                if (ConditionMode != ConditionMode.Custom)
+                    return LanguageService.GetLocalizedString("Condition_SummaryDefault", "Default (use step result)");
+                return string.Format(
+                    LanguageService.GetLocalizedString("Condition_SummaryCustom", "Custom ({0} rules)"),
+                    Conditions?.Count ?? 0);
+            }
+        }
+
+        private void OnConditionsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(ConditionSummary));
+        }
+
+        [JsonIgnore]
+        private ICommand editConditionsCommand;
+        /// <summary>打开结果判断编辑窗口（原位置仅保留入口）</summary>
+        [JsonIgnore]
+        public ICommand EditConditionsCommand => editConditionsCommand ??= new RelayCommand(() => Views.WindowEditConditions.Edit(this));
 
         [JsonIgnore]
         private ICommand addConditionCommand;
@@ -274,6 +321,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             this.LineNo = 0;
             this.Name = string.Empty;
             this.Description = string.Empty;
+            Conditions.CollectionChanged += OnConditionsCollectionChanged;
         }
 
         /// <summary>
@@ -714,8 +762,54 @@ namespace ShaoLu.Viewmodels.AutomationStep
         #region 关闭模式
 
         private PopupCloseMode _closeMode = PopupCloseMode.ButtonClick;
-        /// <summary>关闭模式：ButtonClick=点击按钮, Timeout=超时自动关闭, StepReached=到达步骤关闭</summary>
-        public PopupCloseMode CloseMode { get => _closeMode; set => SetProperty(ref _closeMode, value); }
+        /// <summary>
+        /// 关闭方式（Flags，可多选组合）：ButtonClick=点击按钮, Timeout=超时自动关闭, StepReached=到达步骤关闭。
+        /// 组合后满足任一条件即关闭。
+        /// </summary>
+        [JsonConverter(typeof(ShaoLu.Converters.PopupCloseModeJsonConverter))]
+        public PopupCloseMode CloseMode
+        {
+            get => _closeMode;
+            set
+            {
+                if (SetProperty(ref _closeMode, value))
+                {
+                    OnPropertyChanged(nameof(CloseByButtonClick));
+                    OnPropertyChanged(nameof(CloseByTimeout));
+                    OnPropertyChanged(nameof(CloseByStepReached));
+                }
+            }
+        }
+
+        /// <summary>是否启用点击按钮关闭</summary>
+        [JsonIgnore]
+        public bool CloseByButtonClick
+        {
+            get => CloseMode.HasFlag(PopupCloseMode.ButtonClick);
+            set => SetCloseFlag(PopupCloseMode.ButtonClick, value);
+        }
+
+        /// <summary>是否启用超时自动关闭</summary>
+        [JsonIgnore]
+        public bool CloseByTimeout
+        {
+            get => CloseMode.HasFlag(PopupCloseMode.Timeout);
+            set => SetCloseFlag(PopupCloseMode.Timeout, value);
+        }
+
+        /// <summary>是否启用到达步骤关闭</summary>
+        [JsonIgnore]
+        public bool CloseByStepReached
+        {
+            get => CloseMode.HasFlag(PopupCloseMode.StepReached);
+            set => SetCloseFlag(PopupCloseMode.StepReached, value);
+        }
+
+        /// <summary>按位设置/清除某个关闭方式</summary>
+        private void SetCloseFlag(PopupCloseMode flag, bool enabled)
+        {
+            CloseMode = enabled ? (CloseMode | flag) : (CloseMode & ~flag);
+        }
 
         private double _autoCloseSeconds = 5;
         /// <summary>Timeout 模式下的自动关闭时间(秒)</summary>
@@ -897,31 +991,40 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _ => MessageBoxImage.Information
             };
 
+            // 关闭方式可组合：未勾选任何方式时按点击按钮处理，避免无限等待
+            var closeMode = CloseMode;
+            if ((closeMode & (PopupCloseMode.ButtonClick | PopupCloseMode.Timeout | PopupCloseMode.StepReached)) == 0)
+                closeMode |= PopupCloseMode.ButtonClick;
+
+            bool closeByStepReached = closeMode.HasFlag(PopupCloseMode.StepReached);
+            bool closeByTimeout = closeMode.HasFlag(PopupCloseMode.Timeout) && AutoCloseSeconds > 0;
+            string defaultResult = PopupButtons.DefaultButton?.Value ?? string.Empty;
+
             // 1. 启动异步弹窗任务（应用自定义位置、背景颜色、背景不透明度与窗口样式）
             System.Windows.Point? position = (WindowX >= 0 && WindowY >= 0) ? new System.Windows.Point(WindowX, WindowY) : null;
             var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, PopupButtons, iconType, position, WindowOpacity / 100.0, BackgroundColor, PopupWindowStyle);
 
             // 保存活跃窗口引用（供 StepReached 模式使用）
-            if (popupWindow is WindowAsyncPopup asyncPopup)
-            {
-                ActivePopupWindow = asyncPopup;
-            }
+            ActivePopupWindow = popupWindow as WindowAsyncPopup;
 
-            // StepReached 模式：不等待窗口关闭，直接继续执行；到达目标步骤时由执行引擎关闭弹窗
-            if (CloseMode == PopupCloseMode.StepReached)
+            // StepReached 模式：不等待窗口关闭，直接继续执行；到达目标步骤时由执行引擎关闭弹窗。
+            // 若同时勾选了超时，则后台计时到点后自动关闭；停止运行时也关闭。
+            if (closeByStepReached)
             {
-                // 停止运行时关闭弹窗，防止窗口残留
-                cancellationToken.Register(() =>
+                var stopRegistration = cancellationToken.Register(() => ClosePopupWindow(popupWindow));
+                if (popupWindow != null)
                 {
-                    if (popupWindow != null && !popupWindow.Dispatcher.HasShutdownStarted)
+                    popupWindow.Closed += (s, e) =>
                     {
-                        popupWindow.Dispatcher.InvokeAsync(() =>
-                        {
-                            if (popupWindow.IsVisible)
-                                popupWindow.Close();
-                        });
-                    }
-                });
+                        stopRegistration.Dispose();
+                        ActivePopupWindow = null;
+                    };
+                }
+
+                if (closeByTimeout)
+                {
+                    _ = ClosePopupAfterTimeoutAsync(popupWindow, TimeSpan.FromSeconds(AutoCloseSeconds), defaultResult, cancellationToken);
+                }
 
                 IsTrue = true;
                 LastResult = new StepExecutionResult
@@ -932,58 +1035,42 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 return IsTrue;
             }
 
-            // 2. 根据关闭模式处理
+            // 2. 等待用户点击按钮超时自动关闭停止运行中的任意一个条件先满足
             try
             {
-                using (cancellationToken.Register(() =>
-                {
-                    if (popupWindow != null && !popupWindow.Dispatcher.HasShutdownStarted)
-                    {
-                        popupWindow.Dispatcher.InvokeAsync(() =>
-                        {
-                            if (popupWindow.IsVisible)
-                                popupWindow.Close();
-                        });
-                    }
-                }))
+                using (cancellationToken.Register(() => ClosePopupWindow(popupWindow)))
                 {
                     var cancelTask = new TaskCompletionSource<bool>();
                     using (cancellationToken.Register(() => cancelTask.TrySetResult(true)))
                     {
-                        Task completedTask;
-
-                        if (CloseMode == PopupCloseMode.Timeout && AutoCloseSeconds > 0)
+                        var waitTasks = new List<Task> { popupTask, cancelTask.Task };
+                        Task timeoutTask = null;
+                        if (closeByTimeout)
                         {
-                            // 超时模式：等待弹窗任务、取消任务、超时任务三者之一完成
-                            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(AutoCloseSeconds), cancellationToken);
-                            completedTask = await Task.WhenAny(popupTask, cancelTask.Task, timeoutTask);
-
-                            if (completedTask == timeoutTask)
-                            {
-                                // 超时自动关闭，返回默认按钮值，不等待窗口关闭
-                                var defaultResult = PopupButtons.DefaultButton?.Value ?? string.Empty;
-                                if (popupWindow is WindowAsyncPopup ap)
-                                {
-                                    ap.CloseWithResult(defaultResult);
-                                }
-                                IsTrue = PopupResultToBool(defaultResult);
-                                LastResult = new StepExecutionResult
-                                {
-                                    IsTrue = IsTrue,
-                                    PopupResult = defaultResult,
-                                    ExecutedAt = DateTime.Now,
-                                };
-                                return IsTrue;
-                            }
+                            timeoutTask = Task.Delay(TimeSpan.FromSeconds(AutoCloseSeconds), cancellationToken);
+                            waitTasks.Add(timeoutTask);
                         }
-                        else
+
+                        var completedTask = await Task.WhenAny(waitTasks);
+
+                        if (timeoutTask != null && completedTask == timeoutTask)
                         {
-                            // ButtonClick 或 StepReached 模式：等待弹窗任务或取消任务
-                            completedTask = await Task.WhenAny(popupTask, cancelTask.Task);
+                            // 超时自动关闭：返回默认按钮值，不等待窗口关闭
+                            if (popupWindow is WindowAsyncPopup popup)
+                                popup.CloseWithResult(defaultResult);
+                            IsTrue = PopupResultToBool(defaultResult);
+                            LastResult = new StepExecutionResult
+                            {
+                                IsTrue = IsTrue,
+                                PopupResult = defaultResult,
+                                ExecutedAt = DateTime.Now,
+                            };
+                            return IsTrue;
                         }
 
                         if (completedTask == cancelTask.Task)
                         {
+                            ClosePopupWindow(popupWindow);
                             IsTrue = false;
                             return false;
                         }
@@ -1004,6 +1091,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Popup error: {ex.Message}");
+                ClosePopupWindow(popupWindow);
                 IsTrue = false;
                 return IsTrue;
             }
@@ -1013,6 +1101,40 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        /// <summary>在 UI 线程上关闭弹窗（已关闭或调度器停止时静默忽略）</summary>
+        private static void ClosePopupWindow(Window window)
+        {
+            if (window == null) return;
+            try
+            {
+                if (window.Dispatcher.HasShutdownStarted) return;
+                window.Dispatcher.InvokeAsync(() =>
+                {
+                    if (window.IsVisible)
+                        window.Close();
+                });
+            }
+            catch { }
+        }
+
+        /// <summary>StepReached 同时勾选超时时：计时到达后关闭弹窗</summary>
+        private async Task ClosePopupAfterTimeoutAsync(Window window, TimeSpan timeout, string result, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await Task.Delay(timeout, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            if (window is WindowAsyncPopup popup)
+                popup.CloseWithResult(result);
+            else
+                ClosePopupWindow(window);
+            ActivePopupWindow = null;
+        }
         /// <summary>
         /// 弹窗返回值转布尔：点击按钮 OK/Yes 为 true，No/Cancel 为 false；
         /// 右上角叉关闭时返回空字符串，同样为 false

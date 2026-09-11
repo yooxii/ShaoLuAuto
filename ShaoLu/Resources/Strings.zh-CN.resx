@@ -441,6 +441,9 @@
   <data name="Timeout" xml:space="preserve">
     <value>超时时间(s)</value>
   </data>
+  <data name="GetInput_Timeout" xml:space="preserve">
+    <value>获取输入超时（{0} 秒）</value>
+  </data>
   <data name="FindTimeInterval" xml:space="preserve">
     <value>重新寻找的间隔时间(s)</value>
   </data>
@@ -534,8 +537,26 @@
   <data name="CloseMode_StepReached" xml:space="preserve">
     <value>到达步骤关闭</value>
   </data>
+  <data name="CloseMode_None" xml:space="preserve">
+    <value>不关闭</value>
+  </data>
+  <data name="CloseMode_Hint" xml:space="preserve">
+    <value>可多选：满足任一条件即关闭</value>
+  </data>
   <data name="Refresh" xml:space="preserve">
     <value>刷新</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>撤销</value>
+  </data>
+  <data name="Redo" xml:space="preserve">
+    <value>恢复</value>
+  </data>
+  <data name="UndoStepEdit" xml:space="preserve">
+    <value>撤销本步骤编辑</value>
+  </data>
+  <data name="RedoStepEdit" xml:space="preserve">
+    <value>恢复本步骤编辑</value>
   </data>
   <data name="ShowErrorPopup" xml:space="preserve">
     <value>展示错误弹窗</value>
@@ -884,6 +905,15 @@
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>条件判断</value>
+  </data>
+  <data name="Condition_EditConditions" xml:space="preserve">
+    <value>编辑结果判断</value>
+  </data>
+  <data name="Condition_SummaryDefault" xml:space="preserve">
+    <value>默认（使用步骤自身结果）</value>
+  </data>
+  <data name="Condition_SummaryCustom" xml:space="preserve">
+    <value>自定义（{0} 条规则）</value>
   </data>
   <data name="GotoPanel" xml:space="preserve">
     <value>跳转设置</value>

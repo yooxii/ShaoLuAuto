@@ -122,9 +122,18 @@ namespace ShaoLu.Views
             {
                 var doc = Utils.RichTextHelper.Deserialize(message ?? string.Empty);
 
-                // 紧凑模式：去除文档内边距
+                // 紧凑模式：去除文档内边距，并让文档按内容测量（窗口大小自适应内容/标题）
                 if (popup._compact)
+                {
                     doc.PagePadding = new Thickness(0);
+                    doc.ColumnWidth = 100000;
+                    doc.PageWidth = double.NaN;
+                    foreach (var block in doc.Blocks)
+                    {
+                        if (block is System.Windows.Documents.Paragraph paragraph)
+                            paragraph.Margin = new Thickness(0);
+                    }
+                }
 
                 // 如果提供了字体模型，应用字体设置到 FlowDocument 级别
                 if (font != null)
@@ -140,13 +149,15 @@ namespace ShaoLu.Views
                 popup.MessageViewer.Document = doc;
             }
 
-            // 紧凑窗口：全面缩小尺寸与边距
+            // 紧凑窗口：全面缩小尺寸与边距，并允许窗口按内容/标题自适应
             if (popup._compact)
             {
-                popup.MinWidth = 100;
+                popup.MinWidth = 0;
                 popup.MinHeight = 0;
+                popup.MaxWidth = 460;
+                popup.MaxHeight = 420;
                 if (popup.ContentGrid != null)
-                    popup.ContentGrid.Margin = new Thickness(6);
+                    popup.ContentGrid.Margin = new Thickness(4);
                 if (popup.TitleText != null)
                 {
                     popup.TitleText.FontSize = 12;
@@ -154,19 +165,21 @@ namespace ShaoLu.Views
                 }
                 if (popup.CloseButton != null)
                 {
-                    popup.CloseButton.Width = 18;
-                    popup.CloseButton.Height = 18;
+                    popup.CloseButton.Width = 16;
+                    popup.CloseButton.Height = 16;
                 }
                 if (popup.IconImage != null)
                 {
-                    popup.IconImage.Width = 24;
-                    popup.IconImage.Height = 24;
-                    popup.IconImage.Margin = new Thickness(0, 0, 6, 0);
+                    popup.IconImage.Width = 20;
+                    popup.IconImage.Height = 20;
+                    popup.IconImage.Margin = new Thickness(0, 0, 4, 0);
                 }
                 if (popup.MessageViewer != null)
                     popup.MessageViewer.Margin = new Thickness(0);
+                if (popup.MessageScroll != null)
+                    popup.MessageScroll.MaxHeight = 200;
                 if (popup.ButtonPanel != null)
-                    popup.ButtonPanel.Margin = new Thickness(0, 6, 0, 0);
+                    popup.ButtonPanel.Margin = new Thickness(0, 4, 0, 0);
             }
             
             // 2. 设置图标（无图标时不占空间）
@@ -225,9 +238,9 @@ namespace ShaoLu.Views
                 var btn = new Button
                 {
                     Content = content,
-                    Width = _compact ? 60 : 80,
-                    Height = _compact ? 24 : 30,
-                    Margin = new Thickness(_compact ? 3 : 5, 0, 0, 0),
+                    Width = _compact ? 54 : 80,
+                    Height = _compact ? 22 : 30,
+                    Margin = new Thickness(_compact ? 2 : 5, 0, 0, 0),
                     IsDefault = isDefault // 设置默认按钮，响应 Enter 键
                 };
 

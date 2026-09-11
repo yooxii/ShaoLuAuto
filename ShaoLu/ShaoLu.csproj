@@ -138,6 +138,7 @@
     <Compile Include="Converters\AutomationStepJsonConverter.cs" />
     <Compile Include="Converters\ConditionModeToVisibilityConverter.cs" />
     <Compile Include="Converters\ConditionEnumToStringConverter.cs" />
+    <Compile Include="Converters\PopupCloseModeJsonConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\BoolToInverseBoolConverter.cs" />
     <Compile Include="Converters\BoolToGoodBadConverter.cs" />
@@ -289,6 +290,9 @@
     <Compile Include="Views\WindowUserManagement.xaml.cs">
       <DependentUpon>WindowUserManagement.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\WindowEditConditions.xaml.cs">
+      <DependentUpon>WindowEditConditions.xaml</DependentUpon>
+    </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -414,6 +418,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowUserManagement.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowEditConditions.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

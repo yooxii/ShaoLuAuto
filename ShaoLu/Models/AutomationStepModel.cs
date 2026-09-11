@@ -45,16 +45,19 @@ namespace ShaoLu.Models
     }
 
     /// <summary>
-    /// 弹出窗口关闭模式
+    /// 弹出窗口关闭方式（Flags，可组合多种方式，任满足其一即关闭）
     /// </summary>
+    [Flags]
     public enum PopupCloseMode
     {
-        /// <summary>默认：用户点击按钮关闭</summary>
-        ButtonClick,
+        /// <summary>未设置任何关闭方式</summary>
+        None = 0,
+        /// <summary>用户点击弹窗按钮关闭</summary>
+        ButtonClick = 1,
         /// <summary>按时间自动关闭</summary>
-        Timeout,
+        Timeout = 2,
         /// <summary>到某个步骤时关闭</summary>
-        StepReached,
+        StepReached = 4,
     }
 
     /// <summary>

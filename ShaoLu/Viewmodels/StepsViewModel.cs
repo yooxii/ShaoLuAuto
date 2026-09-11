@@ -51,6 +51,10 @@ namespace ShaoLu.Viewmodels
                     CopyStepCommand.RaiseCanExecuteChanged();
                     CutStepCommand.RaiseCanExecuteChanged();
                     PasteStepCommand.RaiseCanExecuteChanged();
+                    UndoCommand.RaiseCanExecuteChanged();
+                    RedoCommand.RaiseCanExecuteChanged();
+                    UndoStepCommand.RaiseCanExecuteChanged();
+                    RedoStepCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -58,7 +62,15 @@ namespace ShaoLu.Viewmodels
 
         // 选中步骤
         private AutomationStepBase _selectedStep;
-        public AutomationStepBase SelectedStep { get => _selectedStep; set => SetProperty(ref _selectedStep, value); }
+        public AutomationStepBase SelectedStep
+        {
+            get => _selectedStep;
+            set
+            {
+                if (SetProperty(ref _selectedStep, value))
+                    OnSelectedStepChanged(value);
+            }
+        }
 
         private AutomationStepBase _errorStep;
         public AutomationStepBase ErrorStep { get => _errorStep; set => SetProperty(ref _errorStep, value); }
@@ -66,6 +78,22 @@ namespace ShaoLu.Viewmodels
         public ObservableCollection<AutomationStepBase> SelectedSteps { get; set; } = [];
 
         public ObservableCollection<AutomationStepBase> PasteSteps { get; set; } = [];
+
+        // ------- 撤销 / 恢复 -------
+        // 步骤列表历史：记录整表快照（增删/移动/粘贴/剪切），生命周期到程序关闭或打开新文件
+        private readonly List<List<AutomationStepBase>> _listUndo = new();
+        private readonly List<List<AutomationStepBase>> _listRedo = new();
+        private const int MaxListHistory = 50;
+        private bool _suppressListTracking;
+
+        // 步骤内部历史：每个步骤独立，切换到其他步骤时清空
+        private readonly List<AutomationStepBase> _stepUndo = new();
+        private readonly List<AutomationStepBase> _stepRedo = new();
+        private const int MaxStepHistory = 100;
+        private AutomationStepBase _editStep;
+        private AutomationStepBase _editBaseline;
+        private bool _suppressStepTracking;
+
 
 
         private ObservableCollection<AutomationStepBase> _automationStepBases = [];
@@ -123,7 +151,27 @@ namespace ShaoLu.Viewmodels
 
 
         private RelayCommand pasteStepCommand;
-        public RelayCommand PasteStepCommand => pasteStepCommand ??= new RelayCommand(PasteStep, CanAlertStep);
+        public RelayCommand PasteStepCommand => pasteStepCommand ??= new RelayCommand(PasteStep, CanPasteStep);
+
+
+        private RelayCommand undoCommand;
+        /// <summary>撤销步骤列表操作（增删/移动/粘贴/剪切）</summary>
+        public RelayCommand UndoCommand => undoCommand ??= new RelayCommand(Undo, () => CanAlertStep() && _listUndo.Count > 0);
+
+
+        private RelayCommand redoCommand;
+        /// <summary>恢复步骤列表操作</summary>
+        public RelayCommand RedoCommand => redoCommand ??= new RelayCommand(Redo, () => CanAlertStep() && _listRedo.Count > 0);
+
+
+        private RelayCommand undoStepCommand;
+        /// <summary>撤销当前步骤内部的编辑（每步独立）</summary>
+        public RelayCommand UndoStepCommand => undoStepCommand ??= new RelayCommand(UndoStep, () => CanAlertStep() && _stepUndo.Count > 0);
+
+
+        private RelayCommand redoStepCommand;
+        /// <summary>恢复当前步骤内部的编辑</summary>
+        public RelayCommand RedoStepCommand => redoStepCommand ??= new RelayCommand(RedoStep, () => CanAlertStep() && _stepRedo.Count > 0);
 
         #endregion
 
@@ -155,11 +203,332 @@ namespace ShaoLu.Viewmodels
             }
         }
 
+        #region 撤销 / 恢复
+
+        /// <summary>
+        /// 步骤深拷贝：各步骤的 Clone() 未统一复制基类状态（条件判断、IsSave 等），
+        /// 这里在 Clone() 基础上补齐，供复制/粘贴与撤销快照使用。
+        /// Uid 由调用方决定是否保留。
+        /// </summary>
+        private static AutomationStepBase CloneStepCore(AutomationStepBase step)
+        {
+            var clone = step.Clone();
+            if (step.Name != null) clone.Name = step.Name;
+            clone.Description = step.Description;
+            clone.IsNeed = step.IsNeed;
+            clone.IsSave = step.IsSave;
+            clone.WaitTime = step.WaitTime;
+            clone.EnableLog = step.EnableLog;
+            clone.SelfReferenceLimit = step.SelfReferenceLimit;
+            clone.TrueGotoUid = step.TrueGotoUid;
+            clone.FalseGotoUid = step.FalseGotoUid;
+            clone.ConditionMode = step.ConditionMode;
+            clone.Conditions = CloneConditions(step.Conditions);
+            return clone;
+        }
+
+        /// <summary>深拷贝（保留 Uid，用于快照恢复，保证跳转/条件引用不失效）</summary>
+        private static AutomationStepBase CloneStepPreservingUid(AutomationStepBase step)
+        {
+            var clone = CloneStepCore(step);
+            clone.Uid = step.Uid;
+            return clone;
+        }
+
+        private static ObservableCollection<StepCondition> CloneConditions(IEnumerable<StepCondition> conditions)
+        {
+            var result = new ObservableCollection<StepCondition>();
+            if (conditions == null) return result;
+            foreach (var c in conditions)
+                result.Add(CloneCondition(c));
+            return result;
+        }
+
+        private static StepCondition CloneCondition(StepCondition c) => new()
+        {
+            ParentStepUid = c.ParentStepUid,
+            LegacyStepLineNo = c.LegacyStepLineNo,
+            Variable = c.Variable,
+            StepUid = c.StepUid,
+            Operator = c.Operator,
+            Value = c.Value,
+            Connector = c.Connector,
+            TextExtractMode = c.TextExtractMode,
+            ExtractLines = c.ExtractLines,
+            ExtractMarker = c.ExtractMarker,
+            ExtractLength = c.ExtractLength,
+            ExtractUnit = c.ExtractUnit,
+        };
+
+        #region 步骤列表撤销 / 恢复
+
+        private List<AutomationStepBase> CaptureListSnapshot()
+            => AutomationStepBases?.Select(CloneStepPreservingUid).ToList() ?? new List<AutomationStepBase>();
+
+        /// <summary>在列表发生增删/移动/粘贴/剪切前调用，记录快照</summary>
+        private void PushListUndoSnapshot()
+        {
+            if (_suppressListTracking) return;
+            _listUndo.Add(CaptureListSnapshot());
+            if (_listUndo.Count > MaxListHistory)
+                _listUndo.RemoveAt(0);
+            _listRedo.Clear();
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        private void RestoreListSnapshot(List<AutomationStepBase> snapshot)
+        {
+            if (snapshot == null) return;
+            Guid? selectedUid = SelectedStep?.Uid;
+            _suppressListTracking = true;
+            try
+            {
+                AutomationStepBases.Clear();
+                foreach (var s in snapshot)
+                    AutomationStepBases.Add(CloneStepPreservingUid(s));
+                UpdateAutomationStepBases();
+                SelectedStep = selectedUid.HasValue
+                    ? AutomationStepBases.FirstOrDefault(s => s.Uid == selectedUid.Value)
+                    : null;
+            }
+            finally
+            {
+                _suppressListTracking = false;
+            }
+        }
+
+        private void Undo()
+        {
+            if (_listUndo.Count == 0) return;
+            var target = _listUndo[_listUndo.Count - 1];
+            _listUndo.RemoveAt(_listUndo.Count - 1);
+            _listRedo.Add(CaptureListSnapshot());
+            RestoreListSnapshot(target);
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        private void Redo()
+        {
+            if (_listRedo.Count == 0) return;
+            var target = _listRedo[_listRedo.Count - 1];
+            _listRedo.RemoveAt(_listRedo.Count - 1);
+            _listUndo.Add(CaptureListSnapshot());
+            RestoreListSnapshot(target);
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        /// <summary>清空列表与步骤内部历史（程序启动 / 新建 / 打开文件时调用）</summary>
+        public void ClearUndoRedo()
+        {
+            _listUndo.Clear();
+            _listRedo.Clear();
+            DetachStepHistory();
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        private void RaiseUndoRedoCanExecuteChanged()
+        {
+            UndoCommand.RaiseCanExecuteChanged();
+            RedoCommand.RaiseCanExecuteChanged();
+            UndoStepCommand.RaiseCanExecuteChanged();
+            RedoStepCommand.RaiseCanExecuteChanged();
+        }
+
+        #endregion
+
+        #region 步骤内部撤销 / 恢复
+
+        private void OnSelectedStepChanged(AutomationStepBase step)
+        {
+            if (_isRunning || step == null)
+            {
+                DetachStepHistory();
+                return;
+            }
+
+            // 同一个 Uid 视为同一步骤（列表刷新/撤销恢复时不重置历史）
+            if (ReferenceEquals(_editStep, step))
+                return;
+
+            // 切换到另一个步骤：上一个步骤的编辑历史失效
+            DetachStepHistory();
+            AttachStepHistory(step);
+        }
+
+        private void AttachStepHistory(AutomationStepBase step)
+        {
+            _editStep = step;
+            _stepUndo.Clear();
+            _stepRedo.Clear();
+            _editBaseline = CloneStepPreservingUid(step);
+
+            step.PropertyChanged += OnEditStepPropertyChanged;
+            if (step.Conditions != null)
+            {
+                step.Conditions.CollectionChanged += OnEditStepConditionsChanged;
+                foreach (var c in step.Conditions)
+                    c.PropertyChanged += OnEditConditionPropertyChanged;
+            }
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        private void DetachStepHistory()
+        {
+            if (_editStep != null)
+            {
+                _editStep.PropertyChanged -= OnEditStepPropertyChanged;
+                if (_editStep.Conditions != null)
+                {
+                    _editStep.Conditions.CollectionChanged -= OnEditStepConditionsChanged;
+                    foreach (var c in _editStep.Conditions)
+                        c.PropertyChanged -= OnEditConditionPropertyChanged;
+                }
+            }
+            _editStep = null;
+            _editBaseline = null;
+            _stepUndo.Clear();
+            _stepRedo.Clear();
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        private static bool ShouldIgnoreStepProperty(string propertyName)
+        {
+            return propertyName == nameof(AutomationStepBase.ConditionSummary)
+                || propertyName == nameof(AutomationStepBase.LineNo)
+                || propertyName == nameof(AutomationStepBase.IsError)
+                || propertyName == nameof(AutomationStepBase.ErrorMessage)
+                || propertyName == nameof(AutomationStepBase.IsTrue)
+                || propertyName == nameof(AutomationStepBase.LastResult);
+        }
+
+        private void OnEditStepPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (ShouldIgnoreStepProperty(e.PropertyName)) return;
+            RecordStepChange();
+        }
+
+        private void OnEditStepConditionsChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+                foreach (StepCondition c in e.OldItems)
+                    c.PropertyChanged -= OnEditConditionPropertyChanged;
+            if (e.NewItems != null)
+                foreach (StepCondition c in e.NewItems)
+                    c.PropertyChanged += OnEditConditionPropertyChanged;
+            RecordStepChange();
+        }
+
+        private void OnEditConditionPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            RecordStepChange();
+        }
+
+        /// <summary>记录一次步骤内部修改：把上一次基线压入撤销栈</summary>
+        private void RecordStepChange()
+        {
+            if (_suppressStepTracking || _editStep == null) return;
+            _stepUndo.Add(_editBaseline ?? CloneStepPreservingUid(_editStep));
+            if (_stepUndo.Count > MaxStepHistory)
+                _stepUndo.RemoveAt(0);
+            _stepRedo.Clear();
+            _editBaseline = CloneStepPreservingUid(_editStep);
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        private void UndoStep()
+        {
+            if (_stepUndo.Count == 0 || _editStep == null) return;
+            var target = _stepUndo[_stepUndo.Count - 1];
+            _stepUndo.RemoveAt(_stepUndo.Count - 1);
+            _stepRedo.Add(CloneStepPreservingUid(_editStep));
+            RestoreStepState(target);
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        private void RedoStep()
+        {
+            if (_stepRedo.Count == 0 || _editStep == null) return;
+            var target = _stepRedo[_stepRedo.Count - 1];
+            _stepRedo.RemoveAt(_stepRedo.Count - 1);
+            _stepUndo.Add(CloneStepPreservingUid(_editStep));
+            RestoreStepState(target);
+            RaiseUndoRedoCanExecuteChanged();
+        }
+
+        private static readonly HashSet<string> StepStateSkipProperties = new()
+        {
+            "Uid", "Type", "LineNo", "LastResult", "IsError", "ErrorMessage", "IsTrue",
+            "SelfReferenceCount", "ConditionSummary",
+        };
+
+        /// <summary>把快照状态复制回当前步骤实例（保持实例与 Uid 不变，便于 UI 与引用继续有效）</summary>
+        private void RestoreStepState(AutomationStepBase snapshot)
+        {
+            if (_editStep == null || snapshot == null) return;
+            _suppressStepTracking = true;
+            try
+            {
+                // 条件集合会被整体替换，先解除旧集合与条目的事件订阅
+                if (_editStep.Conditions != null)
+                {
+                    _editStep.Conditions.CollectionChanged -= OnEditStepConditionsChanged;
+                    foreach (var c in _editStep.Conditions)
+                        c.PropertyChanged -= OnEditConditionPropertyChanged;
+                }
+
+                CopyStepState(snapshot, _editStep);
+
+                if (_editStep.Conditions != null)
+                {
+                    _editStep.Conditions.CollectionChanged += OnEditStepConditionsChanged;
+                    foreach (var c in _editStep.Conditions)
+                        c.PropertyChanged += OnEditConditionPropertyChanged;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "RestoreStepState failed");
+            }
+            finally
+            {
+                _suppressStepTracking = false;
+            }
+            _editBaseline = CloneStepPreservingUid(_editStep);
+        }
+
+        private static void CopyStepState(AutomationStepBase source, AutomationStepBase target)
+        {
+            if (source == null || target == null) return;
+            foreach (var p in source.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            {
+                if (!p.CanRead || !p.CanWrite || p.GetIndexParameters().Length > 0) continue;
+                if (StepStateSkipProperties.Contains(p.Name)) continue;
+                try
+                {
+                    object value = p.Name == "Conditions" ? CloneConditions(source.Conditions) : p.GetValue(source);
+                    p.SetValue(target, value);
+                }
+                catch
+                {
+                    // 个别只读/特殊属性忽略
+                }
+            }
+        }
+
+        #endregion
+
+        #endregion
+
         #region 步骤增删
 
         private bool CanAlertStep()
         {
             return !_isRunning;
+        }
+
+        private bool CanPasteStep()
+        {
+            return CanAlertStep() && PasteSteps != null && PasteSteps.Count > 0;
         }
 
         /// <summary>
@@ -219,6 +588,7 @@ namespace ShaoLu.Viewmodels
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
                 ApplyDefaultSettings(step);
+                PushListUndoSnapshot();
                 if (SelectedStep is AutomationStepBase automationStepBase)
                 {
                     int index = AutomationStepBases.IndexOf(automationStepBase) + 1;
@@ -233,6 +603,7 @@ namespace ShaoLu.Viewmodels
             {
                 step = new ClickImageStep();
                 ApplyDefaultSettings(step);
+                PushListUndoSnapshot();
                 AutomationStepBases.Add(step);
             }
             SelectedStep = step;
@@ -258,6 +629,10 @@ namespace ShaoLu.Viewmodels
             else if (step is FindImageStep findStep)
             {
                 findStep.Timeout = _stepSettings.DefaultTimeout;
+            }
+            else if (step is GetInputStep getInputStep)
+            {
+                getInputStep.Timeout = _stepSettings.DefaultTimeout;
             }
         }
 
@@ -322,6 +697,8 @@ namespace ShaoLu.Viewmodels
                         return;
                 }
 
+                PushListUndoSnapshot();
+
                 // 删除前清空引用
                 foreach (var step in AutomationStepBases)
                 {
@@ -358,6 +735,7 @@ namespace ShaoLu.Viewmodels
                 return;
             if (SelectedStep.LineNo <= 1)
                 return;
+            PushListUndoSnapshot();
             AutomationStepBases.Move(SelectedStep.LineNo - 1, SelectedStep.LineNo - 2);
         }
 
@@ -368,6 +746,7 @@ namespace ShaoLu.Viewmodels
                 return;
             if (SelectedStep.LineNo >= AutomationStepBases.Count)
                 return;
+            PushListUndoSnapshot();
             AutomationStepBases.Move(SelectedStep.LineNo - 1, SelectedStep.LineNo);
         }
 
@@ -381,9 +760,17 @@ namespace ShaoLu.Viewmodels
             }
         }
 
-        public void InsertSteps(ObservableCollection<AutomationStepBase> steps, int index = -1)
+        /// <summary>
+        /// 插入步骤。
+        /// </summary>
+        /// <param name="cloneSteps">
+        /// true：插入前深拷贝（用于粘贴，保证多次粘贴互相独立、Uid 唯一）；
+        /// false：直接插入（用于加载文件，需保留原有 Uid 与跳转引用）。
+        /// </param>
+        public void InsertSteps(ObservableCollection<AutomationStepBase> steps, int index = -1, bool cloneSteps = true)
         {
             AutomationStepBases ??= [];
+            if (steps == null || steps.Count == 0) return;
 
             // 烧录配置步骤全局仅允许一个：跳过多余的 BurnInConfigStep
             var toInsert = new List<AutomationStepBase>(steps);
@@ -419,32 +806,25 @@ namespace ShaoLu.Viewmodels
             }
             if (toInsert.Count == 0) return;
 
+            // 需要拷贝时统一深拷贝，避免粘贴后与原对象/剪贴板共享引用
+            var finalSteps = cloneSteps ? toInsert.Select(CloneStepCore).ToList() : toInsert;
+
             if (index >= 0 && index < AutomationStepBases.Count)
             {
-                for (int i = 0; i < toInsert.Count; i++)
+                for (int i = 0; i < finalSteps.Count; i++)
                 {
-                    if (AutomationStepBases.Contains(toInsert[i]))
-                    {
-                        AutomationStepBases.Insert(index + i, toInsert[i].Clone());
-                    }
-                    else
-                    {
-                        AutomationStepBases.Insert(index + i, toInsert[i]);
-                    }
+                    var step = finalSteps[i];
+                    if (!cloneSteps && AutomationStepBases.Contains(step))
+                        step = CloneStepCore(step);
+                    AutomationStepBases.Insert(index + i, step);
                 }
             }
             else
             {
-                for (int i = 0; i < toInsert.Count; i++)
+                foreach (var step in finalSteps)
                 {
-                    if (AutomationStepBases.Contains(toInsert[i]))
-                    {
-                        AutomationStepBases.Add(toInsert[i].Clone());
-                    }
-                    else
-                    {
-                        AutomationStepBases.Add(toInsert[i]);
-                    }
+                    var target = (!cloneSteps && AutomationStepBases.Contains(step)) ? CloneStepCore(step) : step;
+                    AutomationStepBases.Add(target);
                 }
             }
         }
@@ -452,38 +832,47 @@ namespace ShaoLu.Viewmodels
         private void CopyStep()
         {
             if (!EnsureLoggedIn()) return;
+            CopySelectedStepsToClipboard();
+        }
+
+        /// <summary>把选中步骤深拷贝到剪贴板（PasteSteps）；无选中项返回 false</summary>
+        private bool CopySelectedStepsToClipboard()
+        {
+            PasteSteps ??= [];
+
+            if (SelectedSteps == null || SelectedSteps.Count == 0)
+            {
+                PasteSteps.Clear();
+                PasteStepCommand.RaiseCanExecuteChanged();
+                return false;
+            }
 
             PasteSteps.Clear();
-            // 使用 LINQ 调用每个步骤的 Clone 方法
-            var clonedSteps = SelectedSteps.Select(step => step.Clone()).ToList();
+            // 使用统一深拷贝：补齐 Clone() 未复制的条件判断等基类状态，且生成新 Uid
+            foreach (var step in SelectedSteps)
+                PasteSteps.Add(CloneStepCore(step));
 
-            // 将克隆后的步骤添加到 PasteSteps
-            foreach (var step in clonedSteps)
-            {
-                PasteSteps.Add(step);
-            }
+            PasteStepCommand.RaiseCanExecuteChanged();
+            return PasteSteps.Count > 0;
         }
 
         private async void CutStep()
         {
-            CopyStep();
+            if (!EnsureLoggedIn()) return;
+            if (!CopySelectedStepsToClipboard()) return;
             await RemoveStepsAsync(confirm: false);
         }
 
         private void PasteStep()
         {
             if (!EnsureLoggedIn()) return;
+            if (PasteSteps == null || PasteSteps.Count == 0) return;
 
-            if (SelectedStep != null)
-            {
-                InsertSteps(PasteSteps, SelectedStep.LineNo - 1);
-            }
-            else
-            {
-                InsertSteps(PasteSteps);
-            }
+            int index = SelectedStep != null ? SelectedStep.LineNo - 1 : -1;
+            PushListUndoSnapshot();
+            InsertSteps(PasteSteps, index, cloneSteps: true);
+            PasteStepCommand.RaiseCanExecuteChanged();
         }
-
         #endregion
 
         #region 步骤执行
@@ -939,12 +1328,13 @@ namespace ShaoLu.Viewmodels
             foreach (var s in AutomationStepBases)
             {
                 if (s is PopupStep popupStep
-                    && popupStep.CloseMode == PopupCloseMode.StepReached
+                    && popupStep.CloseMode.HasFlag(PopupCloseMode.StepReached)
                     && popupStep.CloseOnStepUid == currentStepUid
                     && popupStep.ActivePopupWindow != null)
                 {
                     var defaultResult = popupStep.PopupButtons.DefaultButton?.Value ?? string.Empty;
                     popupStep.ActivePopupWindow.CloseWithResult(defaultResult);
+                    popupStep.ActivePopupWindow = null;
                 }
             }
         }

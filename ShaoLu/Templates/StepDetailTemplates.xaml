@@ -212,6 +212,15 @@
         </GroupBox>
     </DataTemplate>
 
+    <!-- 结果判断编辑入口（点击后在新窗口编辑，原位置只保留入口与摘要） -->
+    <DataTemplate x:Key="ConditionEntryTemplate">
+        <GroupBox Header="{lex:Loc ConditionPanel}" Margin="0,10,0,0">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="{lex:Loc Condition_EditConditions}" Command="{Binding EditConditionsCommand}" Padding="10,3" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding ConditionSummary}" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="Gray" TextWrapping="Wrap"/>
+            </StackPanel>
+        </GroupBox>
+    </DataTemplate>
     <!-- 空步骤（分割符/占位符/注释） -->
     <DataTemplate x:Key="EmptyStepTemplate" DataType="{x:Type AutoVM:EmptyStep}">
         <StackPanel>
@@ -299,7 +308,7 @@
                 </StackPanel>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -342,7 +351,7 @@
                 <TextBlock Text="{lex:Loc FindImage_OCR_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"/>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -363,7 +372,7 @@
                 <wd:NumericBox Value="{Binding DelayBetweenKeys, UpdateSourceTrigger=LostFocus}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -399,7 +408,7 @@
                 <TextBlock Text="{Binding TextToType}" VerticalAlignment="Center"/>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -441,7 +450,7 @@
                 </StackPanel>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -550,40 +559,18 @@
             </GroupBox>
             <GroupBox Header="{lex:Loc PopupCloseMode}" Margin="0,5,0,0">
                 <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
-                        <Label Content="{lex:Loc CloseMode}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                        <ComboBox ItemsSource="{Binding CloseModes}" SelectedItem="{Binding CloseMode}" MinWidth="150">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding CloseMode}" Value="Timeout"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <Label Content="{lex:Loc AutoCloseSeconds}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                        <wd:NumericBox Value="{Binding AutoCloseSeconds, Mode=TwoWay}" Minimum="0.5" Maximum="3600" Precision="1" Interval="0.5" Width="70"/>
+                    <TextBlock Text="{lex:Loc CloseMode_Hint}" Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                    <CheckBox Content="{lex:Loc CloseMode_ButtonClick}" IsChecked="{Binding CloseByButtonClick}" Margin="0,2"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <CheckBox Content="{lex:Loc CloseMode_Timeout}" IsChecked="{Binding CloseByTimeout}" VerticalAlignment="Center"/>
+                        <wd:NumericBox Value="{Binding AutoCloseSeconds, Mode=TwoWay}" Minimum="0.5" Maximum="3600" Precision="1" Interval="0.5" Width="70" Margin="10,0,0,0"
+                                       IsEnabled="{Binding CloseByTimeout}"/>
                         <TextBlock Text="{lex:Loc Seconds}" VerticalAlignment="Center" Margin="5,0,0,0" Foreground="Gray"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding CloseMode}" Value="StepReached"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <Label Content="{lex:Loc CloseOnStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                        <ComboBox ItemsSource="{Binding AllSteps}" SelectedValue="{Binding CloseOnStepUid, TargetNullValue={x:Static sys:Guid.Empty}}" SelectedValuePath="Uid" MinWidth="150">
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <CheckBox Content="{lex:Loc CloseMode_StepReached}" IsChecked="{Binding CloseByStepReached}" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding AllSteps}" SelectedValue="{Binding CloseOnStepUid, TargetNullValue={x:Static sys:Guid.Empty}}" SelectedValuePath="Uid" MinWidth="150" Margin="10,0,0,0"
+                                  IsEnabled="{Binding CloseByStepReached}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock><Run Text="{Binding LineNo, Mode=OneWay}"/><Run Text=" - "/><Run Text="{Binding Name, Mode=OneWay}"/></TextBlock>
@@ -594,7 +581,7 @@
                 </StackPanel>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -694,6 +681,10 @@
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
             </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Timeout}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" Width="70" Minimum="0" Precision="3" Interval="0.1"/>
+            </StackPanel>
             <StackPanel Margin="0,3,0,0">
                 <Button Content="{lex:Loc OCR_Test}" Command="{Binding TestOCRCommand}" HorizontalAlignment="Left"/>
                 <!-- 结果预览：超过100字符截断显示，点击预览全文 -->
@@ -706,7 +697,7 @@
                 </Border>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -784,7 +775,7 @@
                 </StackPanel>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 
@@ -1015,7 +1006,7 @@
                 <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.01"/>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
         </StackPanel>
     </DataTemplate>
 

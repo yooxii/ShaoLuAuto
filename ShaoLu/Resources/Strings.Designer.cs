@@ -1013,6 +1013,23 @@ namespace ShaoLu.Resources {
                 return ResourceManager.GetString("CloseMode_ButtonClick", resourceCulture);
             }
         }
+        /// <summary>
+        ///   查找类似 None 的本地化字符串。
+        /// </summary>
+        public static string CloseMode_None {
+            get {
+                return ResourceManager.GetString("CloseMode_None", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 Select one or more conditions; the popup closes when any condition is met. 的本地化字符串。
+        /// </summary>
+        public static string CloseMode_Hint {
+            get {
+                return ResourceManager.GetString("CloseMode_Hint", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   查找类似 Step Reached 的本地化字符串。
@@ -1146,6 +1163,32 @@ namespace ShaoLu.Resources {
         public static string ConditionPanel {
             get {
                 return ResourceManager.GetString("ConditionPanel", resourceCulture);
+            }
+        }
+        /// <summary>
+        ///   查找类似 Edit Result Conditions 的本地化字符串。
+        /// </summary>
+        public static string Condition_EditConditions {
+            get {
+                return ResourceManager.GetString("Condition_EditConditions", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 Default (use step result) 的本地化字符串。
+        /// </summary>
+        public static string Condition_SummaryDefault {
+            get {
+                return ResourceManager.GetString("Condition_SummaryDefault", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 Custom ({0} rules) 的本地化字符串。
+        /// </summary>
+        public static string Condition_SummaryCustom {
+            get {
+                return ResourceManager.GetString("Condition_SummaryCustom", resourceCulture);
             }
         }
         
@@ -2777,6 +2820,41 @@ namespace ShaoLu.Resources {
                 return ResourceManager.GetString("Refresh", resourceCulture);
             }
         }
+        /// <summary>
+        ///   查找类似 Undo 的本地化字符串。
+        /// </summary>
+        public static string Undo {
+            get {
+                return ResourceManager.GetString("Undo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 Redo 的本地化字符串。
+        /// </summary>
+        public static string Redo {
+            get {
+                return ResourceManager.GetString("Redo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 Undo Step Edit 的本地化字符串。
+        /// </summary>
+        public static string UndoStepEdit {
+            get {
+                return ResourceManager.GetString("UndoStepEdit", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 Redo Step Edit 的本地化字符串。
+        /// </summary>
+        public static string RedoStepEdit {
+            get {
+                return ResourceManager.GetString("RedoStepEdit", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   查找类似 Admin password 的本地化字符串。
@@ -3651,6 +3729,15 @@ namespace ShaoLu.Resources {
             }
         }
         
+        /// <summary>
+        ///   查找类似 Get input timed out ({0}s) 的本地化字符串。
+        /// </summary>
+        public static string GetInput_Timeout {
+            get {
+                return ResourceManager.GetString("GetInput_Timeout", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   查找类似 Timeout 的本地化字符串。
         /// </summary>

@@ -45,6 +45,11 @@
                 <MenuItem Header="{lex:Loc Copy}" Command="{Binding CopyStepCommand}"/>
                 <MenuItem Header="{lex:Loc Cut}" Command="{Binding CutStepCommand}"/>
                 <MenuItem Header="{lex:Loc Paste}" Command="{Binding PasteStepCommand}"/>
+                <Separator/>
+                <MenuItem Header="{lex:Loc Undo}" Command="{Binding UndoCommand}"/>
+                <MenuItem Header="{lex:Loc Redo}" Command="{Binding RedoCommand}"/>
+                <MenuItem Header="{lex:Loc UndoStepEdit}" Command="{Binding UndoStepCommand}"/>
+                <MenuItem Header="{lex:Loc RedoStepEdit}" Command="{Binding RedoStepCommand}"/>
             </ContextMenu>
 
             <ResourceDictionary.MergedDictionaries>
@@ -80,12 +85,17 @@
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Edit}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
                         <Button Content="{lex:Loc Refresh}" Margin="3" Click="Refresh_Click"/>
+                        <Button Content="{lex:Loc Undo}" Margin="3" Command="{Binding UndoCommand}"/>
+                        <Button Content="{lex:Loc Redo}" Margin="3" Command="{Binding RedoCommand}"/>
                         <Button Content="{lex:Loc Up}" Margin="3" Command="{Binding UpStepCommand}"/>
                         <Button Content="{lex:Loc Down}" Margin="3" Command="{Binding DownStepCommand}"/>
                         <Button Content="{lex:Loc Copy}" Margin="3" Command="{Binding CopyStepCommand}"/>
                         <Button Content="{lex:Loc Cut}" Margin="3" Command="{Binding CutStepCommand}"/>
                         <Button Content="{lex:Loc Paste}" Margin="3" Command="{Binding PasteStepCommand}"/>
                         <Button Content="{lex:Loc Delete}" Margin="3" Command="{Binding DelStepCommand}"/>
+                        <Separator/>
+                        <Button Content="{lex:Loc UndoStepEdit}" Margin="3" Command="{Binding UndoStepCommand}"/>
+                        <Button Content="{lex:Loc RedoStepEdit}" Margin="3" Command="{Binding RedoStepCommand}"/>
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Step}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
                         <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
@@ -121,6 +131,14 @@
                               SelectionMode="Extended" SelectedItem="{Binding SelectedStep}"
                               utils:DataGridSelectedItemsBehavior.SelectedItems="{Binding SelectedSteps}"
                               IsReadOnly="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}, Converter={StaticResource BoolToInverseBoolConverter}}">
+                            <DataGrid.InputBindings>
+                                <KeyBinding Key="C" Modifiers="Ctrl" Command="{Binding CopyStepCommand}"/>
+                                <KeyBinding Key="X" Modifiers="Ctrl" Command="{Binding CutStepCommand}"/>
+                                <KeyBinding Key="V" Modifiers="Ctrl" Command="{Binding PasteStepCommand}"/>
+                                <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoCommand}"/>
+                                <KeyBinding Key="Y" Modifiers="Ctrl" Command="{Binding RedoCommand}"/>
+                                <KeyBinding Key="Z" Modifiers="Ctrl+Shift" Command="{Binding RedoCommand}"/>
+                            </DataGrid.InputBindings>
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow" BasedOn="{StaticResource WD.DefaultDataGridRow}">
                                 <Style.Setters>

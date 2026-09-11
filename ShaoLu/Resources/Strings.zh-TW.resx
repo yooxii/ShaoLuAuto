@@ -441,6 +441,9 @@
   <data name="Timeout" xml:space="preserve">
     <value>超時時間(s)</value>
   </data>
+  <data name="GetInput_Timeout" xml:space="preserve">
+    <value>獲取輸入逾時（{0} 秒）</value>
+  </data>
   <data name="FindTimeInterval" xml:space="preserve">
     <value>重新尋找的間隔時間(s)</value>
   </data>
@@ -534,8 +537,26 @@
   <data name="CloseMode_StepReached" xml:space="preserve">
     <value>到達步驟關閉</value>
   </data>
+  <data name="CloseMode_None" xml:space="preserve">
+    <value>不關閉</value>
+  </data>
+  <data name="CloseMode_Hint" xml:space="preserve">
+    <value>可多選：滿足任一條件即關閉</value>
+  </data>
   <data name="Refresh" xml:space="preserve">
     <value>刷新</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>復原</value>
+  </data>
+  <data name="Redo" xml:space="preserve">
+    <value>重做</value>
+  </data>
+  <data name="UndoStepEdit" xml:space="preserve">
+    <value>復原本步驟編輯</value>
+  </data>
+  <data name="RedoStepEdit" xml:space="preserve">
+    <value>重做本步驟編輯</value>
   </data>
   <data name="ShowErrorPopup" xml:space="preserve">
     <value>展示錯誤彈窗</value>
@@ -884,6 +905,15 @@
   </data>
   <data name="ConditionPanel" xml:space="preserve">
     <value>條件判斷</value>
+  </data>
+  <data name="Condition_EditConditions" xml:space="preserve">
+    <value>編輯結果判斷</value>
+  </data>
+  <data name="Condition_SummaryDefault" xml:space="preserve">
+    <value>預設（使用步驟自身結果）</value>
+  </data>
+  <data name="Condition_SummaryCustom" xml:space="preserve">
+    <value>自訂（{0} 條規則）</value>
   </data>
   <data name="GotoPanel" xml:space="preserve">
     <value>跳轉設置</value>

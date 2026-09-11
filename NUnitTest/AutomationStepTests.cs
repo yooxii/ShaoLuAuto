@@ -300,6 +300,32 @@ namespace NUnitTest
                 Assert.That(clone.TrueGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000010")));
                 Assert.That(clone.FalseGotoUid, Is.EqualTo(Guid.Parse("00000000-0000-0000-0000-000000000020")));
             }
+
+            [Test]
+            public void CloseModeFlags_CombineCorrectly()
+            {
+                var step = new PopupStep();
+                Assert.That(step.CloseByButtonClick, Is.True);
+                Assert.That(step.CloseByTimeout, Is.False);
+                Assert.That(step.CloseByStepReached, Is.False);
+
+                step.CloseByTimeout = true;
+                step.CloseByStepReached = true;
+                Assert.That(step.CloseMode, Is.EqualTo(PopupCloseMode.ButtonClick | PopupCloseMode.Timeout | PopupCloseMode.StepReached));
+
+                step.CloseByButtonClick = false;
+                Assert.That(step.CloseMode.HasFlag(PopupCloseMode.ButtonClick), Is.False);
+                Assert.That(step.CloseMode.HasFlag(PopupCloseMode.Timeout), Is.True);
+                Assert.That(step.CloseMode.HasFlag(PopupCloseMode.StepReached), Is.True);
+            }
+
+            [Test]
+            public void Clone_CopiesCombinedCloseMode()
+            {
+                var step = new PopupStep("Popup") { CloseMode = PopupCloseMode.Timeout | PopupCloseMode.StepReached };
+                var clone = (PopupStep)step.Clone();
+                Assert.That(clone.CloseMode, Is.EqualTo(PopupCloseMode.Timeout | PopupCloseMode.StepReached));
+            }
         }
 
         #endregion
@@ -537,6 +563,21 @@ namespace NUnitTest
                 Assert.That(clone.TextPoints[1].Source, Is.EqualTo(TextPointSource.Relative));
                 clone.TextPoints[0].X = 999;
                 Assert.That(step.TextPoints[0].X, Is.EqualTo(1));
+            }
+
+            [Test]
+            public void DefaultTimeout_IsThreeSeconds()
+            {
+                var step = new GetInputStep();
+                Assert.That(step.Timeout, Is.EqualTo(3));
+            }
+
+            [Test]
+            public void Clone_CopiesTimeout()
+            {
+                var step = new GetInputStep("Test") { Timeout = 7.5 };
+                var clone = (GetInputStep)step.Clone();
+                Assert.That(clone.Timeout, Is.EqualTo(7.5));
             }
         }
 

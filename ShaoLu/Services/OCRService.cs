@@ -92,10 +92,17 @@ namespace ShaoLu.Services
                 {
                     bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                     byte[] imgBytes = ms.ToArray();
-                    using (var pix = TesseractOCR.Pix.Image.LoadFromMemory(imgBytes))
-                    using (var page = _ocr.Process(pix))
+
+                    // Tesseract Engine 非线程安全：超时被放弃的识别任务可能仍在运行，
+                    // 这里串行化引擎访问，避免与后续识别并发使用同一实例。
+                    lock (_lock)
                     {
-                        return page.Text?.Trim() ?? string.Empty;
+                        Init();
+                        using (var pix = TesseractOCR.Pix.Image.LoadFromMemory(imgBytes))
+                        using (var page = _ocr.Process(pix))
+                        {
+                            return page.Text?.Trim() ?? string.Empty;
+                        }
                     }
                 }
             }

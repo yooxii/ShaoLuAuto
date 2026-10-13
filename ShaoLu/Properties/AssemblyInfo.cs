@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -48,5 +48,10 @@ using System.Windows;
 //      生成号
 //      修订号
 //
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+// 版本号三处必须一致（tools/build-app.ps1 每次构建都会校验，不一致直接报错）：
+//      1. ShaoLu.csproj 的 <ApplicationVersion>  -> ClickOnce 清单里的 ShaoLu.exe 版本
+//      2. 本文件的 AssemblyVersion              -> 程序集标识
+//      3. 本文件的 AssemblyFileVersion          -> 资源管理器里的「文件版本/产品版本」
+// 需要临时用别的号构建时：tools/build-app.ps1 -Version <号> / tools/pack-release.ps1 -Version <号>。
+[assembly: AssemblyVersion("0.6.2.2610")]
+[assembly: AssemblyFileVersion("0.6.2.2610")]

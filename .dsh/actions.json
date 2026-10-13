@@ -1,0 +1,75 @@
+// DSH Actions — ShaoLu 仓库共享任务（随仓库提交）
+// 语法为 JSONC（允许注释与尾逗号）；schema 见 dsh-actions-authoring 技能。
+// 所有命令统一走 tools\*.ps1 包装脚本，避免把多步逻辑塞进一行命令。
+{
+  "version": "1.0.0",
+  "actions": [
+    // ---------- 编译 ----------
+    {
+      "label": "编译 Debug",
+      "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools\\build-app.ps1 -Configuration Debug",
+      "detail": "MSBuild 构建 ShaoLu.slnx 的 Debug|x64（主程序 + NUnitTest 测试工程），产物在 ShaoLu\\bin\\x64\\Debug\\。做实验、需要断点调试时用它。",
+      "presentation": { "panel": "append" },
+      "icon": "lucide:hammer"
+    },
+    {
+      "label": "编译 Release",
+      "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools\\build-app.ps1 -Configuration Release",
+      "detail": "MSBuild 构建 ShaoLu.slnx 的 Release|x64（开优化、无 DEBUG 常量），产物在 ShaoLu\\bin\\x64\\Release\\。交付/测性能用它；发布打包会自动执行这一步。",
+      "presentation": { "panel": "append" },
+      "icon": "lucide:package-check"
+    },
+
+    // ---------- 运行 ----------
+    {
+      "label": "运行 Debug",
+      "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools\\run-app.ps1 -Configuration Debug",
+      "detail": "启动 ShaoLu\\bin\\x64\\Debug\\ShaoLu.exe（Debug 版，带完整 pdb、无优化）。不自动编译，需先「编译 Debug」；已在运行的实例不会被重复启动。",
+      "runOptions": { "instancePolicy": "reject" },
+      "presentation": { "panel": "dedicated" },
+      "icon": "lucide:play"
+    },
+    {
+      "label": "运行 Release",
+      "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools\\run-app.ps1 -Configuration Release",
+      "detail": "启动 ShaoLu\\bin\\x64\\Release\\ShaoLu.exe（Release 版，优化且无调试信息）。不自动编译，需先「编译 Release」；已在运行的实例不会被重复启动。",
+      "runOptions": { "instancePolicy": "reject" },
+      "presentation": { "panel": "dedicated" },
+      "icon": "lucide:rocket"
+    },
+
+    // ---------- 测试 ----------
+    {
+      "label": "运行测试(NUnit)",
+      "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools\\test.ps1",
+      "detail": "构建解决方案后用 VS 自带 vstest.console 跑 NUnitTest 的 189 个用例（NUnit 4.6.1 + NUnit3TestAdapter）。默认 Debug，可在会话里把 -Configuration 改成 Release。",
+      "presentation": { "panel": "append" },
+      "icon": "lucide:flask-conical"
+    },
+
+    // ---------- 发布 ----------
+    {
+      "label": "发布打包",
+      "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools\\pack-release.ps1",
+      "detail": "发布：编译 Release（版本号来自 ShaoLu.csproj 的 ApplicationVersion，并同步写入程序集版本）→ 过滤掉 pdb/ClickOnce 清单/WebView2 缓存/日志/用户数据 → 复制运行必需文件到 ShaoLu\\bin\\publish\\AutoShaoLu_<版本号>\\。默认只出目录，不生成 zip（要 zip 时用 -Zip，目录约 150 MB）。",
+      "approval": "agent",
+      "presentation": { "panel": "dedicated" },
+      "inputs": [
+        {
+          "id": "version",
+          "type": "string",
+          "description": "发布版本号，例如 0.6.2.5；留空则用 ShaoLu.csproj 的 ApplicationVersion（唯一版本来源）。",
+          "required": false
+        },
+        {
+          "id": "force",
+          "type": "select",
+          "options": ["no", "yes"],
+          "default": "no",
+          "description": "选 yes 时覆盖已存在的同名包目录和 zip（-Force）。"
+        }
+      ],
+      "icon": "lucide:package"
+    }
+  ]
+}

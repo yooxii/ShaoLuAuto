@@ -51,6 +51,8 @@
     <Compile Include="StepExecutionContextTests.cs" />
     <Compile Include="StepsFileTests.cs" />
     <Compile Include="BurnInServiceTests.cs" />
+    <Compile Include="AcbelBridgeTests.cs" />
+    <Compile Include="AcbelInsertDataValidationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FlaUI.UIA3">

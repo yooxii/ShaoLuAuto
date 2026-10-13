@@ -4,6 +4,8 @@
     <Platform Name="x64" />
   </Configurations>
   <Project Path="NUnitTest/NUnitTest.csproj" Id="9a6fe03c-a618-4a5e-9858-8770842ec58e" />
+  <!-- x86 桥接进程：32 位的 Acbel_Chroma_Test.dll 只能由它加载（见 Reference\Acbel_Chroma_Test-接入说明.md） -->
+  <Project Path="AcbelBridge/AcbelBridge.csproj" Id="7e1b9d42-6c31-4a58-9c0e-5b7a2f4d8e13" />
   <Project Path="ShaoLu/ShaoLu.csproj" Id="6326f714-723e-4eab-8f52-0dfdda17b648">
     <Platform Solution="*|x64" Project="x64" />
   </Project>

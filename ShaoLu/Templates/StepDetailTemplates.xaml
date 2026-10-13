@@ -259,6 +259,12 @@
                 <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
                 <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
+            <CheckBox IsChecked="{Binding HighPrecision}" Content="{lex:Loc HighPrecision}" ToolTip="{lex:Loc HighPrecision_Hint}" Margin="0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2" Visibility="{Binding HighPrecision, Converter={StaticResource BoolToVis}}">
+                <Label Content="{lex:Loc ColorThreshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
+                <Slider Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" Width="70" Precision="3" Minimum="0" Interval="0.01"/>
@@ -332,6 +338,12 @@
                 <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
                 <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <CheckBox IsChecked="{Binding HighPrecision}" Content="{lex:Loc HighPrecision}" ToolTip="{lex:Loc HighPrecision_Hint}" Margin="0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2" Visibility="{Binding HighPrecision, Converter={StaticResource BoolToVis}}">
+                <Label Content="{lex:Loc ColorThreshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
+                <Slider Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
@@ -952,6 +964,12 @@
                 <StackPanel Orientation="Horizontal" Margin="0,2">
                     <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                     <wd:NumericBox Value="{Binding SimilarityThreshold}" Width="70" Minimum="0" Maximum="1" Precision="2" Interval="0.01"/>
+                </StackPanel>
+                <CheckBox IsChecked="{Binding HighPrecision}" Content="{lex:Loc HighPrecision}" ToolTip="{lex:Loc HighPrecision_Hint}" Margin="0,2"/>
+                <StackPanel Orientation="Horizontal" Margin="0,2" Visibility="{Binding HighPrecision, Converter={StaticResource BoolToVis}}">
+                    <Label Content="{lex:Loc ColorThreshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70" Minimum="0" Maximum="1"/>
+                    <Slider Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </StackPanel>
             <!-- 截图留痕 -->

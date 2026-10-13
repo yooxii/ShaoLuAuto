@@ -305,6 +305,90 @@ namespace NUnitTest
             Assert.Throws<ArgumentException>((TestDelegate)(() => StepsFile.LoadStepsFromJson("")));
         }
 
+        [Test]
+        public void SaveAndLoad_ClickImageStep_ColorRecognitionFields_RoundTrip()
+        {
+            EnsureImageStepServicesConfigured();
+            var step = new ClickImageStep("识图点击", "颜色识别往返")
+            {
+                SimilarityThreshold = 0.75,
+                HighPrecision = true,
+                ColorThreshold = 0.9,
+                Clicks = 2
+            };
+
+            string filePath = Path.Combine(_testDir, "clickimage_color_steps.json");
+            StepsFile.SaveStepsToJson(new ObservableCollection<AutomationStepBase> { step }, filePath);
+            var loaded = StepsFile.LoadStepsFromJson(filePath);
+
+            Assert.That(loaded.Count, Is.EqualTo(1));
+            var loadedStep = loaded[0] as ClickImageStep;
+            Assert.That(loadedStep, Is.Not.Null);
+            Assert.That(loadedStep.SimilarityThreshold, Is.EqualTo(0.75));
+            Assert.That(loadedStep.HighPrecision, Is.True);
+            Assert.That(loadedStep.ColorThreshold, Is.EqualTo(0.9));
+
+            // Clone（复制/粘贴步骤）必须一并复制颜色识别字段
+            var clone = (ClickImageStep)step.Clone();
+            Assert.That(clone.HighPrecision, Is.True);
+            Assert.That(clone.ColorThreshold, Is.EqualTo(0.9));
+        }
+
+        [Test]
+        public void LoadStepsFromJson_LegacyClickImageStep_MissingColorFields_UsesDefaults()
+        {
+            EnsureImageStepServicesConfigured();
+            // 旧版 steps.json：没有 HighPrecision / ColorThreshold 字段
+            string legacyJson = @"[
+  {
+    ""Type"": 0,
+    ""Uid"": ""22222222-2222-2222-2222-222222222222"",
+    ""Name"": ""LegacyClickImage"",
+    ""SimilarityThreshold"": 0.8,
+    ""Clicks"": 2
+  }
+]";
+            string filePath = Path.Combine(_testDir, "legacy_clickimage_steps.json");
+            File.WriteAllText(filePath, legacyJson, new System.Text.UTF8Encoding(false));
+
+            var loaded = StepsFile.LoadStepsFromJson(filePath);
+
+            Assert.That(loaded.Count, Is.EqualTo(1));
+            var step = loaded[0] as ClickImageStep;
+            Assert.That(step, Is.Not.Null);
+            // 缺字段时落到默认值：颜色识别关闭，行为与改动前一致
+            Assert.That(step.HighPrecision, Is.False);
+            Assert.That(step.ColorThreshold, Is.EqualTo(0.95));
+            Assert.That(step.SimilarityThreshold, Is.EqualTo(0.8));
+            Assert.That(step.Clicks, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void SaveAndLoad_BurnInConfigStep_ColorRecognitionFields_RoundTrip()
+        {
+            var step = new BurnInConfigStep("烧录配置")
+            {
+                SimilarityThreshold = 0.85,
+                HighPrecision = true,
+                ColorThreshold = 0.9
+            };
+
+            string filePath = Path.Combine(_testDir, "burnin_color_steps.json");
+            StepsFile.SaveStepsToJson(new ObservableCollection<AutomationStepBase> { step }, filePath);
+            var loaded = StepsFile.LoadStepsFromJson(filePath);
+
+            var loadedStep = loaded[0] as BurnInConfigStep;
+            Assert.That(loadedStep, Is.Not.Null);
+            Assert.That(loadedStep.Config.HighPrecision, Is.True);
+            Assert.That(loadedStep.Config.ColorThreshold, Is.EqualTo(0.9));
+            Assert.That(loadedStep.Config.SimilarityThreshold, Is.EqualTo(0.85));
+
+            // CloneConfig 必须一并复制颜色识别字段
+            var clone = (BurnInConfigStep)step.Clone();
+            Assert.That(clone.Config.HighPrecision, Is.True);
+            Assert.That(clone.Config.ColorThreshold, Is.EqualTo(0.9));
+        }
+
 #pragma warning restore CS0618
 
         #endregion
@@ -352,5 +436,35 @@ namespace NUnitTest
         }
 
         #endregion
+
+        /// <summary>
+        /// ImageRecognitionBase 的字段初始化经 SingletonLocator 解析 MainViewModel / FileServices，
+        /// 而单元测试进程没有 App.xaml.cs 里的 DI 注册，这里补一个最小实现（Ioc 全进程只允许配置一次）。
+        /// </summary>
+        private static void EnsureImageStepServicesConfigured()
+        {
+            lock (_serviceLock)
+            {
+                if (_servicesConfigured) return;
+                CommunityToolkit.Mvvm.DependencyInjection.Ioc.Default.ConfigureServices(new StepImageServices());
+                _servicesConfigured = true;
+            }
+        }
+
+        private static readonly object _serviceLock = new object();
+        private static bool _servicesConfigured;
+
+        private sealed class StepImageServices : IServiceProvider
+        {
+            private readonly ShaoLu.Viewmodels.MainViewModel _main = new ShaoLu.Viewmodels.MainViewModel();
+            private readonly ShaoLu.Services.FileServices _files = new ShaoLu.Services.FileServices();
+
+            public object GetService(Type serviceType)
+            {
+                if (serviceType == typeof(ShaoLu.Viewmodels.MainViewModel)) return _main;
+                if (serviceType == typeof(ShaoLu.Services.FileServices)) return _files;
+                return null;
+            }
+        }
     }
 }

@@ -1068,6 +1068,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Color similarity threshold 的本地化字符串。
+        /// </summary>
+        public static string ColorThreshold {
+            get {
+                return ResourceManager.GetString("ColorThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Condition 的本地化字符串。
         /// </summary>
         public static string Condition {
@@ -1900,6 +1909,24 @@ namespace ShaoLu.Resources {
         public static string Hidden {
             get {
                 return ResourceManager.GetString("Hidden", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 High-precision recognition 的本地化字符串。
+        /// </summary>
+        public static string HighPrecision {
+            get {
+                return ResourceManager.GetString("HighPrecision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 When checked, the match must also satisfy the color similarity threshold — use it to tell apart shapes that differ only in color 的本地化字符串。
+        /// </summary>
+        public static string HighPrecision_Hint {
+            get {
+                return ResourceManager.GetString("HighPrecision_Hint", resourceCulture);
             }
         }
         

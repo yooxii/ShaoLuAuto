@@ -23,6 +23,32 @@ namespace ShaoLu.Utils
 
     }
 
+    /// <summary>
+    /// 颜色（高精度）匹配结果，由纯函数 <see cref="Autogui.MatchImageColor"/> 输出
+    /// </summary>
+    public struct ColorMatchResult
+    {
+        /// <summary>
+        /// 结构相似度与颜色相似度同时达标时为 true
+        /// </summary>
+        public bool IsMatch { get; set; }
+
+        /// <summary>
+        /// 模板左上角在目标图中的坐标（颜色模式下为邻域校正后的最佳位置）
+        /// </summary>
+        public System.Drawing.Point LeftTop { get; set; }
+
+        /// <summary>
+        /// 灰度结构相似度（CCoeffNormed 最大值）
+        /// </summary>
+        public double StructureSimilarity { get; set; }
+
+        /// <summary>
+        /// 最佳位置处的颜色相似度（0~1）
+        /// </summary>
+        public double ColorSimilarity { get; set; }
+    }
+
     public class Autogui
     {
         private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -55,8 +81,10 @@ namespace ShaoLu.Utils
         /// <param name="threshold"> 相似度阈值 </param>
         /// <param name="gaptime"> 若没有找到，重复的间隔时间，(s) </param>
         /// <param name="timeout"> 若没有找到，超时时间，(s) </param>
+        /// <param name="highPrecision"> 是否启用颜色（高精度）匹配；false 时走原有灰度路径，行为与历史版本一致 </param>
+        /// <param name="colorThreshold"> 颜色相似度阈值，仅 highPrecision 为 true 时生效 </param>
         /// <returns>匹配结果，包含坐标和相似度</returns>
-        public static AutoRect FindImageOnScreen(Bitmap templateImage, double threshold = 0.8, double gaptime = 0.2, double timeout = 3)
+        public static AutoRect FindImageOnScreen(Bitmap templateImage, double threshold = 0.8, double gaptime = 0.2, double timeout = 3, bool highPrecision = false, double colorThreshold = 0.95)
         {
             if (templateImage == null)
             {
@@ -78,18 +106,43 @@ namespace ShaoLu.Utils
             {
                 // 1. 每次循环都重新获取屏幕截图（因为屏幕内容是动态变化的）
                 using var screenImg = CaptureScreen();
-                using var screenMat = BitmapConverter.ToMat(screenImg);
-                using var grayScreen = screenMat.CvtColor(ColorConversionCodes.BGR2GRAY);
 
-                // 2. 执行模板匹配
-                using Mat result = new();
-                Cv2.MatchTemplate(grayScreen, grayTemplate, result, TemplateMatchModes.CCoeffNormed);
+                double maxVal;
+                OpenCvSharp.Point maxLoc;
+                double colorSimilarity = 1.0;
 
-                // 3. 获取最大相似度及位置
-                Cv2.MinMaxLoc(result, out double minVal, out double maxVal, out OpenCvSharp.Point minLoc, out OpenCvSharp.Point maxLoc);
+                if (highPrecision)
+                {
+                    // 颜色（高精度）模式：灰度定位 + Lab 颜色校验，两者同时达标才算命中
+                    var colorMatch = MatchImageColor(templateImage, screenImg, threshold, colorThreshold);
+                    maxVal = colorMatch.StructureSimilarity;
+                    maxLoc = new OpenCvSharp.Point(colorMatch.LeftTop.X, colorMatch.LeftTop.Y);
+                    colorSimilarity = colorMatch.ColorSimilarity;
+                }
+                else
+                {
+                    // 原有灰度路径，未启用颜色模式时与历史版本保持一致
+                    using var screenMat = BitmapConverter.ToMat(screenImg);
+                    using var grayScreen = screenMat.CvtColor(ColorConversionCodes.BGR2GRAY);
 
-                // 4. 判断是否匹配成功
-                if (maxVal >= threshold)
+                    // 2. 执行模板匹配
+                    using Mat result = new();
+                    Cv2.MatchTemplate(grayScreen, grayTemplate, result, TemplateMatchModes.CCoeffNormed);
+
+                    // 3. 获取最大相似度及位置
+                    Cv2.MinMaxLoc(result, out double minVal, out double grayMaxVal, out OpenCvSharp.Point minLoc, out OpenCvSharp.Point grayMaxLoc);
+                    maxVal = grayMaxVal;
+                    maxLoc = grayMaxLoc;
+                }
+
+                // 4. 判断是否匹配成功：颜色模式要求结构相似度与颜色相似度同时达标
+                bool matched = highPrecision
+                    ? maxVal >= threshold && colorSimilarity >= colorThreshold
+                    : maxVal >= threshold;
+                // 命中时 Similarity 取结构相似度与颜色相似度的较小值，保证“相似度”仍单调可信
+                double similarity = highPrecision ? Math.Min(maxVal, colorSimilarity) : maxVal;
+
+                if (matched)
                 {
                     // 计算中心坐标
                     int centerX = maxLoc.X + templateMat.Width / 2;
@@ -97,12 +150,12 @@ namespace ShaoLu.Utils
 
                     res.Center = new Point(centerX, centerY);
                     res.LeftTop = maxLoc;
-                    res.Similarity = maxVal;
+                    res.Similarity = similarity;
                     return res; // 找到目标，直接返回
                 }
 
                 // 5. 未找到目标，更新相似度并检查是否超时
-                res.Similarity = maxVal;
+                res.Similarity = similarity;
 
                 if (stopwatch.ElapsedMilliseconds >= timeoutMs)
                 {
@@ -119,6 +172,86 @@ namespace ShaoLu.Utils
             }
             // 超时未找到，返回包含最后一次相似度的默认 Apoint 对象
             return res;
+        }
+
+        /// <summary>
+        /// 纯函数匹配核心：先用灰度归一化互相关定位最佳位置，再在 Lab 空间比较该位置的颜色。
+        /// 不依赖屏幕截图，可脱离真实屏幕做单元测试；<see cref="FindImageOnScreen"/> 只是它的截屏 + 轮询外壳。
+        /// </summary>
+        /// <param name="templateImage"> 模板图像 </param>
+        /// <param name="screenImage"> 目标图像（如屏幕截图） </param>
+        /// <param name="threshold"> 灰度结构相似度阈值 </param>
+        /// <param name="colorThreshold"> 颜色相似度阈值 </param>
+        /// <param name="neighborhood"> 颜色比较的邻域半径（像素），用于抵消半像素 / 抗锯齿误差 </param>
+        /// <returns> 命中与否、命中位置、结构相似度、颜色相似度 </returns>
+        public static ColorMatchResult MatchImageColor(Bitmap templateImage, Bitmap screenImage, double threshold = 0.8, double colorThreshold = 0.95, int neighborhood = 1)
+        {
+            ColorMatchResult match = new();
+            if (templateImage == null || screenImage == null)
+            {
+                return match;
+            }
+
+            using var templateMat = BitmapConverter.ToMat(templateImage);
+            using var screenMat = BitmapConverter.ToMat(screenImage);
+            if (templateMat.Width > screenMat.Width || templateMat.Height > screenMat.Height)
+            {
+                return match;
+            }
+
+            // 1. 灰度结构定位：与灰度模式使用同一种度量，保证 Similarity 可以横向比较
+            using var grayTemplate = templateMat.CvtColor(ColorConversionCodes.BGR2GRAY);
+            using var grayScreen = screenMat.CvtColor(ColorConversionCodes.BGR2GRAY);
+            using var result = new Mat();
+            Cv2.MatchTemplate(grayScreen, grayTemplate, result, TemplateMatchModes.CCoeffNormed);
+            Cv2.MinMaxLoc(result, out _, out double maxVal, out _, out OpenCvSharp.Point maxLoc);
+            match.StructureSimilarity = maxVal;
+
+            // 2. 颜色校验：Lab 空间逐像素比较，色相差异不会被亮度/结构项掩盖
+            using var labTemplate = templateMat.CvtColor(ColorConversionCodes.BGR2Lab);
+            using var labScreen = screenMat.CvtColor(ColorConversionCodes.BGR2Lab);
+
+            int radius = Math.Max(0, neighborhood);
+            double bestColor = -1;
+            OpenCvSharp.Point bestLoc = maxLoc;
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    int x = maxLoc.X + dx;
+                    int y = maxLoc.Y + dy;
+                    if (x < 0 || y < 0 || x + templateMat.Width > screenMat.Width || y + templateMat.Height > screenMat.Height)
+                    {
+                        continue;
+                    }
+
+                    double similarity = ComputeColorSimilarity(labTemplate, labScreen, x, y);
+                    if (similarity > bestColor)
+                    {
+                        bestColor = similarity;
+                        bestLoc = new OpenCvSharp.Point(x, y);
+                    }
+                }
+            }
+
+            match.ColorSimilarity = bestColor < 0 ? 0 : bestColor;
+            match.LeftTop = new System.Drawing.Point(bestLoc.X, bestLoc.Y);
+            match.IsMatch = maxVal >= threshold && match.ColorSimilarity >= colorThreshold;
+            return match;
+        }
+
+        /// <summary>
+        /// Lab 空间逐像素平均绝对差换算出的颜色相似度（0~1）：像素完全一致为 1.0。
+        /// 亮度与两个色度通道等权平均，单通道量程取 255。
+        /// </summary>
+        private static double ComputeColorSimilarity(Mat labTemplate, Mat labScreen, int x, int y)
+        {
+            using var screenPatch = new Mat(labScreen, new Rect(x, y, labTemplate.Width, labTemplate.Height));
+            using var diff = new Mat();
+            Cv2.Absdiff(labTemplate, screenPatch, diff);
+            Scalar mean = Cv2.Mean(diff);
+            double meanAbsDiff = (mean.Val0 + mean.Val1 + mean.Val2) / 3.0;
+            return 1.0 - meanAbsDiff / 255.0;
         }
 
         public static List<AutoRect> FindImagesOnScreen(List<AutoguiImage> templateImage, double gaptime = 0.2, double timeout = 3, bool signle = false)
@@ -296,7 +429,7 @@ namespace ShaoLu.Utils
         /// <summary>
         /// 在屏幕上查找并点击图像，返回匹配结果（包含相似度和位置）
         /// </summary>
-        public static AutoRect ClickImageOnScreenEx(Bitmap templateImage, Position position = 0, List<Point>? clickposition = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3)
+        public static AutoRect ClickImageOnScreenEx(Bitmap templateImage, Position position = 0, List<Point>? clickposition = null, double threshold = 0.8, int clicks = 1, double clickgaptime = 0.1, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3, bool highPrecision = false, double colorThreshold = 0.95)
         {
             int nextclickTimeMs = (int)(nextclicktime * 1000);
             int waitTimeMs = (int)(waittime * 1000);
@@ -316,7 +449,7 @@ namespace ShaoLu.Utils
                 }
                 try
                 {
-                    AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.1, 0.2);
+                    AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.1, 0.2, highPrecision, colorThreshold);
                     if (!rect.IsEmpty && clickposition != null)
                     {
                         foreach (Point p in clickposition)
@@ -436,7 +569,7 @@ namespace ShaoLu.Utils
         /// <summary>
         /// 在屏幕上查找图像并执行鼠标动作序列
         /// </summary>
-        public static AutoRect ClickImageOnScreenEx(Bitmap templateImage, Position position, List<Point>? clickposition, double threshold, System.Collections.Generic.List<Models.MouseActionItem> actions, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3)
+        public static AutoRect ClickImageOnScreenEx(Bitmap templateImage, Position position, List<Point>? clickposition, double threshold, System.Collections.Generic.List<Models.MouseActionItem> actions, double nextclicktime = 0.1, double waittime = 0.1, double timeout = 3, bool highPrecision = false, double colorThreshold = 0.95)
         {
             int nextclickTimeMs = (int)(nextclicktime * 1000);
             int waitTimeMs = (int)(waittime * 1000);
@@ -453,7 +586,7 @@ namespace ShaoLu.Utils
                 }
                 try
                 {
-                    AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.1, 0.2);
+                    AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.1, 0.2, highPrecision, colorThreshold);
                     if (!rect.IsEmpty && clickposition != null)
                     {
                         foreach (Point p in clickposition)

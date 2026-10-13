@@ -153,6 +153,15 @@
   <data name="Picture_similarity_threshold" xml:space="preserve">
     <value>Picture similarity threshold</value>
   </data>
+  <data name="HighPrecision" xml:space="preserve">
+    <value>High-precision recognition</value>
+  </data>
+  <data name="ColorThreshold" xml:space="preserve">
+    <value>Color similarity threshold</value>
+  </data>
+  <data name="HighPrecision_Hint" xml:space="preserve">
+    <value>When checked, the match must also satisfy the color similarity threshold — use it to tell apart shapes that differ only in color</value>
+  </data>
   <data name="Preview" xml:space="preserve">
     <value>Preview</value>
   </data>

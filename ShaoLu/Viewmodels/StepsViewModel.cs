@@ -1232,9 +1232,9 @@ namespace ShaoLu.Viewmodels
             else
             {
                 // 图像模式：立即截屏与判据模板逐一比对（关键字不参与判定）
-                goodImageHit = MatchTemplate(config.GoodTemplateName, config.SimilarityThreshold);
-                badImageHit = MatchTemplate(config.BadTemplateName, config.SimilarityThreshold);
-                failImageHit = MatchTemplate(config.FailTemplateName, config.SimilarityThreshold);
+                goodImageHit = MatchTemplate(config.GoodTemplateName, config.SimilarityThreshold, config.HighPrecision, config.ColorThreshold);
+                badImageHit = MatchTemplate(config.BadTemplateName, config.SimilarityThreshold, config.HighPrecision, config.ColorThreshold);
+                failImageHit = MatchTemplate(config.FailTemplateName, config.SimilarityThreshold, config.HighPrecision, config.ColorThreshold);
             }
 
             var (result, goodText, badText, remark, screenshotPath) =
@@ -1295,7 +1295,7 @@ namespace ShaoLu.Viewmodels
         /// <summary>
         /// 截屏并与判据模板图比对（单次匹配，不重试）；模板未配置或文件缺失返回 false
         /// </summary>
-        private static bool MatchTemplate(string templateName, double threshold)
+        private static bool MatchTemplate(string templateName, double threshold, bool highPrecision, double colorThreshold)
         {
             if (string.IsNullOrEmpty(templateName)) return false;
             try
@@ -1309,7 +1309,7 @@ namespace ShaoLu.Viewmodels
                 using (var template = new System.Drawing.Bitmap(fullPath))
                 {
                     // timeout=0 单次匹配；未命中时 FindImageOnScreen 抛异常，同样视为未命中
-                    var rect = Autogui.FindImageOnScreen(template, threshold, gaptime: 0, timeout: 0);
+                    var rect = Autogui.FindImageOnScreen(template, threshold, gaptime: 0, timeout: 0, highPrecision: highPrecision, colorThreshold: colorThreshold);
                     return !rect.IsEmpty;
                 }
             }

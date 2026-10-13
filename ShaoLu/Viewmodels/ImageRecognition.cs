@@ -69,6 +69,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private ImageSource _croppedImg;
         private Rect _croppedRect = new();
         private double _similarityThreshold = 0.85;
+        private bool _highPrecision = false;
+        private double _colorThreshold = 0.95;
         private List<ClickThumb> _clickThumbs = [];
 
 
@@ -155,6 +157,37 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     else if (_similarityThreshold > 1)
                     {
                         _similarityThreshold = 1;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 高识别精度（颜色识别）：勾选后除结构相似度外，还要求颜色相似度达标
+        /// </summary>
+        public bool HighPrecision
+        {
+            get => _highPrecision;
+            set => SetProperty(ref _highPrecision, value);
+        }
+
+        /// <summary>
+        /// 颜色相似度阈值（0~1，仅在高识别精度启用时参与判定）
+        /// </summary>
+        public double ColorThreshold
+        {
+            get => _colorThreshold;
+            set
+            {
+                if (SetProperty(ref _colorThreshold, value))
+                {
+                    if (_colorThreshold < 0)
+                    {
+                        _colorThreshold = 0;
+                    }
+                    else if (_colorThreshold > 1)
+                    {
+                        _colorThreshold = 1;
                     }
                 }
             }
@@ -503,6 +536,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
                 ClickThumbs = ClickThumbs?.Select(t => t.Clone()).ToList(),
                 SimilarityThreshold = SimilarityThreshold,
+                HighPrecision = HighPrecision,
+                ColorThreshold = ColorThreshold,
                 Clicks = Clicks,
                 ClickGap = ClickGap,
                 WaitTime = WaitTime,
@@ -534,8 +569,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 await Task.Delay((int)WaitTime * 1000, cancellationToken);
                 if (MouseActions != null && MouseActions.Count > 0)
-                    return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, MouseActions.ToList(), NextClickTime, 0, Timeout);
-                return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
+                    return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, MouseActions.ToList(), NextClickTime, 0, Timeout, HighPrecision, ColorThreshold);
+                return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, clickPoints, SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout, HighPrecision, ColorThreshold);
             });
             IsTrue = !rect.IsEmpty;
             IsError = false;
@@ -635,6 +670,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
                 ClickThumbs = ClickThumbs?.Select(t => t.Clone()).ToList(),
                 SimilarityThreshold = SimilarityThreshold,
+                HighPrecision = HighPrecision,
+                ColorThreshold = ColorThreshold,
                 WaitTime = WaitTime,
                 GapTime = GapTime,
                 Timeout = Timeout,
@@ -657,7 +694,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var res = await Task.Run(async () =>
             {
                 await Task.Delay((int)WaitTime * 1000, cancellationToken);
-                return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout);
+                return Autogui.FindImageOnScreen(img, SimilarityThreshold, GapTime, Timeout, HighPrecision, ColorThreshold);
             });
             img?.Dispose();
             IsTrue = !res.IsEmpty;

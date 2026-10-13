@@ -153,6 +153,15 @@
   <data name="Picture_similarity_threshold" xml:space="preserve">
     <value>相似閾值</value>
   </data>
+  <data name="HighPrecision" xml:space="preserve">
+    <value>高識別精度</value>
+  </data>
+  <data name="ColorThreshold" xml:space="preserve">
+    <value>顏色相似度閾值</value>
+  </data>
+  <data name="HighPrecision_Hint" xml:space="preserve">
+    <value>勾選後除結構相似度外還要求顏色相似度達標，適合區分形狀相同但顏色不同的畫面</value>
+  </data>
   <data name="Preview" xml:space="preserve">
     <value>預覽</value>
   </data>

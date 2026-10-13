@@ -32,6 +32,12 @@ namespace ShaoLu.Models
         /// <summary>模板匹配相似度阈值（0-1）</summary>
         public double SimilarityThreshold { get; set; } = 0.8;
 
+        /// <summary>高识别精度（颜色识别）：勾选后除结构相似度外，还要求颜色相似度达标</summary>
+        public bool HighPrecision { get; set; } = false;
+
+        /// <summary>颜色相似度阈值（0-1，仅在高识别精度启用时参与判定）</summary>
+        public double ColorThreshold { get; set; } = 0.95;
+
         /// <summary>是否已配置任一判据模板（图像判定模式下使用）</summary>
         public bool HasAnyTemplate =>
             !string.IsNullOrEmpty(GoodTemplateName)

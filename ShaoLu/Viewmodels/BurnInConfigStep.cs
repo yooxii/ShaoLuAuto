@@ -154,6 +154,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set { if (Config.SimilarityThreshold != value) { Config.SimilarityThreshold = value; OnPropertyChanged(nameof(SimilarityThreshold)); } }
         }
 
+        /// <summary>高识别精度（颜色识别）代理属性</summary>
+        [JsonIgnore]
+        public bool HighPrecision
+        {
+            get => Config.HighPrecision;
+            set { if (Config.HighPrecision != value) { Config.HighPrecision = value; OnPropertyChanged(nameof(HighPrecision)); } }
+        }
+
+        /// <summary>颜色相似度阈值（代理属性）</summary>
+        [JsonIgnore]
+        public double ColorThreshold
+        {
+            get => Config.ColorThreshold;
+            set { if (Config.ColorThreshold != value) { Config.ColorThreshold = value; OnPropertyChanged(nameof(ColorThreshold)); } }
+        }
+
         /// <summary>良品判据模板缩略图</summary>
         [JsonIgnore]
         public System.Windows.Media.ImageSource GoodTemplateThumb => LoadThumb(Config.GoodTemplateName);
@@ -442,6 +458,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 BadTemplateName = src.BadTemplateName,
                 FailTemplateName = src.FailTemplateName,
                 SimilarityThreshold = src.SimilarityThreshold,
+                HighPrecision = src.HighPrecision,
+                ColorThreshold = src.ColorThreshold,
                 CaptureScreenshot = src.CaptureScreenshot,
                 RegionX = src.RegionX,
                 RegionY = src.RegionY,

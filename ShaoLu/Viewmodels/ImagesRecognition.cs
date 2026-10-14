@@ -127,8 +127,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
             foreach (var image in Images)
             {
-                var sourceImage = (image.CroppedImg ?? image.ImgSrc) ?? throw new Exception("No image available for clicking.");
-                var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
+                var cropped = image.CroppedImg;
+                var sourceImage = (cropped ?? image.ImgSrc) ?? throw new Exception("No image available for clicking.");
+                var img = image.CreateRuntimeBitmap(sourceImage, cropped != null);
                 var rect = await Task.Run(async () =>
                 {
                     await Task.Delay((int)WaitTime * 1000, cancellationToken);
@@ -214,11 +215,16 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public override async Task<bool> RunAsync(CancellationToken cancellationToken = default)
         {
             List<AutoRect> res = [];
-            List<AutoguiImage> autoguiImages = Images.Select(x => new AutoguiImage()
+            List<AutoguiImage> autoguiImages = Images.Select(x =>
             {
-                Bitmap = Utils.Autogui.ConvertImageSourceToBitmap(x.CroppedImg ?? x.ImgSrc ?? throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"))),
-                Position = Autogui.Position.LeftTop,
-                Threshold = x.SimilarityThreshold
+                var cropped = x.CroppedImg;
+                var sourceImage = (cropped ?? x.ImgSrc) ?? throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"));
+                return new AutoguiImage()
+                {
+                    Bitmap = x.CreateRuntimeBitmap(sourceImage, cropped != null),
+                    Position = Autogui.Position.LeftTop,
+                    Threshold = x.SimilarityThreshold
+                };
             }).ToList();
             res = await Task.Run(async () =>
             {

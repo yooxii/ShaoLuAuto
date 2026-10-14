@@ -606,11 +606,74 @@ namespace ShaoLu.Utils
         }
 
         /// <summary>
+        /// 尽力而为地冻结 WPF 图像，使其可跨线程访问；无法冻结或冻结失败时保持原对象不变，不抛异常。
+        /// 注意：读取未冻结对象的 IsFrozen / CanFreeze 本身也会做线程归属校验并抛异常，故整段都需要保护。
+        /// </summary>
+        public static void FreezeIfPossible(ImageSource imageSource)
+        {
+            if (!(imageSource is System.Windows.Freezable freezable)) return;
+
+            try
+            {
+                if (freezable.IsFrozen || !freezable.CanFreeze) return;
+                freezable.Freeze();
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to freeze ImageSource.");
+            }
+        }
+
+        /// <summary>
+        /// 依次尝试各文件路径创建 Bitmap；用 FileStream 读入后立刻复制一份并释放文件句柄（不锁文件），
+        /// 全部路径不可用时返回 null。
+        /// </summary>
+        public static Bitmap TryCreateBitmapFromPaths(IEnumerable<string> paths)
+        {
+            if (paths == null) return null;
+
+            foreach (var path in paths)
+            {
+                if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path)) continue;
+
+                try
+                {
+                    // GDI+ 要求从流构造的 Bitmap 在生命周期内保持流打开，这里复制一份后立即释放句柄
+                    using (var fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read))
+                    using (var loaded = new Bitmap(fs))
+                    {
+                        return new Bitmap(loaded);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Failed to load Bitmap from file: {0}", path);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 运行时段取图：优先按文件路径读图（子线程安全），文件路径全部不可用才回退 WPF 图像转换；
+        /// 两条路都失败时抛 "Image Convert Error."。
+        /// </summary>
+        public static Bitmap CreateRuntimeBitmap(ImageSource imageSource, IEnumerable<string> filePaths)
+        {
+            return TryCreateBitmapFromPaths(filePaths)
+                ?? ConvertImageSourceToBitmap(imageSource)
+                ?? throw new Exception("Image Convert Error.");
+        }
+
+        /// <summary>
         /// 将 WPF ImageSource 转换为 System.Drawing.Bitmap
         /// </summary>
         public static Bitmap? ConvertImageSourceToBitmap(ImageSource imageSource)
         {
             if (imageSource == null) return null;
+
+            // 未冻结的图像在子线程访问会抛“调用线程无法访问此对象”，这里先尽力冻结（失败不中断转换）
+            FreezeIfPossible(imageSource);
 
             // 如果是 BitmapSource，可以直接处理
             if (imageSource is BitmapSource bitmapSource)

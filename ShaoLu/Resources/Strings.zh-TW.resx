@@ -1533,4 +1533,7 @@
   <data name="Msg_Interrupt_NotRunning" xml:space="preserve">
     <value>中斷步驟只能在自動化運行中發出</value>
   </data>
+  <data name="MultiThreadRegionCollapse_ToolTip" xml:space="preserve">
+    <value>折疊/展開該多執行緒區域（僅影響列表顯示）</value>
+  </data>
 </root>

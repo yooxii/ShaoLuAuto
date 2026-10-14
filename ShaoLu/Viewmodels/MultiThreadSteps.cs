@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using System;
@@ -64,6 +65,29 @@ namespace ShaoLu.Viewmodels.AutomationStep
     }
 
     /// <summary>
+    /// 多线程区域折叠状态的变更通知器（纯界面状态）。
+    /// 步骤列表的每一行都绑定它的 Revision 以重新计算可见性；
+    /// 折叠只影响列表显示，不改变任何运行语义。
+    /// </summary>
+    public sealed class RegionCollapseNotifier : ObservableObject
+    {
+        /// <summary>全局单例（步骤列表 XAML 以 x:Static 绑定其 Revision）</summary>
+        public static RegionCollapseNotifier Instance { get; } = new RegionCollapseNotifier();
+
+        private int _revision;
+
+        /// <summary>折叠状态版本号：每次折叠/展开自增，用于触发所有行重算可见性</summary>
+        public int Revision
+        {
+            get => _revision;
+            private set => SetProperty(ref _revision, value);
+        }
+
+        /// <summary>通知步骤列表重新计算各行可见性</summary>
+        public void Refresh() => Revision++;
+    }
+
+    /// <summary>
     /// 多线程开始步骤：到达时新建一个子线程执行被圈入的区域（配置值为线程总数上限）；
     /// 主线程跳过区域，继续执行区域之后的步骤。
     /// </summary>
@@ -86,6 +110,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>运行时已创建的线程数（每次运行开始时归零）</summary>
         [JsonIgnore]
         public int CreatedThreads { get; set; }
+
+        private bool _isRegionCollapsed;
+
+        /// <summary>本区域在步骤列表中是否已折叠（纯界面状态：不落盘、不影响运行语义）</summary>
+        [JsonIgnore]
+        public bool IsRegionCollapsed
+        {
+            get => _isRegionCollapsed;
+            set
+            {
+                if (SetProperty(ref _isRegionCollapsed, value))
+                {
+                    RegionCollapseNotifier.Instance.Refresh();
+                }
+            }
+        }
 
         /// <summary>区域划定方式下拉候选（纯追加，仅界面绑定使用）</summary>
         public static readonly IReadOnlyList<MultiThreadRangeMode> RangeModes = new[]

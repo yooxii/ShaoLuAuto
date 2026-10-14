@@ -20,8 +20,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
     // 图像基类
     public abstract partial class ImageRecognitionBase : AutomationStepBase, IDisposable
     {
-        readonly MainViewModel mainVM = SingletonLocator.Main;
-        readonly FileServices fileServer = SingletonLocator.FileServices;
+        // 延迟解析（与 AutomationStepBase.FileServices 一致）：两者都是 DI 单例，首次访问时解析即可，
+        // 避免构造步骤对象就必须依赖已注册的 DI 容器
+        private MainViewModel mainVM => SingletonLocator.Main;
+        private FileServices fileServer => SingletonLocator.FileServices;
         private bool _isDisposed = false;
 
         #region 属性
@@ -115,6 +117,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             get
             {
                 _croppedImg ??= LoadImage(CroppedImageFullPath);
+                EnsureFrozenCroppedImg();
                 if (_croppedImg == null)
                 {
                     IsError = true;
@@ -124,6 +127,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
             set
             {
+                // 裁剪图在运行时段会被后台线程使用：赋值时先尽量冻结，未冻结对象跨线程访问会抛异常
+                Autogui.FreezeIfPossible(value);
                 if (SetProperty(ref _croppedImg, value))
                 {
                     if (value != null)
@@ -133,6 +138,54 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 保证缓存中的裁剪图已冻结：无法就地冻结时改用磁盘副本（LoadImage 加载后已冻结），
+        /// 避免把未冻结的 WPF 对象交给运行时段的后台线程。
+        /// </summary>
+        private void EnsureFrozenCroppedImg()
+        {
+            if (!(_croppedImg is Freezable freezable) || IsFrozenSafe(freezable))
+                return;
+
+            Autogui.FreezeIfPossible(_croppedImg);
+            if (IsFrozenSafe(freezable))
+                return;
+
+            var reloaded = LoadImage(CroppedImageFullPath);
+            if (reloaded != null)
+                _croppedImg = reloaded;
+        }
+
+        /// <summary>读取 Freezable.IsFrozen；跨线程读取未冻结对象会抛异常，此时按“未冻结”处理</summary>
+        private static bool IsFrozenSafe(Freezable freezable)
+        {
+            try
+            {
+                return freezable.IsFrozen;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 运行时段取图：优先按文件路径读图（跨线程安全），取图顺序
+        /// CroppedImageFullPath → FindPackagedSourceImage() → ImagePath；
+        /// 有裁剪图时只取裁剪图自己的磁盘副本，避免退化成原图导致匹配区域错误。
+        /// 文件路径全部不可用时才回退 WPF 图像转换，两条路都失败时抛 "Image Convert Error."。
+        /// </summary>
+        internal System.Drawing.Bitmap CreateRuntimeBitmap(ImageSource sourceImage, bool hasCroppedImage)
+        {
+            var paths = new List<string> { CroppedImageFullPath };
+            if (!hasCroppedImage)
+            {
+                paths.Add(FindPackagedSourceImage());
+                paths.Add(ImagePath);
+            }
+            return Autogui.CreateRuntimeBitmap(sourceImage, paths);
         }
 
         public Rect CroppedRect { get => _croppedRect; set => SetProperty(ref _croppedRect, value); }
@@ -551,9 +604,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for clicking.");
+            var cropped = CroppedImg;
+            var sourceImage = (cropped ?? ImgSrc) ?? throw new Exception("No image available for clicking.");
 
-            var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
+            // 优先按磁盘文件取图，子线程不再依赖 WPF ImageSource 的线程归属
+            var img = CreateRuntimeBitmap(sourceImage, cropped != null);
 
             // 如果没有设置点击点，使用图像中心点作为默认点击位置
             var clickPoints = ClickPoints;
@@ -689,8 +744,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var sourceImage = (CroppedImg ?? ImgSrc) ?? throw new Exception("No image available for finding.");
-            var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
+            var cropped = CroppedImg;
+            var sourceImage = (cropped ?? ImgSrc) ?? throw new Exception("No image available for finding.");
+            // 优先按磁盘文件取图，子线程不再依赖 WPF ImageSource 的线程归属
+            var img = CreateRuntimeBitmap(sourceImage, cropped != null);
             var res = await Task.Run(async () =>
             {
                 await Task.Delay((int)WaitTime * 1000, cancellationToken);

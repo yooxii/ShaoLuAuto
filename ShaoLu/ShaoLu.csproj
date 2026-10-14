@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.6.5.2613</ApplicationVersion>
+    <ApplicationVersion>0.6.5.2614</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -144,6 +144,7 @@
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\BoolToInverseBoolConverter.cs" />
     <Compile Include="Converters\BoolToGoodBadConverter.cs" />
+    <Compile Include="Converters\RegionCollapseConverter.cs" />
     <Compile Include="Converters\SettingsTemplateSelector.cs" />
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
@@ -200,6 +201,7 @@
     <Compile Include="Services\AcbelBridgeClient.cs" />
     <Compile Include="Services\SignalCenter.cs" />
     <Compile Include="Services\MultiThreadRange.cs" />
+    <Compile Include="Services\SubThreadRunner.cs" />
     <!-- 与 AcbelBridge 共享同一份字段规范/校验源码（链接编译，规范只写一遍） -->
     <Compile Include="..\Shared\AcbelInsertDataSpec.cs">
       <Link>Services\AcbelInsertDataSpec.cs</Link>

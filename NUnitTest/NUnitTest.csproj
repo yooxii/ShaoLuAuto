@@ -57,6 +57,8 @@
     <Compile Include="AcbelInsertDataValidationTests.cs" />
     <Compile Include="ScreenCoordinatesTests.cs" />
     <Compile Include="MultiThreadTests.cs" />
+    <Compile Include="SubThreadRunnerTests.cs" />
+    <Compile Include="ImageThreadingTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FlaUI.UIA3">

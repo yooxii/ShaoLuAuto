@@ -22,6 +22,10 @@ namespace ShaoLu.Viewmodels
         private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private CancellationTokenSource _cts;
 
+        /// <summary>多线程：本次运行创建的子线程（主流程结束时据此等待或取消）</summary>
+        private readonly List<SubThreadRunner> _subThreadRunners = new List<SubThreadRunner>();
+        private readonly object _subThreadLock = new object();
+
         /// <summary>待处理中断（子线程发出，主线程在每个步骤开始前消费）</summary>
         private readonly object _interruptLock = new object();
         private Guid? _pendingInterruptUid;
@@ -915,6 +919,8 @@ namespace ShaoLu.Viewmodels
                 _pendingInterruptUid = null;
             }
             MultiThreadInterruptBridge.RegisterHandler(RequestInterrupt);
+            // 多线程：清空上一次运行留下的子线程记录
+            ClearSubThreadRunners();
             if (_stepSettings.MinimizeOnRun)
                 Application.Current.MainWindow.WindowState = WindowState.Minimized;
             foreach (var step in AutomationStepBases)
@@ -954,6 +960,10 @@ namespace ShaoLu.Viewmodels
                 as BurnInConfigStep)?.Config?.BurnFinishStepUid;
             DateTime? burnCycleStart = null;
             bool burnJudged = false;
+            // 多线程：本次运行是否正常跑完（未停止、未取消、未异常）——正常跑完时子线程应被等待而不是取消
+            bool runEndedNormally = false;
+            // 本次运行的取消源（局部持有，避免被下一次运行替换的 _cts 影响收尾逻辑）
+            CancellationTokenSource cts = null;
 
             try
             {
@@ -970,7 +980,8 @@ namespace ShaoLu.Viewmodels
 
                 PreRun();
                 _cts = new CancellationTokenSource();
-                var token = _cts.Token;
+                cts = _cts;
+                var token = cts.Token;
 
                 logger.Info("Start Auto");
 
@@ -1160,6 +1171,12 @@ namespace ShaoLu.Viewmodels
                     }
                     // 未跳转时不修改 i，for 循环 i++ 自然进入下一步
                 }
+
+                // 多线程：脚本正常跑完（未停止、未取消、未异常）时先等子线程自然结束，再收尾
+                runEndedNormally = !StopSignal && !token.IsCancellationRequested;
+                if (runEndedNormally)
+                    await WaitSubThreadsToEndAsync(cts, token);
+
                 StopSignal = true;
                 _executionContext.StopTimer();
                 Views.WindowStatistics.CloseAllOnStop();
@@ -1183,12 +1200,24 @@ namespace ShaoLu.Viewmodels
             }
             finally
             {
-                // 多线程：运行结束/停止时取消所有子线程（不等待其收尾，避免界面卡死）并注销中断处理器
+                // 多线程：只有用户停止/取消/未处理异常（或仍有子线程在跑）时才取消子线程并等其收尾；
+                // 正常跑完时子线程已在上面的等待中自然结束，不再取消它们
                 try
                 {
-                    _cts?.Cancel();
+                    if (!runEndedNormally || HasRunningSubThreads())
+                    {
+                        try { cts?.Cancel(); } catch (ObjectDisposedException) { }
+                        await WaitSubThreadsAfterCancelAsync();
+                    }
+                    else
+                    {
+                        ClearSubThreadRunners();
+                    }
                 }
-                catch (ObjectDisposedException) { }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "MultiThread: sub thread cleanup failed");
+                }
                 MultiThreadInterruptBridge.RegisterHandler(null);
 
                 // 烧录统计：运行结束但从未到达烧录完成步骤时，补记一条未完成烧录供追溯
@@ -1205,6 +1234,89 @@ namespace ShaoLu.Viewmodels
                 BurnInService.EndSession();
             }
         }
+
+        #region 多线程子线程收尾
+
+        /// <summary>取消后等待子线程收尾的上限（毫秒），避免个别子线程不响应取消时界面永远卡住</summary>
+        private const int SubThreadCancelWaitMs = 5000;
+
+        /// <summary>
+        /// 多线程：脚本正常跑完时等待所有子线程自然结束，不主动取消。
+        /// 等待期间用户点停止（token 被取消）则按取消处理：取消 token 后继续等子线程收尾。
+        /// </summary>
+        private async Task WaitSubThreadsToEndAsync(CancellationTokenSource cts, CancellationToken token)
+        {
+            var runners = SnapshotSubThreadRunners();
+            if (runners.Length == 0) return;
+
+            logger.Info("MultiThread: main flow finished, waiting for {0} sub thread(s) to end", runners.Length);
+            var all = Task.WhenAll(runners.Select(r => r.Completion));
+
+            // 等待期间用户点停止：子线程按取消收尾（而不是无限等待）
+            if (await Task.WhenAny(all, Task.Delay(Timeout.Infinite, token)) != all)
+            {
+                logger.Info("MultiThread: stop requested while waiting, {0} sub thread(s) will be cancelled",
+                    runners.Count(r => !r.IsCompleted));
+                try { cts?.Cancel(); } catch (ObjectDisposedException) { }
+            }
+
+            await all;
+            logger.Info("MultiThread: all {0} sub thread(s) ended", runners.Length);
+            ClearSubThreadRunners();
+        }
+
+        /// <summary>
+        /// 多线程：取消后等待子线程收尾（有界等待；个别子线程不响应取消时只告警，不无限等待）
+        /// </summary>
+        private async Task WaitSubThreadsAfterCancelAsync()
+        {
+            var runners = SnapshotSubThreadRunners();
+            if (runners.Length == 0) return;
+
+            logger.Info("MultiThread: waiting for {0} cancelled sub thread(s) to unwind", runners.Length);
+            var all = Task.WhenAll(runners.Select(r => r.Completion));
+            if (await Task.WhenAny(all, Task.Delay(SubThreadCancelWaitMs)) == all)
+            {
+                logger.Info("MultiThread: all {0} sub thread(s) ended", runners.Length);
+            }
+            else
+            {
+                logger.Warn("MultiThread: {0} sub thread(s) still running after {1} ms, stop waiting",
+                    runners.Count(r => !r.IsCompleted), SubThreadCancelWaitMs);
+            }
+
+            int abandoned = runners.Count(r => r.IsAbandoned);
+            if (abandoned > 0)
+                logger.Warn("MultiThread: {0} sub thread(s) aborted by cancel before their steps finished", abandoned);
+
+            ClearSubThreadRunners();
+        }
+
+        private SubThreadRunner[] SnapshotSubThreadRunners()
+        {
+            lock (_subThreadLock)
+            {
+                return _subThreadRunners.ToArray();
+            }
+        }
+
+        private bool HasRunningSubThreads()
+        {
+            lock (_subThreadLock)
+            {
+                return _subThreadRunners.Any(r => !r.IsCompleted);
+            }
+        }
+
+        private void ClearSubThreadRunners()
+        {
+            lock (_subThreadLock)
+            {
+                _subThreadRunners.Clear();
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 根据异常类型推断 ErrorType
@@ -1406,19 +1518,21 @@ namespace ShaoLu.Viewmodels
 
         /// <summary>
         /// 启动一个子线程执行 [regionStart, regionEnd] 区域内的步骤。
-        /// 子线程使用独立的执行上下文、不阻塞主线程（不等待其收尾），并随主 token 一起取消。
+        /// 子线程是专用 STA 线程 + Dispatcher 消息泵（见 SubThreadRunner），因此区域内可以创建并操作 WPF 窗口；
+        /// 子线程使用独立的执行上下文、不阻塞主线程，结束时由主流程负责等待或取消。
+        /// token 只用于步骤内的协作式取消，不能交给线程调度（token 已取消时委托根本不会执行）。
         /// </summary>
         private void StartSubThread(IList<AutomationStepBase> steps, int regionStart, int regionEnd, CancellationToken token)
         {
             if (steps == null) return;
             var snapshot = steps.ToList();
-            Task.Run(async () =>
+            var runner = SubThreadRunner.Start($"ShaoLu-SubThread-[{regionStart},{regionEnd}]", async ct =>
             {
                 // 标记当前执行流位于子线程：中断步骤据此判断发出者身份
                 MultiThreadInterruptBridge.InChildThread = true;
                 try
                 {
-                    await RunSubThreadAsync(snapshot, regionStart, regionEnd, token);
+                    await RunSubThreadAsync(snapshot, regionStart, regionEnd, ct);
                 }
                 catch (OperationCanceledException)
                 {
@@ -1429,11 +1543,18 @@ namespace ShaoLu.Viewmodels
                     logger.Error(ex, "MultiThread: sub thread failed");
                 }
             }, token);
+
+            lock (_subThreadLock)
+            {
+                _subThreadRunners.Add(runner);
+            }
         }
 
         /// <summary>
         /// 子线程执行器：顺序执行区域内步骤，结果只写入自己的执行上下文。
         /// 步骤报错只记录并继续；跳转指向区域之外时结束该子线程。
+        /// 只随 token 取消而中止：主流程正常跑完时会等它自然结束（见 WaitSubThreadsToEndAsync），
+        /// 用户点停止时 Stop() 已取消 token，子线程据此按取消收尾。
         /// </summary>
         private async Task RunSubThreadAsync(List<AutomationStepBase> steps, int regionStart, int regionEnd, CancellationToken token)
         {
@@ -1444,14 +1565,14 @@ namespace ShaoLu.Viewmodels
                 for (int i = regionStart; i <= regionEnd; i++)
                 {
                     token.ThrowIfCancellationRequested();
-                    if (StopSignal || i < 0) break;
+                    if (i < 0) break;
 
-                    while (IsPaused && !StopSignal)
+                    // 暂停等待：只看 token（主流程正常跑完不影响子线程；用户停止时 token 已取消）
+                    while (IsPaused)
                     {
                         token.ThrowIfCancellationRequested();
                         await Task.Delay(100, token);
                     }
-                    if (StopSignal) break;
 
                     var step = steps[i];
                     if (!step.IsNeed) continue;

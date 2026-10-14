@@ -1533,4 +1533,7 @@
   <data name="Msg_Interrupt_NotRunning" xml:space="preserve">
     <value>The interrupt step can only be issued while an automation run is in progress</value>
   </data>
+  <data name="MultiThreadRegionCollapse_ToolTip" xml:space="preserve">
+    <value>Collapse / expand this multi-thread region (display only)</value>
+  </data>
 </root>

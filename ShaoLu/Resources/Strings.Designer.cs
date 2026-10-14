@@ -4242,5 +4242,14 @@ namespace ShaoLu.Resources {
             }
         }
         
+        /// <summary>
+        ///   查找类似 Collapse / expand this multi-thread region (display only) 的本地化字符串。
+        /// </summary>
+        public static string MultiThreadRegionCollapse_ToolTip {
+            get {
+                return ResourceManager.GetString("MultiThreadRegionCollapse_ToolTip", resourceCulture);
+            }
+        }
+        
     }
 }

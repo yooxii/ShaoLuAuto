@@ -134,6 +134,8 @@ namespace ShaoLu.Services
                     return currentResult?.OCRText ?? string.Empty;
                 case ConditionVariable.Self_PopupResult:
                     return currentResult?.PopupResult ?? string.Empty;
+                case ConditionVariable.Self_SignalValue:
+                    return currentResult?.SignalValue ?? string.Empty;
 
                 // 引用其他步骤（通过 Uid 查找）
                 case ConditionVariable.Step_IsTrue:
@@ -150,6 +152,8 @@ namespace ShaoLu.Services
                     return GetResultByUid(stepUid)?.OCRText ?? string.Empty;
                 case ConditionVariable.Step_PopupResult:
                     return GetResultByUid(stepUid)?.PopupResult ?? string.Empty;
+                case ConditionVariable.Step_SignalValue:
+                    return GetResultByUid(stepUid)?.SignalValue ?? string.Empty;
                 case ConditionVariable.Step_Triggered:
                     // 仅当引用步骤是刚刚执行完成的步骤时为 true（每次步骤执行后只成立一次）
                     return stepUid.HasValue && CurrentStepUid.HasValue && stepUid.Value == CurrentStepUid.Value;

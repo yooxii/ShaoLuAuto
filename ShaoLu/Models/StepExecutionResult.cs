@@ -38,6 +38,11 @@ namespace ShaoLu.Models
         public string PopupResult { get; set; }
 
         /// <summary>
+        /// 接收信号步骤收到的信号内容（文本形式；非信号步骤为空）
+        /// </summary>
+        public string SignalValue { get; set; }
+
+        /// <summary>
         /// 错误信息
         /// </summary>
         public string ErrorMessage { get; set; }

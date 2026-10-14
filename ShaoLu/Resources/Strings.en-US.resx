@@ -1434,4 +1434,103 @@
   <data name="NoRecentFiles" xml:space="preserve">
     <value>(None)</value>
   </data>
+  <data name="MultiThreadGroup" xml:space="preserve">
+    <value>Multi-thread</value>
+  </data>
+  <data name="AddMultiThreadStep" xml:space="preserve">
+    <value>Start Multi-thread</value>
+  </data>
+  <data name="AddMultiThreadEndStep" xml:space="preserve">
+    <value>End Multi-thread Region</value>
+  </data>
+  <data name="AddSendSignalStep" xml:space="preserve">
+    <value>Send Signal</value>
+  </data>
+  <data name="AddReceiveSignalStep" xml:space="preserve">
+    <value>Receive Signal</value>
+  </data>
+  <data name="AddInterruptStep" xml:space="preserve">
+    <value>Interrupt</value>
+  </data>
+  <data name="MT_ThreadCount" xml:space="preserve">
+    <value>Thread Count</value>
+  </data>
+  <data name="MT_ThreadCountHint" xml:space="preserve">
+    <value>Each time this step is reached a new thread is created, up to this many threads. Once the limit is reached no more threads are created (every thread runs the same region).</value>
+  </data>
+  <data name="MT_RangeMode" xml:space="preserve">
+    <value>Region Mode</value>
+  </data>
+  <data name="MT_RangeMode_ByLineNo" xml:space="preserve">
+    <value>By end step</value>
+  </data>
+  <data name="MT_RangeMode_ByEndStep" xml:space="preserve">
+    <value>By "End Multi-thread Region" step</value>
+  </data>
+  <data name="MT_RangeEnd" xml:space="preserve">
+    <value>End Step</value>
+  </data>
+  <data name="MT_RangeEnd_ToEnd" xml:space="preserve">
+    <value>To the end of the script</value>
+  </data>
+  <data name="MT_EndHint" xml:space="preserve">
+    <value>Region end marker: pairs with a "Start Multi-thread" step. The steps between the two are executed by the child thread, while the main thread skips the region and continues.</value>
+  </data>
+  <data name="Signal_Name" xml:space="preserve">
+    <value>Signal Name</value>
+  </data>
+  <data name="Signal_Kind" xml:space="preserve">
+    <value>Signal Type</value>
+  </data>
+  <data name="Signal_Kind_Bool" xml:space="preserve">
+    <value>Boolean</value>
+  </data>
+  <data name="Signal_Kind_Int" xml:space="preserve">
+    <value>Integer</value>
+  </data>
+  <data name="Signal_Kind_String" xml:space="preserve">
+    <value>String</value>
+  </data>
+  <data name="Signal_Value" xml:space="preserve">
+    <value>Signal Value</value>
+  </data>
+  <data name="Signal_Blocking" xml:space="preserve">
+    <value>Blocking Wait</value>
+  </data>
+  <data name="Signal_BlockingHint" xml:space="preserve">
+    <value>When checked, waits here until the signal arrives or the timeout expires; when unchecked it reads immediately (and may find nothing).</value>
+  </data>
+  <data name="Signal_Timeout" xml:space="preserve">
+    <value>Timeout (s)</value>
+  </data>
+  <data name="Signal_Timeout_Unlimited" xml:space="preserve">
+    <value>0 means no time limit</value>
+  </data>
+  <data name="Interrupt_Target" xml:space="preserve">
+    <value>Run from this step after interrupting</value>
+  </data>
+  <data name="Interrupt_Hint" xml:space="preserve">
+    <value>Issued by child threads only: interrupts the main thread and forces it to continue from the specified step. The main thread records a failure when it reaches this step.</value>
+  </data>
+  <data name="Msg_Signal_NameRequired" xml:space="preserve">
+    <value>Signal name cannot be empty</value>
+  </data>
+  <data name="Msg_Signal_WaitFailed" xml:space="preserve">
+    <value>Timed out or cancelled while waiting for the signal</value>
+  </data>
+  <data name="Msg_Signal_NotFound" xml:space="preserve">
+    <value>No signal received</value>
+  </data>
+  <data name="Msg_Signal_TypeMismatch" xml:space="preserve">
+    <value>Signal value type mismatch</value>
+  </data>
+  <data name="Msg_Interrupt_OnlyFromSubThread" xml:space="preserve">
+    <value>The interrupt step can only be issued by a child thread</value>
+  </data>
+  <data name="Msg_Interrupt_TargetRequired" xml:space="preserve">
+    <value>The interrupt step has no target step specified</value>
+  </data>
+  <data name="Msg_Interrupt_NotRunning" xml:space="preserve">
+    <value>The interrupt step can only be issued while an automation run is in progress</value>
+  </data>
 </root>

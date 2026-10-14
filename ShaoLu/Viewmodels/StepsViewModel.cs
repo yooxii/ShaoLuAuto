@@ -21,6 +21,10 @@ namespace ShaoLu.Viewmodels
     {
         private readonly static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private CancellationTokenSource _cts;
+
+        /// <summary>待处理中断（子线程发出，主线程在每个步骤开始前消费）</summary>
+        private readonly object _interruptLock = new object();
+        private Guid? _pendingInterruptUid;
         private readonly StepSettingsModel _stepSettings = SingletonLocator.Settings.Step;
         private readonly StepExecutionContext _executionContext = StepExecutionContext.Instance;
 
@@ -584,6 +588,11 @@ namespace ShaoLu.Viewmodels
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
                     "BurnInConfig" => new BurnInConfigStep(LanguageService.GetLocalizedString("BurnInConfig_StepName")),
                     "FocusWindow" => new FocusWindowStep($"FocusWindow_{AutomationStepBases.Count(t => t.Type == StepType.FocusWindow) + 1}"),
+                    "MultiThread" => new MultiThreadStartStep($"MultiThread_{AutomationStepBases.Count(t => t.Type == StepType.MultiThread) + 1}"),
+                    "MultiThreadEnd" => new MultiThreadEndStep($"MultiThreadEnd_{AutomationStepBases.Count(t => t.Type == StepType.MultiThreadEnd) + 1}"),
+                    "SendSignal" => new SendSignalStep($"SendSignal_{AutomationStepBases.Count(t => t.Type == StepType.SendSignal) + 1}"),
+                    "ReceiveSignal" => new ReceiveSignalStep($"ReceiveSignal_{AutomationStepBases.Count(t => t.Type == StepType.ReceiveSignal) + 1}"),
+                    "Interrupt" => new InterruptStep($"Interrupt_{AutomationStepBases.Count(t => t.Type == StepType.Interrupt) + 1}"),
                     "Empty" => new EmptyStep($"Empty_{AutomationStepBases.Count(t => t.Type == StepType.Empty) + 1}"),
                     _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
                 };
@@ -899,6 +908,13 @@ namespace ShaoLu.Viewmodels
             // 清空执行上下文并启动总计时
             _executionContext.Clear();
             _executionContext.StartTimer();
+            // 多线程：清空信号中心与待处理中断，并注册主线程的中断处理器
+            SignalCenter.Reset();
+            lock (_interruptLock)
+            {
+                _pendingInterruptUid = null;
+            }
+            MultiThreadInterruptBridge.RegisterHandler(RequestInterrupt);
             if (_stepSettings.MinimizeOnRun)
                 Application.Current.MainWindow.WindowState = WindowState.Minimized;
             foreach (var step in AutomationStepBases)
@@ -907,6 +923,9 @@ namespace ShaoLu.Viewmodels
                 step.SelfReferenceCount = 0;
                 step.ErrorType = StepErrorType.None;
                 step.LastResult = null;
+                // 多线程：重置已建线程数
+                if (step is MultiThreadStartStep multiThreadStart)
+                    multiThreadStart.CreatedThreads = 0;
                 // 重置统计步骤的条件计数
                 if (step is StatisticsStep statisticsStep)
                     statisticsStep.ResetCounters();
@@ -973,6 +992,22 @@ namespace ShaoLu.Viewmodels
                     if (StopSignal)
                         break;
 
+                    // 待处理中断：子线程打断主线程时，主线程从目标步骤开始执行
+                    if (TryConsumeInterrupt(out Guid interruptTargetUid))
+                    {
+                        int interruptIndex = FindIndexByUid(interruptTargetUid);
+                        if (interruptIndex < 0)
+                        {
+                            logger.Warn("Interrupt: target step not found: {0}", interruptTargetUid);
+                        }
+                        else
+                        {
+                            logger.Info("Interrupt: main flow restarts from step index {0}", interruptIndex);
+                            i = interruptIndex - 1; // -1 因为 for 循环会 i++
+                            continue;
+                        }
+                    }
+
                     var step = AutomationStepBases[i];
 
                     // StepReached 模式：检查是否有弹窗需要在到达此步骤时关闭
@@ -980,6 +1015,9 @@ namespace ShaoLu.Viewmodels
 
                     if (!step.IsNeed)
                         continue;
+
+                    // 多线程开始步骤解析出的区域末尾（-1 表示不跳过区域）
+                    int multiThreadSkipEndIndex = -1;
 
                     try
                     {
@@ -995,6 +1033,32 @@ namespace ShaoLu.Viewmodels
 
                         step.IsError = false;
                         step.ErrorType = StepErrorType.None;
+
+                        // 多线程开始步骤：解析区域、按需创建子线程，并让主线程跳过区域继续执行
+                        if (step is MultiThreadStartStep multiThreadStart)
+                        {
+                            if (MultiThreadRange.TryResolve(AutomationStepBases, i, multiThreadStart.RangeMode,
+                                    multiThreadStart.RangeEndUid, out int rangeEnd, out string rangeError))
+                            {
+                                if (multiThreadStart.CreatedThreads < multiThreadStart.ThreadCount)
+                                {
+                                    multiThreadStart.CreatedThreads++;
+                                    StartSubThread(AutomationStepBases, i + 1, rangeEnd, token);
+                                    logger.Info("MultiThread: thread {0}/{1} started for region [{2},{3}]",
+                                        multiThreadStart.CreatedThreads, multiThreadStart.ThreadCount, i + 1, rangeEnd);
+                                }
+                                multiThreadSkipEndIndex = rangeEnd;
+                            }
+                            else
+                            {
+                                // 解析失败：该步骤记为失败，且不跳过区域（安全退化）
+                                step.IsTrue = false;
+                                step.IsError = true;
+                                step.ErrorMessage = rangeError;
+                                step.ErrorType = StepErrorType.Unknown;
+                                logger.Warn("MultiThread: range resolve failed: {0}", rangeError);
+                            }
+                        }
 
                         // 构建执行结果
                         var result = step.LastResult ?? new StepExecutionResult();
@@ -1083,54 +1147,18 @@ namespace ShaoLu.Viewmodels
                         }
                     }
 
-                    // 确定下一个执行索引（通过 Uid 查找目标步骤）
-                    Guid? targetUid = step.IsTrue ? step.TrueGotoUid : step.FalseGotoUid;
-
-                    if (targetUid.HasValue && targetUid.Value != Guid.Empty)
+                    // 确定下一个执行索引（通过 Uid 查找目标步骤，含自引用上限处理）
+                    int nextIndex = ResolveNextIndex(step, i, AutomationStepBases);
+                    if (nextIndex >= 0)
                     {
-                        int nextIndex = FindIndexByUid(targetUid.Value);
-
-                        if (nextIndex < 0)
-                        {
-                            // 目标步骤不存在（可能被删除），继续下一步
-                            step.SelfReferenceCount = 0;
-                        }
-                        // 自引用检测
-                        else if (nextIndex == i) // 指向自身
-                        {
-                            step.SelfReferenceCount++;
-                            // SelfReferenceLimit: -1=无限制, 0=禁止自引用, >0=限制次数
-                            if (step.SelfReferenceLimit >= 0 && step.SelfReferenceCount >= step.SelfReferenceLimit)
-                            {
-                                // 达到自引用上限：自身结果强制为 false
-                                step.IsTrue = false;
-                                step.ErrorMessage = string.Format(LanguageService.GetLocalizedString("Msg_SelfReferenceLimit"), step.Name, step.SelfReferenceLimit);
-                                step.SelfReferenceCount = 0;
-
-                                // 按 false 结果重新解析跳转目标
-                                if (step.FalseGotoUid.HasValue && step.FalseGotoUid.Value != Guid.Empty)
-                                {
-                                    int falseIndex = FindIndexByUid(step.FalseGotoUid.Value);
-                                    if (falseIndex >= 0 && falseIndex != i)
-                                    {
-                                        i = falseIndex - 1; // -1 因为 for 循环会 i++
-                                    }
-                                    // 目标仍指向自身时不跳转，继续下一步
-                                }
-                                // FalseGoto 为空时不跳转，继续下一步
-                            }
-                            else
-                            {
-                                i = nextIndex - 1; // -1 因为 for 循环会 i++
-                            }
-                        }
-                        else
-                        {
-                            step.SelfReferenceCount = 0; // 非自引用时重置
-                            i = nextIndex - 1;
-                        }
+                        i = nextIndex - 1; // -1 因为 for 循环会 i++
                     }
-                    // targetUid 为空时不修改 i，for 循环 i++ 自然进入下一步
+                    else if (multiThreadSkipEndIndex >= 0)
+                    {
+                        // 多线程开始步骤：主线程跳过被圈入的区域，继续执行区域之后的步骤
+                        i = multiThreadSkipEndIndex;
+                    }
+                    // 未跳转时不修改 i，for 循环 i++ 自然进入下一步
                 }
                 StopSignal = true;
                 _executionContext.StopTimer();
@@ -1155,6 +1183,14 @@ namespace ShaoLu.Viewmodels
             }
             finally
             {
+                // 多线程：运行结束/停止时取消所有子线程（不等待其收尾，避免界面卡死）并注销中断处理器
+                try
+                {
+                    _cts?.Cancel();
+                }
+                catch (ObjectDisposedException) { }
+                MultiThreadInterruptBridge.RegisterHandler(null);
+
                 // 烧录统计：运行结束但从未到达烧录完成步骤时，补记一条未完成烧录供追溯
                 try
                 {
@@ -1337,6 +1373,209 @@ namespace ShaoLu.Viewmodels
                     popupStep.ActivePopupWindow = null;
                 }
             }
+        }
+
+        #endregion
+
+        #region 多线程
+
+        /// <summary>登记一个待处理中断（子线程调用，多次中断覆盖为最新）</summary>
+        private void RequestInterrupt(Guid targetUid)
+        {
+            lock (_interruptLock)
+            {
+                _pendingInterruptUid = targetUid;
+            }
+        }
+
+        /// <summary>取走待处理中断（消费）</summary>
+        private bool TryConsumeInterrupt(out Guid targetUid)
+        {
+            lock (_interruptLock)
+            {
+                if (_pendingInterruptUid.HasValue)
+                {
+                    targetUid = _pendingInterruptUid.Value;
+                    _pendingInterruptUid = null;
+                    return true;
+                }
+            }
+            targetUid = Guid.Empty;
+            return false;
+        }
+
+        /// <summary>
+        /// 启动一个子线程执行 [regionStart, regionEnd] 区域内的步骤。
+        /// 子线程使用独立的执行上下文、不阻塞主线程（不等待其收尾），并随主 token 一起取消。
+        /// </summary>
+        private void StartSubThread(IList<AutomationStepBase> steps, int regionStart, int regionEnd, CancellationToken token)
+        {
+            if (steps == null) return;
+            var snapshot = steps.ToList();
+            Task.Run(async () =>
+            {
+                // 标记当前执行流位于子线程：中断步骤据此判断发出者身份
+                MultiThreadInterruptBridge.InChildThread = true;
+                try
+                {
+                    await RunSubThreadAsync(snapshot, regionStart, regionEnd, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.Info("MultiThread: sub thread cancelled");
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "MultiThread: sub thread failed");
+                }
+            }, token);
+        }
+
+        /// <summary>
+        /// 子线程执行器：顺序执行区域内步骤，结果只写入自己的执行上下文。
+        /// 步骤报错只记录并继续；跳转指向区域之外时结束该子线程。
+        /// </summary>
+        private async Task RunSubThreadAsync(List<AutomationStepBase> steps, int regionStart, int regionEnd, CancellationToken token)
+        {
+            var context = new StepExecutionContext();
+            context.StartTimer();
+            try
+            {
+                for (int i = regionStart; i <= regionEnd; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+                    if (StopSignal || i < 0) break;
+
+                    while (IsPaused && !StopSignal)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        await Task.Delay(100, token);
+                    }
+                    if (StopSignal) break;
+
+                    var step = steps[i];
+                    if (!step.IsNeed) continue;
+
+                    try
+                    {
+                        var sw = Stopwatch.StartNew();
+                        await step.RunAsync(token);
+                        sw.Stop();
+
+                        step.IsError = false;
+                        step.ErrorType = StepErrorType.None;
+
+                        // 子线程不修改 SelectedStep / RunningStepUid，不更新统计计数，不判定烧录
+                        var result = step.LastResult ?? new StepExecutionResult();
+                        result.ExecutionTimeMs = sw.Elapsed.TotalMilliseconds;
+                        result.IsTrue = step.IsTrue;
+                        result.ExecutedAt = DateTime.Now;
+                        step.LastResult = result;
+
+                        context.SetResult(step.LineNo, result);
+                        context.SetResultByUid(step.Uid, result);
+                        context.CurrentStepUid = step.Uid;
+
+                        if (step is not StatisticsStep
+                            && step.ConditionMode == ConditionMode.Custom && step.Conditions.Count > 0)
+                        {
+                            step.IsTrue = ConditionEvaluator.Evaluate(step.Conditions, context, result);
+                        }
+
+                        if (step.EnableLog)
+                        {
+                            string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
+                            string logContent = $"[SubThread] [Result:{step.IsTrue}] [Time:{result.ExecutionTimeMs:F0}ms]";
+                            if (result.Similarity >= 0)
+                                logContent += $" [Similarity:{result.Similarity:F3}]";
+                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        step.ErrorType = StepErrorType.CancelledByUser;
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        // 子线程内步骤报错：只记录错误与日志，不影响主流程，继续执行后续步骤
+                        logger.Warn(ex, "MultiThread: step '{0}' failed in sub thread", step.Name);
+                        step.IsError = true;
+                        step.ErrorMessage = ex.Message;
+                        step.ErrorType = InferErrorType(ex);
+                    }
+
+                    // 区域内的跳转；指向区域之外时结束该子线程并记日志
+                    int nextIndex = ResolveNextIndex(step, i, steps);
+                    if (nextIndex < 0) continue;
+
+                    if (nextIndex < regionStart || nextIndex > regionEnd)
+                    {
+                        logger.Info("MultiThread: step '{0}' jumps outside region [{1},{2}], sub thread ends",
+                            step.Name, regionStart, regionEnd);
+                        break;
+                    }
+                    i = nextIndex - 1; // -1 因为 for 循环会 i++
+                }
+            }
+            finally
+            {
+                context.StopTimer();
+            }
+        }
+
+        /// <summary>
+        /// 按跳转配置解析下一个执行索引（含自引用上限处理）。
+        /// 返回 -1 表示不跳转（继续下一步）；否则返回目标步骤索引。
+        /// </summary>
+        private static int ResolveNextIndex(AutomationStepBase step, int currentIndex, IList<AutomationStepBase> steps)
+        {
+            Guid? targetUid = step.IsTrue ? step.TrueGotoUid : step.FalseGotoUid;
+            if (!targetUid.HasValue || targetUid.Value == Guid.Empty)
+                return -1;
+
+            int nextIndex = FindIndexByUidIn(steps, targetUid.Value);
+            if (nextIndex < 0)
+            {
+                // 目标步骤不存在（可能被删除），继续下一步
+                step.SelfReferenceCount = 0;
+                return -1;
+            }
+            if (nextIndex != currentIndex)
+            {
+                step.SelfReferenceCount = 0; // 非自引用时重置
+                return nextIndex;
+            }
+
+            // 自引用检测
+            step.SelfReferenceCount++;
+            // SelfReferenceLimit: -1=无限制, 0=禁止自引用, >0=限制次数
+            if (step.SelfReferenceLimit < 0 || step.SelfReferenceCount < step.SelfReferenceLimit)
+                return nextIndex;
+
+            // 达到自引用上限：自身结果强制为 false
+            step.IsTrue = false;
+            step.ErrorMessage = string.Format(LanguageService.GetLocalizedString("Msg_SelfReferenceLimit"), step.Name, step.SelfReferenceLimit);
+            step.SelfReferenceCount = 0;
+
+            // 按 false 结果重新解析跳转目标；FalseGoto 为空或仍指向自身时不跳转
+            if (step.FalseGotoUid.HasValue && step.FalseGotoUid.Value != Guid.Empty)
+            {
+                int falseIndex = FindIndexByUidIn(steps, step.FalseGotoUid.Value);
+                if (falseIndex >= 0 && falseIndex != currentIndex)
+                    return falseIndex;
+            }
+            return -1;
+        }
+
+        private static int FindIndexByUidIn(IList<AutomationStepBase> steps, Guid uid)
+        {
+            if (steps == null) return -1;
+            for (int i = 0; i < steps.Count; i++)
+            {
+                if (steps[i].Uid == uid) return i;
+            }
+            return -1;
         }
 
         #endregion

@@ -109,6 +109,13 @@
                             <MenuItem Header="{lex:Loc AddFocusWindowStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="FocusWindow"/>
                             <MenuItem Header="{lex:Loc AddEmptyStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Empty"/>
                         </wd:SplitButton>
+                        <wd:SplitButton x:Name="AddMultiThreadStep" Content="{lex:Loc MultiThreadGroup}" CommandParameter="MultiThread" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                            <MenuItem Header="{lex:Loc AddMultiThreadStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="MultiThread"/>
+                            <MenuItem Header="{lex:Loc AddMultiThreadEndStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="MultiThreadEnd"/>
+                            <MenuItem Header="{lex:Loc AddSendSignalStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="SendSignal"/>
+                            <MenuItem Header="{lex:Loc AddReceiveSignalStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="ReceiveSignal"/>
+                            <MenuItem Header="{lex:Loc AddInterruptStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Interrupt"/>
+                        </wd:SplitButton>
                         <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
                     </ToolBar>
                 </ToolBarTray>

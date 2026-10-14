@@ -50,6 +50,12 @@ namespace ShaoLu.Models
         Step_PopupResult,
         /// <summary>引用步骤是否在本次评估前刚刚被执行（用于统计执行次数）</summary>
         Step_Triggered,
+
+        // 信号内容（接收信号步骤收到的值的文本形式）
+        /// <summary>本步骤收到的信号内容</summary>
+        Self_SignalValue,
+        /// <summary>引用步骤收到的信号内容</summary>
+        Step_SignalValue,
     }
 
     /// <summary>
@@ -239,6 +245,18 @@ namespace ShaoLu.Models
                             ConditionVariable.Self_ExecutionTimeMs,
                             ConditionVariable.Step_IsTrue,
                             ConditionVariable.Step_OCRText,
+                            ConditionVariable.Step_ExecutionTimeMs,
+                            ConditionVariable.Step_Triggered,
+                        });
+                        break;
+                    case StepType.ReceiveSignal:
+                        vars.AddRange(new[]
+                        {
+                            ConditionVariable.Self_IsTrue,
+                            ConditionVariable.Self_SignalValue,
+                            ConditionVariable.Self_ExecutionTimeMs,
+                            ConditionVariable.Step_IsTrue,
+                            ConditionVariable.Step_SignalValue,
                             ConditionVariable.Step_ExecutionTimeMs,
                             ConditionVariable.Step_Triggered,
                         });

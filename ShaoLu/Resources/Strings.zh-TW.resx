@@ -1434,4 +1434,103 @@
   <data name="NoRecentFiles" xml:space="preserve">
     <value>（無）</value>
   </data>
+  <data name="MultiThreadGroup" xml:space="preserve">
+    <value>多執行緒</value>
+  </data>
+  <data name="AddMultiThreadStep" xml:space="preserve">
+    <value>多執行緒開始</value>
+  </data>
+  <data name="AddMultiThreadEndStep" xml:space="preserve">
+    <value>多執行緒區域結束</value>
+  </data>
+  <data name="AddSendSignalStep" xml:space="preserve">
+    <value>發出訊號</value>
+  </data>
+  <data name="AddReceiveSignalStep" xml:space="preserve">
+    <value>接收訊號</value>
+  </data>
+  <data name="AddInterruptStep" xml:space="preserve">
+    <value>中斷</value>
+  </data>
+  <data name="MT_ThreadCount" xml:space="preserve">
+    <value>執行緒個數</value>
+  </data>
+  <data name="MT_ThreadCountHint" xml:space="preserve">
+    <value>每次執行到該步驟會新建一個執行緒，最多建這麼多個；達到上限後不再新建（每個執行緒都執行同一段區域）</value>
+  </data>
+  <data name="MT_RangeMode" xml:space="preserve">
+    <value>區域劃定方式</value>
+  </data>
+  <data name="MT_RangeMode_ByLineNo" xml:space="preserve">
+    <value>按結束步驟選擇</value>
+  </data>
+  <data name="MT_RangeMode_ByEndStep" xml:space="preserve">
+    <value>按「多執行緒區域結束」步驟</value>
+  </data>
+  <data name="MT_RangeEnd" xml:space="preserve">
+    <value>結束步驟</value>
+  </data>
+  <data name="MT_RangeEnd_ToEnd" xml:space="preserve">
+    <value>到腳本末尾</value>
+  </data>
+  <data name="MT_EndHint" xml:space="preserve">
+    <value>區域結束標記：與「多執行緒開始」步驟配對，兩者之間的步驟由子執行緒執行，主執行緒跳過這段繼續往下</value>
+  </data>
+  <data name="Signal_Name" xml:space="preserve">
+    <value>訊號名</value>
+  </data>
+  <data name="Signal_Kind" xml:space="preserve">
+    <value>訊號類型</value>
+  </data>
+  <data name="Signal_Kind_Bool" xml:space="preserve">
+    <value>布林</value>
+  </data>
+  <data name="Signal_Kind_Int" xml:space="preserve">
+    <value>整數</value>
+  </data>
+  <data name="Signal_Kind_String" xml:space="preserve">
+    <value>字串</value>
+  </data>
+  <data name="Signal_Value" xml:space="preserve">
+    <value>訊號值</value>
+  </data>
+  <data name="Signal_Blocking" xml:space="preserve">
+    <value>阻塞等待</value>
+  </data>
+  <data name="Signal_BlockingHint" xml:space="preserve">
+    <value>勾選後在此等待，直到收到訊號或等待逾時；不勾選則立刻讀取（可能讀不到）</value>
+  </data>
+  <data name="Signal_Timeout" xml:space="preserve">
+    <value>等待逾時(s)</value>
+  </data>
+  <data name="Signal_Timeout_Unlimited" xml:space="preserve">
+    <value>0 表示不限時</value>
+  </data>
+  <data name="Interrupt_Target" xml:space="preserve">
+    <value>中斷後從該步驟開始執行</value>
+  </data>
+  <data name="Interrupt_Hint" xml:space="preserve">
+    <value>只由子執行緒發出：打斷主執行緒並強制其從指定步驟開始執行；主執行緒執行到本步驟會記失敗</value>
+  </data>
+  <data name="Msg_Signal_NameRequired" xml:space="preserve">
+    <value>訊號名不能為空</value>
+  </data>
+  <data name="Msg_Signal_WaitFailed" xml:space="preserve">
+    <value>等待訊號逾時或被取消</value>
+  </data>
+  <data name="Msg_Signal_NotFound" xml:space="preserve">
+    <value>未收到訊號</value>
+  </data>
+  <data name="Msg_Signal_TypeMismatch" xml:space="preserve">
+    <value>訊號值類型不匹配</value>
+  </data>
+  <data name="Msg_Interrupt_OnlyFromSubThread" xml:space="preserve">
+    <value>中斷步驟只能由子執行緒發出</value>
+  </data>
+  <data name="Msg_Interrupt_TargetRequired" xml:space="preserve">
+    <value>中斷步驟未指定目標步驟</value>
+  </data>
+  <data name="Msg_Interrupt_NotRunning" xml:space="preserve">
+    <value>中斷步驟只能在自動化運行中發出</value>
+  </data>
 </root>

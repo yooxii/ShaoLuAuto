@@ -7,7 +7,8 @@
                     xmlns:conv="clr-namespace:ShaoLu.Converters"
                     xmlns:models="clr-namespace:ShaoLu.Models"
                     xmlns:utils="clr-namespace:ShaoLu.Utils"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:svc="clr-namespace:ShaoLu.Services">
 
     <conv:ConditionModeToVisibilityConverter x:Key="ConditionModeToVisibility"/>
     <conv:ConditionEnumToStringConverter x:Key="ConditionEnumToString"/>
@@ -1134,6 +1135,211 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 多线程开始步骤 -->
+    <DataTemplate x:Key="MultiThreadStartTemplate" DataType="{x:Type AutoVM:MultiThreadStartStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc MT_ThreadCount}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding ThreadCount, Mode=TwoWay}" Width="80" Minimum="1" Precision="0"
+                               ToolTip="{lex:Loc MT_ThreadCountHint}"/>
+                <TextBlock Text="{lex:Loc MT_ThreadCountHint}" Foreground="Gray" FontSize="11" Margin="8,0,0,0"
+                           VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="260"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc MT_RangeMode}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Source={x:Static AutoVM:MultiThreadStartStep.RangeModes}}"
+                          SelectedItem="{Binding RangeMode}" MinWidth="170" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <!-- 仅「按结束步骤选择」方式需要指定结束步骤 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RangeMode}" Value="{x:Static AutoVM:MultiThreadRangeMode.ByLineNo}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc MT_RangeEnd}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding AllSteps}"
+                          SelectedValue="{Binding RangeEndUid, TargetNullValue={x:Static sys:Guid.Empty}}"
+                          SelectedValuePath="Uid"
+                          IsEditable="False"
+                          MinWidth="180" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text=" - "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Text="{lex:Loc MT_RangeEnd_ToEnd}" Foreground="Gray" FontSize="11" Margin="8,0,0,0"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 多线程区域结束步骤（纯区域标记，本身不执行动作） -->
+    <DataTemplate x:Key="MultiThreadEndTemplate" DataType="{x:Type AutoVM:MultiThreadEndStep}">
+        <StackPanel>
+            <TextBlock Text="{lex:Loc MT_EndHint}" Foreground="Gray" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 发出信号步骤 -->
+    <DataTemplate x:Key="SendSignalTemplate" DataType="{x:Type AutoVM:SendSignalStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Name}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SignalName, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Kind}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Source={x:Static AutoVM:SendSignalStep.SignalKinds}}"
+                          SelectedItem="{Binding SignalKind}" MinWidth="120" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <!-- 信号值：按信号类型切显隐 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Value}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SignalKind}" Value="{x:Static svc:SignalValueKind.Bool}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <CheckBox IsChecked="{Binding SignalBool}" Content="{lex:Loc Signal_Kind_Bool}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SignalKind}" Value="{x:Static svc:SignalValueKind.Int}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <wd:NumericBox Value="{Binding SignalInt, Mode=TwoWay}" Width="90" Precision="0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SignalKind}" Value="{x:Static svc:SignalValueKind.String}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBox Text="{Binding SignalString, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+                </StackPanel>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 接收信号步骤 -->
+    <DataTemplate x:Key="ReceiveSignalTemplate" DataType="{x:Type AutoVM:ReceiveSignalStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Name}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SignalName, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Kind}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Source={x:Static AutoVM:ReceiveSignalStep.SignalKinds}}"
+                          SelectedItem="{Binding SignalKind}" MinWidth="120" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <CheckBox IsChecked="{Binding Blocking}" Content="{lex:Loc Signal_Blocking}"
+                      ToolTip="{lex:Loc Signal_BlockingHint}" Margin="0,2"/>
+            <!-- 等待超时：仅阻塞等待时有效 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Blocking}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc Signal_Timeout}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding SignalTimeout, Mode=TwoWay}" Width="80" Minimum="0" Precision="1"/>
+                <TextBlock Text="{lex:Loc Signal_Timeout_Unlimited}" Foreground="Gray" FontSize="11" Margin="8,0,0,0"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 中断步骤（仅子线程可用） -->
+    <DataTemplate x:Key="InterruptTemplate" DataType="{x:Type AutoVM:InterruptStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Interrupt_Target}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding AllSteps}"
+                          SelectedValue="{Binding InterruptTargetUid, TargetNullValue={x:Static sys:Guid.Empty}}"
+                          SelectedValuePath="Uid"
+                          IsEditable="False"
+                          MinWidth="200" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text=" - "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <TextBlock Text="{lex:Loc Interrupt_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,5" TextWrapping="Wrap"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      EmptyStepTemplate="{StaticResource EmptyStepTemplate}"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
@@ -1146,5 +1352,10 @@
                      MouseActionTemplate="{StaticResource MouseActionStepTemplate}"
                      StatisticsTemplate="{StaticResource StatisticsStepTemplate}"
                      BurnInConfigTemplate="{StaticResource BurnInConfigStepTemplate}"
-                     FocusWindowTemplate="{StaticResource FocusWindowStepTemplate}"/>
+                     FocusWindowTemplate="{StaticResource FocusWindowStepTemplate}"
+                     MultiThreadTemplate="{StaticResource MultiThreadStartTemplate}"
+                     MultiThreadEndTemplate="{StaticResource MultiThreadEndTemplate}"
+                     SendSignalTemplate="{StaticResource SendSignalTemplate}"
+                     ReceiveSignalTemplate="{StaticResource ReceiveSignalTemplate}"
+                     InterruptTemplate="{StaticResource InterruptTemplate}"/>
 </ResourceDictionary>

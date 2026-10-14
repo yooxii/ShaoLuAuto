@@ -2138,6 +2138,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Screen-relative coordinates 的本地化字符串。
+        /// </summary>
+        public static string TextPointSource_ScreenRelative {
+            get {
+                return ResourceManager.GetString("TextPointSource_ScreenRelative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Edit Drag Path 的本地化字符串。
         /// </summary>
         public static string MouseAction_EditDragPath {
@@ -2768,6 +2777,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Screen-relative coordinates 的本地化字符串。
+        /// </summary>
+        public static string Coordinate_ScreenRelative {
+            get {
+                return ResourceManager.GetString("Coordinate_ScreenRelative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 When checked, the coordinate is stored and resolved as a percentage (0–100) of the primary screen size 的本地化字符串。
+        /// </summary>
+        public static string Coordinate_ScreenRelative_Hint {
+            get {
+                return ResourceManager.GetString("Coordinate_ScreenRelative_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Position 的本地化字符串。
         /// </summary>
         public static string PositionMode {
@@ -2791,6 +2818,15 @@ namespace ShaoLu.Resources {
         public static string PositionMode_CurrentMouse {
             get {
                 return ResourceManager.GetString("PositionMode_CurrentMouse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Screen-relative coordinates 的本地化字符串。
+        /// </summary>
+        public static string PositionMode_Relative {
+            get {
+                return ResourceManager.GetString("PositionMode_Relative", resourceCulture);
             }
         }
         

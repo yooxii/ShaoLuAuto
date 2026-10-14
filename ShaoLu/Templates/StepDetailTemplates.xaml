@@ -520,12 +520,39 @@
                 </ComboBox>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowPositionRelative}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <Label Content="{lex:Loc PopupWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
+            </StackPanel>
+            <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowPositionRelative}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc PopupWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <CheckBox IsChecked="{Binding WindowPositionRelative}" Content="{lex:Loc Coordinate_ScreenRelative}" ToolTip="{lex:Loc Coordinate_ScreenRelative_Hint}" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc PopupOpacity}" Padding="0,0,5,0" VerticalAlignment="Center"/>
@@ -667,6 +694,22 @@
                                     <wd:NumericBox Value="{Binding Y, Mode=TwoWay}" Width="65" Precision="0" Interval="1" Margin="0,0,5,0"/>
                                     <Button Content="{lex:Loc SelectPoint}" Command="{Binding DataContext.SelectTextPointCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
                                 </StackPanel>
+                                <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Source}" Value="{x:Static models:TextPointSource.ScreenRelative}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <wd:NumericBox Value="{Binding X, Mode=TwoWay}" Width="65" Precision="2" Interval="0.01" Margin="0,0,3,0"/>
+                                    <wd:NumericBox Value="{Binding Y, Mode=TwoWay}" Width="65" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                                    <Button Content="{lex:Loc SelectPoint}" Command="{Binding DataContext.SelectTextPointCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                </StackPanel>
                                 <!-- 相对定位：状态摘要 + 选图 + 编辑 -->
                                 <StackPanel Orientation="Horizontal">
                                     <StackPanel.Style>
@@ -740,6 +783,22 @@
                 <wd:NumericBox Value="{Binding TargetX, Mode=TwoWay}" Width="70" Precision="0" Margin="0,0,5,0"/>
                 <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding TargetY, Mode=TwoWay}" Width="70" Precision="0" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
+            </StackPanel>
+            <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PositionMode}" Value="Relative"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding TargetX, Mode=TwoWay}" Width="70" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding TargetY, Mode=TwoWay}" Width="70" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
                 <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
@@ -853,12 +912,39 @@
                 <TextBox Text="{Binding WindowTitle, UpdateSourceTrigger=LostFocus}" MinWidth="120"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowPositionRelative}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <Label Content="{lex:Loc StatsWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectWindowPositionCommand}"/>
+            </StackPanel>
+            <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowPositionRelative}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc StatsWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectWindowPositionCommand}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <CheckBox IsChecked="{Binding WindowPositionRelative}" Content="{lex:Loc Coordinate_ScreenRelative}" ToolTip="{lex:Loc Coordinate_ScreenRelative_Hint}" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <CheckBox IsChecked="{Binding AlwaysOnTop}" Content="{lex:Loc StatsAlwaysOnTop}" VerticalAlignment="Center"/>
@@ -979,12 +1065,32 @@
                 <Label Content="{lex:Loc BurnIn_ScreenshotRegion}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <Button Content="{lex:Loc BurnIn_SelectRegion}" Command="{Binding SelectRegionCommand}" Padding="12,3"/>
                 <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Foreground="Gray">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Config.RegionRelative}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
                     <Run Text="X:"/><Run Text="{Binding Config.RegionX, Mode=OneWay, StringFormat=F0}"/>
                     <Run Text=" Y:"/><Run Text="{Binding Config.RegionY, Mode=OneWay, StringFormat=F0}"/>
                     <Run Text=" W:"/><Run Text="{Binding Config.RegionW, Mode=OneWay, StringFormat=F0}"/>
                     <Run Text=" H:"/><Run Text="{Binding Config.RegionH, Mode=OneWay, StringFormat=F0}"/>
                 </TextBlock>
             </StackPanel>
+            <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2"
+                        Visibility="{Binding CaptureScreenshot, Converter={StaticResource BoolToVis}}">
+                <CheckBox IsChecked="{Binding Config.RegionRelative}" Content="{lex:Loc Coordinate_ScreenRelative}" ToolTip="{lex:Loc Coordinate_ScreenRelative_Hint}" VerticalAlignment="Center"/>
+                <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Foreground="Gray"
+                            Visibility="{Binding Config.RegionRelative, Converter={StaticResource BoolToVis}}">
+                    <Run Text="X:"/><Run Text="{Binding Config.RegionX, Mode=OneWay, StringFormat=F2}"/>
+                    <Run Text=" Y:"/><Run Text="{Binding Config.RegionY, Mode=OneWay, StringFormat=F2}"/>
+                    <Run Text=" W:"/><Run Text="{Binding Config.RegionW, Mode=OneWay, StringFormat=F2}"/>
+                    <Run Text=" H:"/><Run Text="{Binding Config.RegionH, Mode=OneWay, StringFormat=F2}"/>
+                </TextBlock>
+            </StackPanel>
+
             <StackPanel Orientation="Horizontal" Margin="0,2"
                         Visibility="{Binding CaptureScreenshot, Converter={StaticResource BoolToVis}}">
                 <Label Content="{lex:Loc BurnIn_ScreenshotDir}" Padding="0,0,5,0" VerticalAlignment="Center"/>

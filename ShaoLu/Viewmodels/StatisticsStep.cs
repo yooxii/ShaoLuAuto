@@ -209,6 +209,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
     public class StatisticsStep : AutomationStepBase
     {
         private string _windowTitle = "Statistics";
+        private bool _windowPositionRelative;
         private double _windowX = 100;
         private double _windowY = 100;
         private bool _alwaysOnTop = true;
@@ -232,10 +233,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>窗口标题</summary>
         public string WindowTitle { get => _windowTitle; set => SetProperty(ref _windowTitle, value); }
 
-        /// <summary>窗口 X 位置</summary>
+        /// <summary>窗口位置是否为屏幕相对坐标（WindowX/WindowY 存占屏幕宽/高的百分比；切换时自动换算）</summary>
+        public bool WindowPositionRelative
+        {
+            get => _windowPositionRelative;
+            set
+            {
+                if (!SetProperty(ref _windowPositionRelative, value)) return;
+                WindowX = Utils.ScreenCoordinates.ConvertX(WindowX, !value, value);
+                WindowY = Utils.ScreenCoordinates.ConvertY(WindowY, !value, value);
+            }
+        }
+
+        /// <summary>窗口 X 位置（相对模式下为占屏幕宽度的百分比）</summary>
         public double WindowX { get => _windowX; set => SetProperty(ref _windowX, value); }
 
-        /// <summary>窗口 Y 位置</summary>
+        /// <summary>窗口 Y 位置（相对模式下为占屏幕高度的百分比）</summary>
         public double WindowY { get => _windowY; set => SetProperty(ref _windowY, value); }
 
         /// <summary>是否始终置顶</summary>
@@ -314,8 +327,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var point = Views.WindowSelectPoint.ShowAndSelect();
             if (point.HasValue)
             {
-                WindowX = point.Value.X;
-                WindowY = point.Value.Y;
+                // 相对模式下存百分比，绝对模式下存逻辑像素
+                WindowX = Utils.ScreenCoordinates.ConvertX(point.Value.X, false, WindowPositionRelative);
+                WindowY = Utils.ScreenCoordinates.ConvertY(point.Value.Y, false, WindowPositionRelative);
             }
         }
 
@@ -346,6 +360,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var clone = new StatisticsStep(Name, Description)
             {
                 WindowTitle = WindowTitle,
+                WindowPositionRelative = WindowPositionRelative,
                 WindowX = WindowX,
                 WindowY = WindowY,
                 AlwaysOnTop = AlwaysOnTop,

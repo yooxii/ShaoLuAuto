@@ -50,7 +50,26 @@ namespace ShaoLu.Models
         /// <summary>截图保存目录（留空使用默认位置：AppData\AutoShaoLu\screenshots）</summary>
         public string ScreenshotDir { get; set; } = string.Empty;
 
-        /// <summary>截图区域（屏幕绝对坐标，逻辑像素）</summary>
+        private bool _regionRelative;
+        /// <summary>截图区域是否为屏幕相对坐标（RegionX/RegionY/RegionW/RegionH 存百分比；切换时自动换算）</summary>
+        public bool RegionRelative
+        {
+            get => _regionRelative;
+            set
+            {
+                if (_regionRelative == value) return;
+                _regionRelative = value;
+                RegionX = ConvertNullable(RegionX, !value, value, Utils.ScreenCoordinates.ConvertX);
+                RegionY = ConvertNullable(RegionY, !value, value, Utils.ScreenCoordinates.ConvertY);
+                RegionW = ConvertNullable(RegionW, !value, value, Utils.ScreenCoordinates.ConvertWidth);
+                RegionH = ConvertNullable(RegionH, !value, value, Utils.ScreenCoordinates.ConvertHeight);
+            }
+        }
+
+        private static double? ConvertNullable(double? value, bool fromRelative, bool toRelative, Func<double, bool, bool, double> convert)
+            => value.HasValue ? convert(value.Value, fromRelative, toRelative) : value;
+
+        /// <summary>截图区域（绝对模式为屏幕绝对坐标逻辑像素，相对模式为占屏幕宽/高的百分比）</summary>
         public double? RegionX { get; set; }
         public double? RegionY { get; set; }
         public double? RegionW { get; set; }

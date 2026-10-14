@@ -53,8 +53,8 @@ namespace ShaoLu.Views
 
             // 应用窗口配置
             Title = step.WindowTitle;
-            Left = step.WindowX;
-            Top = step.WindowY;
+            Left = Utils.ScreenCoordinates.ToPixelX(step.WindowX, step.WindowPositionRelative);
+            Top = Utils.ScreenCoordinates.ToPixelY(step.WindowY, step.WindowPositionRelative);
             Topmost = step.AlwaysOnTop;
             if (TitleText != null)
                 TitleText.Text = step.WindowTitle;

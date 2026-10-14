@@ -21,9 +21,35 @@ namespace ShaoLu.Models
     }
 
     /// <summary>
+    /// 拖拽路径点：值为屏幕逻辑像素或屏幕相对坐标（百分比），取决于所属鼠标操作步骤的位置模式。
+    /// 使用 double 而非整数像素，避免相对模式下百分比取整带来的位置误差。
+    /// </summary>
+    public class DragPathPoint
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+
+        public DragPathPoint()
+        {
+        }
+
+        public DragPathPoint(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        /// <summary>兼容以整数像素点存储的旧格式拖拽路径</summary>
+        public static implicit operator DragPathPoint(Point p)
+        {
+            return new DragPathPoint(p.X, p.Y);
+        }
+    }
+
+    /// <summary>
     /// 鼠标动作项（步骤中顺序执行的动作列表）
     /// Drag 动作按步骤类型使用两种互斥的路径数据：
-    /// - 鼠标操作步骤：DragPath（屏幕绝对坐标序列，逻辑像素）
+    /// - 鼠标操作步骤：DragPath（屏幕逻辑像素；相对模式下为占屏幕宽/高的百分比）
     /// - 图像类步骤：ClickDragTrajectories（相邻点击点之间的手绘轨迹，相对裁剪区左上角偏移）
     /// </summary>
     public class MouseActionItem : ObservableObject
@@ -31,7 +57,7 @@ namespace ShaoLu.Models
         private MouseActionType _actionType = MouseActionType.LeftClick;
         private int _count = 1;
         private double _interval = 0.1;
-        private ObservableCollection<Point> _dragPath = new();
+        private ObservableCollection<DragPathPoint> _dragPath = new();
         private List<List<Point>> _clickDragTrajectories = new();
 
         /// <summary>动作类型</summary>
@@ -43,8 +69,8 @@ namespace ShaoLu.Models
         /// <summary>动作间隔(秒)；长按动作下为按住时长</summary>
         public double Interval { get => _interval; set => SetProperty(ref _interval, value); }
 
-        /// <summary>绝对位置拖拽路径（屏幕绝对坐标序列，逻辑像素；仅鼠标操作步骤使用）</summary>
-        public ObservableCollection<Point> DragPath { get => _dragPath; set => SetProperty(ref _dragPath, value); }
+        /// <summary>拖拽路径（仅鼠标操作步骤使用）：绝对模式存屏幕逻辑像素，相对模式存占屏幕宽/高的百分比</summary>
+        public ObservableCollection<DragPathPoint> DragPath { get => _dragPath; set => SetProperty(ref _dragPath, value); }
 
         /// <summary>
         /// 点击点拖拽轨迹：第 i 项为点击点 i 到点击点 i+1 之间的手绘轨迹点
@@ -73,7 +99,7 @@ namespace ShaoLu.Models
                 Interval = Interval,
             };
             foreach (var p in DragPath)
-                res.DragPath.Add(new Point(p.X, p.Y));
+                res.DragPath.Add(new DragPathPoint(p.X, p.Y));
             foreach (var segment in ClickDragTrajectories)
             {
                 var copy = new List<Point>(segment.Count);

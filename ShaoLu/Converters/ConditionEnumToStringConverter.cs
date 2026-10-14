@@ -141,6 +141,7 @@ namespace ShaoLu.Converters
         {
             PositionMode.Absolute => Services.LanguageService.GetLocalizedString("PositionMode_Absolute"),
             PositionMode.CurrentMouse => Services.LanguageService.GetLocalizedString("PositionMode_CurrentMouse"),
+            PositionMode.Relative => Services.LanguageService.GetLocalizedString("PositionMode_Relative"),
             _ => m.ToString(),
         };
 
@@ -184,6 +185,7 @@ namespace ShaoLu.Converters
         {
             TextPointSource.Absolute => Services.LanguageService.GetLocalizedString("TextPointSource_Absolute"),
             TextPointSource.Relative => Services.LanguageService.GetLocalizedString("TextPointSource_Relative"),
+            TextPointSource.ScreenRelative => Services.LanguageService.GetLocalizedString("TextPointSource_ScreenRelative"),
             _ => s.ToString(),
         };
 

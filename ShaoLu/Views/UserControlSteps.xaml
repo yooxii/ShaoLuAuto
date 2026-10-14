@@ -48,8 +48,6 @@
                 <Separator/>
                 <MenuItem Header="{lex:Loc Undo}" Command="{Binding UndoCommand}"/>
                 <MenuItem Header="{lex:Loc Redo}" Command="{Binding RedoCommand}"/>
-                <MenuItem Header="{lex:Loc UndoStepEdit}" Command="{Binding UndoStepCommand}"/>
-                <MenuItem Header="{lex:Loc RedoStepEdit}" Command="{Binding RedoStepCommand}"/>
             </ContextMenu>
 
             <ResourceDictionary.MergedDictionaries>
@@ -93,9 +91,6 @@
                         <Button Content="{lex:Loc Cut}" Margin="3" Command="{Binding CutStepCommand}"/>
                         <Button Content="{lex:Loc Paste}" Margin="3" Command="{Binding PasteStepCommand}"/>
                         <Button Content="{lex:Loc Delete}" Margin="3" Command="{Binding DelStepCommand}"/>
-                        <Separator/>
-                        <Button Content="{lex:Loc UndoStepEdit}" Margin="3" Command="{Binding UndoStepCommand}"/>
-                        <Button Content="{lex:Loc RedoStepEdit}" Margin="3" Command="{Binding RedoStepCommand}"/>
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Step}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
                         <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
@@ -171,6 +166,12 @@
                 <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
                 <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2"
                           IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
+                <DockPanel>
+                    <!-- 撤销/恢复本步骤编辑：固定在详情顶部，不随内容滚动 -->
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,3">
+                        <Button Content="{lex:Loc Undo}" ToolTip="{lex:Loc Undo}" Command="{Binding UndoStepCommand}" Padding="10,2" Margin="0,0,3,0"/>
+                        <Button Content="{lex:Loc Redo}" ToolTip="{lex:Loc Redo}" Command="{Binding RedoStepCommand}" Padding="10,2"/>
+                    </StackPanel>
                     <!-- 当 SelectedStep 为 null 时，可以显示提示文本 -->
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch">
                         <Grid>
@@ -184,6 +185,7 @@
                             Visibility="{Binding SelectedStep, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Inverse}"/>
                         </Grid>
                     </ScrollViewer>
+                </DockPanel>
                 </GroupBox>
             </Grid>
             <Grid Grid.Row="2" Margin="3 0 3 5">

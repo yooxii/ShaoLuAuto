@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.6.3.2611</ApplicationVersion>
+    <ApplicationVersion>0.6.4.2611</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -210,6 +210,7 @@
     <Compile Include="Utils\ListBoxSelectedUidsBehavior.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="Utils\RichTextHelper.cs" />
+    <Compile Include="Utils\ScreenCoordinates.cs" />
     <Compile Include="Utils\ScreenTextReader.cs" />
     <Compile Include="Utils\StepsFile.cs" />
     <Compile Include="Utils\TextHelper.cs" />

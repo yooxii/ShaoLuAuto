@@ -55,6 +55,7 @@
     <Compile Include="BurnInServiceTests.cs" />
     <Compile Include="AcbelBridgeTests.cs" />
     <Compile Include="AcbelInsertDataValidationTests.cs" />
+    <Compile Include="ScreenCoordinatesTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FlaUI.UIA3">

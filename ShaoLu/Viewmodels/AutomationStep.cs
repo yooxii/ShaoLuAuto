@@ -823,12 +823,27 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         #region 窗口外观
 
+        private bool _windowPositionRelative;
+        /// <summary>窗口位置是否为屏幕相对坐标（WindowX/WindowY 存占屏幕宽/高的百分比；切换时自动换算）</summary>
+        public bool WindowPositionRelative
+        {
+            get => _windowPositionRelative;
+            set
+            {
+                if (!SetProperty(ref _windowPositionRelative, value)) return;
+                // -1 为"居中显示"的哨兵值，不参与换算
+                if (WindowX < 0 && WindowY < 0) return;
+                WindowX = ScreenCoordinates.ConvertX(WindowX, !value, value);
+                WindowY = ScreenCoordinates.ConvertY(WindowY, !value, value);
+            }
+        }
+
         private double _windowX = -1;
-        /// <summary>窗口 X 位置（-1 表示居中显示）</summary>
+        /// <summary>窗口 X 位置（-1 表示居中显示；相对模式下为占屏幕宽度的百分比）</summary>
         public double WindowX { get => _windowX; set => SetProperty(ref _windowX, value); }
 
         private double _windowY = -1;
-        /// <summary>窗口 Y 位置（-1 表示居中显示）</summary>
+        /// <summary>窗口 Y 位置（-1 表示居中显示；相对模式下为占屏幕高度的百分比）</summary>
         public double WindowY { get => _windowY; set => SetProperty(ref _windowY, value); }
 
         private double _windowOpacity = 100;
@@ -858,8 +873,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var point = Views.WindowSelectPoint.ShowAndSelect();
             if (point.HasValue)
             {
-                WindowX = point.Value.X;
-                WindowY = point.Value.Y;
+                // 相对模式下存百分比，绝对模式下存逻辑像素
+                WindowX = ScreenCoordinates.ConvertX(point.Value.X, false, WindowPositionRelative);
+                WindowY = ScreenCoordinates.ConvertY(point.Value.Y, false, WindowPositionRelative);
             }
         }
 
@@ -970,6 +986,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 CloseMode = CloseMode,
                 AutoCloseSeconds = AutoCloseSeconds,
                 CloseOnStepUid = CloseOnStepUid,
+                WindowPositionRelative = WindowPositionRelative,
                 WindowX = WindowX,
                 WindowY = WindowY,
                 WindowOpacity = WindowOpacity,
@@ -1001,7 +1018,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
             string defaultResult = PopupButtons.DefaultButton?.Value ?? string.Empty;
 
             // 1. 启动异步弹窗任务（应用自定义位置、背景颜色、背景不透明度与窗口样式）
-            System.Windows.Point? position = (WindowX >= 0 && WindowY >= 0) ? new System.Windows.Point(WindowX, WindowY) : null;
+            double popupX = ScreenCoordinates.ToPixelX(WindowX, WindowPositionRelative);
+            double popupY = ScreenCoordinates.ToPixelY(WindowY, WindowPositionRelative);
+            System.Windows.Point? position = (popupX >= 0 && popupY >= 0) ? new System.Windows.Point(popupX, popupY) : null;
             var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, PopupButtons, iconType, position, WindowOpacity / 100.0, BackgroundColor, PopupWindowStyle);
 
             // 保存活跃窗口引用（供 StepReached 模式使用）

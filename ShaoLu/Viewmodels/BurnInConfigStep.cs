@@ -269,10 +269,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var win = new Views.WindowSelectRegion();
             if (win.ShowDialog() == true && win.SelectedRegion != Rect.Empty)
             {
-                Config.RegionX = win.SelectedRegion.X;
-                Config.RegionY = win.SelectedRegion.Y;
-                Config.RegionW = win.SelectedRegion.Width;
-                Config.RegionH = win.SelectedRegion.Height;
+                // 相对模式下存百分比，绝对模式下存逻辑像素
+                var region = win.SelectedRegion;
+                bool relative = Config.RegionRelative;
+                Config.RegionX = Utils.ScreenCoordinates.ConvertX(region.X, false, relative);
+                Config.RegionY = Utils.ScreenCoordinates.ConvertY(region.Y, false, relative);
+                Config.RegionW = Utils.ScreenCoordinates.ConvertWidth(region.Width, false, relative);
+                Config.RegionH = Utils.ScreenCoordinates.ConvertHeight(region.Height, false, relative);
                 OnPropertyChanged(nameof(Config));
             }
         }
@@ -461,6 +464,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 HighPrecision = src.HighPrecision,
                 ColorThreshold = src.ColorThreshold,
                 CaptureScreenshot = src.CaptureScreenshot,
+                RegionRelative = src.RegionRelative,
                 RegionX = src.RegionX,
                 RegionY = src.RegionY,
                 RegionW = src.RegionW,

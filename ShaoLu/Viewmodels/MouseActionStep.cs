@@ -22,6 +22,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         Absolute,
         /// <summary>鼠标当前位置</summary>
         CurrentMouse,
+        /// <summary>屏幕相对坐标：横/纵坐标占屏幕宽度/高度的百分比</summary>
+        Relative,
     }
 
     /// <summary>
@@ -34,13 +36,42 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private double _targetY;
         private ObservableCollection<MouseActionItem> _mouseActions = new() { new MouseActionItem() };
 
-        /// <summary>位置模式</summary>
-        public PositionMode PositionMode { get => _positionMode; set => SetProperty(ref _positionMode, value); }
+        /// <summary>位置模式（在绝对坐标与屏幕相对坐标之间切换时自动换算坐标单位）</summary>
+        public PositionMode PositionMode
+        {
+            get => _positionMode;
+            set
+            {
+                var old = _positionMode;
+                if (!SetProperty(ref _positionMode, value)) return;
+                ConvertCoordinateUnit(old == PositionMode.Relative, value == PositionMode.Relative);
+            }
+        }
 
-        /// <summary>目标 X 坐标（逻辑像素，Absolute 模式）</summary>
+        /// <summary>按百分比/像素单位切换换算本步骤的位置与拖拽路径</summary>
+        private void ConvertCoordinateUnit(bool fromRelative, bool toRelative)
+        {
+            if (fromRelative == toRelative) return;
+
+            TargetX = ScreenCoordinates.ConvertX(TargetX, fromRelative, toRelative);
+            TargetY = ScreenCoordinates.ConvertY(TargetY, fromRelative, toRelative);
+
+            if (MouseActions == null) return;
+            foreach (var action in MouseActions)
+            {
+                if (action?.DragPath == null) continue;
+                foreach (var p in action.DragPath)
+                {
+                    p.X = ScreenCoordinates.ConvertX(p.X, fromRelative, toRelative);
+                    p.Y = ScreenCoordinates.ConvertY(p.Y, fromRelative, toRelative);
+                }
+            }
+        }
+
+        /// <summary>目标 X 坐标（Absolute 模式为逻辑像素，Relative 模式为占屏幕宽度的百分比）</summary>
         public double TargetX { get => _targetX; set => SetProperty(ref _targetX, value); }
 
-        /// <summary>目标 Y 坐标（逻辑像素，Absolute 模式）</summary>
+        /// <summary>目标 Y 坐标（Absolute 模式为逻辑像素，Relative 模式为占屏幕高度的百分比）</summary>
         public double TargetY { get => _targetY; set => SetProperty(ref _targetY, value); }
 
         /// <summary>鼠标动作序列</summary>
@@ -48,7 +79,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         /// <summary>所有位置模式（供 ComboBox 绑定）</summary>
         [JsonIgnore]
-        public List<PositionMode> PositionModes { get; } = new() { PositionMode.Absolute, PositionMode.CurrentMouse };
+        public List<PositionMode> PositionModes { get; } = new() { PositionMode.Absolute, PositionMode.CurrentMouse, PositionMode.Relative };
 
         #region 命令
 
@@ -125,25 +156,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 double dpiX = Services.OCRService.CachedDpiX;
                 double dpiY = Services.OCRService.CachedDpiY;
 
-                // 移动到目标位置
-                if (PositionMode == PositionMode.Absolute)
+                // 移动到目标位置（相对模式先按百分比换算为逻辑像素）
+                if (PositionMode == PositionMode.Absolute || PositionMode == PositionMode.Relative)
                 {
-                    int physX = (int)(TargetX * dpiX);
-                    int physY = (int)(TargetY * dpiY);
+                    bool relative = PositionMode == PositionMode.Relative;
+                    int physX = (int)(ScreenCoordinates.ToPixelX(TargetX, relative) * dpiX);
+                    int physY = (int)(ScreenCoordinates.ToPixelY(TargetY, relative) * dpiY);
                     Autogui.MoveMouseTo(physX, physY);
                 }
                 // CurrentMouse 模式：不移动，直接在当前位置执行
 
-                // 执行动作序列（绝对位置拖拽路径：逻辑像素转物理像素）
+                // 执行动作序列（拖拽路径：逻辑像素转物理像素）
                 Autogui.ExecuteMouseActions(
                     new List<MouseActionItem>(MouseActions),
-                    act =>
-                    {
-                        var path = new List<System.Drawing.Point>();
-                        foreach (var p in act.DragPath)
-                            path.Add(new System.Drawing.Point((int)(p.X * dpiX), (int)(p.Y * dpiY)));
-                        return path;
-                    });
+                    act => ResolveDragPathPixels(act, dpiX, dpiY));
             }, cancellationToken);
 
             IsTrue = true;
@@ -167,9 +193,27 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var point = Views.WindowSelectPoint.ShowAndSelect();
             if (point.HasValue)
             {
-                TargetX = point.Value.X;
-                TargetY = point.Value.Y;
+                // 相对模式下存百分比，绝对模式下存逻辑像素
+                bool relative = PositionMode == PositionMode.Relative;
+                TargetX = ScreenCoordinates.ConvertX(point.Value.X, false, relative);
+                TargetY = ScreenCoordinates.ConvertY(point.Value.Y, false, relative);
             }
+        }
+
+        /// <summary>把拖拽路径换算为屏幕物理像素（相对模式下先按百分比换算为逻辑像素，再乘 DPI 缩放）</summary>
+        public List<System.Drawing.Point> ResolveDragPathPixels(MouseActionItem action, double dpiX, double dpiY)
+        {
+            var path = new List<System.Drawing.Point>();
+            if (action?.DragPath == null) return path;
+
+            bool relative = PositionMode == PositionMode.Relative;
+            foreach (var p in action.DragPath)
+            {
+                path.Add(new System.Drawing.Point(
+                    (int)(ScreenCoordinates.ToPixelX(p.X, relative) * dpiX),
+                    (int)(ScreenCoordinates.ToPixelY(p.Y, relative) * dpiY)));
+            }
+            return path;
         }
 
         private void EditDragPath(object parameter)
@@ -177,13 +221,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
             // 鼠标操作步骤的拖拽：全屏按住左键绘制移动轨迹
             if (parameter is MouseActionItem item)
             {
-                var existing = item.DragPath.Select(p => new System.Windows.Point(p.X, p.Y)).ToList();
+                // 采集窗口始终以屏幕逻辑像素工作；相对模式下在读取与写回两端换算
+                bool relative = PositionMode == PositionMode.Relative;
+                var existing = item.DragPath
+                    .Select(p => new System.Windows.Point(
+                        ScreenCoordinates.ToPixelX(p.X, relative),
+                        ScreenCoordinates.ToPixelY(p.Y, relative)))
+                    .ToList();
                 var trajectory = Views.WindowDragPathAbsolute.ShowAndCapture(existing.Count > 0 ? existing : null);
                 if (trajectory == null) return; // 取消不改动
 
                 item.DragPath.Clear();
                 foreach (var p in trajectory)
-                    item.DragPath.Add(new Models.Point((int)p.X, (int)p.Y));
+                    item.DragPath.Add(new DragPathPoint(
+                        ScreenCoordinates.ConvertX(p.X, false, relative),
+                        ScreenCoordinates.ConvertY(p.Y, false, relative)));
             }
         }
 

@@ -264,6 +264,9 @@
   <data name="TextPointSource_Relative" xml:space="preserve">
     <value>圖像相對定位</value>
   </data>
+  <data name="TextPointSource_ScreenRelative" xml:space="preserve">
+    <value>螢幕相對座標</value>
+  </data>
   <data name="Input_TextPointsHint" xml:space="preserve">
     <value>依清單順序在各位置取得文字，結果以換行合併；相對定位先在螢幕上匹配圖片，再依圖片編輯視窗設定的點擊點取得文字。</value>
   </data>
@@ -1062,8 +1065,17 @@
   <data name="PositionMode_Absolute" xml:space="preserve">
     <value>絕對座標</value>
   </data>
+  <data name="PositionMode_Relative" xml:space="preserve">
+    <value>螢幕相對座標</value>
+  </data>
   <data name="PositionMode_CurrentMouse" xml:space="preserve">
     <value>滑鼠目前位置</value>
+  </data>
+  <data name="Coordinate_ScreenRelative" xml:space="preserve">
+    <value>螢幕相對座標</value>
+  </data>
+  <data name="Coordinate_ScreenRelative_Hint" xml:space="preserve">
+    <value>勾選後該座標按佔主螢幕寬/高的百分比（0~100）儲存與換算</value>
   </data>
   <data name="StatsWindowTitle" xml:space="preserve">
     <value>視窗標題</value>

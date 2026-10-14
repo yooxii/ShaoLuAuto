@@ -391,9 +391,13 @@ namespace ShaoLu.Services
             if (config == null || !config.HasRegion) return null;
             try
             {
+                // 相对模式（百分比）先换算为屏幕逻辑像素
+                bool relative = config.RegionRelative;
                 var region = new System.Drawing.Rectangle(
-                    (int)config.RegionX.Value, (int)config.RegionY.Value,
-                    (int)config.RegionW.Value, (int)config.RegionH.Value);
+                    (int)ScreenCoordinates.ToPixelX(config.RegionX.Value, relative),
+                    (int)ScreenCoordinates.ToPixelY(config.RegionY.Value, relative),
+                    (int)ScreenCoordinates.ToPixelWidth(config.RegionW.Value, relative),
+                    (int)ScreenCoordinates.ToPixelHeight(config.RegionH.Value, relative));
                 using Bitmap bmp = Autogui.CaptureScreenRegion(region);
                 if (bmp == null) return null;
 

@@ -581,6 +581,44 @@ namespace NUnitTest
             }
         }
 
+        #region MouseActionStep 克隆
+
+        [TestFixture]
+        public class MouseActionStepCloneTests
+        {
+            [Test]
+            public void Clone_CopiesMouseActions_Independent()
+            {
+                var step = new MouseActionStep("鼠标操作") { TargetX = 100, TargetY = 200 };
+                var action = new MouseActionItem { ActionType = MouseActionType.Drag, Count = 2, Interval = 0.5 };
+                action.DragPath.Add(new DragPathPoint(10, 20));
+                step.MouseActions.Clear(); // 步骤默认自带一个动作项，先清空以便断言“恰好复制一个”
+                step.MouseActions.Add(action);
+
+                var clone = (MouseActionStep)step.Clone();
+
+                Assert.That(clone.MouseActions.Count, Is.EqualTo(1), "克隆必须复制动作列表");
+                Assert.That(clone.MouseActions[0].ActionType, Is.EqualTo(MouseActionType.Drag));
+                Assert.That(clone.MouseActions[0].Count, Is.EqualTo(2));
+                Assert.That(clone.MouseActions[0].Interval, Is.EqualTo(0.5));
+                Assert.That(clone.MouseActions[0].DragPath.Count, Is.EqualTo(1));
+                Assert.That(clone.MouseActions[0].DragPath[0].X, Is.EqualTo(10));
+                Assert.That(clone.MouseActions[0].DragPath[0].Y, Is.EqualTo(20));
+                Assert.That(clone.TargetX, Is.EqualTo(100));
+                Assert.That(clone.TargetY, Is.EqualTo(200));
+
+                // 与原始对象互不共享
+                Assert.That(clone.MouseActions[0], Is.Not.SameAs(step.MouseActions[0]));
+                Assert.That(clone.MouseActions[0].DragPath[0], Is.Not.SameAs(step.MouseActions[0].DragPath[0]));
+                clone.MouseActions[0].Count = 7;
+                clone.MouseActions[0].DragPath[0].X = 999;
+                Assert.That(step.MouseActions[0].Count, Is.EqualTo(2));
+                Assert.That(step.MouseActions[0].DragPath[0].X, Is.EqualTo(10));
+            }
+        }
+
+        #endregion
+
         #endregion
     }
 }

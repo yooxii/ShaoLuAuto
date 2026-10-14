@@ -135,7 +135,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 PositionMode = PositionMode,
                 TargetX = TargetX,
                 TargetY = TargetY,
-                MouseActions = new(MouseActions != null ? new List<MouseActionItem>(MouseActions.Count) : new List<MouseActionItem>()),
+                MouseActions = new ObservableCollection<MouseActionItem>(
+                    MouseActions != null ? MouseActions.Select(a => a.Clone()) : Enumerable.Empty<MouseActionItem>()),
                 WaitTime = WaitTime,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,

@@ -33,6 +33,11 @@ namespace ShaoLu.Models
         public string OCRText { get; set; }
 
         /// <summary>
+        /// 文本来源：OCR=OCR 识别，Direct=直接读取屏幕（无文本时为空）
+        /// </summary>
+        public string TextSource { get; set; }
+
+        /// <summary>
         /// 弹出框用户选择的按钮值
         /// </summary>
         public string PopupResult { get; set; }

@@ -805,6 +805,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Similarity = res.Similarity,
                 ClickPosition = res.IsEmpty ? null : res.Center,
                 OCRText = ocrText,
+                TextSource = "OCR",
             };
 
             return IsTrue;

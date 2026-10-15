@@ -84,26 +84,22 @@
                 <DataGridTextColumn Header="UID" 
                                     Binding="{Binding StepUid}" 
                                     Width="auto" SortMemberPath="StepUid"/>
-                <DataGridTemplateColumn Header="{lex:Loc InputText}" SortMemberPath="InputText" Width="auto">
+                <DataGridTemplateColumn Header="{lex:Loc Stats_ColResult}" SortMemberPath="InputText" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding InputText, Converter={StaticResource TruncateText}}"
-                                       Tag="{Binding InputText}"
+                            <TextBlock Text="{Binding ResultDisplay, Converter={StaticResource TruncateText}}"
+                                       Tag="{Binding ResultDisplay}"
                                        ToolTip="{lex:Loc ClickToPreview}"
                                        MouseLeftButtonUp="LogText_Click" Cursor="Hand"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{lex:Loc OCRText}" SortMemberPath="OCRText" Width="auto">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding OCRText, Converter={StaticResource TruncateText}}"
-                                       Tag="{Binding OCRText}"
-                                       ToolTip="{lex:Loc ClickToPreview}"
-                                       MouseLeftButtonUp="LogText_Click" Cursor="Hand"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{lex:Loc Stats_ColTime}"
+                                    Binding="{Binding ExecutionTimeDisplay}"
+                                    Width="auto" SortMemberPath="ExecutionTimeMs"/>
+                <DataGridTextColumn Header="{lex:Loc Stats_ColThread}"
+                                    Binding="{Binding ThreadDisplay}"
+                                    Width="auto" SortMemberPath="ThreadName"/>
             </DataGrid.Columns>
         </DataGrid>
 

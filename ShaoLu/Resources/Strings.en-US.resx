@@ -1122,6 +1122,9 @@
   <data name="Stats_ColResult" xml:space="preserve">
     <value>Result</value>
   </data>
+  <data name="Stats_ColThread" xml:space="preserve">
+    <value>Thread</value>
+  </data>
   <data name="Stats_CurrentStep" xml:space="preserve">
     <value>Current Executing Step</value>
   </data>

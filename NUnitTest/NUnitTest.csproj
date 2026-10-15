@@ -59,6 +59,8 @@
     <Compile Include="MultiThreadTests.cs" />
     <Compile Include="SubThreadRunnerTests.cs" />
     <Compile Include="ImageThreadingTests.cs" />
+    <Compile Include="StepsOrderMoveTests.cs" />
+    <Compile Include="ExecutionLogDisplayTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FlaUI.UIA3">

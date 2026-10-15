@@ -303,6 +303,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 IsTrue = !string.IsNullOrWhiteSpace(text),
                 OCRText = text,
+                // 直接读取屏幕文本与 OCR 识别区分开，供执行记录窗口标注
+                TextSource = InputMode == GetInputMode.ScreenText ? "Direct" : "OCR",
                 ExecutedAt = DateTime.Now,
             };
 

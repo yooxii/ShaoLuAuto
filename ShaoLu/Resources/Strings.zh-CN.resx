@@ -1122,6 +1122,9 @@
   <data name="Stats_ColResult" xml:space="preserve">
     <value>结果</value>
   </data>
+  <data name="Stats_ColThread" xml:space="preserve">
+    <value>线程</value>
+  </data>
   <data name="Stats_CurrentStep" xml:space="preserve">
     <value>当前执行步骤</value>
   </data>

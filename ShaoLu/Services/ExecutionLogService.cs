@@ -33,7 +33,9 @@ namespace ShaoLu.Services
         /// <summary>
         /// 记录一条执行日志
         /// </summary>
-        public static void Log(Guid stepUid, string stepFileName, string stepName, string inputText, string ocrText = null)
+        public static void Log(Guid stepUid, string stepFileName, string stepName, string inputText, string ocrText = null,
+            double? executionTimeMs = null, bool? isTrue = null, double? similarity = null,
+            string threadName = null, string textSource = null, string errorMessage = null)
         {
             try
             {
@@ -44,6 +46,12 @@ namespace ShaoLu.Services
                     StepName = stepName ?? string.Empty,
                     InputText = inputText ?? string.Empty,
                     OCRText = ocrText,
+                    ExecutionTimeMs = executionTimeMs,
+                    IsTrue = isTrue,
+                    Similarity = similarity,
+                    ThreadName = threadName,
+                    TextSource = textSource,
+                    ErrorMessage = errorMessage,
                     ExecutedAt = DateTime.Now
                 };
                 Fsql.Insert(log).ExecuteAffrows();

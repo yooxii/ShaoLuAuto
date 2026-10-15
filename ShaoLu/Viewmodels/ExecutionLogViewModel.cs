@@ -207,9 +207,16 @@ namespace ShaoLu.Viewmodels
                     page: CurrentPage,
                     pageSize: PageSize);
 
+                // 生成展示列（结果 / 执行时间 / 线程）并归并 10 秒内的连续相同结果
+                ExecutionLogDisplay.Build(results);
+
                 Logs.Clear();
                 foreach (var log in results)
                 {
+                    // 被归并进上一行的重复记录不再显示，重复次数由组首的「 ×N」体现
+                    if (log.IsMergedAway)
+                        continue;
+
                     Logs.Add(log);
                 }
 

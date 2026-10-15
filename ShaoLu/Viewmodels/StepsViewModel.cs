@@ -744,23 +744,51 @@ namespace ShaoLu.Viewmodels
         private void UpStep()
         {
             if (!EnsureLoggedIn()) return;
-            if (SelectedStep == null)
-                return;
-            if (SelectedStep.LineNo <= 1)
-                return;
-            PushListUndoSnapshot();
-            AutomationStepBases.Move(SelectedStep.LineNo - 1, SelectedStep.LineNo - 2);
+            MoveSelectedSteps(StepsOrderMove.BuildUp);
         }
 
         private void DownStep()
         {
             if (!EnsureLoggedIn()) return;
-            if (SelectedStep == null)
-                return;
-            if (SelectedStep.LineNo >= AutomationStepBases.Count)
-                return;
+            MoveSelectedSteps(StepsOrderMove.BuildDown);
+        }
+
+        /// <summary>
+        /// 统一上移 / 下移选中的步骤（支持多选）。plan 为纯函数：选中索引集合 + 当前数量 → 本次点击的移动序列。
+        /// 每次点击每个选中步骤最多移动一位；无选中、或本次点击无处可移时不改列表也不记录撤销快照（与原有单步行为一致）。
+        /// </summary>
+        private void MoveSelectedSteps(Func<IEnumerable<int>, int, IReadOnlyList<StepsOrderMove.MoveStep>> plan)
+        {
+            var selectedIndices = GetSelectedStepIndices();
+            if (selectedIndices.Count == 0) return;
+            var moves = plan(selectedIndices, AutomationStepBases.Count);
+            if (moves.Count == 0) return;
             PushListUndoSnapshot();
-            AutomationStepBases.Move(SelectedStep.LineNo - 1, SelectedStep.LineNo);
+            foreach (var move in moves)
+            {
+                AutomationStepBases.Move(move.From, move.To);
+            }
+        }
+
+        /// <summary>当前选中的步骤在 AutomationStepBases 中的索引（多选为多条；已不在列表中的忽略）。</summary>
+        private HashSet<int> GetSelectedStepIndices()
+        {
+            var indices = new HashSet<int>();
+            if (SelectedSteps != null)
+            {
+                foreach (var step in SelectedSteps)
+                {
+                    if (step == null) continue;
+                    int index = AutomationStepBases.IndexOf(step);
+                    if (index >= 0) indices.Add(index);
+                }
+            }
+            if (SelectedStep != null)
+            {
+                int index = AutomationStepBases.IndexOf(SelectedStep);
+                if (index >= 0) indices.Add(index);
+            }
+            return indices;
         }
 
         private void SelectStep()
@@ -912,6 +940,8 @@ namespace ShaoLu.Viewmodels
             // 清空执行上下文并启动总计时
             _executionContext.Clear();
             _executionContext.StartTimer();
+            // 多线程：清空上一轮登记的子线程上下文，避免残留数据混入统计
+            StepExecutionContext.ClearChildContexts();
             // 多线程：清空信号中心与待处理中断，并注册主线程的中断处理器
             SignalCenter.Reset();
             lock (_interruptLock)
@@ -1054,7 +1084,7 @@ namespace ShaoLu.Viewmodels
                                 if (multiThreadStart.CreatedThreads < multiThreadStart.ThreadCount)
                                 {
                                     multiThreadStart.CreatedThreads++;
-                                    StartSubThread(AutomationStepBases, i + 1, rangeEnd, token);
+                                    StartSubThread(AutomationStepBases, i + 1, rangeEnd, multiThreadStart.CreatedThreads, token);
                                     logger.Info("MultiThread: thread {0}/{1} started for region [{2},{3}]",
                                         multiThreadStart.CreatedThreads, multiThreadStart.ThreadCount, i + 1, rangeEnd);
                                 }
@@ -1104,7 +1134,14 @@ namespace ShaoLu.Viewmodels
                             string logContent = $"[Result:{step.IsTrue}] [Time:{result.ExecutionTimeMs:F0}ms]";
                             if (result.Similarity >= 0)
                                 logContent += $" [Similarity:{result.Similarity:F3}]";
-                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText);
+                            // 结构化参数一并入库，供执行记录窗口渲染“结果 / 执行时间 / 线程”
+                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText,
+                                executionTimeMs: result.ExecutionTimeMs,
+                                isTrue: step.IsTrue,
+                                similarity: result.Similarity,
+                                threadName: "主线程",
+                                textSource: result.TextSource,
+                                errorMessage: step.IsError ? step.ErrorMessage : null);
                         }
 
                         // 烧录完成判定：当前步骤为配置的烧录完成步骤时立即判定并记录
@@ -1522,7 +1559,7 @@ namespace ShaoLu.Viewmodels
         /// 子线程使用独立的执行上下文、不阻塞主线程，结束时由主流程负责等待或取消。
         /// token 只用于步骤内的协作式取消，不能交给线程调度（token 已取消时委托根本不会执行）。
         /// </summary>
-        private void StartSubThread(IList<AutomationStepBase> steps, int regionStart, int regionEnd, CancellationToken token)
+        private void StartSubThread(IList<AutomationStepBase> steps, int regionStart, int regionEnd, int threadIndex, CancellationToken token)
         {
             if (steps == null) return;
             var snapshot = steps.ToList();
@@ -1532,7 +1569,7 @@ namespace ShaoLu.Viewmodels
                 MultiThreadInterruptBridge.InChildThread = true;
                 try
                 {
-                    await RunSubThreadAsync(snapshot, regionStart, regionEnd, ct);
+                    await RunSubThreadAsync(snapshot, regionStart, regionEnd, threadIndex, ct);
                 }
                 catch (OperationCanceledException)
                 {
@@ -1556,9 +1593,11 @@ namespace ShaoLu.Viewmodels
         /// 只随 token 取消而中止：主流程正常跑完时会等它自然结束（见 WaitSubThreadsToEndAsync），
         /// 用户点停止时 Stop() 已取消 token，子线程据此按取消收尾。
         /// </summary>
-        private async Task RunSubThreadAsync(List<AutomationStepBase> steps, int regionStart, int regionEnd, CancellationToken token)
+        private async Task RunSubThreadAsync(List<AutomationStepBase> steps, int regionStart, int regionEnd, int threadIndex, CancellationToken token)
         {
             var context = new StepExecutionContext();
+            // 登记到全局上下文表并标注线程名，统计面板据此聚合数据并区分线程
+            StepExecutionContext.RegisterContext(context, $"子线程{threadIndex}");
             context.StartTimer();
             try
             {
@@ -1609,12 +1648,31 @@ namespace ShaoLu.Viewmodels
                             string logContent = $"[SubThread] [Result:{step.IsTrue}] [Time:{result.ExecutionTimeMs:F0}ms]";
                             if (result.Similarity >= 0)
                                 logContent += $" [Similarity:{result.Similarity:F3}]";
-                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText);
+                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText,
+                                executionTimeMs: result.ExecutionTimeMs,
+                                isTrue: step.IsTrue,
+                                similarity: result.Similarity,
+                                threadName: context.ThreadName,
+                                textSource: result.TextSource,
+                                errorMessage: step.IsError ? step.ErrorMessage : null);
                         }
                     }
                     catch (OperationCanceledException)
                     {
                         step.ErrorType = StepErrorType.CancelledByUser;
+                        // 取消路径不会经过 try 内的成功日志，这里补一条，避免子线程步骤“没有日志”
+                        if (step.EnableLog)
+                        {
+                            string cancelFileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
+                            ExecutionLogService.Log(step.Uid, cancelFileName, step.Name,
+                                "[SubThread] [Result:False] [Cancelled]", null,
+                                executionTimeMs: step.LastResult?.ExecutionTimeMs,
+                                isTrue: false,
+                                similarity: step.LastResult?.Similarity,
+                                threadName: context.ThreadName,
+                                textSource: step.LastResult?.TextSource,
+                                errorMessage: "Cancelled");
+                        }
                         break;
                     }
                     catch (Exception ex)
@@ -1624,6 +1682,19 @@ namespace ShaoLu.Viewmodels
                         step.IsError = true;
                         step.ErrorMessage = ex.Message;
                         step.ErrorType = InferErrorType(ex);
+                        // 异常路径同样补一条日志，内容带上异常消息
+                        if (step.EnableLog)
+                        {
+                            string errorFileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
+                            ExecutionLogService.Log(step.Uid, errorFileName, step.Name,
+                                $"[SubThread] [Result:False] [Error:{ex.Message}]", null,
+                                executionTimeMs: step.LastResult?.ExecutionTimeMs,
+                                isTrue: false,
+                                similarity: step.LastResult?.Similarity,
+                                threadName: context.ThreadName,
+                                textSource: step.LastResult?.TextSource,
+                                errorMessage: ex.Message);
+                        }
                     }
 
                     // 区域内的跳转；指向区域之外时结束该子线程并记日志

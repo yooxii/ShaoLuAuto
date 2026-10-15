@@ -22,6 +22,7 @@ namespace ShaoLu.Models
         BurnInConfig = 203,
         FocusWindow = 204,
         Popup = 1000,
+        AcbelUpload = 1001,     // 上传Acbel（ACBEL_INSERT_DATA）
 
         // 多线程步骤
         MultiThread = 300,      // 多线程开始

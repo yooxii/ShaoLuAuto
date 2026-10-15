@@ -203,6 +203,27 @@ namespace ShaoLu.Services
         }
 
         /// <summary>
+        /// 取所有上下文中最近一次执行的结果对象（按 ExecutedAt 取最新），并输出该结果来源的线程标签。
+        /// 供需要同时读取 IsTrue / OCRText / TextSource 的调用方使用；取不到时返回 false，不抛异常。
+        /// </summary>
+        public static bool TryGetLatestResult(Guid uid, out StepExecutionResult result, out string threadName)
+        {
+            result = null;
+            threadName = null;
+            if (uid == Guid.Empty)
+                return false;
+            try
+            {
+                result = FindLatestResult(uid, out threadName);
+            }
+            catch (Exception)
+            {
+                result = null;
+            }
+            return result != null;
+        }
+
+        /// <summary>
         /// 解析条件变量的实际值
         /// </summary>
         /// <param name="variable">条件变量类型</param>

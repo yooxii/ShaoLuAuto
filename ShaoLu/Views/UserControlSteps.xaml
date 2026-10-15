@@ -60,6 +60,7 @@
                     <MenuItem Header="{lex:Loc AddTextMoreStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeTextMore"/>
                     <MenuItem Header="{lex:Loc AddTextFromFileStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeTextFromFile"/>
                     <MenuItem Header="{lex:Loc AddPopupStep}" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
+                    <MenuItem Header="{lex:Loc AddAcbelUploadStep}" Command="{Binding AddStepCommand}" CommandParameter="AcbelUpload"/>
                     <MenuItem Header="{lex:Loc AddGetInputStep}" Command="{Binding AddStepCommand}" CommandParameter="GetInput"/>
                     <MenuItem Header="{lex:Loc AddMouseActionStep}" Command="{Binding AddStepCommand}" CommandParameter="MouseAction"/>
                     <MenuItem Header="{lex:Loc AddStatisticsStep}" Command="{Binding AddStepCommand}" CommandParameter="Statistics"/>
@@ -148,6 +149,7 @@
                             <MenuItem Header="{lex:Loc AddInterruptStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Interrupt"/>
                         </wd:SplitButton>
                         <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
+                        <Button Content="{lex:Loc AddAcbelUploadStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="AcbelUpload"/>
                     </ToolBar>
                 </ToolBarTray>
             </ToolBarPanel>

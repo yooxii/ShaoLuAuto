@@ -95,6 +95,7 @@ namespace ShaoLu.Converters
                 StepType.TypeTextMore => typeof(TypeTextMoreStep),
                 StepType.TypeTextFromFile => typeof(TypeTextFromFileStep),
                 StepType.Popup => typeof(PopupStep),
+                StepType.AcbelUpload => typeof(AcbelUploadStep),
                 StepType.Empty => typeof(EmptyStep),
                 StepType.GetInput => typeof(GetInputStep),
                 StepType.MouseAction => typeof(MouseActionStep),

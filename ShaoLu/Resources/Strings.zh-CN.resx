@@ -426,6 +426,39 @@
   <data name="AddPopupStep" xml:space="preserve">
     <value>弹出消息</value>
   </data>
+  <data name="AddAcbelUploadStep" xml:space="preserve">
+    <value>上传Acbel</value>
+  </data>
+  <data name="AcbelRequiredMark" xml:space="preserve">
+    <value>必填</value>
+  </data>
+  <data name="AcbelProgramFile" xml:space="preserve">
+    <value>镭雕程式文件名</value>
+  </data>
+  <data name="AcbelDryRun" xml:space="preserve">
+    <value>仅校验、不写库</value>
+  </data>
+  <data name="AcbelOptionalFields" xml:space="preserve">
+    <value>选填字段</value>
+  </data>
+  <data name="AcbelRefSteps" xml:space="preserve">
+    <value>引用步骤</value>
+  </data>
+  <data name="AcbelRefClear" xml:space="preserve">
+    <value>清除引用</value>
+  </data>
+  <data name="AcbelRefExecutionResult" xml:space="preserve">
+    <value>执行结果</value>
+  </data>
+  <data name="AcbelRefOcrText" xml:space="preserve">
+    <value>OCR 文本</value>
+  </data>
+  <data name="AcbelRefDirectText" xml:space="preserve">
+    <value>直接获取文本</value>
+  </data>
+  <data name="AcbelUploadFailed" xml:space="preserve">
+    <value>上传Acbel失败：</value>
+  </data>
   <data name="StepTrueGoto" xml:space="preserve">
     <value>若真则</value>
   </data>

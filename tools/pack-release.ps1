@@ -7,9 +7,11 @@
        (the single version source; AssemblyVersion/FileVersion are passed the same value).
     2. Build Release|x64 with -p:OutputPath=<staging> -p:ApplicationVersion=<version>, so the
        staging tree is fresh and ShaoLu\bin\Release is left untouched.
-    3. Copy everything runtime-required into ShaoLu\bin\publish\<name>_<version>\,
+    3. Build AcbelBridge (the x86 bridge process) and copy AcbelBridge.exe plus its native
+       Acbel_Chroma_Test.dll into the package root, right next to ShaoLu.exe.
+    4. Copy everything runtime-required into ShaoLu\bin\publish\<name>_<version>\,
        excluding pdb, ClickOnce manifests, the WebView2 user cache, logs and user data.
-    4. No archive by default; pass -Zip for an additional .zip next to the package folder.
+    5. No archive by default; pass -Zip for an additional .zip next to the package folder.
 
 .EXAMPLE
     powershell -NoProfile -File tools/pack-release.ps1
@@ -85,6 +87,24 @@ Write-Host "==> Version: $Version"
         OutputPath = "$staging\"
     }
 
+# ---------- AcbelBridge（x86 桥接进程） ----------
+# 主程序通过 AcbelBridgeClient 从自身目录旁启动 AcbelBridge.exe（Acbel_Chroma_Test.dll 是
+# 32 位原生 DLL，必须与这个 x86 的 exe 同目录）；客户机上没有源码树，所以这两个文件必须进包，
+# 否则 ResolveBridgeExe 只能落到「向上找 AcbelBridge\bin\Debug|Release」那一步并最终抛异常。
+# 桥接工程只声明了 Debug|AnyCPU 与 Release|AnyCPU，默认的 -Platform x64 会落到没有 OutputPath
+# 的 Debug|x64 组合，所以这里显式指定 AnyCPU（真正的位数仍由 csproj 里的 PlatformTarget=x86 决定）。
+# 它的产物走自己的 bin\<Configuration>，不套主程序那份 OutputPath 覆盖。
+$bridgeConfiguration = 'Release'
+$bridgeDir = Join-Path $root "AcbelBridge\bin\$bridgeConfiguration"
+Write-Host "==> AcbelBridge: 构建（$bridgeConfiguration|AnyCPU）"
+& (Join-Path $PSScriptRoot 'build-app.ps1') `
+    -Configuration $bridgeConfiguration `
+    -Platform AnyCPU `
+    -Target 'AcbelBridge\AcbelBridge.csproj'
+if ($LASTEXITCODE -ne 0) {
+    throw "AcbelBridge build FAILED (MSBuild exit code $LASTEXITCODE, Configuration=$bridgeConfiguration, Platform=AnyCPU)."
+}
+
 # ---------- copy runtime files ----------
 # Not needed at runtime: debug symbols, ClickOnce manifests, the WebView2 user cache,
 # logs, and per-machine user data (regenerated on first launch).
@@ -122,6 +142,18 @@ foreach ($item in $stagingItems) {
 }
 
 if ($copied -eq 0) { throw "Staging tree is empty: $staging" }
+
+# ---------- 复制 AcbelBridge ----------
+# 只复制 exe 与原生 DLL（不带 pdb），放到包目录根：ResolveBridgeExe 第 3 条就是找 ShaoLu.exe 旁边。
+$bridgeOutputs = @('AcbelBridge.exe', 'Acbel_Chroma_Test.dll')
+foreach ($name in $bridgeOutputs) {
+    $bridgeFile = Join-Path $bridgeDir $name
+    if (-not (Test-Path -LiteralPath $bridgeFile)) {
+        throw "AcbelBridge output missing: $bridgeFile"
+    }
+    Copy-Item -LiteralPath $bridgeFile -Destination (Join-Path $packageDir $name) -Force
+}
+Write-Host "==> AcbelBridge: 复制到 $packageDir"
 
 if ($Zip) {
     Compress-Archive -Path (Join-Path $packageDir '*') -DestinationPath $zipPath -Force

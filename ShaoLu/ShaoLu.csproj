@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.6.5.2618</ApplicationVersion>
+    <ApplicationVersion>0.6.6.2619</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -200,6 +200,7 @@
     <Compile Include="Services\LanguageService.cs" />
     <Compile Include="Services\StepExecutionContext.cs" />
     <Compile Include="Services\AcbelBridgeClient.cs" />
+    <Compile Include="Viewmodels\AcbelUploadStep.cs" />
     <Compile Include="Services\SignalCenter.cs" />
     <Compile Include="Services\MultiThreadRange.cs" />
     <Compile Include="Services\SubThreadRunner.cs" />

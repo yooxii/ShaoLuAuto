@@ -1340,6 +1340,104 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 上传Acbel：引用菜单样式（引用步骤 -> 步骤 -> 结果种类，以及清除引用） -->
+    <Style x:Key="AcbelRefLeafStyle" TargetType="{x:Type MenuItem}">
+        <Setter Property="Command" Value="{Binding Command}"/>
+    </Style>
+
+    <Style x:Key="AcbelRefStepStyle" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource AcbelRefLeafStyle}">
+        <Setter Property="ItemsSource" Value="{Binding Children}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AcbelRefLeafStyle}"/>
+    </Style>
+
+    <Style x:Key="AcbelRefRootStyle" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource AcbelRefLeafStyle}">
+        <Setter Property="ItemsSource" Value="{Binding Children}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AcbelRefStepStyle}"/>
+    </Style>
+
+    <!-- 上传Acbel：字段行（段名 + 固定文本输入框 / 引用标签 + ▾ 引用菜单） -->
+    <DataTemplate x:Key="AcbelUploadRowTemplate" DataType="{x:Type AutoVM:AcbelUploadRow}">
+        <Grid Margin="0,0,0,3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
+                <TextBlock Text="{lex:Loc AcbelRequiredMark}" Foreground="#FFD32F2F" FontWeight="Bold" FontSize="11"
+                           Margin="0,0,3,0" VerticalAlignment="Center"
+                           Visibility="{Binding IsRequired, Converter={StaticResource BoolToVis}}"/>
+                <TextBlock Text="{Binding Name}" FontSize="11" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+            </StackPanel>
+            <Grid Grid.Column="1">
+                <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center">
+                    <TextBox.Style>
+                        <Style TargetType="{x:Type TextBox}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsReferenced}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                <Button Command="{Binding ClearReferenceCommand}" ToolTip="{Binding ReferenceLabel}"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                    <Button.Style>
+                        <Style TargetType="{x:Type Button}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border Background="#FFF0F6FC" BorderBrush="#FFB8CBE0" BorderThickness="1"
+                                                CornerRadius="2" Padding="4,1">
+                                            <TextBlock Text="{Binding ReferenceLabel}" Foreground="#FF1E6FB8" FontSize="11"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsReferenced}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+            <Menu Grid.Column="2" Background="Transparent" VerticalAlignment="Center" Padding="0">
+                <MenuItem Header="▾" Padding="4,1" ItemsSource="{Binding MenuNodes}"
+                          ItemContainerStyle="{StaticResource AcbelRefRootStyle}"/>
+            </Menu>
+        </Grid>
+    </DataTemplate>
+
+    <!-- 上传Acbel：ACBEL_INSERT_DATA 上传步骤 -->
+    <DataTemplate x:Key="AcbelUploadStepTemplate" DataType="{x:Type AutoVM:AcbelUploadStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <CheckBox IsChecked="{Binding DryRun}" Content="{lex:Loc AcbelDryRun}" Margin="0,0,0,5"/>
+            <TextBlock Text="{lex:Loc AcbelProgramFile}" FontWeight="Bold" Margin="0,0,0,2"/>
+            <ContentControl Content="{Binding ProgramFileRow}" ContentTemplate="{StaticResource AcbelUploadRowTemplate}"/>
+            <Separator Margin="0,5"/>
+            <ItemsControl ItemsSource="{Binding RequiredRows}" ItemTemplate="{StaticResource AcbelUploadRowTemplate}"/>
+            <Expander Margin="0,6,0,0">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{lex:Loc AcbelOptionalFields}"/>
+                        <TextBlock Text="{Binding OptionalRows.Count}" Margin="4,0,0,0"/>
+                    </StackPanel>
+                </Expander.Header>
+                <ItemsControl ItemsSource="{Binding OptionalRows}" ItemTemplate="{StaticResource AcbelUploadRowTemplate}"/>
+            </Expander>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      EmptyStepTemplate="{StaticResource EmptyStepTemplate}"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
@@ -1348,6 +1446,7 @@
                      TypeTextMoreTemplate="{StaticResource TextStepMoreTemplate}"
                      TypeTextFromFileTemplate="{StaticResource TextStepFromFileTemplate}"
                      PopupTemplate="{StaticResource PopupStepTemplate}"
+                     AcbelUploadTemplate="{StaticResource AcbelUploadStepTemplate}"
                      GetInputTemplate="{StaticResource GetInputStepTemplate}"
                      MouseActionTemplate="{StaticResource MouseActionStepTemplate}"
                      StatisticsTemplate="{StaticResource StatisticsStepTemplate}"

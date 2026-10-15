@@ -426,6 +426,39 @@
   <data name="AddPopupStep" xml:space="preserve">
     <value>Popup Message</value>
   </data>
+  <data name="AddAcbelUploadStep" xml:space="preserve">
+    <value>Upload to Acbel</value>
+  </data>
+  <data name="AcbelRequiredMark" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="AcbelProgramFile" xml:space="preserve">
+    <value>Laser program file</value>
+  </data>
+  <data name="AcbelDryRun" xml:space="preserve">
+    <value>Validate only (no DB write)</value>
+  </data>
+  <data name="AcbelOptionalFields" xml:space="preserve">
+    <value>Optional fields</value>
+  </data>
+  <data name="AcbelRefSteps" xml:space="preserve">
+    <value>Reference step</value>
+  </data>
+  <data name="AcbelRefClear" xml:space="preserve">
+    <value>Clear reference</value>
+  </data>
+  <data name="AcbelRefExecutionResult" xml:space="preserve">
+    <value>Execution result</value>
+  </data>
+  <data name="AcbelRefOcrText" xml:space="preserve">
+    <value>OCR text</value>
+  </data>
+  <data name="AcbelRefDirectText" xml:space="preserve">
+    <value>Direct text</value>
+  </data>
+  <data name="AcbelUploadFailed" xml:space="preserve">
+    <value>Acbel upload failed: </value>
+  </data>
   <data name="StepTrueGoto" xml:space="preserve">
     <value>TrueGoto</value>
   </data>

@@ -1682,6 +1682,8 @@ namespace ShaoLu.Viewmodels
                         step.IsError = true;
                         step.ErrorMessage = ex.Message;
                         step.ErrorType = InferErrorType(ex);
+                        // 异常即失败：不置 false 会沿用上次的 IsTrue，导致 FalseGoto 不生效而继续往下执行
+                        step.IsTrue = false;
                         // 异常路径同样补一条日志，内容带上异常消息
                         if (step.EnableLog)
                         {

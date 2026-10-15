@@ -1060,6 +1060,9 @@ namespace ShaoLu.Viewmodels
                     // 多线程开始步骤解析出的区域末尾（-1 表示不跳过区域）
                     int multiThreadSkipEndIndex = -1;
 
+                    // 计时器放在 try 之外，异常路径也要用它记录耗时
+                    var sw = Stopwatch.StartNew();
+
                     try
                     {
                         SelectedStep = step;
@@ -1067,8 +1070,6 @@ namespace ShaoLu.Viewmodels
                         // 记录当前正在执行的步骤（供统计窗口展示）
                         _executionContext.RunningStepUid = step.Uid;
 
-                        // 计时执行
-                        var sw = Stopwatch.StartNew();
                         await step.RunAsync(token);
                         sw.Stop();
 
@@ -1176,6 +1177,8 @@ namespace ShaoLu.Viewmodels
                         step.IsError = true;
                         step.ErrorMessage = ex.Message;
                         step.ErrorType = InferErrorType(ex);
+                        sw.Stop();
+                        RecordFailureResult(step, _executionContext, sw.Elapsed.TotalMilliseconds, ex.Message);
                         if (_stepSettings.ShowErrorPopup)
                         {
                             var (_, popupTask) = WindowAsyncPopup.Show(
@@ -1354,6 +1357,25 @@ namespace ShaoLu.Viewmodels
         }
 
         #endregion
+
+        /// <summary>
+        /// 记录一次失败的执行结果：失败路径同样要写入执行上下文，
+        /// 否则统计窗口看不到失败步骤的结果、次数与耗时（子线程同理）
+        /// </summary>
+        private static StepExecutionResult RecordFailureResult(AutomationStepBase step, StepExecutionContext context, double elapsedMs, string errorMessage)
+        {
+            var result = new StepExecutionResult
+            {
+                IsTrue = false,
+                ExecutionTimeMs = elapsedMs,
+                ExecutedAt = DateTime.Now,
+                ErrorMessage = errorMessage,
+            };
+            context.SetResult(step.LineNo, result);
+            context.SetResultByUid(step.Uid, result);
+            context.CurrentStepUid = step.Uid;
+            return result;
+        }
 
         /// <summary>
         /// 根据异常类型推断 ErrorType
@@ -1616,9 +1638,11 @@ namespace ShaoLu.Viewmodels
                     var step = steps[i];
                     if (!step.IsNeed) continue;
 
+                    // 计时器放在 try 之外，异常路径也要用它记录耗时
+                    var sw = Stopwatch.StartNew();
+
                     try
                     {
-                        var sw = Stopwatch.StartNew();
                         await step.RunAsync(token);
                         sw.Stop();
 
@@ -1684,17 +1708,20 @@ namespace ShaoLu.Viewmodels
                         step.ErrorType = InferErrorType(ex);
                         // 异常即失败：不置 false 会沿用上次的 IsTrue，导致 FalseGoto 不生效而继续往下执行
                         step.IsTrue = false;
+                        // 失败也要写入执行上下文，统计窗口才能看到子线程步骤的结果/次数/耗时
+                        sw.Stop();
+                        var failResult = RecordFailureResult(step, context, sw.Elapsed.TotalMilliseconds, ex.Message);
                         // 异常路径同样补一条日志，内容带上异常消息
                         if (step.EnableLog)
                         {
                             string errorFileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
                             ExecutionLogService.Log(step.Uid, errorFileName, step.Name,
                                 $"[SubThread] [Result:False] [Error:{ex.Message}]", null,
-                                executionTimeMs: step.LastResult?.ExecutionTimeMs,
+                                executionTimeMs: failResult.ExecutionTimeMs,
                                 isTrue: false,
-                                similarity: step.LastResult?.Similarity,
+                                similarity: failResult.Similarity,
                                 threadName: context.ThreadName,
-                                textSource: step.LastResult?.TextSource,
+                                textSource: failResult.TextSource,
                                 errorMessage: ex.Message);
                         }
                     }

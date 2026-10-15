@@ -281,11 +281,11 @@ namespace ShaoLu.Views
             }
         }
 
-        /// <summary>步骤结果来源的线程标签（主线程/子线程N），无数据时按主线程显示</summary>
+        /// <summary>步骤结果来源的线程标签（主线程/子线程N），无执行记录时显示 -</summary>
         private string GetStepThreadText(StepExecutionContext context, Guid uid)
         {
-            context.GetStepResultAll(uid, out string threadName);
-            return string.IsNullOrEmpty(threadName) ? "主线程" : threadName;
+            var result = context.GetStepResultAll(uid, out string threadName);
+            return result == null ? "-" : (string.IsNullOrEmpty(threadName) ? "主线程" : threadName);
         }
 
         protected override void OnClosed(EventArgs e)

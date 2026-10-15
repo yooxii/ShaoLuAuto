@@ -377,10 +377,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };
+            // 构造函数已用默认统计项初始化集合，必须先清空再拷贝，
+            // 否则每次克隆都会在默认项之后追加一份，统计项随保存/撤销不断累积重复
+            clone.StatisticsItems.Clear();
             foreach (var item in StatisticsItems)
             {
                 clone.StatisticsItems.Add(CloneItem(item));
             }
+            clone.CustomConditions.Clear();
             foreach (var item in CustomConditions)
             {
                 clone.CustomConditions.Add(CloneItem(item));

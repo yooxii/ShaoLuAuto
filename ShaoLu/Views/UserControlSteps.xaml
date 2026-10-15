@@ -24,6 +24,34 @@
             <conv:RegionCollapseConverter x:Key="RegionCollapseConverter"/>
             <utils:SingletonLocator x:Key="VMLocator" />
 
+            <!-- 折叠开关模板只用于「多线程开始」行；其余步骤用空模板，避免绑定不存在的 IsRegionCollapsed 属性 -->
+            <DataTemplate x:Key="RegionCollapseToggleTemplate">
+                <ToggleButton x:Name="RegionCollapseToggle"
+                              Width="16" Height="16" Padding="0" Focusable="False"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              ToolTip="{lex:Loc MultiThreadRegionCollapse_ToolTip}"
+                              IsChecked="{Binding IsRegionCollapsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Content" Value="&#x25B8;"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Type}" Value="{x:Static models:StepType.MultiThread}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Content" Value="&#x25BE;"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
+            </DataTemplate>
+            <DataTemplate x:Key="RegionCollapseEmptyTemplate"/>
+            <conv:RegionCollapseCellTemplateSelector x:Key="RegionCollapseCellTemplateSelector"
+                                                     ToggleTemplate="{StaticResource RegionCollapseToggleTemplate}"
+                                                     EmptyTemplate="{StaticResource RegionCollapseEmptyTemplate}"/>
+
             <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Steps, Source={StaticResource VMLocator}}">
                 <MenuItem Header="{lex:Loc Add}">
                     <MenuItem Header="{lex:Loc AddImageStep}" Command="{Binding AddStepCommand}" CommandParameter="ClickImage"/>
@@ -174,32 +202,8 @@
                         </DataGrid.RowStyle>
                         <DataGrid.Columns>
                             <!-- 多线程区域折叠开关：只出现在「多线程开始」行的首列 -->
-                            <DataGridTemplateColumn Width="22" CanUserSort="False" CanUserResize="False">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ToggleButton x:Name="RegionCollapseToggle"
-                                                      Width="16" Height="16" Padding="0" Focusable="False"
-                                                      HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                      ToolTip="{lex:Loc MultiThreadRegionCollapse_ToolTip}"
-                                                      IsChecked="{Binding IsRegionCollapsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                            <ToggleButton.Style>
-                                                <Style TargetType="ToggleButton">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                    <Setter Property="Content" Value="&#x25B8;"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Type}" Value="{x:Static models:StepType.MultiThread}">
-                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                        </DataTrigger>
-                                                        <Trigger Property="IsChecked" Value="True">
-                                                            <Setter Property="Content" Value="&#x25BE;"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </ToggleButton.Style>
-                                        </ToggleButton>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Width="22" CanUserSort="False" CanUserResize="False"
+                                                    CellTemplateSelector="{StaticResource RegionCollapseCellTemplateSelector}"/>
                             <DataGridCheckBoxColumn Header="" Binding="{Binding IsNeed,UpdateSourceTrigger=PropertyChanged}"/>
                             <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
                             <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>

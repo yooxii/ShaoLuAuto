@@ -6,17 +6,54 @@
                     xmlns:lex="http://wpflocalizeextension.codeplex.com"
                     xmlns:conv="clr-namespace:ShaoLu.Converters"
                     xmlns:models="clr-namespace:ShaoLu.Models"
+                    xmlns:views="clr-namespace:ShaoLu.Views"
                     xmlns:utils="clr-namespace:ShaoLu.Utils"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:svc="clr-namespace:ShaoLu.Services">
 
     <conv:ConditionModeToVisibilityConverter x:Key="ConditionModeToVisibility"/>
     <conv:ConditionEnumToStringConverter x:Key="ConditionEnumToString"/>
+    <conv:BoolToInverseBoolConverter x:Key="BoolToInverse"/>
     <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+    <!-- 细横向滚动条：每个设置段内部使用，高度 6px、无箭头、圆角滑块 -->
+    <ControlTemplate x:Key="ThinHorizontalScrollBarTemplate" TargetType="{x:Type ScrollBar}">
+        <Grid Background="Transparent">
+            <Track x:Name="PART_Track" IsDirectionReversed="False" Orientation="Horizontal">
+                <Track.DecreaseRepeatButton>
+                    <RepeatButton Command="ScrollBar.PageLeftCommand" Opacity="0" Focusable="False"/>
+                </Track.DecreaseRepeatButton>
+                <Track.Thumb>
+                    <Thumb>
+                        <Thumb.Template>
+                            <ControlTemplate TargetType="{x:Type Thumb}">
+                                <Border Background="#FFB8B8B8" CornerRadius="3" Margin="0,1"/>
+                            </ControlTemplate>
+                        </Thumb.Template>
+                    </Thumb>
+                </Track.Thumb>
+                <Track.IncreaseRepeatButton>
+                    <RepeatButton Command="ScrollBar.PageRightCommand" Opacity="0" Focusable="False"/>
+                </Track.IncreaseRepeatButton>
+            </Track>
+        </Grid>
+    </ControlTemplate>
+
+    <!-- 只把「横向」滚动条换成细样式；竖向滚动条保持系统默认 -->
+    <Style TargetType="{x:Type ScrollBar}">
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Height" Value="6"/>
+                <Setter Property="MinHeight" Value="6"/>
+                <Setter Property="Template" Value="{StaticResource ThinHorizontalScrollBarTemplate}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
 
     <!-- 通用 Goto 跳转设置面板 -->
     <DataTemplate x:Key="GotoPanelTemplate">
         <GroupBox Header="{lex:Loc GotoPanel}" Margin="0,10,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -70,6 +107,7 @@
                     <TextBlock Text="{lex:Loc SelfReferenceLimitHint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray" FontSize="11"/>
                 </StackPanel>
             </Grid>
+          </ScrollViewer>
         </GroupBox>
     </DataTemplate>
 
@@ -78,6 +116,7 @@
         <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="3" Padding="5" Margin="0,2">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -112,8 +151,15 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <!-- 第二行：运算符 + 值 -->
-                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal">
+                <!-- 第二行：用户输入字段名（仅变量为「引用步骤 → 用户输入字段」时显示） -->
+                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,3"
+                            Visibility="{Binding ShowFieldName, Converter={StaticResource BoolToVis}}">
+                    <Label Content="{lex:Loc UserInput_FieldName}" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding FieldName, UpdateSourceTrigger=LostFocus}" MinWidth="90"
+                             ToolTip="{lex:Loc UserInput_FieldNameHint}"/>
+                </StackPanel>
+                <!-- 第三行：运算符 + 值 -->
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal">
                     <ComboBox SelectedItem="{Binding Operator}" MinWidth="70" Margin="0,0,3,0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -135,8 +181,8 @@
                     <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}" MinWidth="50" Margin="0,0,3,0"
                              ToolTip="{lex:Loc Condition_Value_Tooltip}"/>
                 </StackPanel>
-                <!-- 第三行：识别文本提取设置（仅识别文本变量显示） -->
-                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0"
+                <!-- 第四行：识别文本提取设置（仅识别文本变量显示） -->
+                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0"
                             Visibility="{Binding ShowTextExtractSettings, Converter={StaticResource BoolToVis}}">
                     <Label Content="{lex:Loc TextExtract_Mode}" Padding="0,0,3,0" VerticalAlignment="Center"/>
                     <ComboBox ItemsSource="{Binding AllTextExtractModes}" SelectedItem="{Binding TextExtractMode}" MinWidth="90" Margin="0,0,3,0">
@@ -168,8 +214,8 @@
                         </ComboBox>
                     </StackPanel>
                 </StackPanel>
-                <!-- 第四行：条件合并符（保持在最后） -->
-                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0">
+                <!-- 第五行：条件合并符（保持在最后） -->
+                <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0">
                     <ComboBox SelectedItem="{Binding Connector}" MinWidth="55" Margin="0,0,3,0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -187,6 +233,7 @@
     <!-- 通用条件判断面板 -->
     <DataTemplate x:Key="ConditionPanelTemplate">
         <GroupBox Header="{lex:Loc ConditionPanel}" Margin="0,10,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
             <StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,3">
                     <Label Content="{lex:Loc ConditionMode_Label}" VerticalAlignment="Center"/>
@@ -210,16 +257,19 @@
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
+          </ScrollViewer>
         </GroupBox>
     </DataTemplate>
 
     <!-- 结果判断编辑入口（点击后在新窗口编辑，原位置只保留入口与摘要） -->
     <DataTemplate x:Key="ConditionEntryTemplate">
         <GroupBox Header="{lex:Loc ConditionPanel}" Margin="0,10,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
             <StackPanel Orientation="Horizontal">
                 <Button Content="{lex:Loc Condition_EditConditions}" Command="{Binding EditConditionsCommand}" Padding="10,3" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding ConditionSummary}" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="Gray" TextWrapping="Wrap"/>
             </StackPanel>
+          </ScrollViewer>
         </GroupBox>
     </DataTemplate>
     <!-- 空步骤（分割符/占位符/注释） -->
@@ -275,6 +325,7 @@
                 <wd:NumericBox Value="{Binding Timeout, UpdateSourceTrigger=LostFocus}" Width="70" Precision="3" Minimum="0" Interval="0.1"/>
             </StackPanel>
             <GroupBox Header="{lex:Loc MouseActions}" Margin="0,5,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                         <Button Content="+" Command="{Binding AddMouseActionCommand}" MinWidth="30" Margin="0,0,5,0"/>
@@ -313,6 +364,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
+              </ScrollViewer>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
@@ -442,6 +494,7 @@
                 <Button Content="{lex:Loc Reset}" Command="{Binding ResetIndexCommand}" Margin="5,0,0,0"/>
             </StackPanel>
             <GroupBox Header="{lex:Loc Contents}" Margin="0,5,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
                 <StackPanel Margin="0,3,0,0">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                         <Button Content="{lex:Loc Select}" Command="{Binding OpenFileCommand}" Margin="0,0,5,0"/>
@@ -461,6 +514,7 @@
                         </ListBox.ItemsPanel>
                     </ListBox>
                 </StackPanel>
+              </ScrollViewer>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
@@ -574,6 +628,7 @@
                 <Button Content="{lex:Loc Select}" Command="{Binding SelectBackgroundColorCommand}"/>
             </StackPanel>
             <GroupBox Header="{lex:Loc Buttons}" Margin="0,5,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                         <Button Content="+" Command="{Binding AddButtonCommand}" MinWidth="30" Margin="0,0,5,0"/>
@@ -596,8 +651,10 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </StackPanel>
+              </ScrollViewer>
             </GroupBox>
             <GroupBox Header="{lex:Loc PopupCloseMode}" Margin="0,5,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
                 <StackPanel>
                     <TextBlock Text="{lex:Loc CloseMode_Hint}" Foreground="Gray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,4"/>
                     <CheckBox Content="{lex:Loc CloseMode_ButtonClick}" IsChecked="{Binding CloseByButtonClick}" Margin="0,2"/>
@@ -619,6 +676,7 @@
                         </ComboBox>
                     </StackPanel>
                 </StackPanel>
+              </ScrollViewer>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
@@ -807,6 +865,7 @@
                 <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.01"/>
             </StackPanel>
             <GroupBox Header="{lex:Loc MouseActions}" Margin="0,5,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                         <Button Content="+" Command="{Binding AddMouseActionCommand}" MinWidth="30" Margin="0,0,5,0"/>
@@ -845,6 +904,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
+              </ScrollViewer>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
@@ -977,6 +1037,7 @@
                 <TextBlock Text="%" VerticalAlignment="Center" Margin="3,0,0,0"/>
             </StackPanel>
             <GroupBox Header="{lex:Loc StatsItems}" Margin="0,5,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
                 <StackPanel>
                     <ItemsControl ItemsSource="{Binding StatisticsItems}" ItemTemplate="{StaticResource StatsItemTemplate}"/>
                     <Expander Header="{lex:Loc StatsCustomConditions}" Margin="0,5,0,0">
@@ -986,6 +1047,7 @@
                         </StackPanel>
                     </Expander>
                 </StackPanel>
+              </ScrollViewer>
             </GroupBox>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
         </StackPanel>
@@ -1438,6 +1500,190 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 用户输入步骤：打开工程 / 开始运行前弹窗填写字段，字段值可被其他步骤按名称引用 -->
+    <DataTemplate x:Key="UserInputStepTemplate" DataType="{x:Type AutoVM:UserInputStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <!-- 弹窗标题（留空时占位显示「用户输入」） -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc UserInput_Title}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Grid MinWidth="180">
+                    <TextBox Text="{Binding PromptTitle, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"/>
+                    <TextBlock Text="{lex:Loc UserInput_Title}" Foreground="Gray" Margin="4,0,0,0"
+                               VerticalAlignment="Center" IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding PromptTitle}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding PromptTitle}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </StackPanel>
+            <!-- 询问时机（可同时勾选：打开工程时 / 开始运行前） -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <CheckBox IsChecked="{Binding AskOnFileOpen}" Content="{lex:Loc UserInput_AskOnOpen}"
+                          VerticalAlignment="Center" Margin="0,0,15,0"/>
+                <CheckBox IsChecked="{Binding AskOnRun}" Content="{lex:Loc UserInput_AskOnRun}"
+                          VerticalAlignment="Center"/>
+            </StackPanel>
+            <!-- 冻结字段说明：首次填写确认后锁定，登录后才可修改 -->
+            <TextBlock Text="{lex:Loc UserInput_FrozenHint}" Foreground="Gray" FontSize="11"
+                       TextWrapping="Wrap" Margin="0,2,0,0"/>
+            <GroupBox Header="{lex:Loc UserInput_Fields}" Margin="0,6,0,0">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" views:StepScrollAssist.BubbleWheelToParent="True">
+                <StackPanel>
+                    <DataGrid x:Name="UserInputFieldsGrid" ItemsSource="{Binding Fields}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                              CanUserResizeRows="False" HeadersVisibility="Column" RowHeaderWidth="0"
+                              GridLinesVisibility="Horizontal" SelectionMode="Single" SelectionUnit="FullRow"
+                              IsReadOnly="True" Height="Auto" MaxHeight="240"
+                              Background="Transparent" AlternatingRowBackground="#F5F5F5"
+                              views:UserInputFieldLockGuard.GuardLockedEdits="True">
+                        <DataGrid.CellStyle>
+                            <Style TargetType="{x:Type DataGridCell}">
+                                <Setter Property="Padding" Value="2,1"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="{lex:Loc UserInput_FieldName}" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                                 BorderThickness="0" Background="Transparent" MinHeight="22"
+                                                 VerticalContentAlignment="Center" ToolTip="{Binding Name}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{lex:Loc UserInput_FieldType}" Width="86">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding Source={x:Static models:UserInputField.AllTypes}}"
+                                                  SelectedItem="{Binding FieldType, UpdateSourceTrigger=PropertyChanged}"
+                                                  MinHeight="22" BorderThickness="0" Background="Transparent">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock>
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="{Binding}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding}" Value="{x:Static models:UserInputFieldType.Text}">
+                                                                        <Setter Property="Text" Value="{lex:Loc UserInput_Type_Text}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding}" Value="{x:Static models:UserInputFieldType.Number}">
+                                                                        <Setter Property="Text" Value="{lex:Loc UserInput_Type_Number}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding}" Value="{x:Static models:UserInputFieldType.Date}">
+                                                                        <Setter Property="Text" Value="{lex:Loc UserInput_Type_Date}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding}" Value="{x:Static models:UserInputFieldType.Password}">
+                                                                        <Setter Property="Text" Value="{lex:Loc UserInput_Type_Password}"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding}" Value="{x:Static models:UserInputFieldType.Dropdown}">
+                                                                        <Setter Property="Text" Value="{lex:Loc UserInput_Type_Dropdown}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- 值：冻结且已确认、未登录时只读（灰色 + 提示登录后修改） -->
+                            <DataGridTemplateColumn Header="{lex:Loc UserInput_FieldValue}" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                 MinHeight="22" VerticalContentAlignment="Center"
+                                                 views:UserInputFieldLockGuard.GuardLockedValue="True">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="ToolTip" Value="{Binding Value}"/>
+                                                    <Setter Property="IsReadOnly"
+                                                            Value="{Binding CanEditValue, Converter={StaticResource BoolToInverse}}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsValueLocked}" Value="True">
+                                                            <Setter Property="Background" Value="#FFF0F0F0"/>
+                                                            <Setter Property="Foreground" Value="#FF808080"/>
+                                                            <Setter Property="ToolTip" Value="{lex:Loc UserInput_FrozenLocked}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{lex:Loc UserInput_Required}" Width="42">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsRequired}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <!-- 冻结：勾选后该字段首次确认填写即锁定，修改需要登录 -->
+                            <DataGridTemplateColumn Header="{lex:Loc UserInput_Frozen}" Width="46">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsFrozen, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  ToolTip="{lex:Loc UserInput_FrozenHint}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{lex:Loc UserInput_Options}" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Options, UpdateSourceTrigger=PropertyChanged}"
+                                                 BorderThickness="0" Background="Transparent" MinHeight="22" MaxHeight="60"
+                                                 AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                                 VerticalContentAlignment="Top"
+                                                 IsEnabled="{Binding IsDropdown}"
+                                                 ToolTip="{lex:Loc UserInput_Options_Hint}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{lex:Loc UserInput_Description}" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                                 BorderThickness="0" Background="Transparent" MinHeight="22"
+                                                 VerticalContentAlignment="Center" ToolTip="{Binding Description}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <Button Content="{lex:Loc UserInput_AddField}" Command="{Binding AddFieldCommand}" Margin="0,0,5,0"/>
+                        <Button Content="{lex:Loc UserInput_RemoveField}" Command="{Binding RemoveFieldCommand}"
+                                CommandParameter="{Binding SelectedItem, ElementName=UserInputFieldsGrid}" Margin="0,0,5,0"/>
+                        <Button Content="{lex:Loc UserInput_FillNow}" Command="{Binding AskNowCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+              </ScrollViewer>
+            </GroupBox>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      EmptyStepTemplate="{StaticResource EmptyStepTemplate}"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
@@ -1456,5 +1702,6 @@
                      MultiThreadEndTemplate="{StaticResource MultiThreadEndTemplate}"
                      SendSignalTemplate="{StaticResource SendSignalTemplate}"
                      ReceiveSignalTemplate="{StaticResource ReceiveSignalTemplate}"
-                     InterruptTemplate="{StaticResource InterruptTemplate}"/>
+                     InterruptTemplate="{StaticResource InterruptTemplate}"
+                     UserInputTemplate="{StaticResource UserInputStepTemplate}"/>
 </ResourceDictionary>

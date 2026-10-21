@@ -1,4 +1,4 @@
-﻿using ShaoLu.Models;
+using ShaoLu.Models;
 using ShaoLu.Viewmodels.AutomationStep;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,6 +26,7 @@ namespace ShaoLu.Converters
         public DataTemplate SendSignalTemplate { get; set; }
         public DataTemplate ReceiveSignalTemplate { get; set; }
         public DataTemplate InterruptTemplate { get; set; }
+        public DataTemplate UserInputTemplate { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
@@ -53,6 +54,7 @@ namespace ShaoLu.Converters
                     StepType.SendSignal => SendSignalTemplate,
                     StepType.ReceiveSignal => ReceiveSignalTemplate,
                     StepType.Interrupt => InterruptTemplate,
+                    StepType.UserInput => UserInputTemplate,
                     _ => ClickImageTemplate,
                 };
             }

@@ -80,6 +80,7 @@ namespace ShaoLu.Converters
             ConditionVariable.Step_PopupResult => "引用步骤 → 弹窗选择结果",
             ConditionVariable.Step_SignalValue => "引用步骤 → 信号内容",
             ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered"),
+            ConditionVariable.Step_UserInputField => "引用步骤 → 用户输入字段",
             _ => v.ToString(),
         };
 

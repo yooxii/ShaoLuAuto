@@ -56,6 +56,9 @@ namespace ShaoLu.Models
         Self_SignalValue,
         /// <summary>引用步骤收到的信号内容</summary>
         Step_SignalValue,
+
+        /// <summary>「用户输入」步骤里指定字段的值（按 FieldName 取）</summary>
+        Step_UserInputField,
     }
 
     /// <summary>
@@ -141,6 +144,7 @@ namespace ShaoLu.Models
                 if (SetProperty(ref _variable, value))
                 {
                     OnPropertyChanged(nameof(ShowTextExtractSettings));
+                    OnPropertyChanged(nameof(ShowFieldName));
                     RefreshExtractVisibility();
                 }
             }
@@ -159,6 +163,25 @@ namespace ShaoLu.Models
                     OnPropertyChanged(nameof(AvailableVariables));
             }
         }
+
+        private string _fieldName = string.Empty;
+
+        /// <summary>
+        /// 当 Variable 为 Step_UserInputField 时，引用的「用户输入」字段名
+        /// </summary>
+        public string FieldName
+        {
+            get => _fieldName;
+            set
+            {
+                if (SetProperty(ref _fieldName, value))
+                    OnPropertyChanged(nameof(ShowFieldName));
+            }
+        }
+
+        /// <summary>是否显示字段名输入框（仅用户输入字段变量）</summary>
+        [JsonIgnore]
+        public bool ShowFieldName => Variable == ConditionVariable.Step_UserInputField;
 
         /// <summary>
         /// 拥有此条件的步骤 Uid（不序列化，运行时设置）
@@ -261,7 +284,8 @@ namespace ShaoLu.Models
                             ConditionVariable.Step_Triggered,
                         });
                         break;
-                    default: // 文本步骤及其他
+                    default:
+                        // 文本步骤及其他
                         vars.AddRange(new[]
                         {
                             ConditionVariable.Self_IsTrue,
@@ -276,6 +300,9 @@ namespace ShaoLu.Models
                         });
                         break;
                 }
+
+                // 任何步骤都可以引用「用户输入」步骤的字段
+                vars.Add(ConditionVariable.Step_UserInputField);
                 return vars;
             }
         }
@@ -438,6 +465,7 @@ namespace ShaoLu.Models
             {
                 Variable = Variable,
                 StepUid = StepUid,
+                FieldName = FieldName,
                 ParentStepUid = ParentStepUid,
                 Operator = Operator,
                 Value = Value,

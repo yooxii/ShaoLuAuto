@@ -1611,4 +1611,94 @@
   <data name="ClickIntervalHint" xml:space="preserve">
     <value>动作间隔（秒）</value>
   </data>
+  <data name="UserInput_StepName" xml:space="preserve">
+    <value>用户输入</value>
+  </data>
+  <data name="UserInput_Title" xml:space="preserve">
+    <value>用户输入</value>
+  </data>
+  <data name="UserInput_AddField" xml:space="preserve">
+    <value>添加字段</value>
+  </data>
+  <data name="UserInput_RemoveField" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="UserInput_FillNow" xml:space="preserve">
+    <value>立即填写</value>
+  </data>
+  <data name="UserInput_AskOnOpen" xml:space="preserve">
+    <value>打开工程时询问</value>
+  </data>
+  <data name="UserInput_AskOnRun" xml:space="preserve">
+    <value>开始运行前询问</value>
+  </data>
+  <data name="UserInput_FieldName" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="UserInput_FieldType" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="UserInput_FieldValue" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="UserInput_Required" xml:space="preserve">
+    <value>必填</value>
+  </data>
+  <data name="UserInput_Options" xml:space="preserve">
+    <value>下拉选项</value>
+  </data>
+  <data name="UserInput_Options_Hint" xml:space="preserve">
+    <value>每行一个候选值（类型为下拉选择时使用）</value>
+  </data>
+  <data name="UserInput_Description" xml:space="preserve">
+    <value>说明</value>
+  </data>
+  <data name="UserInput_Fields" xml:space="preserve">
+    <value>字段列表</value>
+  </data>
+  <data name="UserInput_MissingRequired" xml:space="preserve">
+    <value>必填项未填写：{0}</value>
+  </data>
+  <data name="UserInput_MissingRequiredWindow" xml:space="preserve">
+    <value>以下必填项未填写：&#10;{0}</value>
+  </data>
+  <data name="UserInput_Type_Text" xml:space="preserve">
+    <value>单行文本</value>
+  </data>
+  <data name="UserInput_Type_Number" xml:space="preserve">
+    <value>数字</value>
+  </data>
+  <data name="UserInput_Type_Date" xml:space="preserve">
+    <value>日期</value>
+  </data>
+  <data name="UserInput_Type_Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="UserInput_Type_Dropdown" xml:space="preserve">
+    <value>下拉选择</value>
+  </data>
+  <data name="UserInput_FieldNameHint" xml:space="preserve">
+    <value>「用户输入」步骤里定义的字段名（按名称匹配）</value>
+  </data>
+  <data name="AcbelRefUserInput" xml:space="preserve">
+    <value>用户输入</value>
+  </data>
+  <data name="AcbelRefNoFields" xml:space="preserve">
+    <value>（未定义字段）</value>
+  </data>
+  <data name="UserInput_Frozen" xml:space="preserve">
+    <value>冻结</value>
+  </data>
+  <data name="UserInput_FrozenHint" xml:space="preserve">
+    <value>以下冻结字段首次填写后将被锁定，修改需要登录</value>
+  </data>
+  <data name="UserInput_LoginToEdit" xml:space="preserve">
+    <value>登录以修改</value>
+  </data>
+  <data name="UserInput_FrozenLocked" xml:space="preserve">
+    <value>（冻结字段，登录后可修改）</value>
+  </data>
+  <data name="UserInput_FrozenNeedLogin" xml:space="preserve">
+    <value>该字段已冻结，请登录后再修改</value>
+  </data>
 </root>

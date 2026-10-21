@@ -65,7 +65,7 @@ namespace ShaoLu.Services
                     return false;
 
                 // 解析变量值
-                object leftValue = context.ResolveVariable(cond.Variable, cond.StepUid, currentResult);
+                object leftValue = context.ResolveVariable(cond.Variable, cond.StepUid, currentResult, cond.FieldName);
 
                 // 识别文本变量：按条件行的提取设置预处理文本
                 if (cond.IsTextVariable && leftValue is string textValue)

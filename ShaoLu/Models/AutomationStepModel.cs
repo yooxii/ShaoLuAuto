@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +23,7 @@ namespace ShaoLu.Models
         FocusWindow = 204,
         Popup = 1000,
         AcbelUpload = 1001,     // 上传Acbel（ACBEL_INSERT_DATA）
+        UserInput = 1002,       // 用户输入（打开工程/运行前弹窗填写，供其他步骤引用）
 
         // 多线程步骤
         MultiThread = 300,      // 多线程开始

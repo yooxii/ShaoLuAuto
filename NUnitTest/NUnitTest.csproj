@@ -65,6 +65,7 @@
     <Compile Include="ImageThreadingTests.cs" />
     <Compile Include="StepsOrderMoveTests.cs" />
     <Compile Include="ExecutionLogDisplayTests.cs" />
+    <Compile Include="UserInputStepTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FlaUI.UIA3">

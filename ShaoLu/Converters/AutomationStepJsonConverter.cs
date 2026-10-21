@@ -1,5 +1,6 @@
-﻿using ShaoLu.Models;
+using ShaoLu.Models;
 using ShaoLu.Viewmodels.AutomationStep;
+using NLog;
 using System;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -13,6 +14,7 @@ namespace ShaoLu.Converters
     /// </summary>
     public class AutomationStepBaseJsonConverter : JsonConverter<AutomationStepBase>
     {
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         /// <summary>
         /// 存储旧格式（int 行号）的 Goto 值，待反序列化完成后解析为 Uid
         /// Key: 步骤 Uid, Value: (TrueGotoLineNo, FalseGotoLineNo)
@@ -57,7 +59,8 @@ namespace ShaoLu.Converters
                 // 尝试解析字符串枚举 (忽略大小写)
                 if (!Enum.TryParse<StepType>(stepTypeValue, true, out stepType))
                 {
-                    throw new JsonException($"Unknown StepType string: {stepTypeValue}");
+                    logger.Warn("Unknown StepType string {0} in step file; downgraded to EmptyStep", stepTypeValue);
+                    stepType = StepType.Empty;
                 }
             }
             else if (typeProperty.ValueKind == JsonValueKind.Number)
@@ -74,7 +77,9 @@ namespace ShaoLu.Converters
                     }
                     else
                     {
-                        throw new JsonException($"Unknown StepType number: {val}");
+                        // 旧版本程序打开含新步骤类型的文件：降级为空步骤，保证其余步骤可正常打开
+                        logger.Warn("Unknown StepType number {0} in step file; downgraded to EmptyStep", val);
+                        stepType = StepType.Empty;
                     }
                 }
             }
@@ -96,6 +101,7 @@ namespace ShaoLu.Converters
                 StepType.TypeTextFromFile => typeof(TypeTextFromFileStep),
                 StepType.Popup => typeof(PopupStep),
                 StepType.AcbelUpload => typeof(AcbelUploadStep),
+                StepType.UserInput => typeof(UserInputStep),
                 StepType.Empty => typeof(EmptyStep),
                 StepType.GetInput => typeof(GetInputStep),
                 StepType.MouseAction => typeof(MouseActionStep),
@@ -108,7 +114,7 @@ namespace ShaoLu.Converters
                 StepType.ReceiveSignal => typeof(ReceiveSignalStep),
                 StepType.Interrupt => typeof(InterruptStep),
                 // 添加其他映射...
-                _ => throw new JsonException($"No mapping found for StepType: {stepType}"),
+                _ => typeof(EmptyStep),
             };
 
             // 5. 将 JsonElement 重新转换为具体的对象

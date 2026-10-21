@@ -1,5 +1,8 @@
-﻿using ShaoLu.Utils;
+using ShaoLu.Models;
+using ShaoLu.Services;
+using ShaoLu.Utils;
 using ShaoLu.Viewmodels;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -24,7 +27,63 @@ namespace ShaoLu.Views
             DataContext = stepsViewModel;
             AddHandler(Keyboard.GotKeyboardFocusEvent,
                 new KeyboardFocusChangedEventHandler(OnGotKeyboardFocus), true);
+            // 登录状态变化时刷新「用户输入」冻结字段的可编辑性
+            Loaded += (_, __) => HookLoginState(true);
+            Unloaded += (_, __) => HookLoginState(false);
         }
+
+        #region 登录状态 → 冻结字段刷新
+
+        private bool _loginStateHooked;
+
+        /// <summary>订阅/取消订阅主视图模型的登录状态变化</summary>
+        private void HookLoginState(bool hook)
+        {
+            try
+            {
+                var main = SingletonLocator.Main;
+                if (main == null) return;
+                if (hook && !_loginStateHooked)
+                {
+                    main.PropertyChanged += OnMainPropertyChanged;
+                    _loginStateHooked = true;
+                    RefreshUserInputFieldLocks();
+                }
+                else if (!hook && _loginStateHooked)
+                {
+                    main.PropertyChanged -= OnMainPropertyChanged;
+                    _loginStateHooked = false;
+                }
+            }
+            catch { }
+        }
+
+        private void OnMainPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ShaoLu.Viewmodels.MainViewModel.IsLoggedIn))
+                RefreshUserInputFieldLocks();
+        }
+
+        /// <summary>重新计算所有「用户输入」步骤字段的冻结/可编辑状态（登录后解锁、退出后重新锁定）</summary>
+        public void RefreshUserInputFieldLocks()
+        {
+            try
+            {
+                var steps = stepsViewModel?.AutomationStepBases;
+                if (steps == null) return;
+                foreach (var step in steps)
+                {
+                    if (step is ShaoLu.Viewmodels.AutomationStep.UserInputStep userInput && userInput.Fields != null)
+                    {
+                        foreach (var inputField in userInput.Fields)
+                            inputField?.RefreshLockState();
+                    }
+                }
+            }
+            catch { }
+        }
+
+        #endregion
 
         private void Refresh_Click(object sender, System.Windows.RoutedEventArgs e)
         {
@@ -136,5 +195,174 @@ namespace ShaoLu.Views
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// 「用户输入」步骤详情里的冻结字段编辑守卫。
+    /// 步骤详情由 DataTemplate 渲染、没有代码后置，无法直接挂事件，
+    /// 因此用附加属性把事件挂到模板内的 DataGrid / 值输入框上：
+    /// - GuardLockedEdits（DataGrid）：开始编辑时拦截锁定字段；
+    /// - GuardLockedValue（值输入框）：点击/键入时提示“登录后修改”（只读状态下仍允许选中复制）。
+    /// </summary>
+    public static class UserInputFieldLockGuard
+    {
+        #region DataGrid：拦截开始编辑
+
+        public static readonly DependencyProperty GuardLockedEditsProperty =
+            DependencyProperty.RegisterAttached("GuardLockedEdits", typeof(bool), typeof(UserInputFieldLockGuard),
+                new PropertyMetadata(false, OnGuardLockedEditsChanged));
+
+        public static void SetGuardLockedEdits(DependencyObject element, bool value) => element.SetValue(GuardLockedEditsProperty, value);
+
+        public static bool GetGuardLockedEdits(DependencyObject element) => (bool)element.GetValue(GuardLockedEditsProperty);
+
+        private static void OnGuardLockedEditsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(d is DataGrid grid)) return;
+            grid.BeginningEdit -= OnGridBeginningEdit;
+            if (e.NewValue is true) grid.BeginningEdit += OnGridBeginningEdit;
+        }
+
+        private static void OnGridBeginningEdit(object sender, DataGridBeginningEditEventArgs e)
+        {
+            if (e.Row?.Item is UserInputField field && !field.CanEditValue)
+            {
+                e.Cancel = true;
+                PromptNeedLogin();
+            }
+        }
+
+        #endregion
+
+        #region 值输入框：点击/键盘操作时提示
+
+        public static readonly DependencyProperty GuardLockedValueProperty =
+            DependencyProperty.RegisterAttached("GuardLockedValue", typeof(bool), typeof(UserInputFieldLockGuard),
+                new PropertyMetadata(false, OnGuardLockedValueChanged));
+
+        public static void SetGuardLockedValue(DependencyObject element, bool value) => element.SetValue(GuardLockedValueProperty, value);
+
+        public static bool GetGuardLockedValue(DependencyObject element) => (bool)element.GetValue(GuardLockedValueProperty);
+
+        private static void OnGuardLockedValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(d is FrameworkElement element)) return;
+            element.PreviewMouseLeftButtonDown -= OnLockedValueMouseDown;
+            element.PreviewKeyDown -= OnLockedValueKeyDown;
+            if (e.NewValue is true)
+            {
+                element.PreviewMouseLeftButtonDown += OnLockedValueMouseDown;
+                element.PreviewKeyDown += OnLockedValueKeyDown;
+            }
+        }
+
+        private static void OnLockedValueMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!(sender is FrameworkElement element) || !(element.DataContext is UserInputField field)) return;
+            if (field.CanEditValue) return;
+            // 只读单元格仍允许选中复制，仅在鼠标首次进入（尚未获得键盘焦点）时提示一次
+            if (!element.IsKeyboardFocusWithin) PromptNeedLogin();
+        }
+
+        private static void OnLockedValueKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!(sender is FrameworkElement element) || !(element.DataContext is UserInputField field)) return;
+            if (field.CanEditValue) return;
+            // 阅读/复制类按键不提示（IsReadOnly 本身已阻止修改）
+            if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down
+                || e.Key == Key.Tab || e.Key == Key.Home || e.Key == Key.End)
+                return;
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control
+                && (e.Key == Key.C || e.Key == Key.A))
+                return;
+            PromptNeedLogin();
+        }
+
+        #endregion
+
+        /// <summary>最近一次提示时间（1.5 秒节流，避免连续操作弹出多个提示窗口）</summary>
+        private static DateTime _lastPromptAt = DateTime.MinValue;
+
+        /// <summary>提示需要登录后才能修改冻结字段</summary>
+        private static void PromptNeedLogin()
+        {
+            var now = DateTime.UtcNow;
+            if ((now - _lastPromptAt).TotalSeconds < 1.5) return;
+            _lastPromptAt = now;
+
+            WindowAsyncPopup.Show(
+                LanguageService.GetLocalizedString("UserInput_FrozenNeedLogin", "该字段已冻结，请登录后再修改"),
+                LanguageService.GetLocalizedString("Warning", "提示"),
+                PopupButtons.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    /// <summary>
+    /// 步骤详情里每个设置段自带横向滚动容器；为了让最外层（详情面板）的竖向滚动顺畅，
+    /// 段内容器的鼠标滚轮不自行消费，而是转交给上层可竖向滚动的 ScrollViewer。
+    /// </summary>
+    public static class StepScrollAssist
+    {
+        public static readonly DependencyProperty BubbleWheelToParentProperty =
+            DependencyProperty.RegisterAttached(
+                "BubbleWheelToParent",
+                typeof(bool),
+                typeof(StepScrollAssist),
+                new PropertyMetadata(false, OnBubbleWheelToParentChanged));
+
+        public static void SetBubbleWheelToParent(DependencyObject element, bool value)
+            => element?.SetValue(BubbleWheelToParentProperty, value);
+
+        public static bool GetBubbleWheelToParent(DependencyObject element)
+            => element != null && (bool)element.GetValue(BubbleWheelToParentProperty);
+
+        private static void OnBubbleWheelToParentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not UIElement element) return;
+
+            element.PreviewMouseWheel -= OnPreviewMouseWheel;
+            if (e.NewValue is true)
+                element.PreviewMouseWheel += OnPreviewMouseWheel;
+        }
+
+        private static void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (e.Handled || sender is not DependencyObject element) return;
+
+            // 内层容器自身能纵向滚动时，交给它自己处理（当前段内容器都是禁用纵向滚动）
+            if (element is ScrollViewer inner
+                && inner.VerticalScrollBarVisibility != ScrollBarVisibility.Disabled
+                && inner.ScrollableHeight > 0)
+            {
+                return;
+            }
+
+            var parent = FindParentVerticalScrollViewer(element);
+            if (parent == null) return;
+
+            // 标记为已处理，然后把同一滚轮事件转给外层容器
+            e.Handled = true;
+            parent.RaiseEvent(new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+            {
+                RoutedEvent = UIElement.MouseWheelEvent,
+                Source = element,
+            });
+        }
+
+        private static ScrollViewer FindParentVerticalScrollViewer(DependencyObject element)
+        {
+            var current = element as DependencyObject;
+            while (current != null)
+            {
+                current = VisualTreeHelper.GetParent(current);
+                if (current is ScrollViewer viewer
+                    && viewer.VerticalScrollBarVisibility != ScrollBarVisibility.Disabled
+                    && viewer.ScrollableHeight > 0)
+                {
+                    return viewer;
+                }
+            }
+            return null;
+        }
     }
 }

@@ -21,6 +21,9 @@ namespace ShaoLu.Services
         private readonly ConcurrentDictionary<Guid, int> _executionCounts = new();
         private readonly Stopwatch _totalStopwatch = new();
 
+        // 「用户输入」步骤的字段值（步骤 Uid → { 字段名 → 值 }），供其他步骤与条件判断按字段引用
+        private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, string>> _userInputs = new();
+
         // 已登记的子线程上下文（不含单例自身）
         private static readonly List<StepExecutionContext> _childContexts = new();
         private static readonly object _childContextsLock = new();
@@ -122,10 +125,91 @@ namespace ShaoLu.Services
             _results.Clear();
             _resultsByUid.Clear();
             _executionCounts.Clear();
+            _userInputs.Clear();
             _totalStopwatch.Reset();
             CurrentStepUid = null;
             RunningStepUid = null;
         }
+
+        #region 用户输入字段
+
+        /// <summary>写入某个「用户输入」步骤的字段值（步骤执行时调用）</summary>
+        public void SetUserInput(Guid stepUid, IEnumerable<UserInputField> fields)
+        {
+            if (stepUid == Guid.Empty) return;
+
+            var map = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+            if (fields != null)
+            {
+                foreach (var field in fields)
+                {
+                    if (field == null || string.IsNullOrWhiteSpace(field.Name)) continue;
+                    map[field.Name.Trim()] = field.Value ?? string.Empty;
+                }
+            }
+            _userInputs[stepUid] = map;
+        }
+
+        /// <summary>直接写入一个字段值（测试/外部注入用）</summary>
+        public void SetUserInput(Guid stepUid, string fieldName, string value)
+        {
+            if (stepUid == Guid.Empty || string.IsNullOrWhiteSpace(fieldName)) return;
+            var map = _userInputs.GetOrAdd(stepUid, _ => new ConcurrentDictionary<string, string>(StringComparer.Ordinal));
+            map[fieldName.Trim()] = value ?? string.Empty;
+        }
+
+        /// <summary>读取本上下文中某个步骤的字段值；取不到返回 null</summary>
+        public string GetUserInput(Guid stepUid, string fieldName)
+        {
+            if (stepUid == Guid.Empty || string.IsNullOrWhiteSpace(fieldName)) return null;
+            if (_userInputs.TryGetValue(stepUid, out var map)
+                && map.TryGetValue(fieldName.Trim(), out var value))
+                return value;
+            return null;
+        }
+
+        /// <summary>读取某个步骤已写入的字段名</summary>
+        public IReadOnlyList<string> GetUserInputFieldNames(Guid stepUid)
+        {
+            if (stepUid == Guid.Empty) return Array.Empty<string>();
+            return _userInputs.TryGetValue(stepUid, out var map) ? map.Keys.ToList() : Array.Empty<string>();
+        }
+
+        /// <summary>跨所有上下文读取字段值（步骤可能跑在子线程上下文里）</summary>
+        public static bool TryGetUserInput(Guid stepUid, string fieldName, out string value)
+        {
+            value = null;
+            if (stepUid == Guid.Empty || string.IsNullOrWhiteSpace(fieldName)) return false;
+
+            foreach (var ctx in AllContexts)
+            {
+                if (ctx == null) continue;
+                string found = ctx.GetUserInput(stepUid, fieldName);
+                if (found != null)
+                {
+                    value = found;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>跨所有上下文收集某个步骤已写入的字段名（引用菜单展示用）</summary>
+        public static IReadOnlyList<string> GetUserInputFieldNamesAll(Guid stepUid)
+        {
+            var names = new List<string>();
+            foreach (var ctx in AllContexts)
+            {
+                if (ctx == null) continue;
+                foreach (var name in ctx.GetUserInputFieldNames(stepUid))
+                {
+                    if (!names.Contains(name)) names.Add(name);
+                }
+            }
+            return names;
+        }
+
+        #endregion
 
         /// <summary>获取步骤执行时间</summary>
         public double GetStepTime(Guid uid)
@@ -229,8 +313,9 @@ namespace ShaoLu.Services
         /// <param name="variable">条件变量类型</param>
         /// <param name="stepUid">引用的步骤 Uid（当变量为 Step_* 时使用）</param>
         /// <param name="currentResult">当前步骤的执行结果</param>
+        /// <param name="fieldName">「用户输入」字段名（当变量为 Step_UserInputField 时使用）</param>
         /// <returns>变量的实际值</returns>
-        public object ResolveVariable(ConditionVariable variable, Guid? stepUid, StepExecutionResult currentResult)
+        public object ResolveVariable(ConditionVariable variable, Guid? stepUid, StepExecutionResult currentResult, string fieldName = null)
         {
             switch (variable)
             {
@@ -275,6 +360,11 @@ namespace ShaoLu.Services
                     return GetResultByUid(stepUid)?.PopupResult ?? string.Empty;
                 case ConditionVariable.Step_SignalValue:
                     return GetResultByUid(stepUid)?.SignalValue ?? string.Empty;
+                case ConditionVariable.Step_UserInputField:
+                    return stepUid.HasValue
+                        && TryGetUserInput(stepUid.Value, fieldName, out string fieldValue)
+                            ? fieldValue
+                            : string.Empty;
                 case ConditionVariable.Step_Triggered:
                     // 仅当引用步骤是刚刚执行完成的步骤时为 true（每次步骤执行后只成立一次）
                     return stepUid.HasValue && CurrentStepUid.HasValue && stepUid.Value == CurrentStepUid.Value;

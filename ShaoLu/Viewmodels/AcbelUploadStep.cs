@@ -1,4 +1,4 @@
-﻿using AcbelMes;
+using AcbelMes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
@@ -16,7 +16,7 @@ using System.Windows.Input;
 namespace ShaoLu.Viewmodels.AutomationStep
 {
     /// <summary>
-    /// 字段值的引用种类：直接引用其他步骤本次运行的结果。
+    /// 字段值的引用种类：引用其他步骤本次运行的结果，或「用户输入」步骤填写的字段值。
     /// </summary>
     public enum AcbelReferenceKind
     {
@@ -29,7 +29,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         OcrText = 2,
 
         /// <summary>直接获取文本。</summary>
-        DirectText = 3
+        DirectText = 3,
+
+        /// <summary>用户输入字段（按字段名读取「用户输入」步骤填写的值）。</summary>
+        UserInput = 4
     }
 
     /// <summary>
@@ -70,10 +73,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
     /// </summary>
     public sealed class AcbelUploadRow : ObservableObject
     {
+        private static readonly NLog.Logger RowLogger = NLog.LogManager.GetCurrentClassLogger();
+
         private int _index;
         private string _text = string.Empty;
         private Guid? _refStepUid;
         private AcbelReferenceKind? _refKind;
+        private string _refFieldName = string.Empty;
         private ICommand _clearReferenceCommand;
 
         /// <summary>段号（1..27）；0 表示镭雕程式文件名（insert 第 3 参数）。</summary>
@@ -117,6 +123,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        /// <summary>
+        /// 被引用的「用户输入」字段名（仅 RefKind = UserInput 时有意义）。
+        /// 旧文件没有该属性时为空串，不影响其余三种引用。
+        /// </summary>
+        public string RefFieldName
+        {
+            get => _refFieldName;
+            set
+            {
+                if (SetProperty(ref _refFieldName, value ?? string.Empty)) RaiseReferenceChanged();
+            }
+        }
+
         /// <summary>所属步骤 Uid（用于在引用菜单里排除本步骤自身）。</summary>
         [JsonIgnore]
         public Guid OwnerUid { get; set; }
@@ -144,13 +163,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
-        /// <summary>已经引用了其他步骤本次运行的结果。</summary>
+        /// <summary>已经引用了其他步骤的运行结果或「用户输入」字段。</summary>
         [JsonIgnore]
         public bool IsReferenced
             => _refStepUid.HasValue && _refStepUid.Value != Guid.Empty
                && _refKind.HasValue && _refKind.Value != AcbelReferenceKind.None;
 
-        /// <summary>引用标签，例如「12. GetInput_1 · OCR 文本」。</summary>
+        /// <summary>引用标签，例如「12. GetInput_1 · OCR 文本」或「用户输入 → 用户输入_1 / SN」。</summary>
         [JsonIgnore]
         public string ReferenceLabel
         {
@@ -165,6 +184,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     lineNo = pair.Key;
                     stepName = pair.Value.Name;
                     break;
+                }
+
+                // 用户输入：显示「用户输入 → 步骤名 / 字段名」；找不到步骤名时用字段名
+                if (_refKind.Value == AcbelReferenceKind.UserInput)
+                {
+                    string userInputKind = AcbelUploadStep.Loc("AcbelRefUserInput", "用户输入");
+                    string fieldName = _refFieldName ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(stepName))
+                        return string.IsNullOrWhiteSpace(fieldName)
+                            ? userInputKind + " → " + stepName
+                            : userInputKind + " → " + stepName + " / " + fieldName;
+                    if (!string.IsNullOrWhiteSpace(fieldName))
+                        return userInputKind + " → " + fieldName;
+                    return userInputKind;
                 }
 
                 string kind;
@@ -189,7 +222,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
-        /// <summary>「▾」菜单的节点树（引用步骤 / 三种结果种类 / 清除引用）。</summary>
+        /// <summary>「▾」菜单的节点树（引用步骤 / 三种结果种类 / 用户输入字段 / 清除引用）。</summary>
         [JsonIgnore]
         public ObservableCollection<AcbelRefMenuNode> MenuNodes
         {
@@ -201,6 +234,27 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     var step = pair.Value;
                     var stepNode = new AcbelRefMenuNode { Header = pair.Key + ". " + step.Name };
+
+                    // 「用户输入」步骤：步骤节点下直接列出它的每个字段，选中即按字段名引用
+                    if (step is UserInputStep userInputStep)
+                    {
+                        foreach (var fieldName in CollectUserInputFieldNames(userInputStep))
+                            stepNode.Children.Add(CreateUserInputFieldNode(step, fieldName));
+
+                        if (stepNode.Children.Count == 0)
+                        {
+                            stepNode.Children.Add(new AcbelRefMenuNode
+                            {
+                                Header = AcbelUploadStep.Loc("AcbelRefNoFields", "（未定义字段）"),
+                                StepUid = step.Uid,
+                                Kind = AcbelReferenceKind.UserInput
+                            });
+                        }
+
+                        root.Children.Add(stepNode);
+                        continue;
+                    }
+
                     stepNode.Children.Add(CreateKindNode("AcbelRefExecutionResult", "执行结果", step.Uid, AcbelReferenceKind.ExecutionResult));
                     stepNode.Children.Add(CreateKindNode("AcbelRefOcrText", "OCR 文本", step.Uid, AcbelReferenceKind.OcrText));
                     stepNode.Children.Add(CreateKindNode("AcbelRefDirectText", "直接获取文本", step.Uid, AcbelReferenceKind.DirectText));
@@ -217,16 +271,57 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        /// <summary>
+        /// 收集某「用户输入」步骤可选字段名：设计期 Fields 与运行时已写入的字段名合并去重，
+        /// 这样运行前后都能从菜单里选到字段。
+        /// </summary>
+        private static List<string> CollectUserInputFieldNames(UserInputStep step)
+        {
+            var names = new List<string>();
+            try
+            {
+                if (step.Fields != null)
+                {
+                    foreach (var field in step.Fields)
+                    {
+                        if (field == null || string.IsNullOrWhiteSpace(field.Name)) continue;
+                        string name = field.Name.Trim();
+                        if (!names.Contains(name)) names.Add(name);
+                    }
+                }
+
+                foreach (var name in StepExecutionContext.GetUserInputFieldNamesAll(step.Uid))
+                {
+                    if (string.IsNullOrWhiteSpace(name)) continue;
+                    string trimmed = name.Trim();
+                    if (!names.Contains(trimmed)) names.Add(trimmed);
+                }
+            }
+            catch (Exception ex)
+            {
+                RowLogger.Warn(ex, "AcbelUpload: 取用户输入字段名失败");
+            }
+
+            return names;
+        }
+
         /// <summary>点击引用标签即可清除引用。</summary>
         [JsonIgnore]
         public ICommand ClearReferenceCommand => _clearReferenceCommand ??= new RelayCommand(ClearReference);
 
-        /// <summary>引用其他步骤本次运行的结果。</summary>
-        public void SetReference(Guid stepUid, AcbelReferenceKind kind)
+        /// <summary>
+        /// 引用其他步骤本次运行的结果。
+        /// kind = UserInput 时必须给出 fieldName（用户输入字段名）。
+        /// </summary>
+        public void SetReference(Guid stepUid, AcbelReferenceKind kind, string fieldName = null)
         {
             if (stepUid == Guid.Empty || kind == AcbelReferenceKind.None) return;
+            if (kind == AcbelReferenceKind.UserInput && string.IsNullOrWhiteSpace(fieldName)) return;
+
             _refStepUid = stepUid;
             _refKind = kind;
+            // 只有用户输入引用需要字段名，其余引用清空，避免残留旧字段名
+            _refFieldName = kind == AcbelReferenceKind.UserInput ? fieldName.Trim() : string.Empty;
             RaiseReferenceChanged();
         }
 
@@ -236,6 +331,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             if (!IsReferenced) return;
             _refStepUid = null;
             _refKind = null;
+            _refFieldName = string.Empty;
             RaiseReferenceChanged();
         }
 
@@ -248,6 +344,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Text = _text,
                 RefStepUid = _refStepUid,
                 RefKind = _refKind,
+                RefFieldName = _refFieldName,
                 OwnerUid = OwnerUid
             };
         }
@@ -258,11 +355,26 @@ namespace ShaoLu.Viewmodels.AutomationStep
             OnPropertyChanged(nameof(ReferenceLabel));
         }
 
+        /// <summary>「用户输入 → 字段」叶子节点：记录字段名，点击即按 UserInput 引用。</summary>
+        private AcbelRefMenuNode CreateUserInputFieldNode(AutomationStepBase step, string fieldName)
+        {
+            return new AcbelRefMenuNode
+            {
+                Header = fieldName,
+                StepUid = step.Uid,
+                Kind = AcbelReferenceKind.UserInput,
+                FieldName = fieldName,
+                Command = new RelayCommand(() => SetReference(step.Uid, AcbelReferenceKind.UserInput, fieldName))
+            };
+        }
+
         private AcbelRefMenuNode CreateKindNode(string key, string fallback, Guid stepUid, AcbelReferenceKind kind)
         {
             return new AcbelRefMenuNode
             {
                 Header = AcbelUploadStep.Loc(key, fallback),
+                StepUid = stepUid,
+                Kind = kind,
                 Command = new RelayCommand(() => SetReference(stepUid, kind))
             };
         }
@@ -270,6 +382,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
     /// <summary>
     /// 「▾」菜单节点。ToString 供 MenuItem 直接显示（容器 Header 由生成器赋值，样式里的绑定会被覆盖）。
+    /// StepUid / Kind / FieldName 为叶子节点的引用元数据（供「用户输入字段」这类需要额外参数的引用使用）。
     /// </summary>
     public sealed class AcbelRefMenuNode
     {
@@ -278,6 +391,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public ObservableCollection<AcbelRefMenuNode> Children { get; } = new ObservableCollection<AcbelRefMenuNode>();
 
         public ICommand Command { get; set; }
+
+        /// <summary>该叶子节点引用的步骤 Uid。</summary>
+        public Guid? StepUid { get; set; }
+
+        /// <summary>该叶子节点对应的引用种类。</summary>
+        public AcbelReferenceKind? Kind { get; set; }
+
+        /// <summary>「用户输入」引用时的字段名；其它引用为空。</summary>
+        public string FieldName { get; set; }
 
         public override string ToString() => Header ?? string.Empty;
     }
@@ -416,6 +538,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>
         /// 解析某个字段行的取值：未引用取固定文本；引用取其他步骤「本次运行」的结果，
         /// 取不到（未执行过/未初始化）时按空串处理，不报错。
+        /// 「用户输入」引用按字段名从执行上下文取值，不依赖步骤的执行结果。
         /// </summary>
         public string ResolveRowValue(AcbelUploadRow row)
         {
@@ -424,6 +547,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
             try
             {
+                // 用户输入字段：走执行上下文的字段值（未填写/未运行均按空串）
+                if (row.RefKind.Value == AcbelReferenceKind.UserInput)
+                {
+                    return StepExecutionContext.TryGetUserInput(row.RefStepUid.Value, row.RefFieldName, out string userInput)
+                        ? (userInput ?? string.Empty)
+                        : string.Empty;
+                }
+
                 StepExecutionResult result;
                 string threadName;
                 if (!StepExecutionContext.TryGetLatestResult(row.RefStepUid.Value, out result, out threadName) || result == null)

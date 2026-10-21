@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.6.7.2611</ApplicationVersion>
+    <ApplicationVersion>0.6.8.2611</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -155,6 +155,7 @@
     <Compile Include="Models\StepCondition.cs" />
     <Compile Include="Models\StepExecutionResult.cs" />
     <Compile Include="Models\User.cs" />
+    <Compile Include="Models\UserInputField.cs" />
     <Compile Include="Models\StepExecutionLog.cs" />
     <Compile Include="Models\BurnInRecord.cs" />
     <Compile Include="Models\BurnInSession.cs" />
@@ -236,6 +237,7 @@
     <Compile Include="Viewmodels\FocusWindowStep.cs" />
     <Compile Include="Viewmodels\MultiThreadSteps.cs" />
     <Compile Include="Viewmodels\UserManagementViewModel.cs" />
+    <Compile Include="Viewmodels\UserInputStep.cs" />
     <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />
     <Compile Include="Views\UserControlSteps.xaml.cs">
@@ -291,6 +293,9 @@
     </Compile>
     <Compile Include="Views\WindowStatistics.xaml.cs">
       <DependentUpon>WindowStatistics.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowUserInput.xaml.cs">
+      <DependentUpon>WindowUserInput.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowSelectPoint.xaml.cs">
       <DependentUpon>WindowSelectPoint.xaml</DependentUpon>
@@ -415,6 +420,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowStatistics.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowUserInput.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

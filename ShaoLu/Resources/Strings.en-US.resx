@@ -1611,4 +1611,94 @@
   <data name="ClickIntervalHint" xml:space="preserve">
     <value>Interval between actions (seconds)</value>
   </data>
+  <data name="UserInput_StepName" xml:space="preserve">
+    <value>User Input</value>
+  </data>
+  <data name="UserInput_Title" xml:space="preserve">
+    <value>User Input</value>
+  </data>
+  <data name="UserInput_AddField" xml:space="preserve">
+    <value>Add field</value>
+  </data>
+  <data name="UserInput_RemoveField" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="UserInput_FillNow" xml:space="preserve">
+    <value>Fill now</value>
+  </data>
+  <data name="UserInput_AskOnOpen" xml:space="preserve">
+    <value>Ask when opening a project</value>
+  </data>
+  <data name="UserInput_AskOnRun" xml:space="preserve">
+    <value>Ask before running</value>
+  </data>
+  <data name="UserInput_FieldName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="UserInput_FieldType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="UserInput_FieldValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="UserInput_Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="UserInput_Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="UserInput_Options_Hint" xml:space="preserve">
+    <value>One option per line (used when the type is Dropdown)</value>
+  </data>
+  <data name="UserInput_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="UserInput_Fields" xml:space="preserve">
+    <value>Fields</value>
+  </data>
+  <data name="UserInput_MissingRequired" xml:space="preserve">
+    <value>Required fields are empty: {0}</value>
+  </data>
+  <data name="UserInput_MissingRequiredWindow" xml:space="preserve">
+    <value>The following required fields are empty:&#10;{0}</value>
+  </data>
+  <data name="UserInput_Type_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="UserInput_Type_Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="UserInput_Type_Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="UserInput_Type_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="UserInput_Type_Dropdown" xml:space="preserve">
+    <value>Dropdown</value>
+  </data>
+  <data name="UserInput_FieldNameHint" xml:space="preserve">
+    <value>Field name defined in the User Input step (matched by name)</value>
+  </data>
+  <data name="AcbelRefUserInput" xml:space="preserve">
+    <value>User input</value>
+  </data>
+  <data name="AcbelRefNoFields" xml:space="preserve">
+    <value>(no fields defined)</value>
+  </data>
+  <data name="UserInput_Frozen" xml:space="preserve">
+    <value>Frozen</value>
+  </data>
+  <data name="UserInput_FrozenHint" xml:space="preserve">
+    <value>Frozen fields are locked after the first confirmed input; log in to change them</value>
+  </data>
+  <data name="UserInput_LoginToEdit" xml:space="preserve">
+    <value>Log in to edit</value>
+  </data>
+  <data name="UserInput_FrozenLocked" xml:space="preserve">
+    <value>(frozen field, log in to change)</value>
+  </data>
+  <data name="UserInput_FrozenNeedLogin" xml:space="preserve">
+    <value>This field is frozen. Please log in to change it.</value>
+  </data>
 </root>

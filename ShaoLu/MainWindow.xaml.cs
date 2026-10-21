@@ -390,6 +390,36 @@ namespace ShaoLu
         }
 
         /// <summary>
+        /// 「用户输入」步骤：打开工程后询问勾选了 AskOnFileOpen 的步骤。
+        /// 用户取消不影响工程打开；确定后把值立即写入执行上下文。
+        /// 弹窗自身异常只记日志，不把打开工程判成失败。
+        /// </summary>
+        private void TryPromptUserInputsOnFileOpen()
+        {
+            try
+            {
+                var inputSteps = stepsViewModel.AutomationStepBases
+                    .OfType<UserInputStep>()
+                    .Where(s => s != null && s.HasFields && s.AskOnFileOpen)
+                    .ToList();
+                if (inputSteps.Count == 0) return;
+
+                if (!WindowUserInput.ShowAndEdit(inputSteps, this))
+                {
+                    NLog.LogManager.GetCurrentClassLogger().Info("UserInput: file-open prompt cancelled by user");
+                    return;
+                }
+
+                foreach (var inputStep in inputSteps)
+                    StepExecutionContext.Instance.SetUserInput(inputStep.Uid, inputStep.Fields);
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "UserInput: prompt on file open failed");
+            }
+        }
+
+        /// <summary>
         /// 加载步骤文件（支持 .autostep 与旧版 .json）
         /// </summary>
         private void LoadStepFile(string filePath)
@@ -420,6 +450,10 @@ namespace ShaoLu
                 // 记录到最近打开文件列表
                 RecentFilesService.AddRecent(filePath);
                 _isDirty = false;
+
+                // 「用户输入」步骤：打开工程后询问勾选了"打开工程时询问"的步骤。
+                // 用户取消不影响工程打开（只是不更新值）；确定后立即写入执行上下文。
+                TryPromptUserInputsOnFileOpen();
 
                 // 缺失资源显式告警：图片或烧录判据模板缺失会让匹配静默失败
                 var missingAssets = StepsFile.CollectMissingAssets(loadedSteps, mainViewModel.StepImageWorkDir);

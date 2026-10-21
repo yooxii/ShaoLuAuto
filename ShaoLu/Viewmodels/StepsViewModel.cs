@@ -719,6 +719,7 @@ namespace ShaoLu.Viewmodels
                     "TypeTextFromFile" => new TypeTextFromFileStep($"TypeTextFromFile_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextFromFile) + 1}"),
                     "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
                     "AcbelUpload" => new AcbelUploadStep($"AcbelUpload_{AutomationStepBases.Count(t => t.Type == StepType.AcbelUpload) + 1}"),
+                    "UserInput" => new UserInputStep($"UserInput_{AutomationStepBases.Count(t => t.Type == StepType.UserInput) + 1}"),
                     "GetInput" => new GetInputStep($"GetInput_{AutomationStepBases.Count(t => t.Type == StepType.GetInput) + 1}"),
                     "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
@@ -1180,6 +1181,67 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
+        /// 收集需要询问的「用户输入」步骤（只取有字段的，避免弹空窗）。
+        /// askOnRun=true 用于开始运行前，false 用于打开工程时。
+        /// </summary>
+        private List<UserInputStep> CollectUserInputSteps(bool askOnRun)
+        {
+            if (AutomationStepBases == null) return new List<UserInputStep>();
+            return AutomationStepBases
+                .OfType<UserInputStep>()
+                .Where(s => s != null && s.HasFields && (askOnRun ? s.AskOnRun : s.AskOnFileOpen))
+                .ToList();
+        }
+
+        /// <summary>
+        /// 弹出「用户输入」填写窗口（模态）。WPF 窗口必须在 UI 线程创建，
+        /// 非 UI 线程调用时切回 UI 线程再弹。返回 false 表示用户取消。
+        /// </summary>
+        private static bool PromptUserInputs(IReadOnlyList<UserInputStep> steps)
+        {
+            if (steps == null || steps.Count == 0) return true;
+            try
+            {
+                var app = Application.Current;
+                if (app == null)
+                {
+                    // 无 UI 上下文（单元测试等）：没有可填写窗口，按"未取消"处理
+                    return true;
+                }
+                if (app.Dispatcher.CheckAccess())
+                    return WindowUserInput.ShowAndEdit(steps, app.MainWindow);
+                return app.Dispatcher.Invoke(() => WindowUserInput.ShowAndEdit(steps, app.MainWindow));
+            }
+            catch (Exception ex)
+            {
+                // 弹窗失败时按取消处理：宁可中止本次运行，也不要在缺少输入的情况下继续
+                logger.Warn(ex, "UserInput: 弹窗失败，按取消处理");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 把「用户输入」步骤的字段值写入执行上下文，
+        /// 供步骤执行前的条件判断（Step_UserInputField）与「上传Acbel」等步骤按字段引用。
+        /// </summary>
+        private static void PublishUserInputs(IEnumerable<UserInputStep> steps)
+        {
+            if (steps == null) return;
+            foreach (var step in steps)
+            {
+                if (step == null) continue;
+                try
+                {
+                    StepExecutionContext.Instance.SetUserInput(step.Uid, step.Fields);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "UserInput: 写入执行上下文失败（{0}）", step.Name);
+                }
+            }
+        }
+
+        /// <summary>
         /// 运行前确认：可等待的确认窗。确认期间禁用主窗口（等效模态，
         /// 但消息循环不被阻塞，界面照常重绘）。
         /// 确认期间 IsRunning 已为 true，因此再点"开始"会被 CanRun 拦下（S8）。
@@ -1248,8 +1310,21 @@ namespace ShaoLu.Viewmodels
                 if (_stepSettings.ConfirmBeforeRun && !await ConfirmRunAsync())
                     return;
 
+                // 「用户输入」步骤：开始运行前收集勾选了"运行前询问"的步骤并弹窗填写。
+                // 弹窗在 PreRun 之前（避免 PreRun 最小化主窗口后弹窗无属主），
+                // 值在 PreRun 清空执行上下文之后再写入，保证条件判断在步骤执行前就能读到。
+                var runInputSteps = CollectUserInputSteps(askOnRun: true);
+                if (runInputSteps.Count > 0 && !PromptUserInputs(runInputSteps))
+                {
+                    // 用户取消：中止本次运行；运行态由 finally 统一释放（S8），不会残留"运行中"
+                    logger.Info("UserInput: run cancelled by user");
+                    return;
+                }
+
                 PreRun();
                 preRunStarted = true;
+                // 填写完成后立即写入执行上下文（PreRun 会 Clear，故必须在其后写入）
+                PublishUserInputs(runInputSteps);
                 _cts = new CancellationTokenSource();
                 cts = _cts;
                 var token = cts.Token;

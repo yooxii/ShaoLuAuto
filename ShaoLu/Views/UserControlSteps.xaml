@@ -21,6 +21,54 @@
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+            <!-- 工具栏 SplitButton：去掉内置的竖分隔线，内容与下拉箭头直接并排 -->
+            <Style TargetType="{x:Type wd:SplitButton}">
+                <Setter Property="Padding" Value="6,3"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type wd:SplitButton}">
+                            <Border x:Name="PART_Border"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    SnapsToDevicePixels="True">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter x:Name="PART_ContentPresenter"
+                                                      Grid.Column="0"
+                                                      Margin="{TemplateBinding Padding}"
+                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                      Content="{TemplateBinding Content}"
+                                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                      SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                    <ToggleButton x:Name="PART_ToggleButton"
+                                                  Grid.Column="1"
+                                                  Width="24"
+                                                  MinHeight="20"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  ClickMode="Press"
+                                                  Focusable="False"
+                                                  Foreground="{TemplateBinding Foreground}"
+                                                  IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                        <wd:PathIcon Kind="ChevronDown"
+                                                     Width="10" Height="6"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                                    </ToggleButton>
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <conv:BoolToInverseBoolConverter x:Key="BoolToInverseBoolConverter"/>
             <conv:RegionCollapseConverter x:Key="RegionCollapseConverter"/>
             <utils:SingletonLocator x:Key="VMLocator" />
@@ -98,10 +146,25 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <ToolBarPanel Margin="3">
-                <StackPanel Orientation="Horizontal">
-                    <!-- 组别开关：除「运行」外的组默认折叠；编辑与步骤互斥（见代码后置） -->
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
-                        <ToggleButton x:Name="EditGroupToggle" Margin="2" Padding="10,3" Checked="EditGroupToggle_Checked">
+                <ToolBarTray Orientation="Horizontal">
+                    <ToolBar>
+                        <Button Content="{lex:Loc BtnRun_Content}" Margin="3" Command="{Binding RunCommand}"/>
+                        <Button Margin="3" Command="{Binding PauseCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Content" Value="{lex:Loc BtnPause_Content}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                                            <Setter Property="Content" Value="{lex:Loc BtnResume_Content}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Content="{lex:Loc BtnStop_Content}" Margin="3" Command="{Binding StopCommand}"/>
+                        <Separator/>
+                        <!-- 组别开关：除「运行」外的组默认折叠；编辑与步骤互斥（见代码后置） -->
+                        <ToggleButton x:Name="EditGroupToggle" Margin="2" Padding="8,2" Checked="EditGroupToggle_Checked">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{lex:Loc Edit}"/>
                                 <TextBlock Margin="5,0,0,0">
@@ -118,7 +181,7 @@
                                 </TextBlock>
                             </StackPanel>
                         </ToggleButton>
-                        <ToggleButton x:Name="StepGroupToggle" Margin="2" Padding="10,3" IsChecked="True" Checked="StepGroupToggle_Checked">
+                        <ToggleButton x:Name="StepGroupToggle" Margin="2" Padding="8,2" IsChecked="True" Checked="StepGroupToggle_Checked">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{lex:Loc Step}"/>
                                 <TextBlock Margin="5,0,0,0">
@@ -135,23 +198,6 @@
                                 </TextBlock>
                             </StackPanel>
                         </ToggleButton>
-                    </StackPanel>
-                    <ToolBarTray Orientation="Horizontal">
-                    <ToolBar>
-                        <Button Content="{lex:Loc BtnRun_Content}" Margin="3" Command="{Binding RunCommand}"/>
-                        <Button Margin="3" Command="{Binding PauseCommand}">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Content" Value="{lex:Loc BtnPause_Content}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsPaused}" Value="True">
-                                            <Setter Property="Content" Value="{lex:Loc BtnResume_Content}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Button Content="{lex:Loc BtnStop_Content}" Margin="3" Command="{Binding StopCommand}"/>
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Edit}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}"
                              Visibility="{Binding IsChecked, ElementName=EditGroupToggle, Converter={StaticResource BoolToVis}}">
@@ -195,7 +241,6 @@
                         <Button Content="{lex:Loc UserInput_StepName}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="UserInput"/>
                     </ToolBar>
                 </ToolBarTray>
-                </StackPanel>
             </ToolBarPanel>
             <!--步骤按钮-->
             <Grid Grid.Row="1">

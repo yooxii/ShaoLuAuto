@@ -120,7 +120,12 @@ namespace ShaoLu.Views
         private void MenuItemAddOtherStep_Click(object sender, RoutedEventArgs e)
         {
             var menuItem = (MenuItem)sender;
-            AddOCRStep.CommandParameter = menuItem.CommandParameter;
+            // 更新「发出这条菜单的 SplitButton」的 CommandParameter，
+            // 这样菜单选择后主按钮显示什么、点下去就添加什么（此前固定写死 AddOCRStep，
+            // 导致「多线程」这类其他 SplitButton 选完仍是第一个菜单项）
+            var owner = ResolveOwnerSplitButton(menuItem);
+            if (owner != null)
+                owner.CommandParameter = menuItem.CommandParameter;
             if (menuItem.CommandParameter is string type)
             {
                 stepsViewModel.AddStepCommand.Execute(type);
@@ -130,11 +135,22 @@ namespace ShaoLu.Views
         private void MenuItemAddImageStep_Click(object sender, RoutedEventArgs e)
         {
             var menuItem = (MenuItem)sender;
-            AddImageStep.CommandParameter = menuItem.CommandParameter;
+            var owner = ResolveOwnerSplitButton(menuItem);
+            if (owner != null)
+                owner.CommandParameter = menuItem.CommandParameter;
             if (menuItem.CommandParameter is string type)
             {
                 stepsViewModel.AddStepCommand.Execute(type);
             }
+        }
+
+        /// <summary>找到菜单项所属的 SplitButton（菜单项被移入 ContextMenu，PlacementTarget 指向 SplitButton）</summary>
+        private static SplitButton ResolveOwnerSplitButton(MenuItem menuItem)
+        {
+            if (menuItem == null) return null;
+            if (menuItem.Parent is ContextMenu menu && menu.PlacementTarget is SplitButton owner)
+                return owner;
+            return null;
         }
 
         #region 撤销 / 恢复焦点路由

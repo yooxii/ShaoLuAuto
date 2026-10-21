@@ -16,6 +16,9 @@ using System.Windows;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
+// 允许单元测试程序集访问 internal 成员（如 StepsFile.WorkDirResolver，供回归测试替换工作目录）
+[assembly: InternalsVisibleTo("NUnitTest")]
+
 // 将 ComVisible 设置为 false 会使此程序集中的类型
 //对 COM 组件不可见。如果需要从 COM 访问此程序集中的类型
 //请将此类型的 ComVisible 特性设置为 true。
@@ -53,5 +56,5 @@ using System.Windows;
 //      2. 本文件的 AssemblyVersion              -> 程序集标识
 //      3. 本文件的 AssemblyFileVersion          -> 资源管理器里的「文件版本/产品版本」
 // 需要临时用别的号构建时：tools/build-app.ps1 -Version <号> / tools/pack-release.ps1 -Version <号>。
-[assembly: AssemblyVersion("0.6.6.2620")]
-[assembly: AssemblyFileVersion("0.6.6.2620")]
+[assembly: AssemblyVersion("0.6.7.2611")]
+[assembly: AssemblyFileVersion("0.6.7.2611")]

@@ -1,9 +1,10 @@
-﻿using OpenCvSharp;
+using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using ShaoLu.Services;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Media;
@@ -75,6 +76,14 @@ namespace ShaoLu.Utils
         #region 图像类
 
         /// <summary>
+        /// 虚拟桌面边界（含副屏，坐标可能为负）。
+        /// 截图、模板匹配结果换算与鼠标坐标归一化必须统一使用该坐标系，
+        /// 否则副屏上的目标永远匹配不到、点击位置也会整体偏移。
+        /// 注意：ScreenCoordinates 里的“相对坐标”仍以主屏尺寸为基准（用户语义），两者互不影响。
+        /// </summary>
+        internal static Rectangle GetVirtualScreenBounds() => SystemInformation.VirtualScreen;
+
+        /// <summary>
         /// 从屏幕中查找指定的图像，并返回其在屏幕上的位置和相似度。
         /// </summary>
         /// <param name="templateImage"> 要查找的图像 </param>
@@ -83,13 +92,15 @@ namespace ShaoLu.Utils
         /// <param name="timeout"> 若没有找到，超时时间，(s) </param>
         /// <param name="highPrecision"> 是否启用颜色（高精度）匹配；false 时走原有灰度路径，行为与历史版本一致 </param>
         /// <param name="colorThreshold"> 颜色相似度阈值，仅 highPrecision 为 true 时生效 </param>
-        /// <returns>匹配结果，包含坐标和相似度</returns>
+        /// <returns>匹配结果，包含坐标和相似度；未找到时返回空结果（IsEmpty=true），由调用方按 FalseGoto 处理</returns>
         public static AutoRect FindImageOnScreen(Bitmap templateImage, double threshold = 0.8, double gaptime = 0.2, double timeout = 3, bool highPrecision = false, double colorThreshold = 0.95)
         {
             if (templateImage == null)
             {
                 return new();
             }
+            // 截图覆盖整个虚拟桌面，匹配结果需要加回虚拟桌面原点才是屏幕绝对坐标
+            Rectangle screenBounds = GetVirtualScreenBounds();
             // 将秒转换为毫秒，方便计时和休眠
             int gapTimeMs = (int)(gaptime * 1000);
             int timeoutMs = (int)(timeout * 1000);
@@ -144,12 +155,15 @@ namespace ShaoLu.Utils
 
                 if (matched)
                 {
+                    // 4.1 把匹配位置从“截图内部坐标”换算回“屏幕绝对坐标”（补上虚拟桌面原点，副屏可能是负坐标）
+                    int left = screenBounds.X + maxLoc.X;
+                    int top = screenBounds.Y + maxLoc.Y;
                     // 计算中心坐标
-                    int centerX = maxLoc.X + templateMat.Width / 2;
-                    int centerY = maxLoc.Y + templateMat.Height / 2;
+                    int centerX = left + templateMat.Width / 2;
+                    int centerY = top + templateMat.Height / 2;
 
                     res.Center = new Point(centerX, centerY);
-                    res.LeftTop = maxLoc;
+                    res.LeftTop = new Point(left, top);
                     res.Similarity = similarity;
                     return res; // 找到目标，直接返回
                 }
@@ -166,11 +180,8 @@ namespace ShaoLu.Utils
                 Thread.Sleep(gapTimeMs);
             }
 
-            if (res.Similarity < threshold)
-            {
-                throw new Exception(LanguageService.GetLocalizedString("NoMatchingImage"));
-            }
-            // 超时未找到，返回包含最后一次相似度的默认 Apoint 对象
+            // 未匹配属于正常业务结果（图片没在屏幕上），返回空结果让步骤走 FalseGoto；
+            // 真实异常（图像格式、参数、IO 等）仍由上面的匹配流程直接抛出
             return res;
         }
 
@@ -261,39 +272,53 @@ namespace ShaoLu.Utils
                 throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"));
             }
 
-            List<AutoRect> apoints = [];
+            // 按下标保存每张模板的匹配结果，保证返回值与模板顺序一一对应
+            AutoRect[] results = new AutoRect[templateImage.Count];
+            int found = 0;
             int gapTimeMs = (int)(gaptime * 1000);
             int timeoutMs = (int)(timeout * 1000);
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             int i = 0;
-            Bitmap? tempImage = null;
+            Exception? lastError = null;
             while (true)
             {
                 try
                 {
+                    // 未匹配时 FindImageOnScreen 返回空结果（不再抛异常），只有真正匹配才计入
                     AutoRect res = FindImageOnScreen(templateImage[i].Bitmap, templateImage[i].Threshold, 0, 0);
-                    apoints.Add(res);
-                    if (signle)
+                    if (!res.IsEmpty && results[i] == null)
                     {
-                        tempImage?.Dispose();
-                        return apoints;
+                        results[i] = res;
+                        found++;
                     }
-                    if (apoints.Count >= templateImage.Count)
+                    if (signle && found > 0)
                     {
-                        tempImage?.Dispose();
-                        return apoints;
+                        return results.Select(r => r ?? new AutoRect()).ToList();
+                    }
+                    if (found >= templateImage.Count)
+                    {
+                        return results.ToList();
                     }
                 }
                 catch (Exception ex)
                 {
-                    long elapsedMs = stopwatch.ElapsedMilliseconds;
-                    if (elapsedMs >= timeoutMs)
-                    {
-                        tempImage?.Dispose();
-                        throw ex;
-                    }
+                    // 保留重试，但记录最内层异常用于区分“未找到”与“真实异常”
+                    lastError = ex;
                 }
+
+                // 至少尝试一轮后才能判断超时：Timeout=0 表示只尝试一次，不再一进来就失败
+                if (stopwatch.ElapsedMilliseconds >= timeoutMs)
+                {
+                    if (lastError != null)
+                    {
+                        throw new Exception(
+                            $"{LanguageService.GetLocalizedString("NoMatchingImage")}: {lastError.Message}", lastError);
+                    }
+                    // 未找到的模板用空结果占位，保持与模板顺序一致
+                    return results.Select(r => r ?? new AutoRect()).ToList();
+                }
+
                 Thread.Sleep(gapTimeMs);
                 i++;
                 if (i >= templateImage.Count)
@@ -304,12 +329,12 @@ namespace ShaoLu.Utils
         }
 
         /// <summary>
-        /// 截取全屏
+        /// 截取全屏（整个虚拟桌面，含副屏；副屏在主屏左侧/上侧时截取原点为负坐标）
         /// </summary>
         /// <returns> Bitmap格式的全屏截图 </returns>
         public static Bitmap CaptureScreen()
         {
-            Rectangle bounds = Screen.PrimaryScreen.Bounds;
+            Rectangle bounds = GetVirtualScreenBounds();
             Bitmap bmpSrceen = new(bounds.Width, bounds.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             using Graphics g = Graphics.FromImage(bmpSrceen);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -321,14 +346,15 @@ namespace ShaoLu.Utils
         /// <summary>
         /// 截取屏幕指定区域
         /// </summary>
-        /// <param name="region">屏幕绝对坐标区域（逻辑像素）</param>
+        /// <param name="region">屏幕绝对坐标区域（与 CaptureScreen 同一坐标系，即虚拟桌面像素，含负坐标）</param>
         /// <returns> 截取的 Bitmap，若区域为空或非法则返回 null </returns>
         public static Bitmap CaptureScreenRegion(Rectangle region)
         {
             if (region.Width <= 0 || region.Height <= 0) return null;
             try
             {
-                var bounds = Screen.PrimaryScreen.Bounds;
+                // 裁剪范围必须是虚拟桌面（多屏），只按主屏裁剪会让副屏区域永远截不到
+                var bounds = GetVirtualScreenBounds();
                 // 将区域裁剪到屏幕范围内，防止越界
                 region = Rectangle.Intersect(region, bounds);
                 if (region.Width <= 0 || region.Height <= 0) return null;
@@ -347,11 +373,18 @@ namespace ShaoLu.Utils
         /// <summary>
         /// 将鼠标移动到指定的屏幕坐标位置。
         /// </summary>
-        /// <param name="x"> 横坐标 </param>
-        /// <param name="y"> 纵坐标 </param>
+        /// <param name="x"> 横坐标（虚拟桌面绝对坐标，副屏可能为负） </param>
+        /// <param name="y"> 纵坐标（同上） </param>
         public static void MoveMouseTo(int x, int y)
         {
-            sim.Mouse.MoveMouseToPositionOnVirtualDesktop(x * 65535 / Screen.PrimaryScreen.Bounds.Width, y * 65535 / Screen.PrimaryScreen.Bounds.Height);
+            // 归一化基准必须是整个虚拟桌面，且要扣除虚拟桌面原点：
+            // 原来按主屏尺寸归一化，副屏（负坐标/主屏之外）会整体偏移甚至落到屏幕外
+            Rectangle bounds = GetVirtualScreenBounds();
+            int maxX = Math.Max(1, bounds.Width - 1);
+            int maxY = Math.Max(1, bounds.Height - 1);
+            int normalizedX = Math.Max(0, Math.Min(65535, (x - bounds.X) * 65535 / maxX));
+            int normalizedY = Math.Max(0, Math.Min(65535, (y - bounds.Y) * 65535 / maxY));
+            sim.Mouse.MoveMouseToPositionOnVirtualDesktop(normalizedX, normalizedY);
         }
 
         /// <summary>
@@ -440,36 +473,61 @@ namespace ShaoLu.Utils
             Thread.Sleep(waitTimeMs);
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            // 记录最内层异常：用于区分“未找到”与“真实异常（IO/参数/OpenCV）”
+            Exception? lastError = null;
 
             while (true)
             {
-                if (stopwatch.ElapsedMilliseconds >= timeoutMs)
-                {
-                    throw new Exception(LanguageService.GetLocalizedString("NoMatchingImage"));
-                }
                 try
                 {
                     AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.1, 0.2, highPrecision, colorThreshold);
-                    if (!rect.IsEmpty && clickposition != null)
+                    if (!rect.IsEmpty)
                     {
-                        foreach (Point p in clickposition)
+                        if (clickposition != null && clickposition.Count > 0)
                         {
-                            MoveMouseTo(rect, position, p);
+                            foreach (Point p in clickposition)
+                            {
+                                MoveMouseTo(rect, position, p);
+                                for (int i = 0; i < clicks; i++)
+                                {
+                                    sim.Mouse.LeftButtonClick();
+                                    Thread.Sleep(clickGapTimeMs); // 点击间隔
+                                }
+                                Thread.Sleep(nextclickTimeMs); // 等待下一次点击
+                            }
+                        }
+                        else
+                        {
+                            // 没有配置点击点时按匹配区域中心点击一次，避免“匹配成功却不点击”
+                            MoveMouseTo(rect, Position.Center);
                             for (int i = 0; i < clicks; i++)
                             {
                                 sim.Mouse.LeftButtonClick();
-                                Thread.Sleep(clickGapTimeMs); // 点击间隔
+                                Thread.Sleep(clickGapTimeMs);
                             }
-                            Thread.Sleep(nextclickTimeMs); // 等待下一次点击
                         }
                         return rect;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    continue;
+                    // 保留重试逻辑，但记录最内层异常，超时后把原因带进最终错误
+                    lastError = ex;
+                }
+
+                // 至少先尝试一次再判断超时：Timeout=0 表示“只尝试一次”，不再一进来就报未找到
+                if (stopwatch.ElapsedMilliseconds >= timeoutMs)
+                {
+                    break;
                 }
             }
+
+            string notFound = LanguageService.GetLocalizedString("NoMatchingImage");
+            if (lastError != null)
+            {
+                throw new Exception($"{notFound}: {lastError.Message}", lastError);
+            }
+            throw new Exception(notFound);
         }
 
         /// <summary>
@@ -577,32 +635,54 @@ namespace ShaoLu.Utils
 
             Thread.Sleep(waitTimeMs);
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            // 记录最内层异常：用于区分“未找到”与“真实异常（IO/参数/动作执行）”
+            Exception? lastError = null;
 
             while (true)
             {
-                if (stopwatch.ElapsedMilliseconds >= timeoutMs)
-                {
-                    throw new Exception(LanguageService.GetLocalizedString("NoMatchingImage"));
-                }
                 try
                 {
                     AutoRect rect = FindImageOnScreen(templateImage, threshold, 0.1, 0.2, highPrecision, colorThreshold);
-                    if (!rect.IsEmpty && clickposition != null)
+                    if (!rect.IsEmpty)
                     {
-                        foreach (Point p in clickposition)
+                        if (clickposition != null && clickposition.Count > 0)
                         {
-                            MoveMouseTo(rect, position, p);
-                            ExecuteMouseActions(actions, act => BuildImageDragPath(act, rect, position, clickposition));
-                            Thread.Sleep(nextclickTimeMs);
+                            foreach (Point p in clickposition)
+                            {
+                                MoveMouseTo(rect, position, p);
+                                ExecuteMouseActions(actions, act => BuildImageDragPath(act, rect, position, clickposition));
+                                Thread.Sleep(nextclickTimeMs);
+                            }
+                        }
+                        else
+                        {
+                            // 没有配置点击点时按匹配区域中心执行动作，避免“匹配成功却不点击”
+                            MoveMouseTo(rect, Position.Center);
+                            var centerOffset = new List<Point> { new Point(0, 0) };
+                            ExecuteMouseActions(actions, act => BuildImageDragPath(act, rect, Position.Center, centerOffset));
                         }
                         return rect;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    continue;
+                    // 保留重试逻辑，但记录最内层异常，超时后把原因带进最终错误
+                    lastError = ex;
+                }
+
+                // 至少先尝试一次再判断超时：Timeout=0 表示“只尝试一次”，不再一进来就报未找到
+                if (stopwatch.ElapsedMilliseconds >= timeoutMs)
+                {
+                    break;
                 }
             }
+
+            string notFound = LanguageService.GetLocalizedString("NoMatchingImage");
+            if (lastError != null)
+            {
+                throw new Exception($"{notFound}: {lastError.Message}", lastError);
+            }
+            throw new Exception(notFound);
         }
 
         /// <summary>

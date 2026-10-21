@@ -1572,4 +1572,43 @@
   <data name="MultiThreadRegionCollapse_ToolTip" xml:space="preserve">
     <value>Collapse / expand this multi-thread region (display only)</value>
   </data>
+  <data name="BurnIn_TemplateSaveFailed" xml:space="preserve">
+    <value>Failed to save template image</value>
+  </data>
+  <data name="BurnIn_LoadMore" xml:space="preserve">
+    <value>Load more</value>
+  </data>
+  <data name="MissingStepAssets" xml:space="preserve">
+    <value>Images/templates referenced by the project are missing</value>
+  </data>
+  <data name="Save_Failed" xml:space="preserve">
+    <value>Save failed</value>
+  </data>
+  <data name="SaveMissingImages" xml:space="preserve">
+    <value>The following images do not exist on disk and were not written to the project package:</value>
+  </data>
+  <data name="SaveWarnings" xml:space="preserve">
+    <value>Problems occurred while copying images to the working directory:</value>
+  </data>
+  <data name="StopBeforeClose" xml:space="preserve">
+    <value>Automation is running. Please stop it before closing the window.</value>
+  </data>
+  <data name="StopBeforeFileOperation" xml:space="preserve">
+    <value>Automation is running. Please stop it before creating or opening a project.</value>
+  </data>
+  <data name="TypeTextFromFile_ContentsFinished" xml:space="preserve">
+    <value>{0}'s Contents is finished.</value>
+  </data>
+  <data name="UnsavedChangesPrompt" xml:space="preserve">
+    <value>The current project has unsaved changes. Discard them?</value>
+  </data>
+  <data name="RequireAdminPermission" xml:space="preserve">
+    <value>Administrator permission is required to manage users.</value>
+  </data>
+  <data name="UserDoc" xml:space="preserve">
+    <value>User Documentation</value>
+  </data>
+  <data name="ClickIntervalHint" xml:space="preserve">
+    <value>Interval between actions (seconds)</value>
+  </data>
 </root>

@@ -1572,4 +1572,43 @@
   <data name="MultiThreadRegionCollapse_ToolTip" xml:space="preserve">
     <value>折叠/展开该多线程区域（仅影响列表显示）</value>
   </data>
+  <data name="BurnIn_TemplateSaveFailed" xml:space="preserve">
+    <value>保存判据模板失败</value>
+  </data>
+  <data name="BurnIn_LoadMore" xml:space="preserve">
+    <value>加载更多</value>
+  </data>
+  <data name="MissingStepAssets" xml:space="preserve">
+    <value>工程引用的图片/模板缺失</value>
+  </data>
+  <data name="Save_Failed" xml:space="preserve">
+    <value>保存失败</value>
+  </data>
+  <data name="SaveMissingImages" xml:space="preserve">
+    <value>以下图片在磁盘上不存在，未写入工程包：</value>
+  </data>
+  <data name="SaveWarnings" xml:space="preserve">
+    <value>图片复制到工作目录时出现问题：</value>
+  </data>
+  <data name="StopBeforeClose" xml:space="preserve">
+    <value>正在运行自动化，请先停止后再关闭窗口。</value>
+  </data>
+  <data name="StopBeforeFileOperation" xml:space="preserve">
+    <value>正在运行自动化，请先停止后再新建或打开工程。</value>
+  </data>
+  <data name="TypeTextFromFile_ContentsFinished" xml:space="preserve">
+    <value>{0} 的内容已用完。</value>
+  </data>
+  <data name="UnsavedChangesPrompt" xml:space="preserve">
+    <value>当前工程有未保存的修改，确定放弃这些修改吗？</value>
+  </data>
+  <data name="RequireAdminPermission" xml:space="preserve">
+    <value>需要管理员权限才能管理用户。</value>
+  </data>
+  <data name="UserDoc" xml:space="preserve">
+    <value>使用说明</value>
+  </data>
+  <data name="ClickIntervalHint" xml:space="preserve">
+    <value>动作间隔（秒）</value>
+  </data>
 </root>

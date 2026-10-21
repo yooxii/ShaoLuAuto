@@ -208,6 +208,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override AutomationStepBase Clone()
         {
+            // 先读取一次 TextPoints：触发旧版单点 TextPoint → TextPoints 的迁移（迁移后 TextPoint 会被清零）。
+            // 若先复制 TextPoint 再读集合，克隆体会同时带 TextPoint 与迁移出的列表项，最终多出一个获取点（1→2）。
+            var sourcePoints = TextPoints;
             var clone = new GetInputStep(Name, Description)
             {
                 InputMode = InputMode,
@@ -223,7 +226,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };
-            foreach (var p in TextPoints)
+            foreach (var p in sourcePoints)
                 clone.TextPoints.Add(p.Clone());
             return clone;
         }
@@ -449,15 +452,30 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     }
                 }
             }), System.Windows.Threading.DispatcherPriority.Background);
-            win.editImageViewModel.OnImageSaved += (img, rect, thumbs, ocrRect) => SavePointImage(item, img, rect, thumbs);
+            win.editImageViewModel.OnImageSaved += (img, rect, thumbs, ocrRect) =>
+            {
+                // 落盘失败时向上抛出：图片编辑窗口会捕获并提示“保存失败”，不再继续弹“已保存”
+                if (!SavePointImage(item, img, rect, thumbs))
+                    throw new InvalidOperationException(LanguageService.GetLocalizedString("SaveFailed", "Save failed"));
+            };
         }
 
-        /// <summary>保存裁剪图到工作目录 images/{Id}.png，并记录裁剪区与点击点偏移</summary>
-        private void SavePointImage(TextPointItem item, System.Windows.Media.ImageSource img, Rect rect, List<ClickThumb> thumbs)
+        /// <summary>
+        /// 保存裁剪图到工作目录 images/{Id}.png，并记录裁剪区与点击点偏移
+        /// </summary>
+        /// <returns>是否成功落盘；失败时写日志并返回 false（不再吞掉异常却当作已保存）</returns>
+        private bool SavePointImage(TextPointItem item, System.Windows.Media.ImageSource img, Rect rect, List<ClickThumb> thumbs)
         {
-            if (img == null) return;
+            if (img == null) return false;
             try
             {
+                if (img is not System.Windows.Media.Imaging.BitmapSource bs)
+                {
+                    // 不是可编码的位图：不能只改名却不写文件，否则会误报“已保存”
+                    _logger.Warn("SavePointImage skipped: unsupported image source type {0}", img.GetType().Name);
+                    return false;
+                }
+
                 string workDir = Utils.SingletonLocator.Main?.StepImageWorkDir;
                 if (string.IsNullOrEmpty(workDir))
                 {
@@ -468,14 +486,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
                 string fileName = $"{item.Id}.png";
                 string fullPath = Path.Combine(workDir, "images", fileName);
-                if (img is System.Windows.Media.Imaging.BitmapSource bs)
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                using (var fs = new FileStream(fullPath, FileMode.Create))
                 {
-                    var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
-                    using (var fs = new FileStream(fullPath, FileMode.Create))
-                    {
-                        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bs));
-                        encoder.Save(fs);
-                    }
+                    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bs));
+                    encoder.Save(fs);
                 }
 
                 item.CroppedImageName = $"images/{fileName}";
@@ -484,10 +499,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 item.ClickOffsets = thumbs != null && thumbs.Count > 0
                     ? thumbs.Select(t => t.ClickPoint - new Models.Point((int)rect.X, (int)rect.Y)).ToList()
                     : new List<Models.Point> { new Models.Point((int)(rect.Width / 2), (int)(rect.Height / 2)) };
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex, "SavePointImage failed");
+                return false;
             }
         }
 
@@ -545,6 +562,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         // 单点匹配超时同样使用步骤配置的超时时间（<=0 时保持原默认 3s）
                         double searchTimeout = Timeout > 0 ? Timeout : 3;
                         var rect = Utils.Autogui.FindImageOnScreen(template, item.SimilarityThreshold, 0.1, searchTimeout);
+                        // FindImageOnScreen 未命中时返回空结果（不再抛异常），这里必须显式判定，
+                        // 否则会用空坐标(0,0)去读文本，读错位置
+                        if (rect.IsEmpty)
+                            throw new Exception(LanguageService.GetLocalizedString("NoMatchingImage", "No Matching Image"));
                         var offsets = item.ClickOffsets != null && item.ClickOffsets.Count > 0
                             ? item.ClickOffsets
                             : new List<Models.Point> { new Models.Point(template.Width / 2, template.Height / 2) };

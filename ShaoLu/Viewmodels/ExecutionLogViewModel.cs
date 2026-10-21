@@ -191,17 +191,20 @@ namespace ShaoLu.Viewmodels
             {
                 string fileName = string.IsNullOrWhiteSpace(SelectedFileName) ? null : SelectedFileName;
 
+                // 时间区间统一为半开区间 [from, to+1)：结束日期当天的数据也要能看到
+                DateTime? toExclusive = DateTo?.Date.AddDays(1);
+
                 TotalCount = ExecutionLogService.QueryCount(
                     keyword: SearchKeyword,
                     stepFileName: fileName,
                     from: DateFrom,
-                    to: DateTo);
+                    to: toExclusive);
 
                 var results = ExecutionLogService.Query(
                     keyword: SearchKeyword,
                     stepFileName: fileName,
                     from: DateFrom,
-                    to: DateTo,
+                    to: toExclusive,
                     orderBy: SortColumn,
                     descending: SortDescending,
                     page: CurrentPage,

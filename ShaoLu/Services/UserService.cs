@@ -28,6 +28,10 @@ namespace ShaoLu.Services
         private static IFreeSql Fsql => _fsql.Value;
 
         public User CurrentUser { get; private set; }
+
+        /// <summary>
+        /// 当前登录用户是否为管理员（用户管理、删除用户、修改角色等管理操作必须先校验）
+        /// </summary>
         public bool IsAdmin => CurrentUser != null && CurrentUser.Role == UserRole.Admin;
 
         public UserService()
@@ -104,8 +108,15 @@ namespace ShaoLu.Services
                 .ToList();
         }
 
+        /// <summary>
+        /// 新增用户（管理操作）：要求当前登录用户为管理员。
+        /// role 为调用方显式指定，缺省语义为普通用户（UserRole.User）。
+        /// </summary>
         public bool AddUser(string username, string password, UserRole role)
         {
+            if (!IsAdmin)
+                return false;
+
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return false;
 
@@ -124,12 +135,17 @@ namespace ShaoLu.Services
                 CreatedAt = DateTime.Now
             };
 
-            Fsql.Insert(user).ExecuteAffrows();
-            return true;
+            return Fsql.Insert(user).ExecuteAffrows() > 0;
         }
 
+        /// <summary>
+        /// 删除用户（管理操作）：要求当前登录用户为管理员，且不允许删除最后一个管理员。
+        /// </summary>
         public bool DeleteUser(string username)
         {
+            if (!IsAdmin)
+                return false;
+
             var user = Fsql.Select<User>()
                 .Where(u => u.Username == username)
                 .First();
@@ -158,9 +174,55 @@ namespace ShaoLu.Services
             return true;
         }
 
+        /// <summary>
+        /// 修改用户角色（管理操作）：要求当前登录用户为管理员，且不允许把最后一个管理员降级。
+        /// </summary>
+        public bool ChangeRole(string username, UserRole role)
+        {
+            if (!IsAdmin || string.IsNullOrEmpty(username))
+                return false;
+
+            var user = Fsql.Select<User>()
+                .Where(u => u.Username == username)
+                .First();
+            if (user == null)
+                return false;
+
+            if (user.Role == role)
+                return true;
+
+            // 不允许把最后一个管理员降级
+            if (user.Role == UserRole.Admin && role != UserRole.Admin)
+            {
+                long adminCount = Fsql.Select<User>()
+                    .Where(u => u.Role == UserRole.Admin)
+                    .Count();
+                if (adminCount <= 1)
+                    return false;
+            }
+
+            user.Role = role;
+            Fsql.Update<User>()
+                .SetSource(user)
+                .ExecuteAffrows();
+
+            // 当前用户角色变化后同步内存中的登录信息
+            if (CurrentUser?.Username == username)
+                CurrentUser.Role = role;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 修改密码：本人修改需校验旧密码；管理员可为其他用户重置密码。
+        /// </summary>
         public bool ChangePassword(string username, string oldPassword, string newPassword)
         {
             if (string.IsNullOrEmpty(oldPassword) || string.IsNullOrEmpty(newPassword))
+                return false;
+
+            // 非本人且非管理员：拒绝
+            if (!IsAdmin && CurrentUser?.Username != username)
                 return false;
 
             var user = Fsql.Select<User>()
@@ -191,6 +253,12 @@ namespace ShaoLu.Services
                 .Any();
         }
 
+        /// <summary>
+        /// 自助注册。
+        /// 首次注册（系统中还没有管理员）时创建第一个管理员，作为系统引导；
+        /// 已有管理员时必须由管理员审批，且新用户固定为普通用户（UserRole.User），
+        /// 自助注册不得再创建管理员。
+        /// </summary>
         public bool Register(string username, string password, string adminUsername = null, string adminPassword = null)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
@@ -219,7 +287,7 @@ namespace ShaoLu.Services
                     return false;
             }
 
-            // 注册新用户（默认为管理员角色）
+            // 注册新用户：首个用户（引导管理员）为管理员，其余一律普通用户
             var salt = GenerateSalt();
             var hash = HashPassword(password, salt);
             var newUser = new User
@@ -227,12 +295,11 @@ namespace ShaoLu.Services
                 Username = username,
                 PasswordHash = hash,
                 Salt = salt,
-                Role = UserRole.Admin,
+                Role = hasAdmin ? UserRole.User : UserRole.Admin,
                 CreatedAt = DateTime.Now
             };
 
-            Fsql.Insert(newUser).ExecuteAffrows();
-            return true;
+            return Fsql.Insert(newUser).ExecuteAffrows() > 0;
         }
     }
 }

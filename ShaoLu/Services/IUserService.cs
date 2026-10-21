@@ -12,6 +12,7 @@ namespace ShaoLu.Services
         List<User> GetAllUsers();
         bool AddUser(string username, string password, UserRole role);
         bool DeleteUser(string username);
+        bool ChangeRole(string username, UserRole role);
         bool ChangePassword(string username, string oldPassword, string newPassword);
         bool HasAnyAdmin();
         bool Register(string username, string password, string adminUsername = null, string adminPassword = null);

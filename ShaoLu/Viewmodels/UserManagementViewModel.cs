@@ -12,6 +12,16 @@ namespace ShaoLu.Viewmodels
         private readonly IUserService _userService;
         private static string Loc(string key) => LanguageService.GetLocalizedString(key);
 
+        /// <summary>角色下拉索引：0=管理员，1=普通用户（与 WindowUserManagement.xaml 的 ComboBox 顺序一致）</summary>
+        private const int AdminRoleIndex = 0;
+        private const int UserRoleIndex = 1;
+
+        /// <summary>新增用户默认角色索引：普通用户（不得默认创建管理员）</summary>
+        private const int DefaultRoleIndex = UserRoleIndex;
+
+        /// <summary>非管理员执行管理操作时的提示</summary>
+        private const string AdminRequiredMessage = "需要管理员权限才能管理用户";
+
         public ObservableCollection<User> Users { get; } = new ObservableCollection<User>();
 
         private User _selectedUser;
@@ -36,7 +46,7 @@ namespace ShaoLu.Viewmodels
             set => SetProperty(ref _newPassword, value);
         }
 
-        private int _newRoleIndex;
+        private int _newRoleIndex = DefaultRoleIndex;
         public int NewRoleIndex
         {
             get => _newRoleIndex;
@@ -97,6 +107,13 @@ namespace ShaoLu.Viewmodels
         {
             StatusMessage = string.Empty;
 
+            // 管理操作前置校验：只有管理员可以新增用户
+            if (!_userService.IsAdmin)
+            {
+                StatusMessage = AdminRequiredMessage;
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(NewUsername))
             {
                 StatusMessage = Loc("Error_EmptyUsername");
@@ -108,14 +125,15 @@ namespace ShaoLu.Viewmodels
                 return;
             }
 
-            UserRole role = NewRoleIndex == 0 ? UserRole.Admin : UserRole.User;
+            // 角色：0=管理员，其余一律普通用户（默认普通用户，不默认创建管理员）
+            UserRole role = NewRoleIndex == AdminRoleIndex ? UserRole.Admin : UserRole.User;
 
             if (_userService.AddUser(NewUsername, NewPassword, role))
             {
                 StatusMessage = string.Format(Loc("Msg_UserAdded"), NewUsername);
                 NewUsername = string.Empty;
                 NewPassword = string.Empty;
-                NewRoleIndex = 0;
+                NewRoleIndex = DefaultRoleIndex;
                 LoadUsers();
             }
             else
@@ -126,6 +144,15 @@ namespace ShaoLu.Viewmodels
 
         private void ExecuteDeleteUser()
         {
+            StatusMessage = string.Empty;
+
+            // 管理操作前置校验：只有管理员可以删除用户
+            if (!_userService.IsAdmin)
+            {
+                StatusMessage = AdminRequiredMessage;
+                return;
+            }
+
             if (SelectedUser == null)
             {
                 StatusMessage = Loc("Msg_SelectUserFirst");
@@ -165,6 +192,12 @@ namespace ShaoLu.Viewmodels
             if (SelectedUser == null)
             {
                 StatusMessage = "请先选择要修改密码的用户";
+                return;
+            }
+            // 修改他人密码属于管理操作：只有管理员可以执行
+            if (!_userService.IsAdmin && SelectedUser.Username != _userService.CurrentUser?.Username)
+            {
+                StatusMessage = AdminRequiredMessage;
                 return;
             }
             if (string.IsNullOrWhiteSpace(OldPassword))

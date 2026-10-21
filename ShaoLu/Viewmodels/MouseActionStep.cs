@@ -104,7 +104,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 PositionMode = PositionMode,
                 TargetX = TargetX,
                 TargetY = TargetY,
-                MouseActions = new(MouseActions != null ? new List<MouseActionItem>(MouseActions.Count) : new List<MouseActionItem>()),
+                // 深拷贝动作列表（含 DragPath / ClickDragTrajectories），避免克隆步骤与原步骤共享动作对象
+                MouseActions = new(MouseActions != null
+                    ? MouseActions.Where(a => a != null).Select(a => a.Clone()).ToList()
+                    : new List<MouseActionItem>()),
                 WaitTime = WaitTime,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,

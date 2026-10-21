@@ -21,6 +21,9 @@ namespace ShaoLu.Views
         private readonly StatisticsStep _step;
         private readonly DispatcherTimer _refreshTimer;
 
+        /// <summary>自动关闭定时器（关闭窗口时必须停止，避免关闭后仍触发）</summary>
+        private DispatcherTimer _autoCloseTimer;
+
         /// <summary>
         /// 运行停止时关闭所有勾选了 CloseOnStop 的统计窗口
         /// </summary>
@@ -78,14 +81,14 @@ namespace ShaoLu.Views
             // 自动关闭
             if (step.AutoCloseSeconds > 0)
             {
-                var closeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(step.AutoCloseSeconds) };
-                closeTimer.Tick += (s, e) => { closeTimer.Stop(); Close(); };
-                closeTimer.Start();
+                _autoCloseTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(step.AutoCloseSeconds) };
+                _autoCloseTimer.Tick += AutoCloseTimer_Tick;
+                _autoCloseTimer.Start();
             }
 
             // 定时刷新统计
             _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _refreshTimer.Tick += (s, e) => BuildContent();
+            _refreshTimer.Tick += RefreshTimer_Tick;
             _refreshTimer.Start();
 
             OpenWindows.Add(this);
@@ -260,11 +263,46 @@ namespace ShaoLu.Views
             };
         }
 
+        /// <summary>自动关闭到时：先停表再关闭，防止重复触发</summary>
+        private void AutoCloseTimer_Tick(object sender, EventArgs e)
+        {
+            StopAutoCloseTimer();
+            Close();
+        }
+
+        /// <summary>停止并释放自动关闭定时器（手动关闭/关闭中/已关闭都要调用）</summary>
+        private void StopAutoCloseTimer()
+        {
+            if (_autoCloseTimer == null) return;
+
+            _autoCloseTimer.Stop();
+            _autoCloseTimer.Tick -= AutoCloseTimer_Tick;
+            _autoCloseTimer = null;
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            // 关闭过程中就停掉自动关闭与刷新定时器，避免窗口关闭后仍被触发
+            StopAutoCloseTimer();
+            base.OnClosing(e);
+        }
+
         protected override void OnClosed(EventArgs e)
         {
-            _refreshTimer?.Stop();
+            StopAutoCloseTimer();
+            if (_refreshTimer != null)
+            {
+                _refreshTimer.Stop();
+                _refreshTimer.Tick -= RefreshTimer_Tick;
+            }
             OpenWindows.Remove(this);
             base.OnClosed(e);
+        }
+
+        /// <summary>定时刷新统计（命名方法便于关闭时解绑）</summary>
+        private void RefreshTimer_Tick(object sender, EventArgs e)
+        {
+            BuildContent();
         }
 
         /// <summary>

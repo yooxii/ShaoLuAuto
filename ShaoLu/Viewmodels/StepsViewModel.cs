@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.ComponentModel;
+using ShaoLu.Converters;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -11,9 +12,12 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace ShaoLu.Viewmodels
 {
@@ -24,10 +28,25 @@ namespace ShaoLu.Viewmodels
         private readonly StepSettingsModel _stepSettings = SingletonLocator.Settings.Step;
         private readonly StepExecutionContext _executionContext = StepExecutionContext.Instance;
 
+        /// <summary>
+        /// 运行中标志（0=空闲，1=已有一个运行循环在跑）。
+        /// 用 Interlocked 原子在 Run() 入口占用、在 finally 释放，保证"停止→立刻再点开始"
+        /// 不会在旧循环还没退出时插入第二套并行循环（S8）。
+        /// </summary>
+        private int _runActive;
+
+        /// <summary>本次运行内的跳转链访问计数（Q3 环形跳转检测用，每次运行前清空）</summary>
+        private readonly Dictionary<Guid, int> _jumpVisits = new();
+
         #region 属性
 
         private volatile bool _stopSignal = false;
-        public bool StopSignal { get => _stopSignal; set { _stopSignal = value; IsRunning = !value; } }
+        /// <summary>
+        /// 停止请求：只表达"希望当前运行停下来"，不再反向修改 IsRunning（S8）。
+        /// 运行态由 IsRunning 表示，且只在 Run() 的 finally 里复位；
+        /// 否则停止瞬间 IsRunning 就变 false，用户立刻点开始就会叠加出第二套循环。
+        /// </summary>
+        public bool StopSignal { get => _stopSignal; set => _stopSignal = value; }
 
         private volatile bool _isPaused = false;
         /// <summary>是否处于暂停状态</summary>
@@ -93,6 +112,11 @@ namespace ShaoLu.Viewmodels
         private AutomationStepBase _editStep;
         private AutomationStepBase _editBaseline;
         private bool _suppressStepTracking;
+
+        // M22：属性变更合并提交（防抖）——避免拖动滑块时每帧深拷贝整步并塞满撤销栈
+        private const int StepChangeMergeMs = 300;
+        private DispatcherTimer _stepChangeTimer;
+        private bool _hasPendingStepChange;
 
 
 
@@ -206,11 +230,101 @@ namespace ShaoLu.Viewmodels
         #region 撤销 / 恢复
 
         /// <summary>
-        /// 步骤深拷贝：各步骤的 Clone() 未统一复制基类状态（条件判断、IsSave 等），
-        /// 这里在 Clone() 基础上补齐，供复制/粘贴与撤销快照使用。
-        /// Uid 由调用方决定是否保留。
+        /// 快照用 JSON 选项：多态基类转换器 + 不缩进。
+        /// 快照只存在于内存（步骤对象 → JSON 字符串 → 步骤对象），不落盘。
         /// </summary>
-        private static AutomationStepBase CloneStepCore(AutomationStepBase step)
+        private static readonly JsonSerializerOptions SnapshotJsonOptions = new()
+        {
+            WriteIndented = false,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Converters = { new AutomationStepBaseJsonConverter() },
+        };
+
+        /// <summary>
+        /// 步骤深拷贝（M15）：走 JSON 序列化往返，派生类型的所有集合/配置都真正深拷贝。
+        /// 原来的做法是 Clone() + 手工补基类字段，只有 Conditions 被深拷贝，
+        /// 其余集合（统计项、自选步骤 Uid、输入内容列表、弹窗按钮等）都只是赋引用，
+        /// 撤销/恢复后与原步骤共享同一批子对象，改一处会连带改另一处。
+        /// </summary>
+        private static AutomationStepBase DeepCopyStep(AutomationStepBase step)
+        {
+            if (step == null) return null;
+            try
+            {
+                string json = JsonSerializer.Serialize(step, SnapshotJsonOptions);
+                var copy = JsonSerializer.Deserialize<AutomationStepBase>(json, SnapshotJsonOptions);
+                if (copy != null)
+                {
+                    CopyRuntimeImageState(step, copy);
+                    return copy;
+                }
+                logger.Warn("DeepCopyStep 反序列化为空，退化为显式深拷贝：{0}", step.Name);
+            }
+            catch (Exception ex)
+            {
+                // 某类型无法 JSON 序列化时退化（Clone + 基类字段 + 条件集合），并留下告警便于排查
+                logger.Warn(ex, "DeepCopyStep JSON 往返失败，退化为显式深拷贝：{0}", step.Name);
+            }
+            return CloneStepFallback(step);
+        }
+
+        /// <summary>
+        /// 补上 JSON 快照不含的运行时图像缓存（CroppedImg 标了 [JsonIgnore]，只存在于内存）。
+        /// 与改动前基于 Clone() 的快照保持一致：撤销/粘贴后图像预览立即可用；
+        /// 这里只做内存赋值（SetCroppedImageInMemory），绝不落盘（M22，落盘由保存动作负责）。
+        /// </summary>
+        private static void CopyRuntimeImageState(AutomationStepBase source, AutomationStepBase copy)
+        {
+            try
+            {
+                if (source is ImageRecognitionBase srcImageStep && copy is ImageRecognitionBase dstImageStep)
+                {
+                    dstImageStep.SetCroppedImageInMemory(CloneLoadedImage(srcImageStep));
+                }
+                else if (source is ImagesRecognitionBase srcImagesStep && copy is ImagesRecognitionBase dstImagesStep)
+                {
+                    var srcImages = srcImagesStep.Images;
+                    var dstImages = dstImagesStep.Images;
+                    if (srcImages == null || dstImages == null) return;
+                    int count = Math.Min(srcImages.Count, dstImages.Count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        var srcItem = srcImages[i];
+                        if (srcItem == null || dstImages[i] == null) continue;
+                        dstImages[i].SetCroppedImageInMemory(CloneLoadedImage(srcItem));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "CopyRuntimeImageState failed");
+            }
+        }
+
+        /// <summary>
+        /// 取图像步骤已加载/可加载的裁剪图并克隆一份（BitmapSource 非冻结时 Clone，
+        /// 避免跨线程/多处共享同一 Freezable）。裁剪图文件不存在时不取，避免触发加载告警。
+        /// </summary>
+        private static System.Windows.Media.ImageSource CloneLoadedImage(ImageRecognitionBase imageStep)
+        {
+            string fullPath = imageStep.CroppedImageFullPath;
+            if (string.IsNullOrEmpty(fullPath) || !File.Exists(fullPath)) return null;
+            if (imageStep.CroppedImg is not System.Windows.Media.Imaging.BitmapSource bitmap) return null;
+            try
+            {
+                return bitmap.IsFrozen ? bitmap : bitmap.Clone();
+            }
+            catch
+            {
+                return bitmap;
+            }
+        }
+
+        /// <summary>
+        /// 退化深拷贝：JSON 路线不可用时使用。覆盖基类状态与条件集合，
+        /// 派生类型自身的集合依赖各自的 Clone()（可能仍共享引用，故仅在异常路径使用）。
+        /// </summary>
+        private static AutomationStepBase CloneStepFallback(AutomationStepBase step)
         {
             var clone = step.Clone();
             if (step.Name != null) clone.Name = step.Name;
@@ -230,8 +344,16 @@ namespace ShaoLu.Viewmodels
         /// <summary>深拷贝（保留 Uid，用于快照恢复，保证跳转/条件引用不失效）</summary>
         private static AutomationStepBase CloneStepPreservingUid(AutomationStepBase step)
         {
-            var clone = CloneStepCore(step);
-            clone.Uid = step.Uid;
+            var clone = DeepCopyStep(step);
+            if (clone != null) clone.Uid = step.Uid;
+            return clone;
+        }
+
+        /// <summary>深拷贝并生成新 Uid（复制/粘贴/插入用，保证多次粘贴互相独立）</summary>
+        private static AutomationStepBase CloneStepWithNewUid(AutomationStepBase step)
+        {
+            var clone = DeepCopyStep(step);
+            if (clone != null) clone.Uid = Guid.NewGuid();
             return clone;
         }
 
@@ -374,6 +496,10 @@ namespace ShaoLu.Viewmodels
 
         private void DetachStepHistory()
         {
+            // 本步骤的编辑历史即将失效：直接丢弃未提交的合并窗口（修改已写入步骤对象本身）
+            _stepChangeTimer?.Stop();
+            _hasPendingStepChange = false;
+
             if (_editStep != null)
             {
                 _editStep.PropertyChanged -= OnEditStepPropertyChanged;
@@ -423,10 +549,55 @@ namespace ShaoLu.Viewmodels
             RecordStepChange();
         }
 
-        /// <summary>记录一次步骤内部修改：把上一次基线压入撤销栈</summary>
+        /// <summary>
+        /// 记录一次步骤内部修改：把上一次基线压入撤销栈。
+        /// M22：滑块拖动 / 连续输入会在极短时间内产生大量 PropertyChanged，
+        /// 每次都深拷贝整步会卡顿并把撤销栈塞满，这里只在内存里标记"有待提交的修改"，
+        /// 用 DispatcherTimer 短延迟合并，最后只提交一条撤销记录（一次连续编辑 = 一条记录，
+        /// 撤销/重做的语义不变）。
+        /// </summary>
         private void RecordStepChange()
         {
             if (_suppressStepTracking || _editStep == null) return;
+            _hasPendingStepChange = true;
+            var timer = EnsureStepChangeTimer();
+            if (timer == null)
+            {
+                // 无 UI 上下文（单元测试等）时立即提交，保持原来的同步语义
+                CommitPendingStepChange();
+                return;
+            }
+            // 重新计时：合并窗口从最后一次修改算起
+            timer.Stop();
+            timer.Start();
+        }
+
+        /// <summary>取（或创建）合并提交定时器；须在 UI 线程创建</summary>
+        private DispatcherTimer EnsureStepChangeTimer()
+        {
+            if (_stepChangeTimer != null) return _stepChangeTimer;
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null) return null;
+            var timer = new DispatcherTimer(DispatcherPriority.Background, dispatcher)
+            {
+                Interval = TimeSpan.FromMilliseconds(StepChangeMergeMs),
+            };
+            timer.Tick += (s, e) => CommitPendingStepChange();
+            _stepChangeTimer = timer;
+            return timer;
+        }
+
+        /// <summary>
+        /// 把合并窗口内的连续修改一次性提交为一条撤销记录。
+        /// _editBaseline 只在提交时更新，因此合并期间它始终是"本次修改前"的状态。
+        /// </summary>
+        private void CommitPendingStepChange()
+        {
+            _stepChangeTimer?.Stop();
+            if (!_hasPendingStepChange) return;
+            _hasPendingStepChange = false;
+            if (_editStep == null) return;
+
             _stepUndo.Add(_editBaseline ?? CloneStepPreservingUid(_editStep));
             if (_stepUndo.Count > MaxStepHistory)
                 _stepUndo.RemoveAt(0);
@@ -437,6 +608,7 @@ namespace ShaoLu.Viewmodels
 
         private void UndoStep()
         {
+            CommitPendingStepChange();
             if (_stepUndo.Count == 0 || _editStep == null) return;
             var target = _stepUndo[_stepUndo.Count - 1];
             _stepUndo.RemoveAt(_stepUndo.Count - 1);
@@ -447,6 +619,7 @@ namespace ShaoLu.Viewmodels
 
         private void RedoStep()
         {
+            CommitPendingStepChange();
             if (_stepRedo.Count == 0 || _editStep == null) return;
             var target = _stepRedo[_stepRedo.Count - 1];
             _stepRedo.RemoveAt(_stepRedo.Count - 1);
@@ -461,7 +634,11 @@ namespace ShaoLu.Viewmodels
             "SelfReferenceCount", "ConditionSummary",
         };
 
-        /// <summary>把快照状态复制回当前步骤实例（保持实例与 Uid 不变，便于 UI 与引用继续有效）</summary>
+        /// <summary>
+        /// 把快照状态复制回当前步骤实例（保持实例与 Uid 不变，便于 UI 与引用继续有效）。
+        /// M15：先把快照整体深拷贝一份，再把拷贝的属性引用交给当前实例，
+        /// 这样当前步骤与撤销栈里保存的快照不会共享任何集合/子对象。
+        /// </summary>
         private void RestoreStepState(AutomationStepBase snapshot)
         {
             if (_editStep == null || snapshot == null) return;
@@ -476,7 +653,8 @@ namespace ShaoLu.Viewmodels
                         c.PropertyChanged -= OnEditConditionPropertyChanged;
                 }
 
-                CopyStepState(snapshot, _editStep);
+                var fresh = DeepCopyStep(snapshot) ?? snapshot;
+                CopyStepState(fresh, _editStep);
 
                 if (_editStep.Conditions != null)
                 {
@@ -496,6 +674,10 @@ namespace ShaoLu.Viewmodels
             _editBaseline = CloneStepPreservingUid(_editStep);
         }
 
+        /// <summary>
+        /// 按属性名逐个复制状态。source 必须是"本次恢复专用"的深拷贝副本（见 RestoreStepState），
+        /// 因此这里直接按引用赋值：集合与嵌套配置整体转移给目标实例，不会再与原快照共享。
+        /// </summary>
         private static void CopyStepState(AutomationStepBase source, AutomationStepBase target)
         {
             if (source == null || target == null) return;
@@ -505,7 +687,7 @@ namespace ShaoLu.Viewmodels
                 if (StepStateSkipProperties.Contains(p.Name)) continue;
                 try
                 {
-                    object value = p.Name == "Conditions" ? CloneConditions(source.Conditions) : p.GetValue(source);
+                    object value = p.GetValue(source);
                     p.SetValue(target, value);
                 }
                 catch
@@ -644,6 +826,100 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
+        /// 统一维护"对某些步骤 Uid 的引用"（M5），删除步骤时用于检查与清理，避免漏字段。
+        /// 覆盖代码中全部跨步骤 Guid 引用点：
+        ///  - 跳转：TrueGotoUid / FalseGotoUid
+        ///  - 条件行引用：步骤自身 Conditions 与统计项内的 Conditions（StepCondition.StepUid）
+        ///  - 弹窗步骤的"到达此步骤时关闭"目标：PopupStep.CloseOnStepUid
+        ///  - 烧录配置步骤的"烧录完成步骤"：BurnInConfigStep.Config.BurnFinishStepUid
+        ///  - 统计步骤自选范围：StatisticsItemConfig.CustomStepUids
+        /// 说明：StepCondition.ParentStepUid 是"条件归属的步骤"，随所属步骤一起删除，不属于跨步骤引用。
+        /// </summary>
+        /// <param name="deletingUids">待删除步骤的 Uid 集合</param>
+        /// <param name="clear">true=清空引用；false=只收集引用者（用于删除确认提示）</param>
+        /// <returns>引用了待删除步骤的其他步骤描述（"行号 - 名称"）</returns>
+        private List<string> ProcessReferencesTo(HashSet<Guid> deletingUids, bool clear)
+        {
+            var referencingSteps = new List<string>();
+            if (deletingUids == null || deletingUids.Count == 0 || AutomationStepBases == null)
+                return referencingSteps;
+
+            bool IsDeleted(Guid? uid) => uid.HasValue && uid.Value != Guid.Empty && deletingUids.Contains(uid.Value);
+
+            foreach (var step in AutomationStepBases)
+            {
+                if (deletingUids.Contains(step.Uid)) continue; // 跳过待删除的步骤本身
+
+                bool references = false;
+
+                // 跳转引用
+                if (IsDeleted(step.TrueGotoUid))
+                {
+                    references = true;
+                    if (clear) step.TrueGotoUid = null;
+                }
+                if (IsDeleted(step.FalseGotoUid))
+                {
+                    references = true;
+                    if (clear) step.FalseGotoUid = null;
+                }
+
+                // 步骤自身的条件行引用
+                void ProcessConditions(IEnumerable<StepCondition> conditions, ref bool referenced)
+                {
+                    if (conditions == null) return;
+                    foreach (var cond in conditions)
+                    {
+                        if (cond == null || !IsDeleted(cond.StepUid)) continue;
+                        referenced = true;
+                        if (clear) cond.StepUid = null;
+                    }
+                }
+                ProcessConditions(step.Conditions, ref references);
+
+                // 弹窗步骤：到达目标步骤时关闭弹窗
+                if (step is PopupStep popupStep && IsDeleted(popupStep.CloseOnStepUid))
+                {
+                    references = true;
+                    if (clear) popupStep.CloseOnStepUid = null;
+                }
+
+                // 烧录配置步骤：烧录完成步骤
+                if (step is BurnInConfigStep burnStep && burnStep.Config != null
+                    && IsDeleted(burnStep.Config.BurnFinishStepUid))
+                {
+                    references = true;
+                    if (clear) burnStep.Config.BurnFinishStepUid = null;
+                }
+
+                // 统计步骤：自选步骤 Uid 列表与统计项内的条件行
+                if (step is StatisticsStep statsStep)
+                {
+                    void ProcessStatisticsItem(StatisticsItemConfig item)
+                    {
+                        if (item == null) return;
+                        ProcessConditions(item.Conditions, ref references);
+                        if (item.CustomStepUids == null || item.CustomStepUids.Count == 0) return;
+                        for (int i = item.CustomStepUids.Count - 1; i >= 0; i--)
+                        {
+                            if (!deletingUids.Contains(item.CustomStepUids[i])) continue;
+                            references = true;
+                            if (clear) item.CustomStepUids.RemoveAt(i);
+                        }
+                    }
+                    foreach (var item in statsStep.StatisticsItems)
+                        ProcessStatisticsItem(item);
+                    foreach (var item in statsStep.CustomConditions)
+                        ProcessStatisticsItem(item);
+                }
+
+                if (references)
+                    referencingSteps.Add($"{step.LineNo} - {step.Name}");
+            }
+            return referencingSteps;
+        }
+
+        /// <summary>
         /// 核心删除逻辑，confirm=true 时弹出确认对话框
         /// </summary>
         private async Task RemoveStepsAsync(bool confirm)
@@ -652,34 +928,10 @@ namespace ShaoLu.Viewmodels
             {
                 if (SelectedSteps.Count == 0) return;
 
-                // 检查待删除步骤是否被其他步骤引用
+                // 检查待删除步骤是否被其他步骤引用：与下面的清理复用同一处遍历，
+                // 保证"提示里列出的引用点"和"实际清掉的引用点"完全一致（M5）
                 var deletingUids = SelectedSteps.Select(s => s.Uid).ToHashSet();
-                var referencingSteps = new List<string>();
-
-                foreach (var step in AutomationStepBases)
-                {
-                    if (deletingUids.Contains(step.Uid)) continue; // 跳过待删除的步骤本身
-
-                    bool references = false;
-                    if (step.TrueGotoUid.HasValue && deletingUids.Contains(step.TrueGotoUid.Value))
-                        references = true;
-                    if (step.FalseGotoUid.HasValue && deletingUids.Contains(step.FalseGotoUid.Value))
-                        references = true;
-                    if (step.Conditions != null)
-                    {
-                        foreach (var cond in step.Conditions)
-                        {
-                            if (cond.StepUid.HasValue && deletingUids.Contains(cond.StepUid.Value))
-                            {
-                                references = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (references)
-                        referencingSteps.Add($"{step.LineNo} - {step.Name}");
-                }
+                var referencingSteps = ProcessReferencesTo(deletingUids, clear: false);
 
                 // 如果需要确认，弹出确认对话框
                 if (confirm)
@@ -699,23 +951,8 @@ namespace ShaoLu.Viewmodels
 
                 PushListUndoSnapshot();
 
-                // 删除前清空引用
-                foreach (var step in AutomationStepBases)
-                {
-                    if (deletingUids.Contains(step.Uid)) continue;
-                    if (step.TrueGotoUid.HasValue && deletingUids.Contains(step.TrueGotoUid.Value))
-                        step.TrueGotoUid = null;
-                    if (step.FalseGotoUid.HasValue && deletingUids.Contains(step.FalseGotoUid.Value))
-                        step.FalseGotoUid = null;
-                    if (step.Conditions != null)
-                    {
-                        foreach (var cond in step.Conditions)
-                        {
-                            if (cond.StepUid.HasValue && deletingUids.Contains(cond.StepUid.Value))
-                                cond.StepUid = null;
-                        }
-                    }
-                }
+                // 删除前清空全部跨步骤引用（跳转 / 条件 / 弹窗关闭目标 / 烧录完成步骤 / 统计自选步骤）
+                ProcessReferencesTo(deletingUids, clear: true);
 
                 for (int i = SelectedSteps.Count - 1; i >= 0; i--)
                 {
@@ -807,7 +1044,7 @@ namespace ShaoLu.Viewmodels
             if (toInsert.Count == 0) return;
 
             // 需要拷贝时统一深拷贝，避免粘贴后与原对象/剪贴板共享引用
-            var finalSteps = cloneSteps ? toInsert.Select(CloneStepCore).ToList() : toInsert;
+            var finalSteps = cloneSteps ? toInsert.Select(CloneStepWithNewUid).ToList() : toInsert;
 
             if (index >= 0 && index < AutomationStepBases.Count)
             {
@@ -815,7 +1052,7 @@ namespace ShaoLu.Viewmodels
                 {
                     var step = finalSteps[i];
                     if (!cloneSteps && AutomationStepBases.Contains(step))
-                        step = CloneStepCore(step);
+                        step = CloneStepWithNewUid(step);
                     AutomationStepBases.Insert(index + i, step);
                 }
             }
@@ -823,7 +1060,7 @@ namespace ShaoLu.Viewmodels
             {
                 foreach (var step in finalSteps)
                 {
-                    var target = (!cloneSteps && AutomationStepBases.Contains(step)) ? CloneStepCore(step) : step;
+                    var target = (!cloneSteps && AutomationStepBases.Contains(step)) ? CloneStepWithNewUid(step) : step;
                     AutomationStepBases.Add(target);
                 }
             }
@@ -850,7 +1087,7 @@ namespace ShaoLu.Viewmodels
             PasteSteps.Clear();
             // 使用统一深拷贝：补齐 Clone() 未复制的条件判断等基类状态，且生成新 Uid
             foreach (var step in SelectedSteps)
-                PasteSteps.Add(CloneStepCore(step));
+                PasteSteps.Add(CloneStepWithNewUid(step));
 
             PasteStepCommand.RaiseCanExecuteChanged();
             return PasteSteps.Count > 0;
@@ -880,20 +1117,29 @@ namespace ShaoLu.Viewmodels
         private void Stop()
         {
             logger.Info("Stop Auto");
+            // 只发出"停止请求"：运行态（IsRunning）必须等旧循环真正退出后，
+            // 在 Run() 的 finally 里复位，否则刚点停止就能再点开始，叠加出第二套循环（S8）
             StopSignal = true;
             _cts?.Cancel();
         }
 
         private bool CanRun()
         {
-            return AutomationStepBases != null && AutomationStepBases.Count > 0 && !_isRunning;
+            // 只看运行态。StopSignal 只表示"停止请求"，不能当作可运行依据（S8）
+            return AutomationStepBases != null && AutomationStepBases.Count > 0
+                && !_isRunning
+                && Volatile.Read(ref _runActive) == 0;
         }
 
         private void PreRun()
         {
+            // 运行前把未提交的步骤编辑合并成一条撤销记录（M22）
+            CommitPendingStepChange();
             // 重置停止信号和暂停状态
             StopSignal = false;
             IsPaused = false;
+            // 重置跳转链（Q3 环形检测用，只统计本次运行）
+            _jumpVisits.Clear();
             // 初始化自动化引擎
             Autogui.StartAuto();
             // 清空执行上下文并启动总计时
@@ -924,32 +1170,72 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
+        /// 运行前确认：可等待的确认窗。确认期间禁用主窗口（等效模态，
+        /// 但消息循环不被阻塞，界面照常重绘）。
+        /// 确认期间 IsRunning 已为 true，因此再点"开始"会被 CanRun 拦下（S8）。
+        /// </summary>
+        private async Task<bool> ConfirmRunAsync()
+        {
+            var mainWindow = Application.Current?.MainWindow;
+            var (popupWindow, confirmTask) = WindowAsyncPopup.Show(
+                LanguageService.GetLocalizedString("Msg_ConfirmRun"), LanguageService.GetLocalizedString("Question"),
+                PopupButtons.YesNo, MessageBoxImage.Question);
+
+            bool ownerDisabled = false;
+            try
+            {
+                if (mainWindow != null && popupWindow != null)
+                {
+                    // 确认窗口非模态，这里用"禁用主窗口"达到模态效果（不阻塞 WPF 线程）
+                    mainWindow.IsEnabled = false;
+                    ownerDisabled = true;
+                }
+                var confirmResult = await confirmTask;
+                return confirmResult == PopupButton.YesValue;
+            }
+            finally
+            {
+                if (ownerDisabled && mainWindow != null)
+                    mainWindow.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
         /// 启动自动化运行，将耗时任务移至后台线程
         /// </summary>
         public async void Run()
         {
+            // S8：运行态在入口处原子置位（不再依赖 StopSignal 反向清理）。
+            // 已有一次运行在跑（含正在停止的旧循环）时直接忽略，防止重入出第二套循环。
+            if (Interlocked.Exchange(ref _runActive, 1) == 1)
+            {
+                logger.Warn("Run ignored: previous run is still active");
+                return;
+            }
+            IsRunning = true;
+
             // 烧录完成判定的运行时状态（声明于 try 外，供 finally 访问）：
-            // burnFinishStepUid = 配置的烧录完成步骤；burnCycleStart = 本轮烧录起始时间；
-            // burnJudged = 本次运行是否至少判定过一次
-            Guid? burnFinishStepUid = (AutomationStepBases?.FirstOrDefault(s => s is BurnInConfigStep)
-                as BurnInConfigStep)?.Config?.BurnFinishStepUid;
+            // burnConfigStep = 烧录配置步骤；burnFinishStepUid = 配置的烧录完成步骤；
+            // burnCycleStart = 本轮烧录起始时间；burnJudged = 本次运行是否至少成功判定并记录过一次
+            BurnInConfigStep burnConfigStep = null;
+            Guid? burnFinishStepUid = null;
             DateTime? burnCycleStart = null;
             bool burnJudged = false;
+            // PreRun 是否真正执行过（取消确认时不复位主窗口，避免把用户的最大化窗口还原掉）
+            bool preRunStarted = false;
 
             try
             {
-                // 运行前确认
-                if (_stepSettings.ConfirmBeforeRun)
-                {
-                    var (_, confirmTask) = WindowAsyncPopup.Show(
-                        LanguageService.GetLocalizedString("Msg_ConfirmRun"), LanguageService.GetLocalizedString("Question"),
-                        PopupButtons.YesNo, MessageBoxImage.Question);
-                    var confirmResult = await confirmTask;
-                    if (confirmResult != PopupButton.YesValue)
-                        return;
-                }
+                // 烧录配置在运行开始时读取一次，供本次运行与 finally 的补记判定使用
+                burnConfigStep = AutomationStepBases?.FirstOrDefault(s => s is BurnInConfigStep) as BurnInConfigStep;
+                burnFinishStepUid = burnConfigStep?.Config?.BurnFinishStepUid;
+
+                // 运行前确认（可等待，不阻塞 WPF 线程）
+                if (_stepSettings.ConfirmBeforeRun && !await ConfirmRunAsync())
+                    return;
 
                 PreRun();
+                preRunStarted = true;
                 _cts = new CancellationTokenSource();
                 var token = _cts.Token;
 
@@ -1001,35 +1287,42 @@ namespace ShaoLu.Viewmodels
                         result.ExecutionTimeMs = sw.Elapsed.TotalMilliseconds;
                         result.IsTrue = step.IsTrue;
                         result.ExecutedAt = DateTime.Now;
-                        step.LastResult = result;
-
-                        // 存入执行上下文
-                        _executionContext.SetResult(step.LineNo, result);
-                        _executionContext.SetResultByUid(step.Uid, result);
+                        // 先标记"刚刚执行完成的步骤"：条件里 Step_Triggered 的语义与改动前保持一致
                         _executionContext.CurrentStepUid = step.Uid;
 
-                        // 统计步骤的条件计数累计
+                        // S7：先评估自定义条件得出"最终 IsTrue"，再回写结果与执行上下文。
+                        // 条件里的 Self_* 变量读的是步骤自身结果（即上面写入的 result.IsTrue），
+                        // 因此这里传入尚未回写最终值的 result；评估完成后把最终结果写回 result。
+                        if (step is not StatisticsStep
+                            && step.ConditionMode == ConditionMode.Custom && step.Conditions.Count > 0)
+                        {
+                            step.IsTrue = ConditionEvaluator.Evaluate(step.Conditions, _executionContext, result);
+                        }
+                        result.IsTrue = step.IsTrue;
+
+                        // LastResult 保存的是最终结果（已含自定义条件判定后的值）
+                        step.LastResult = result;
+
+                        // 存入执行上下文：后续步骤引用 Step_IsTrue、统计步骤累计时读到的都是最终结果
+                        _executionContext.SetResult(step.LineNo, result);
+                        _executionContext.SetResultByUid(step.Uid, result);
+
+                        // 统计步骤的条件计数累计（读取上面已写入上下文的最终结果）
                         foreach (var s in AutomationStepBases)
                         {
                             if (s is StatisticsStep statsStep)
                                 statsStep.UpdateConditionCounts(_executionContext, result);
                         }
 
-                        // 自定义条件判断（统计步骤不参与条件判断）
-                        if (step is not StatisticsStep
-                            && step.ConditionMode == ConditionMode.Custom && step.Conditions.Count > 0)
-                        {
-                            step.IsTrue = ConditionEvaluator.Evaluate(step.Conditions, _executionContext, result);
-                        }
-
-                        // 通用日志记录
+                        // 通用日志记录（T4 契约：Log 返回是否落库成功，失败只告警、不静默）
                         if (step.EnableLog)
                         {
                             string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
                             string logContent = $"[Result:{step.IsTrue}] [Time:{result.ExecutionTimeMs:F0}ms]";
                             if (result.Similarity >= 0)
                                 logContent += $" [Similarity:{result.Similarity:F3}]";
-                            ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText);
+                            if (!ExecutionLogService.Log(step.Uid, fileName, step.Name, logContent, result.OCRText))
+                                logger.Warn("执行日志未落库：{0}", step.Name);
                         }
 
                         // 烧录完成判定：当前步骤为配置的烧录完成步骤时立即判定并记录
@@ -1040,9 +1333,17 @@ namespace ShaoLu.Viewmodels
                             burnCycleStart ??= BurnInService.CurrentSession.StartedAt;
                             try
                             {
-                                JudgeAndRecordBurnIn(BurnInService.CurrentSession, step, burnCycleStart.Value);
-                                burnJudged = true;
-                                burnCycleStart = DateTime.Now; // 下一轮烧录的起始时间
+                                // T4 契约：只有记录真正落库成功才算"已判定"；
+                                // 失败时保持 burnJudged=false，交给运行结束时的补记（M9）
+                                if (JudgeAndRecordBurnIn(BurnInService.CurrentSession, step, burnCycleStart.Value))
+                                {
+                                    burnJudged = true;
+                                    burnCycleStart = DateTime.Now; // 下一轮烧录的起始时间
+                                }
+                                else
+                                {
+                                    logger.Warn("烧录记录未落库，等待运行结束补记：{0}", step.Name);
+                                }
                             }
                             catch (Exception burnEx)
                             {
@@ -1128,26 +1429,21 @@ namespace ShaoLu.Viewmodels
                         {
                             step.SelfReferenceCount = 0; // 非自引用时重置
                             i = nextIndex - 1;
+                            // Q3：记录跳转路径，检测 A→B→A 这类环（仅告警，见 DetectJumpCycle）
+                            DetectJumpCycle(targetUid.Value);
                         }
+                    }
+                    else
+                    {
+                        // 无跳转：正常进入下一步，本次跳转链结束
+                        _jumpVisits.Clear();
                     }
                     // targetUid 为空时不修改 i，for 循环 i++ 自然进入下一步
                 }
-                StopSignal = true;
-                _executionContext.StopTimer();
-                Views.WindowStatistics.CloseAllOnStop();
-                Application.Current.MainWindow.WindowState = WindowState.Normal;
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    Application.Current.MainWindow.Activate();
-                });
-                logger.Info("Auto Finished");
             }
             catch (OperationCanceledException)
             {
                 logger.Info("Operation Canceled");
-                StopSignal = true;
-                _executionContext.StopTimer();
-                Views.WindowStatistics.CloseAllOnStop();
             }
             catch (Exception ex)
             {
@@ -1155,19 +1451,83 @@ namespace ShaoLu.Viewmodels
             }
             finally
             {
-                // 烧录统计：运行结束但从未到达烧录完成步骤时，补记一条未完成烧录供追溯
+                // S9：正常结束 / 用户取消 / 外层异常，都在这里统一收尾，
+                // 避免异常路径不复位 IsRunning、统计窗关不掉、主窗卡在最小化。
+                if (preRunStarted)
+                {
+                    try
+                    {
+                        StopSignal = true;
+                        _executionContext.StopTimer();
+
+                        // Q5：流程结束时统一关闭"到达步骤关闭"的弹窗，避免残留窗口永久停留
+                        CloseAllStepReachedPopups();
+
+                        Views.WindowStatistics.CloseAllOnStop();
+                        var mainWindow = Application.Current?.MainWindow;
+                        if (mainWindow != null)
+                        {
+                            mainWindow.WindowState = WindowState.Normal;
+                            Application.Current.Dispatcher.Invoke(() => mainWindow.Activate());
+                        }
+                        logger.Info("Auto Finished");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Warn(ex, "Reset run state failed");
+                    }
+
+                    // 烧录统计补记（M20）：只有"配置了烧录完成步骤 + 本轮确实进入过烧录会话 + 从未判定成功"
+                    // 才补记 NotFinished；只有配置步骤却没配完成步骤属于"未配置"，只告警、不写失败记录
+                    try
+                    {
+                        if (burnConfigStep != null && !burnFinishStepUid.HasValue)
+                        {
+                            logger.Warn("烧录流程未配置烧录完成步骤：本次运行不补记 NotFinished 记录（仅告警）");
+                        }
+                        else if (burnFinishStepUid.HasValue && BurnInService.CurrentSession != null && !burnJudged)
+                        {
+                            RecordBurnInNotFinished(BurnInService.CurrentSession,
+                                burnCycleStart ?? BurnInService.CurrentSession.StartedAt);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Warn(ex, "RecordBurnInNotFinished failed");
+                    }
+                }
+
                 try
                 {
-                    if (BurnInService.CurrentSession != null && !burnJudged)
-                        RecordBurnInNotFinished(BurnInService.CurrentSession,
-                            burnCycleStart ?? BurnInService.CurrentSession.StartedAt);
+                    BurnInService.EndSession();
                 }
-                catch (Exception ex)
+                finally
                 {
-                    logger.Warn(ex, "RecordBurnInNotFinished failed");
+                    // S8：运行态最后复位——旧循环真正退出后才允许下一次开始。
+                    // 先清 _runActive 再置 IsRunning：IsRunning 的 setter 会重算 CanRun，
+                    // 这样"开始"按钮在结束时立即恢复可用（两份状态同处 UI 线程，无竞态）。
+                    Interlocked.Exchange(ref _runActive, 0);
+                    IsRunning = false;
                 }
-                BurnInService.EndSession();
             }
+        }
+
+        /// <summary>
+        /// Q3：检测跳转链里的环（A→B→A 这类两段跳转环）。
+        /// 只做诊断告警、不中断流程：直接自跳已有 SelfReferenceLimit 兜底，
+        /// 而两段跳转环常被用作"轮询直到满足条件"的合法循环，强制中断会破坏现有流程。
+        /// 跳转链在遇到"不跳转的步骤"时清空，避免把正常流程的重复访问误判成环。
+        /// </summary>
+        private void DetectJumpCycle(Guid targetUid)
+        {
+            if (!_jumpVisits.TryGetValue(targetUid, out int count))
+                count = 0;
+            count++;
+            _jumpVisits[targetUid] = count;
+            // 同一跳转链内第 3 次回到同一步骤才告警，避免首次重复访问就误报
+            if (count == 3)
+                logger.Warn("检测到跳转环：步骤 {0} 在连续跳转链中第 {1} 次出现，若流程无法结束请检查跳转设置",
+                    targetUid, count);
         }
 
         /// <summary>
@@ -1192,8 +1552,9 @@ namespace ShaoLu.Viewmodels
         /// 完成步骤为获取输入→按其识别文本+关键字判定；
         /// 其他类型步骤→立即截屏与判据模板比对，一次得出 良品/不良品/烧录失败。
         /// cycleStart 为本轮烧录的起始时间（循环流程中每轮独立计时）。
+        /// 返回 true 表示记录已成功落库（T4 契约）；返回 false 时调用方不得视为"已判定"（M9）。
         /// </summary>
-        private void JudgeAndRecordBurnIn(BurnInSession session, AutomationStepBase finishStep, DateTime cycleStart)
+        private bool JudgeAndRecordBurnIn(BurnInSession session, AutomationStepBase finishStep, DateTime cycleStart)
         {
             var finishedAt = DateTime.Now;
             string stepFileName = Path.GetFileNameWithoutExtension(
@@ -1206,7 +1567,7 @@ namespace ShaoLu.Viewmodels
             bool hasTemplate = config?.HasAnyTemplate == true;
             if (config == null || (!keywordMode && !hasTemplate))
             {
-                BurnInService.Record(new BurnInRecord
+                bool recordedNotConfigured = BurnInService.Record(new BurnInRecord
                 {
                     OrderNo = session.OrderNo,
                     Operator = session.Operator,
@@ -1219,7 +1580,9 @@ namespace ShaoLu.Viewmodels
                     IsBurnFailed = true,
                     Remark = "NotConfigured",
                 });
-                return;
+                if (!recordedNotConfigured)
+                    logger.Warn("烧录记录（NotConfigured）未落库：{0}", stepFileName);
+                return recordedNotConfigured;
             }
 
             string ocrText = null;
@@ -1240,7 +1603,7 @@ namespace ShaoLu.Viewmodels
             var (result, goodText, badText, remark, screenshotPath) =
                 BurnInService.EvaluateAndCapture(config, ocrText, goodImageHit, badImageHit, failImageHit, session.OrderNo);
 
-            BurnInService.Record(new BurnInRecord
+            bool recorded = BurnInService.Record(new BurnInRecord
             {
                 OrderNo = session.OrderNo,
                 Operator = session.Operator,
@@ -1256,19 +1619,24 @@ namespace ShaoLu.Viewmodels
                 ScreenshotPath = screenshotPath,
                 Remark = remark,
             });
+            if (!recorded)
+                logger.Warn("烧录记录未落库（{0}）：{1}", result, stepFileName);
+            return recorded;
         }
 
         /// <summary>
-        /// 运行结束（正常/取消/异常）但从未到达烧录完成步骤时，
-        /// 补记一条未完成烧录供追溯（仅当存在烧录配置步骤时）
+        /// 运行结束（正常/取消/异常）但从未成功判定记录过烧录时，补记一条未完成烧录供追溯。
+        /// M20：只有"配置了烧录完成步骤"且"本轮确实进入过烧录会话"才补记；
+        /// "未配置完成步骤"属于配置问题，由调用方告警，不写失败记录。
         /// </summary>
         private void RecordBurnInNotFinished(BurnInSession session, DateTime cycleStart)
         {
+            if (session == null) return;
             var configStep = AutomationStepBases?.FirstOrDefault(s => s is BurnInConfigStep) as BurnInConfigStep;
-            if (configStep == null) return;
+            if (configStep?.Config?.BurnFinishStepUid == null) return;
 
             var finishedAt = DateTime.Now;
-            BurnInService.Record(new BurnInRecord
+            bool recorded = BurnInService.Record(new BurnInRecord
             {
                 OrderNo = session.OrderNo,
                 Operator = session.Operator,
@@ -1282,6 +1650,8 @@ namespace ShaoLu.Viewmodels
                 IsBurnFailed = true,
                 Remark = "NotFinished",
             });
+            if (!recorded)
+                logger.Warn("未完成烧录的补记记录未落库（NotFinished）");
         }
 
         private AutomationStepBase FindStepByUid(Guid uid)
@@ -1321,21 +1691,50 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
-        /// StepReached 模式：检查所有 PopupStep，如果有活跃弹窗的目标步骤是当前步骤，则关闭弹窗
+        /// StepReached 模式：到达目标步骤时关闭弹窗。
+        /// Q5：目标步骤已被删除、或目标为空（未设置）时同样关闭，
+        /// 否则弹窗会因为没有"到达时刻"而永久停留。
         /// </summary>
         private void CheckAndCloseStepReachedPopups(Guid currentStepUid)
         {
             foreach (var s in AutomationStepBases)
             {
-                if (s is PopupStep popupStep
-                    && popupStep.CloseMode.HasFlag(PopupCloseMode.StepReached)
-                    && popupStep.CloseOnStepUid == currentStepUid
-                    && popupStep.ActivePopupWindow != null)
-                {
-                    var defaultResult = popupStep.PopupButtons.DefaultButton?.Value ?? string.Empty;
-                    popupStep.ActivePopupWindow.CloseWithResult(defaultResult);
-                    popupStep.ActivePopupWindow = null;
-                }
+                if (s is not PopupStep popupStep) continue;
+                if (!popupStep.CloseMode.HasFlag(PopupCloseMode.StepReached)) continue;
+                var popupWindow = popupStep.ActivePopupWindow;
+                if (popupWindow == null) continue;
+
+                bool reached = popupStep.CloseOnStepUid == currentStepUid;
+                bool targetMissing = !popupStep.CloseOnStepUid.HasValue
+                    || popupStep.CloseOnStepUid.Value == Guid.Empty
+                    || FindIndexByUid(popupStep.CloseOnStepUid.Value) < 0;
+                if (!reached && !targetMissing) continue;
+
+                var defaultResult = popupStep.PopupButtons?.DefaultButton?.Value ?? string.Empty;
+                popupWindow.CloseWithResult(defaultResult);
+                popupStep.ActivePopupWindow = null;
+                if (targetMissing && !reached)
+                    logger.Warn("StepReached 弹窗的目标步骤不存在（可能已被删除），已关闭：{0}", popupStep.Name);
+            }
+        }
+
+        /// <summary>
+        /// Q5：流程结束（正常/取消/异常）时统一关闭所有 StepReached 模式的弹窗，
+        /// 避免弹窗在运行结束后残留、用户关不掉。
+        /// </summary>
+        private void CloseAllStepReachedPopups()
+        {
+            if (AutomationStepBases == null) return;
+            foreach (var s in AutomationStepBases)
+            {
+                if (s is not PopupStep popupStep) continue;
+                if (!popupStep.CloseMode.HasFlag(PopupCloseMode.StepReached)) continue;
+                var popupWindow = popupStep.ActivePopupWindow;
+                if (popupWindow == null) continue;
+
+                var defaultResult = popupStep.PopupButtons?.DefaultButton?.Value ?? string.Empty;
+                popupWindow.CloseWithResult(defaultResult);
+                popupStep.ActivePopupWindow = null;
             }
         }
 

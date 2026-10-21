@@ -88,6 +88,7 @@
                         <Button Content="{lex:Loc Reset}" Command="{Binding ResetFilterCommand}" Padding="12,3" Margin="0,0,5,5"/>
                         <Button Content="{lex:Loc BurnIn_ExportCsv}" Command="{Binding ExportCsvCommand}" Padding="12,3" Margin="0,0,5,5"/>
                         <Button Content="{lex:Loc BurnIn_ExportExcel}" Command="{Binding ExportExcelCommand}" Padding="12,3" Margin="0,0,5,5"/>
+                        <Button Content="{lex:Loc BurnIn_LoadMore}" Command="{Binding LoadMoreRecordsCommand}" Padding="12,3" Margin="0,0,5,5"/>
                     </WrapPanel>
                     <DataGrid Grid.Row="1"
                               ItemsSource="{Binding Records}"

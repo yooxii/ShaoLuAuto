@@ -117,6 +117,24 @@ namespace ShaoLu.Viewmodels
             OnCropRectChanged?.Invoke(rect);
         }
 
+        /// <summary>
+        /// 最近一次保存事件的落盘结果：true=成功，false=失败，null=订阅者未回报（视为成功，兼容旧流程）
+        /// </summary>
+        public bool? LastSaveSucceeded { get; private set; }
+
+        /// <summary>最近一次落盘失败的原因（供保存失败提示）</summary>
+        public string LastSaveError { get; private set; }
+
+        /// <summary>
+        /// 由 OnImageSaved 订阅者在真正落盘后回报结果，
+        /// 使 SaveCroppedImage 的返回值反映落盘成败（不回报时保持旧行为）。
+        /// </summary>
+        public void ReportSaveResult(bool succeeded, string error = null)
+        {
+            LastSaveSucceeded = succeeded;
+            LastSaveError = succeeded ? null : error;
+        }
+
         public async Task<bool> SaveCroppedImage()
         {
             if (ImgDst == null)
@@ -126,7 +144,23 @@ namespace ShaoLu.Viewmodels
                 return false;
             }
 
+            // 重置上一次的落盘结果，避免沿用旧状态
+            LastSaveSucceeded = null;
+            LastSaveError = null;
+
             OnImageSaved?.Invoke(ImgDst, CropRect, Thumbs.ToList(), OCRRect);
+
+            // 落盘失败时不再当成功：不返回 true，并显式提示失败原因
+            if (LastSaveSucceeded == false)
+            {
+                string message = string.IsNullOrWhiteSpace(LastSaveError)
+                    ? LanguageService.GetLocalizedString("Save_Failed", "Save failed")
+                    : LastSaveError;
+                var (_, task) = WindowAsyncPopup.Show(message, "Error", PopupButtons.OK, MessageBoxImage.Error);
+                await task;
+                return false;
+            }
+
             return true;
         }
 

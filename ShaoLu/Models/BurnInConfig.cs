@@ -50,8 +50,12 @@ namespace ShaoLu.Models
         public double? RegionW { get; set; }
         public double? RegionH { get; set; }
 
-        /// <summary>是否已配置有效区域</summary>
-        public bool HasRegion => RegionW.HasValue && RegionH.HasValue
+        /// <summary>
+        /// 是否已配置有效区域：X/Y/W/H 四个值都必须存在且尺寸大于 0
+        /// （只校验 W/H 时，X/Y 为 null 会在 CaptureAndSave 里 .Value 抛异常）
+        /// </summary>
+        public bool HasRegion =>
+            RegionX.HasValue && RegionY.HasValue && RegionW.HasValue && RegionH.HasValue
             && RegionW.Value > 0 && RegionH.Value > 0;
     }
 }

@@ -7,6 +7,8 @@ using ShaoLu.Views;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -33,12 +35,21 @@ namespace ShaoLu
         private HwndSource _source;
         private WindowPlayground windowPlayground = new();
 
+        /// <summary>当前工程是否有未保存的修改（用于新建/打开/关闭前提示）</summary>
+        private bool _isDirty;
+        /// <summary>关闭确认已经处理过，避免 Close() 递归再次弹窗</summary>
+        private bool _closeConfirmed;
+
         #region 文件操作快捷键命令（仅主窗口内有效）
 
         public static readonly RoutedUICommand NewCommand = new RoutedUICommand("New", nameof(NewCommand), typeof(MainWindow));
         public static readonly RoutedUICommand OpenCommand = new RoutedUICommand("Open", nameof(OpenCommand), typeof(MainWindow));
         public static readonly RoutedUICommand SaveCommand = new RoutedUICommand("Save", nameof(SaveCommand), typeof(MainWindow));
         public static readonly RoutedUICommand SaveAsCommand = new RoutedUICommand("SaveAs", nameof(SaveAsCommand), typeof(MainWindow));
+
+        // 撤销/恢复（按焦点区域路由到步骤列表或步骤内部）
+        public static readonly RoutedUICommand UndoCommand = new RoutedUICommand("Undo", nameof(UndoCommand), typeof(MainWindow));
+        public static readonly RoutedUICommand RedoCommand = new RoutedUICommand("Redo", nameof(RedoCommand), typeof(MainWindow));
 
         #endregion
 
@@ -92,14 +103,107 @@ namespace ShaoLu
             InitializeComponent();
             DataContext = mainViewModel;
 
+            // 跟踪未保存修改：集合增删 + 单步属性变更（运行期状态变化不算用户编辑）
+            stepsViewModel.AutomationStepBases.CollectionChanged += AutomationStepBases_CollectionChanged;
+            foreach (var step in stepsViewModel.AutomationStepBases)
+                step.PropertyChanged += Step_PropertyChanged;
+
+            Closing += MainWindow_Closing;
+
             Loaded += MainWindow_Loaded;
 
         }
+
+        #region 未保存修改跟踪 / 文件操作防护
+
+        private void AutomationStepBases_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+            {
+                foreach (AutomationStepBase step in e.OldItems)
+                    step.PropertyChanged -= Step_PropertyChanged;
+            }
+            if (e.NewItems != null)
+            {
+                foreach (AutomationStepBase step in e.NewItems)
+                    step.PropertyChanged += Step_PropertyChanged;
+            }
+            MarkDirty();
+        }
+
+        private void Step_PropertyChanged(object sender, PropertyChangedEventArgs e) => MarkDirty();
+
+        /// <summary>标记工程为"有未保存修改"；运行中的执行状态（IsTrue/IsError 等）不计入</summary>
+        private void MarkDirty()
+        {
+            if (stepsViewModel.IsRunning) return;
+            _isDirty = true;
+        }
+
+        /// <summary>运行中禁止新建/打开工程：否则步骤集合被清空会让循环索引错位、日志写错文件</summary>
+        private bool GuardRunningForFileOperation()
+        {
+            if (!stepsViewModel.IsRunning) return true;
+
+            WindowAsyncPopup.Show(
+                LanguageService.GetLocalizedString("StopBeforeFileOperation", "正在运行自动化，请先停止后再新建或打开工程。"),
+                LanguageService.GetLocalizedString("Warning", "Warning"),
+                PopupButtons.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        /// <summary>有未保存修改时询问是否放弃；返回 true 表示可以继续（放弃修改）</summary>
+        private async Task<bool> ConfirmDiscardChangesAsync()
+        {
+            if (!_isDirty) return true;
+
+            var (_, popupTask) = WindowAsyncPopup.Show(
+                LanguageService.GetLocalizedString("UnsavedChangesPrompt", "当前工程有未保存的修改，确定放弃这些修改吗？"),
+                LanguageService.GetLocalizedString("Save", "Save"),
+                PopupButtons.YesNo, MessageBoxImage.Warning);
+            return await popupTask == PopupButton.YesValue;
+        }
+
+        private async void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            if (_closeConfirmed)
+                return;
+
+            // 运行中直接关闭：由 StepsViewModel 的停止逻辑处理，这里只提示一次
+            if (!_isDirty && !stepsViewModel.IsRunning)
+                return;
+
+            e.Cancel = true;
+
+            if (stepsViewModel.IsRunning)
+            {
+                WindowAsyncPopup.Show(
+                    LanguageService.GetLocalizedString("StopBeforeClose", "正在运行自动化，请先停止后再关闭窗口。"),
+                    LanguageService.GetLocalizedString("Warning", "Warning"),
+                    PopupButtons.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!await ConfirmDiscardChangesAsync())
+                return;
+
+            _closeConfirmed = true;
+            Close();
+        }
+
+        #endregion
+
         protected override void OnClosed(EventArgs e)
         {
-            // 窗口关闭时务必注销热键，防止资源泄漏
+            // 窗口关闭时务必注销热键，防止资源泄漏（开始 + 停止两个都要注销）
             _source?.RemoveHook(WndProc);
-            NativeMethods.UnregisterHotKey(new WindowInteropHelper(this).Handle, HOTKEY_STOP_ID);
+            var handle = new WindowInteropHelper(this).Handle;
+            NativeMethods.UnregisterHotKey(handle, HOTKEY_START_ID);
+            NativeMethods.UnregisterHotKey(handle, HOTKEY_STOP_ID);
+
+            stepsViewModel.AutomationStepBases.CollectionChanged -= AutomationStepBases_CollectionChanged;
+            foreach (var step in stepsViewModel.AutomationStepBases)
+                step.PropertyChanged -= Step_PropertyChanged;
 
             // 关闭所有子窗口
             foreach (var window in Application.Current.Windows.Cast<Window>().Where(w => w != this).ToList())
@@ -191,6 +295,64 @@ namespace ShaoLu
             Close();
         }
 
+        #region 撤销 / 恢复命令（按焦点区域路由）
+
+        private void Undo_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            Steps?.RouteUndo();
+        }
+
+        private void Undo_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = Steps != null && Steps.CanRouteUndo();
+        }
+
+        private void Redo_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            Steps?.RouteRedo();
+        }
+
+        private void Redo_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = Steps != null && Steps.CanRouteRedo();
+        }
+
+        /// <summary>
+        /// Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z：按当前焦点区域路由撤销恢复。
+        /// 在 Preview 阶段处理，避免焦点在 TextBox 时被文本框自身的撤销拦截。
+        /// </summary>
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (Steps == null) return;
+
+            if (e.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (Steps.CanRouteUndo())
+                {
+                    Steps.RouteUndo();
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Y && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (Steps.CanRouteRedo())
+                {
+                    Steps.RouteRedo();
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Z && Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                if (Steps.CanRouteRedo())
+                {
+                    Steps.RouteRedo();
+                    e.Handled = true;
+                }
+            }
+        }
+
+        #endregion
+
         private void TestCrop_Click(object sender, RoutedEventArgs e)
         {
             //WindowCropImage windowCropImage = new();
@@ -199,18 +361,25 @@ namespace ShaoLu
             windowEditImage.Show();
         }
 
-        private void New_Click(object sender, RoutedEventArgs e)
+        private async void New_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;
+            if (!GuardRunningForFileOperation()) return;
+            if (!await ConfirmDiscardChangesAsync()) return;
+
             stepsViewModel.AutomationStepBases.Clear();
             stepsViewModel.ClearUndoRedo();
             // 清空文件路径
             mainViewModel.StepFilePath = null;
             mainViewModel.StepImageWorkDir = null;
+            _isDirty = false;
         }
 
-        private void Open_Click(object sender, RoutedEventArgs e)
+        private async void Open_Click(object sender, RoutedEventArgs e)
         {
+            if (!GuardRunningForFileOperation()) return;
+            if (!await ConfirmDiscardChangesAsync()) return;
+
             var filePath = PathServices.OpenPathDialog(
                 LanguageService.GetLocalizedString("OpenFile"),
                 $"AutoStep Files|*.autostep|{LanguageService.GetLocalizedString("StepFile")}|*.json");
@@ -250,6 +419,19 @@ namespace ShaoLu
 
                 // 记录到最近打开文件列表
                 RecentFilesService.AddRecent(filePath);
+                _isDirty = false;
+
+                // 缺失资源显式告警：图片或烧录判据模板缺失会让匹配静默失败
+                var missingAssets = StepsFile.CollectMissingAssets(loadedSteps, mainViewModel.StepImageWorkDir);
+                if (missingAssets.Count > 0)
+                {
+                    WindowAsyncPopup.Show(
+                        $"{LanguageService.GetLocalizedString("MissingStepAssets", "工程引用的图片/模板缺失")}：{missingAssets.Count}\n" +
+                        string.Join("\n", missingAssets.Take(8)) +
+                        (missingAssets.Count > 8 ? "\n..." : ""),
+                        LanguageService.GetLocalizedString("OpenFile"),
+                        PopupButtons.OK, MessageBoxImage.Warning);
+                }
             }
             catch (Exception ex)
             {
@@ -292,8 +474,10 @@ namespace ShaoLu
         }
 
         /// <summary>打开最近文件列表中的文件；文件不存在时提示并从列表移除</summary>
-        private void OpenRecentFile(string filePath)
+        private async void OpenRecentFile(string filePath)
         {
+            if (!GuardRunningForFileOperation()) return;
+
             if (!System.IO.File.Exists(filePath))
             {
                 RecentFilesService.Remove(filePath);
@@ -303,6 +487,7 @@ namespace ShaoLu
                     PopupButtons.OK, MessageBoxImage.Error);
                 return;
             }
+            if (!await ConfirmDiscardChangesAsync()) return;
             LoadStepFile(filePath);
         }
 
@@ -346,10 +531,13 @@ namespace ShaoLu
             });
         }
 
-        private void Example_Click(object sender, RoutedEventArgs e)
+        private async void Example_Click(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem item && item.Tag is string filePath)
             {
+                if (!GuardRunningForFileOperation()) return;
+                if (!await ConfirmDiscardChangesAsync()) return;
+
                 if (windowPlayground == null || !windowPlayground.IsLoaded)
                 {
                     windowPlayground = new WindowPlayground();
@@ -489,6 +677,9 @@ namespace ShaoLu
 
         private void DoSave(string filePath, bool includeSourceImages = false)
         {
+            var savedFlags = stepsViewModel.AutomationStepBases
+                .Select(step => (Step: step, step.IsSave))
+                .ToList();
             try
             {
                 foreach (var step in stepsViewModel.AutomationStepBases)
@@ -496,20 +687,44 @@ namespace ShaoLu
                     step.IsSave = true;
                 }
 
-                StepsFile.SaveAsAutoStepPackage(stepsViewModel.AutomationStepBases, filePath, includeSourceImages);
+                // 原子保存：包写成功后才会替换旧文件（并保留 .bak）；图片会落地到包对应的工作目录
+                var result = StepsFile.SaveAsAutoStepPackage(stepsViewModel.AutomationStepBases, filePath, includeSourceImages);
 
-                // 更新当前文件路径和工作目录
+                // 更新当前文件路径和工作目录（图片此时已落地，再按 Ctrl+S 不会丢图）
                 mainViewModel.StepFilePath = filePath;
-                mainViewModel.StepImageWorkDir = StepsFile.GetWorkDirPath(filePath);
+                mainViewModel.StepImageWorkDir = result.WorkDir;
+                _isDirty = false;
 
-                // 保存成功反馈
+                // 保存成功反馈；缺失图片/落地失败必须显式告警，不能只报"成功"
+                string message = LanguageService.GetLocalizedString("SaveSuccess");
+                bool hasProblem = result.HasMissingImages || result.HasWarnings;
+
+                if (result.HasMissingImages)
+                {
+                    message += "\n\n" + LanguageService.GetLocalizedString("SaveMissingImages", "以下图片在磁盘上不存在，未写入工程包：")
+                        + "\n" + string.Join("\n", result.MissingImages.Take(8))
+                        + (result.MissingImages.Count > 8 ? "\n..." : "");
+                }
+                if (result.HasWarnings)
+                {
+                    message += "\n\n" + LanguageService.GetLocalizedString("SaveWarnings", "图片复制到工作目录时出现问题：")
+                        + "\n" + string.Join("\n", result.Warnings.Take(8));
+                }
+
                 WindowAsyncPopup.Show(
-                    LanguageService.GetLocalizedString("SaveSuccess"),
+                    message,
                     LanguageService.GetLocalizedString("Save"),
-                    PopupButtons.OK, MessageBoxImage.Information);
+                    PopupButtons.OK,
+                    hasProblem ? MessageBoxImage.Warning : MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
+                // 保存失败：恢复 IsSave 标记（文件并未真正保存）
+                foreach (var (step, flag) in savedFlags)
+                {
+                    step.IsSave = flag;
+                }
+
                 NLog.LogManager.GetCurrentClassLogger().Error(ex, "Save file failed: {0}", filePath);
                 WindowAsyncPopup.Show(
                     $"{LanguageService.GetLocalizedString("SaveFailed")}: {ex.Message}",
@@ -544,6 +759,16 @@ namespace ShaoLu
         private void UserManagement_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;
+
+            // 用户管理是管理员操作：普通用户不得打开（服务层同样会拒绝）
+            if (!SingletonLocator.UserService.IsAdmin)
+            {
+                WindowAsyncPopup.Show(
+                    LanguageService.GetLocalizedString("RequireAdminPermission", "需要管理员权限才能管理用户。"),
+                    LanguageService.GetLocalizedString("UserManagementTitle"),
+                    PopupButtons.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var userManagementVm = Ioc.Default.GetRequiredService<ShaoLu.Viewmodels.UserManagementViewModel>();
             var window = new WindowUserManagement(userManagementVm);

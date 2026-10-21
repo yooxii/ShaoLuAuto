@@ -192,19 +192,36 @@ namespace ShaoLu.Services
 
         #region 记录 CRUD
 
-        public static void Record(BurnInRecord record)
+        /// <summary>
+        /// 写入一条烧录记录。
+        /// 返回 true 表示已成功落库；false 表示落库失败（已写 Warn 日志）。
+        /// 调用方必须用返回值决定是否把 burnJudged 置为 true：
+        /// 落库失败时不得视为已判定，交由运行结束时的 NotFinished 补记路径兜底，
+        /// 避免"判定完成却没记录"（也不在此处重复补记，防止重复记录）。
+        /// </summary>
+        public static bool Record(BurnInRecord record)
         {
+            if (record == null)
+            {
+                _logger.Warn("Record ignored: burn_in_record is null");
+                return false;
+            }
+
             try
             {
-                if (record == null) return;
-                Fsql.Insert(record).ExecuteAffrows();
+                return Fsql.Insert(record).ExecuteAffrows() > 0;
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failed to insert burn_in_record");
+                _logger.Warn(ex, "Failed to insert burn_in_record");
+                return false;
             }
         }
 
+        /// <summary>
+        /// 分页查询明细。时间区间统一为半开区间 [from, to)：调用方传"结束日期 + 1 天"
+        /// 即可包含结束日当天全部记录（与汇总口径一致）。
+        /// </summary>
         public static List<BurnInRecord> Query(
             string orderNo = null,
             DateTime? from = null,
@@ -220,12 +237,37 @@ namespace ShaoLu.Services
             if (from.HasValue)
                 q = q.Where(x => x.BurnFinishedAt >= from.Value);
             if (to.HasValue)
-                q = q.Where(x => x.BurnFinishedAt <= to.Value);
+                q = q.Where(x => x.BurnFinishedAt < to.Value);
             if (result.HasValue)
                 q = q.Where(ResultFilter(result.Value));
 
             return q.OrderBy(descending ? "BurnFinishedAt DESC" : "BurnFinishedAt ASC")
                     .Page(page, pageSize).ToList();
+        }
+
+        /// <summary>
+        /// 按同一过滤条件逐页读取全部明细（供导出使用，不做条数截断）。
+        /// 惰性枚举，导出可边读边写，内存占用恒定为单页。
+        /// </summary>
+        public static IEnumerable<BurnInRecord> QueryAll(
+            string orderNo = null,
+            DateTime? from = null,
+            DateTime? to = null,
+            BurnResult? result = null,
+            bool descending = true,
+            int pageSize = 1000)
+        {
+            if (pageSize <= 0) pageSize = 1000;
+            int page = 1;
+            while (true)
+            {
+                var batch = Query(orderNo, from, to, result, page, pageSize, descending);
+                foreach (var row in batch)
+                    yield return row;
+                if (batch.Count < pageSize)
+                    yield break;
+                page++;
+            }
         }
 
         public static long QueryCount(
@@ -238,7 +280,7 @@ namespace ShaoLu.Services
             if (!string.IsNullOrWhiteSpace(orderNo))
                 q = q.Where(x => x.OrderNo == orderNo);
             if (from.HasValue) q = q.Where(x => x.BurnFinishedAt >= from.Value);
-            if (to.HasValue) q = q.Where(x => x.BurnFinishedAt <= to.Value);
+            if (to.HasValue) q = q.Where(x => x.BurnFinishedAt < to.Value);
             if (result.HasValue) q = q.Where(ResultFilter(result.Value));
             return q.Count();
         }
@@ -281,11 +323,15 @@ namespace ShaoLu.Services
             public DateTime FirstAt { get; set; }
         }
 
+        /// <summary>
+        /// 按工令聚合统计摘要。时间区间统一为半开区间 [from, to)，
+        /// 与明细查询口径一致（传结束日期 + 1 天即可包含当天）。
+        /// </summary>
         public static List<OrderSummary> GetOrderSummaries(DateTime? from = null, DateTime? to = null)
         {
             var q = Fsql.Select<BurnInRecord>();
             if (from.HasValue) q = q.Where(x => x.BurnFinishedAt >= from.Value);
-            if (to.HasValue) q = q.Where(x => x.BurnFinishedAt <= to.Value);
+            if (to.HasValue) q = q.Where(x => x.BurnFinishedAt < to.Value);
 
             // 内存聚合（数据量通常较小）
             var rows = q.ToList();
@@ -363,7 +409,19 @@ namespace ShaoLu.Services
             string screenshotPath = null;
             if (config?.CaptureScreenshot == true && config.HasRegion)
             {
-                screenshotPath = CaptureAndSave(config, orderNoForFile);
+                var capture = CaptureAndSave(config, orderNoForFile);
+                if (capture.Success)
+                {
+                    screenshotPath = capture.Path;
+                }
+                else
+                {
+                    // 截图失败不再静默：失败原因写入 remark 供导出与追溯
+                    _logger.Warn("Capture failed for order {0}: {1}", orderNoForFile, capture.Error);
+                    string mark = string.IsNullOrEmpty(capture.Error) ? "[截图失败]" : $"[截图失败] {capture.Error}";
+                    remark = string.IsNullOrEmpty(remark) ? mark : $"{remark} | {mark}";
+                    if (remark.Length > 500) remark = remark.Substring(0, 500);
+                }
             }
 
             return (result, goodText, badText, remark, screenshotPath);
@@ -385,28 +443,49 @@ namespace ShaoLu.Services
                          .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
         }
 
-        /// <summary>截取配置的区域并保存为 PNG，返回文件路径；失败返回 null</summary>
-        public static string CaptureAndSave(BurnInConfig config, string orderNo)
+        /// <summary>
+        /// 截图保存结果：调用方据此判断是否拿到有效截图（不再静默吞异常）。
+        /// </summary>
+        public sealed class CaptureResult
         {
-            if (config == null || !config.HasRegion) return null;
+            /// <summary>是否成功保存</summary>
+            public bool Success { get; private set; }
+            /// <summary>成功时的 PNG 绝对路径</summary>
+            public string Path { get; private set; }
+            /// <summary>失败原因（成功时为空）</summary>
+            public string Error { get; private set; }
+
+            public static CaptureResult Ok(string path) => new CaptureResult { Success = true, Path = path };
+            public static CaptureResult Fail(string error) => new CaptureResult { Success = false, Error = error };
+        }
+
+        /// <summary>
+        /// 截取配置的区域并保存为 PNG。
+        /// 返回 <see cref="CaptureResult"/>：成功带路径，失败带原因（同时写 Warn 日志）。
+        /// </summary>
+        public static CaptureResult CaptureAndSave(BurnInConfig config, string orderNo)
+        {
+            if (config == null) return CaptureResult.Fail("未提供烧录配置");
+            if (!config.HasRegion) return CaptureResult.Fail("未配置截图区域");
+
             try
             {
                 var region = new System.Drawing.Rectangle(
                     (int)config.RegionX.Value, (int)config.RegionY.Value,
                     (int)config.RegionW.Value, (int)config.RegionH.Value);
                 using Bitmap bmp = Autogui.CaptureScreenRegion(region);
-                if (bmp == null) return null;
+                if (bmp == null) return CaptureResult.Fail("截屏返回空图像");
 
                 string dir = Path.Combine(GetEffectiveScreenshotDir(config), SanitizeFileName(orderNo ?? "unknown"));
                 Directory.CreateDirectory(dir);
                 string file = Path.Combine(dir, $"{DateTime.Now:yyyyMMdd_HHmmss_fff}.png");
                 bmp.Save(file, ImageFormat.Png);
-                return file;
+                return CaptureResult.Ok(file);
             }
             catch (Exception ex)
             {
                 _logger.Warn(ex, "CaptureAndSave failed");
-                return null;
+                return CaptureResult.Fail($"{ex.GetType().Name}: {ex.Message}");
             }
         }
 
@@ -422,49 +501,74 @@ namespace ShaoLu.Services
 
         #region 导出
 
-        /// <summary>导出当前过滤条件下的明细到 CSV</summary>
-        public static void ExportCsv(string path, List<BurnInRecord> rows)
+        /// <summary>
+        /// 导出当前过滤条件下的明细到 CSV。
+        /// rows 可为惰性序列（全量导出不做条数截断），边读边写；返回实际写出的记录条数。
+        /// </summary>
+        public static int ExportCsv(string path, IEnumerable<BurnInRecord> rows)
         {
             if (rows == null) throw new ArgumentNullException(nameof(rows));
-            var sb = new StringBuilder();
-            sb.AppendLine(string.Join(",", new[]
+
+            int count = 0;
+            // 流式写入，避免大数据量时把整张表拼进内存；UTF8 带 BOM 便于 Excel 识别中文
+            using (var writer = new StreamWriter(path, false, new UTF8Encoding(true)))
             {
-                "Id","OrderNo","Operator","PartName","StepFileName",
-                "BurnStartedAt","BurnFinishedAt","BurnDurationMs",
-                "IsGood","GoodText","BadText","ScreenshotPath","Remark"
-            }));
-            foreach (var r in rows)
-            {
-                sb.AppendLine(string.Join(",", new[]
+                writer.WriteLine(string.Join(",", new[]
                 {
-                    r.Id.ToString(),
-                    CsvEscape(r.OrderNo),
-                    CsvEscape(r.Operator),
-                    CsvEscape(r.PartName),
-                    CsvEscape(r.StepFileName),
-                    r.BurnStartedAt.ToString("yyyy-MM-dd HH:mm:ss"),
-                    r.BurnFinishedAt.ToString("yyyy-MM-dd HH:mm:ss"),
-                    r.BurnDurationMs.ToString("F0"),
-                    r.Result.ToString(),
-                    CsvEscape(r.GoodText),
-                    CsvEscape(r.BadText),
-                    CsvEscape(r.ScreenshotPath),
-                    CsvEscape(r.Remark),
+                    "Id","OrderNo","Operator","PartName","StepFileName",
+                    "BurnStartedAt","BurnFinishedAt","BurnDurationMs",
+                    "IsGood","GoodText","BadText","ScreenshotPath","Remark"
                 }));
+
+                foreach (var r in rows)
+                {
+                    if (r == null) continue;
+                    writer.WriteLine(string.Join(",", new[]
+                    {
+                        r.Id.ToString(),
+                        CsvEscape(r.OrderNo),
+                        CsvEscape(r.Operator),
+                        CsvEscape(r.PartName),
+                        CsvEscape(r.StepFileName),
+                        r.BurnStartedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                        r.BurnFinishedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                        r.BurnDurationMs.ToString("F0"),
+                        r.Result.ToString(),
+                        CsvEscape(r.GoodText),
+                        CsvEscape(r.BadText),
+                        CsvEscape(r.ScreenshotPath),
+                        CsvEscape(r.Remark),
+                    }));
+                    count++;
+                }
+                writer.Flush();
             }
-            File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
+            return count;
         }
 
+        /// <summary>
+        /// CSV 单元格转义：
+        ///  1) 公式注入防护——以 = + - @ 开头的单元格前导单引号，避免 Excel/WPS 当公式执行；
+        ///  2) 含分隔符/引号/换行/制表符时整体加双引号，内部双引号翻倍。
+        /// </summary>
         private static string CsvEscape(string s)
         {
-            if (s == null) return "";
-            bool needQuote = s.IndexOfAny(new[] { ',', '"', '\n', '\r' }) >= 0;
+            if (s == null) return string.Empty;
+
+            // 公式注入：在转义之前加前导单引号（Excel 会把该单元格当文本）
+            if (s.Length > 0 && (s[0] == '=' || s[0] == '+' || s[0] == '-' || s[0] == '@'))
+                s = "'" + s;
+
+            bool needQuote = s.IndexOfAny(new[] { ',', '"', '\n', '\r', '\t' }) >= 0;
             s = s.Replace("\"", "\"\"");
             return needQuote ? $"\"{s}\"" : s;
         }
 
-        /// <summary>导出当前过滤条件下的明细到 Excel（.xlsx）</summary>
-        public static void ExportExcel(string path, List<BurnInRecord> rows)
+        /// <summary>
+        /// 导出当前过滤条件下的明细到 Excel（.xlsx）。
+        /// rows 可为惰性序列（全量导出不做条数截断）；返回实际写出的记录条数。
+        /// </summary>
+        public static int ExportExcel(string path, IEnumerable<BurnInRecord> rows)
         {
             if (rows == null) throw new ArgumentNullException(nameof(rows));
             // 许可已在 App.xaml.cs 中通过 ExcelPackage.License.SetNonCommercialPersonal 设置
@@ -477,10 +581,11 @@ namespace ShaoLu.Services
             };
             for (int c = 0; c < headers.Length; c++) ws.Cells[1, c + 1].Value = headers[c];
 
-            for (int i = 0; i < rows.Count; i++)
+            int count = 0;
+            foreach (var r in rows)
             {
-                var r = rows[i];
-                int row = i + 2;
+                if (r == null) continue;
+                int row = count + 2;
                 ws.Cells[row, 1].Value = r.Id;
                 ws.Cells[row, 2].Value = r.OrderNo;
                 ws.Cells[row, 3].Value = r.Operator;
@@ -494,8 +599,10 @@ namespace ShaoLu.Services
                 ws.Cells[row, 11].Value = r.BadText;
                 ws.Cells[row, 12].Value = r.ScreenshotPath;
                 ws.Cells[row, 13].Value = r.Remark;
+                count++;
             }
             package.SaveAs(new FileInfo(path));
+            return count;
         }
 
         #endregion

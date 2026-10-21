@@ -52,9 +52,21 @@ namespace ShaoLu.Views
                     WindowAsyncPopup.Show(LanguageService.GetLocalizedString("NoCropImage"), "Error", PopupButtons.OK, MessageBoxImage.Error);
                     return;
                 }
-                var res = await vm.SaveCroppedImage();
-                if (res)
-                    WindowAsyncPopup.Show(LanguageService.GetLocalizedString("Saved"), LanguageService.GetLocalizedString("Success"), PopupButtons.OK, MessageBoxImage.Information);
+                try
+                {
+                    var res = await vm.SaveCroppedImage();
+                    if (res)
+                        WindowAsyncPopup.Show(LanguageService.GetLocalizedString("Saved"), LanguageService.GetLocalizedString("Success"), PopupButtons.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    // 落盘失败由步骤的 OnImageSaved 处理器抛出：这里必须显式报错，不能继续提示“已保存”
+                    NLog.LogManager.GetCurrentClassLogger().Error(ex, "Save cropped image failed");
+                    WindowAsyncPopup.Show(
+                        $"{LanguageService.GetLocalizedString("SaveFailed", "Save failed")}: {ex.Message}",
+                        LanguageService.GetLocalizedString("Error", "Error"),
+                        PopupButtons.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -119,7 +131,10 @@ namespace ShaoLu.Views
 
         private void ClearOCRRegion_Click(object sender, RoutedEventArgs e)
         {
-            editImageViewModel.OCRRect = Rect.Empty;
+            // 用 default(Rect)（0,0,0,0）作为“未设置 OCR 区域”的哨兵：
+            // Rect.Empty 的 X/Y 为 +∞、Width/Height 为 -∞，后续 Clone 时 new Rect(...) 会抛 ArgumentException，
+            // JSON 序列化 ±∞ 也会失败
+            editImageViewModel.OCRRect = new Rect();
             UpdateOCRDisplay();
         }
 

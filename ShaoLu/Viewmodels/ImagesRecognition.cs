@@ -31,10 +31,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
                 ClickThumbs = ClickThumbs?.Select(t => t.Clone()).ToList(),
                 SimilarityThreshold = SimilarityThreshold,
-                CroppedImg = clonedImg,
             };
+            // 裁剪图只做内存克隆：克隆/快照是高频路径，不再每次都写 PNG（落盘由保存动作负责）
             if (clonedImg != null)
-                res.SaveCroppedImageToDisk(clonedImg);
+                res.SetCroppedImageInMemory(clonedImg);
             return res;
         }
 
@@ -51,6 +51,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public ObservableCollection<ImageRecognition> Images { get => _images; set => SetProperty(ref _images, value); }
 
         private bool _oneByOne = false;
+        /// <summary>
+        /// 逐个匹配/点击（保留字段：当前没有 UI 入口，运行时也不参与逻辑，
+        /// 仅为兼容旧数据保留读写，避免旧文件反序列化丢字段；不要据此认为它已生效）
+        /// </summary>
         public bool OneByOne { get => _oneByOne; set => SetProperty(ref _oneByOne, value); }
 
         [RelayCommand]
@@ -129,14 +133,24 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 var sourceImage = (image.CroppedImg ?? image.ImgSrc) ?? throw new Exception("No image available for clicking.");
                 var img = Autogui.ConvertImageSourceToBitmap(sourceImage) ?? throw new Exception("Image Convert Error.");
-                var rect = await Task.Run(async () =>
+                try
                 {
-                    await Task.Delay((int)WaitTime * 1000, cancellationToken);
-                    return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, image.ClickPoints, image.SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
-                });
-                res = !rect.IsEmpty;
-                lastSimilarity = rect.Similarity;
-                lastClickPos = rect.IsEmpty ? null : rect.Center;
+                    // 等待时间按秒换算毫秒：必须 (int)(WaitTime * 1000)，否则小数秒会被截断成 0
+                    // 没有点击点时 Autogui 会按匹配区域中心点击，避免“匹配成功却不点”
+                    var rect = await Task.Run(async () =>
+                    {
+                        await Task.Delay((int)(WaitTime * 1000), cancellationToken);
+                        return Autogui.ClickImageOnScreenEx(img, Autogui.Position.LeftTop, image.ClickPoints, image.SimilarityThreshold, Clicks, ClickGap, NextClickTime, 0, Timeout);
+                    });
+                    res = !rect.IsEmpty;
+                    lastSimilarity = rect.Similarity;
+                    lastClickPos = rect.IsEmpty ? null : rect.Center;
+                }
+                finally
+                {
+                    // 无论成功、失败还是取消都释放 GDI+ 位图
+                    img.Dispose();
+                }
             }
             IsTrue = res;
             IsError = false;
@@ -213,19 +227,32 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
         public override async Task<bool> RunAsync(CancellationToken cancellationToken = default)
         {
-            List<AutoRect> res = [];
+            List<AutoRect> res;
+            // 每张图片的模板位图都必须在结束时释放（原来只在成功路径返回，异常/超时后会泄漏）
             List<AutoguiImage> autoguiImages = Images.Select(x => new AutoguiImage()
             {
                 Bitmap = Utils.Autogui.ConvertImageSourceToBitmap(x.CroppedImg ?? x.ImgSrc ?? throw new Exception(LanguageService.GetLocalizedString("No_img_Warning"))),
                 Position = Autogui.Position.LeftTop,
                 Threshold = x.SimilarityThreshold
             }).ToList();
-            res = await Task.Run(async () =>
+            try
             {
-                await Task.Delay((int)WaitTime * 1000, cancellationToken);
-                return Autogui.FindImagesOnScreen(autoguiImages, GapTime, Timeout);
-            });
-            IsTrue = !res[0].IsEmpty;
+                res = await Task.Run(async () =>
+                {
+                    // 等待时间按秒换算毫秒：必须 (int)(WaitTime * 1000)，否则小数秒会被截断成 0
+                    await Task.Delay((int)(WaitTime * 1000), cancellationToken);
+                    return Autogui.FindImagesOnScreen(autoguiImages, GapTime, Timeout);
+                });
+            }
+            finally
+            {
+                foreach (var autoguiImage in autoguiImages)
+                    autoguiImage.Bitmap?.Dispose();
+            }
+
+            // 未匹配时返回的是空结果占位（不再抛异常），保持与模板顺序一致
+            var first = res != null && res.Count > 0 ? res[0] : new AutoRect();
+            IsTrue = !first.IsEmpty;
             IsError = false;
             ErrorType = StepErrorType.None;
 
@@ -233,8 +260,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             LastResult = new StepExecutionResult
             {
                 IsTrue = IsTrue,
-                Similarity = res[0].Similarity,
-                ClickPosition = res[0].IsEmpty ? null : res[0].Center,
+                Similarity = first.Similarity,
+                ClickPosition = first.IsEmpty ? null : first.Center,
             };
 
             return IsTrue;

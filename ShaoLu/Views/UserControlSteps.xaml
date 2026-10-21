@@ -93,9 +93,6 @@
                         <Button Content="{lex:Loc Cut}" Margin="3" Command="{Binding CutStepCommand}"/>
                         <Button Content="{lex:Loc Paste}" Margin="3" Command="{Binding PasteStepCommand}"/>
                         <Button Content="{lex:Loc Delete}" Margin="3" Command="{Binding DelStepCommand}"/>
-                        <Separator/>
-                        <Button Content="{lex:Loc UndoStepEdit}" Margin="3" Command="{Binding UndoStepCommand}"/>
-                        <Button Content="{lex:Loc RedoStepEdit}" Margin="3" Command="{Binding RedoStepCommand}"/>
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Step}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
                         <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
@@ -135,9 +132,6 @@
                                 <KeyBinding Key="C" Modifiers="Ctrl" Command="{Binding CopyStepCommand}"/>
                                 <KeyBinding Key="X" Modifiers="Ctrl" Command="{Binding CutStepCommand}"/>
                                 <KeyBinding Key="V" Modifiers="Ctrl" Command="{Binding PasteStepCommand}"/>
-                                <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoCommand}"/>
-                                <KeyBinding Key="Y" Modifiers="Ctrl" Command="{Binding RedoCommand}"/>
-                                <KeyBinding Key="Z" Modifiers="Ctrl+Shift" Command="{Binding RedoCommand}"/>
                             </DataGrid.InputBindings>
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow" BasedOn="{StaticResource WD.DefaultDataGridRow}">
@@ -169,7 +163,7 @@
                     </DataGrid>
                 </GroupBox>
                 <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
-                <GroupBox Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2"
+                <GroupBox x:Name="StepDetailsPanel" Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2"
                           IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
                     <!-- 当 SelectedStep 为 null 时，可以显示提示文本 -->
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch">

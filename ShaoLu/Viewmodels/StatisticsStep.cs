@@ -362,10 +362,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };
+            // 注意：StatisticsItems 的字段初始化器已放入 5 个默认统计项，
+            // 这里必须先清空再逐项复制源项，否则每次 Clone 都会叠加默认项（5→10→15…）
+            clone.StatisticsItems.Clear();
             foreach (var item in StatisticsItems)
             {
                 clone.StatisticsItems.Add(CloneItem(item));
             }
+            // CustomConditions 默认为空集合（无字段初始化默认项），此处同样先清空以保持“与源完全一致”
+            clone.CustomConditions.Clear();
             foreach (var item in CustomConditions)
             {
                 clone.CustomConditions.Add(CloneItem(item));

@@ -50,3 +50,6 @@ using System.Windows;
 //
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+
+// 允许单元测试访问内部成员（例如 StepsFile.WorkDirResolver 测试钩子）
+[assembly: InternalsVisibleTo("NUnitTest")]

@@ -23,6 +23,40 @@ namespace ShaoLu.Views
         public WindowSelectRegion()
         {
             InitializeComponent();
+            // XAML 里 WindowState=Maximized 只覆盖主屏；多屏时必须按虚拟桌面摆满，否则副屏无法框选
+            ApplyVirtualScreenBounds();
+        }
+
+        /// <summary>
+        /// 让透明遮罩窗口铺满整个虚拟桌面（含副屏与负坐标区域），
+        /// 与 Autogui.CaptureScreen/CaptureScreenRegion 使用的坐标系保持一致
+        /// </summary>
+        private void ApplyVirtualScreenBounds()
+        {
+            var virtualScreen = System.Windows.Forms.SystemInformation.VirtualScreen;
+            var (dpiX, dpiY) = GetDpiScale();
+
+            // WPF 的 Left/Top/Width/Height 是逻辑像素，需要把物理像素的虚拟桌面换算过来
+            WindowState = WindowState.Normal;
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Left = virtualScreen.X / dpiX;
+            Top = virtualScreen.Y / dpiY;
+            Width = virtualScreen.Width / dpiX;
+            Height = virtualScreen.Height / dpiY;
+        }
+
+        /// <summary>
+        /// 取主窗口的 DPI 缩放因子（窗口自身尚未显示时拿不到 PresentationSource）
+        /// </summary>
+        private static (double dpiX, double dpiY) GetDpiScale()
+        {
+            var mainWindow = Application.Current?.MainWindow;
+            var source = mainWindow != null ? PresentationSource.FromVisual(mainWindow) : null;
+            if (source?.CompositionTarget != null)
+            {
+                return (source.CompositionTarget.TransformToDevice.M11, source.CompositionTarget.TransformToDevice.M22);
+            }
+            return (Services.OCRService.CachedDpiX, Services.OCRService.CachedDpiY);
         }
 
         private void Canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

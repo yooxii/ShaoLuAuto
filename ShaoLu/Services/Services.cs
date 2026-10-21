@@ -144,13 +144,13 @@ namespace ShaoLu.Services
             byte[] bytes = File.ReadAllBytes(filePath);
             if (bytes.Length == 0) return string.Empty;
 
-            // 1. 优先检查 BOM（最准确）
+            // 1. 优先检查 BOM（最准确）；按 BOM 长度跳过前缀，避免首行带 \uFEFF
             if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
-                return Encoding.UTF8.GetString(bytes);
+                return Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
             if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
-                return Encoding.Unicode.GetString(bytes); // UTF-16 LE
+                return Encoding.Unicode.GetString(bytes, 2, bytes.Length - 2); // UTF-16 LE
             if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
-                return Encoding.BigEndianUnicode.GetString(bytes); // UTF-16 BE
+                return Encoding.BigEndianUnicode.GetString(bytes, 2, bytes.Length - 2); // UTF-16 BE
 
             // 2. 无 BOM 时，使用 UtfUnknown 进行启发式检测
             var result = CharsetDetector.DetectFromBytes(bytes);
@@ -163,14 +163,19 @@ namespace ShaoLu.Services
                     // UtfUnknown 返回的 Charset 名称与 .NET Encoding 兼容
                     return Encoding.GetEncoding(result.Detected.EncodingName).GetString(bytes);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    throw new Exception("");
+                    // 不再抛空白异常消息：带上文件路径与原因，UI 上能看出该改哪个文件
+                    throw new InvalidOperationException(
+                        $"读取文件失败：\"{filePath}\"。检测到编码为 {result.Detected.EncodingName}，" +
+                        $"但当前系统不支持该编码，请将文件另存为 UTF-8 后重试。", ex);
                 }
             }
             else
             {
-                throw new Exception("");
+                throw new InvalidOperationException(
+                    $"读取文件失败：\"{filePath}\"。无法识别文件编码（可能是二进制文件或编码不受支持），" +
+                    "请将文件另存为 UTF-8 后重试。");
             }
         }
 

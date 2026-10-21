@@ -68,7 +68,9 @@ namespace ShaoLu.Views
                 // 等系统重绘
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
 
-                var workArea = SystemParameters.WorkArea;
+                // 覆盖整个虚拟桌面（多屏，副屏可能位于负坐标区）：
+                // 只按主屏工作区截图/摆放窗口，副屏上的区域永远选不到
+                var virtualScreen = System.Windows.Forms.SystemInformation.VirtualScreen;
 
                 // 获取 DPI 缩放因子，将逻辑像素转换为物理像素用于截图
                 double dpiX = 1.0, dpiY = 1.0;
@@ -82,11 +84,16 @@ namespace ShaoLu.Views
                     }
                 }
 
-                // 截图使用物理像素
-                int w = (int)(workArea.Width * dpiX);
-                int h = (int)(workArea.Height * dpiY);
-                int sx = (int)(workArea.X * dpiX);
-                int sy = (int)(workArea.Y * dpiY);
+                // 窗口摆放区域（WPF 逻辑像素，含虚拟桌面负坐标原点）
+                var workArea = new Rect(
+                    virtualScreen.X / dpiX, virtualScreen.Y / dpiY,
+                    virtualScreen.Width / dpiX, virtualScreen.Height / dpiY);
+
+                // 截图使用物理像素，且与窗口区域同一坐标系
+                int w = virtualScreen.Width;
+                int h = virtualScreen.Height;
+                int sx = virtualScreen.X;
+                int sy = virtualScreen.Y;
 
                 BitmapSource screenshot;
                 using (var bmp = new Bitmap(w, h))

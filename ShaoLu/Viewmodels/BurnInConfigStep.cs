@@ -297,16 +297,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }), System.Windows.Threading.DispatcherPriority.Background);
             editWindow.editImageViewModel.OnImageSaved += (img, rect, clickThumbs, ocrRect) =>
             {
-                SaveTemplate(img, kind);
+                // 模板落盘结果回报给裁剪窗口：失败时不再提示“已保存”，并由 SaveCroppedImage 弹出明确错误
+                string saveError = SaveTemplate(img, kind);
+                editWindow.editImageViewModel.ReportSaveResult(saveError == null, saveError);
             };
         }
 
-        /// <summary>将裁剪图保存为指定类型判据模板（{工作目录}\images\burnin_{Uid}_{kind}.png）</summary>
-        private void SaveTemplate(System.Windows.Media.ImageSource imageSource, string kind)
+        /// <summary>
+        /// 将裁剪图保存为指定类型判据模板（{工作目录}\images\burnin_{Uid}_{kind}.png）。
+        /// 返回 null 表示落盘成功；返回非空字符串表示落盘失败的原因（交由调用方显式告警，不再静默吞掉）。
+        /// </summary>
+        private string SaveTemplate(System.Windows.Media.ImageSource imageSource, string kind)
         {
             try
             {
-                if (!(imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource)) return;
+                if (!(imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource))
+                    return LanguageService.GetLocalizedString("BurnIn_TemplateSaveFailed", "Failed to save template image") + ": image is not a BitmapSource";
 
                 var mainVM = Utils.SingletonLocator.Main;
                 string workDir = mainVM?.StepImageWorkDir;
@@ -353,10 +359,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         OnPropertyChanged(nameof(FailTemplateThumb));
                         break;
                 }
+
+                return null;
             }
             catch (Exception ex)
             {
-                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "SaveTemplate failed");
+                // 落盘失败不再静默吞掉：记录错误并回传原因，由裁剪窗口显式提示用户
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "SaveTemplate failed");
+                return LanguageService.GetLocalizedString("BurnIn_TemplateSaveFailed", "Failed to save template image")
+                    + ": " + ex.Message;
             }
         }
 
@@ -443,6 +454,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FailTemplateName = src.FailTemplateName,
                 SimilarityThreshold = src.SimilarityThreshold,
                 CaptureScreenshot = src.CaptureScreenshot,
+                ScreenshotDir = src.ScreenshotDir,
                 RegionX = src.RegionX,
                 RegionY = src.RegionY,
                 RegionW = src.RegionW,

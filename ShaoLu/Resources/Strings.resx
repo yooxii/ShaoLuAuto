@@ -1413,4 +1413,43 @@
   <data name="NoRecentFiles" xml:space="preserve">
     <value>(None)</value>
   </data>
+  <data name="BurnIn_TemplateSaveFailed" xml:space="preserve">
+    <value>Failed to save burn-in template</value>
+  </data>
+  <data name="BurnIn_LoadMore" xml:space="preserve">
+    <value>Load more</value>
+  </data>
+  <data name="MissingStepAssets" xml:space="preserve">
+    <value>Images/templates referenced by the project are missing</value>
+  </data>
+  <data name="Save_Failed" xml:space="preserve">
+    <value>Save failed</value>
+  </data>
+  <data name="SaveMissingImages" xml:space="preserve">
+    <value>These images are missing on disk and were not packed:</value>
+  </data>
+  <data name="SaveWarnings" xml:space="preserve">
+    <value>Problems occurred while copying images to the working directory:</value>
+  </data>
+  <data name="StopBeforeClose" xml:space="preserve">
+    <value>Automation is running. Stop it before closing the window.</value>
+  </data>
+  <data name="StopBeforeFileOperation" xml:space="preserve">
+    <value>Automation is running. Stop it before creating or opening a project.</value>
+  </data>
+  <data name="TypeTextFromFile_ContentsFinished" xml:space="preserve">
+    <value>{0} contents are finished.</value>
+  </data>
+  <data name="UnsavedChangesPrompt" xml:space="preserve">
+    <value>The current project has unsaved changes. Discard them?</value>
+  </data>
+  <data name="UserDoc" xml:space="preserve">
+    <value>User guide</value>
+  </data>
+  <data name="ClickIntervalHint" xml:space="preserve">
+    <value>Click interval (s)</value>
+  </data>
+  <data name="RequireAdminPermission" xml:space="preserve">
+    <value>Administrator permission is required to manage users.</value>
+  </data>
 </root>

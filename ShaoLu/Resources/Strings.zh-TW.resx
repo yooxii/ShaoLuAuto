@@ -1413,4 +1413,43 @@
   <data name="NoRecentFiles" xml:space="preserve">
     <value>（無）</value>
   </data>
+  <data name="BurnIn_TemplateSaveFailed" xml:space="preserve">
+    <value>儲存燒錄模板失敗</value>
+  </data>
+  <data name="BurnIn_LoadMore" xml:space="preserve">
+    <value>載入更多</value>
+  </data>
+  <data name="MissingStepAssets" xml:space="preserve">
+    <value>專案引用的圖片/範本遺失</value>
+  </data>
+  <data name="Save_Failed" xml:space="preserve">
+    <value>儲存失敗</value>
+  </data>
+  <data name="SaveMissingImages" xml:space="preserve">
+    <value>以下圖片在磁碟上不存在，未寫入專案封裝：</value>
+  </data>
+  <data name="SaveWarnings" xml:space="preserve">
+    <value>圖片複製到工作目錄時發生問題：</value>
+  </data>
+  <data name="StopBeforeClose" xml:space="preserve">
+    <value>正在執行自動化，請先停止後再關閉視窗。</value>
+  </data>
+  <data name="StopBeforeFileOperation" xml:space="preserve">
+    <value>正在執行自動化，請先停止後再新建或開啟專案。</value>
+  </data>
+  <data name="TypeTextFromFile_ContentsFinished" xml:space="preserve">
+    <value>{0} 的內容已用完。</value>
+  </data>
+  <data name="UnsavedChangesPrompt" xml:space="preserve">
+    <value>目前已開啟的專案有未儲存的變更，確定要放棄這些變更嗎？</value>
+  </data>
+  <data name="UserDoc" xml:space="preserve">
+    <value>使用手冊</value>
+  </data>
+  <data name="ClickIntervalHint" xml:space="preserve">
+    <value>點擊間隔（秒）</value>
+  </data>
+  <data name="RequireAdminPermission" xml:space="preserve">
+    <value>需要管理員權限才能管理使用者。</value>
+  </data>
 </root>

@@ -392,7 +392,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay((int)WaitTime * 1000, cancellationToken);
+            await Task.Delay((int)(WaitTime * 1000), cancellationToken);
             var res = await Task.Run(() =>
             {
                 if (DelayBetweenKeys < 0.01)
@@ -546,7 +546,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay((int)WaitTime * 1000, cancellationToken);
+            await Task.Delay((int)(WaitTime * 1000), cancellationToken);
             var res = await Task.Run(() =>
             {
                 if (DelayBetweenKeys >= 0.01)
@@ -563,6 +563,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
     }
 
+    /// <summary>
+    /// 文本文件逐条输入步骤：按 Index 顺序依次输入文件中的一条内容。
+    /// 文本源耗尽（Index >= Contents.Count）的语义（Q6）：结束该输入源并报错，不重置 Index。
+    /// 抛出 IndexOutOfRangeException（它是密封类，无法派生专用类型；该类型正是执行引擎
+    /// InferErrorType 识别为 StepErrorType.IndexOutOfRange 的类型，错误类型不会被覆盖成 Unknown）：
+    /// - 未配置 FalseGoto：执行引擎停止流程；
+    /// - 配置了 FalseGoto：跳转到失败分支。
+    /// 因为 Index 不重置，重复进入该步骤会再次报同样的错，不会静默从头循环形成死循环。
+    /// </summary>
     public partial class TypeTextFromFileStep : AutomationStepBase
     {
         private FileServices _fileServices;
@@ -676,6 +685,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Contents.Clear();
                 foreach (var item in res.Split(Delimiter, StringSplitOptions.RemoveEmptyEntries))
                     Contents.Add(new ContentItem(item));
+                // 重新载入后从头开始，避免残留旧索引一进来就被判定为“已耗尽”
+                Index = 0;
             }
             else if (Path.GetExtension(FilePath).ToLower() == ".xlsx")
             {
@@ -684,10 +695,18 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 ExcelWorksheet ws = package.Workbook.Worksheets[0];
 
                 Contents.Clear();
-                for (int r = 1; r <= ws.Dimension.End.Row; r++)
+                // 空表（未使用任何单元格）时 ws.Dimension 为 null，直接访问会空引用，需防御
+                var dimension = ws.Dimension;
+                if (dimension == null)
+                {
+                    Index = 0;
+                    return;
+                }
+                for (int r = 1; r <= dimension.End.Row; r++)
                 {
                     Contents.Add(new ContentItem(ws.Cells[r, 1].Text));
                 }
+                Index = 0;
             }
             else
             {
@@ -698,6 +717,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
+            // 文本源耗尽（Index >= Contents.Count）的语义见类注释：结束该输入源并报错，不重置 Index。
             if (Contents != null && Contents.Count > 0)
             {
                 if (Index >= Contents.Count)
@@ -705,13 +725,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     IsTrue = false;
                     IsError = true;
                     ErrorType = StepErrorType.IndexOutOfRange;
-                    Index = 0;
-                    throw new InvalidOperationException($"{Name}'s Contents is Finished.");
+                    ErrorMessage = string.Format(
+                        LanguageService.GetLocalizedString("TypeTextFromFile_ContentsFinished", "{0}'s Contents is finished."), Name);
+                    throw new IndexOutOfRangeException(ErrorMessage);
                 }
                 TextToType = Contents[Index].Text;
-                Index++;
             }
-            await Task.Delay((int)WaitTime * 1000, cancellationToken);
+            await Task.Delay((int)(WaitTime * 1000), cancellationToken);
             var res = await Task.Run(() =>
             {
                 if (DelayBetweenKeys <= 0.01)
@@ -722,6 +742,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = res;
             IsError = false;
             ErrorType = StepErrorType.None;
+
+            // 输入成功后才推进索引：输入失败不消耗一条内容
+            if (res && Contents != null && Contents.Count > 0)
+                Index++;
 
             return res;
         }
@@ -1241,7 +1265,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay((int)WaitTime * 1000, cancellationToken);
+            await Task.Delay((int)(WaitTime * 1000), cancellationToken);
             return IsTrue;
         }
     }

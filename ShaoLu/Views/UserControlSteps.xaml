@@ -20,6 +20,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <conv:BoolToInverseBoolConverter x:Key="BoolToInverseBoolConverter"/>
             <conv:RegionCollapseConverter x:Key="RegionCollapseConverter"/>
             <utils:SingletonLocator x:Key="VMLocator" />
@@ -97,7 +98,45 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <ToolBarPanel Margin="3">
-                <ToolBarTray Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal">
+                    <!-- 组别开关：除「运行」外的组默认折叠；编辑与步骤互斥（见代码后置） -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
+                        <ToggleButton x:Name="EditGroupToggle" Margin="2" Padding="10,3" Checked="EditGroupToggle_Checked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{lex:Loc Edit}"/>
+                                <TextBlock Margin="5,0,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="▸"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, ElementName=EditGroupToggle}" Value="True">
+                                                    <Setter Property="Text" Value="▾"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </ToggleButton>
+                        <ToggleButton x:Name="StepGroupToggle" Margin="2" Padding="10,3" IsChecked="True" Checked="StepGroupToggle_Checked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{lex:Loc Step}"/>
+                                <TextBlock Margin="5,0,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="▸"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, ElementName=StepGroupToggle}" Value="True">
+                                                    <Setter Property="Text" Value="▾"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </ToggleButton>
+                    </StackPanel>
+                    <ToolBarTray Orientation="Horizontal">
                     <ToolBar>
                         <Button Content="{lex:Loc BtnRun_Content}" Margin="3" Command="{Binding RunCommand}"/>
                         <Button Margin="3" Command="{Binding PauseCommand}">
@@ -114,7 +153,8 @@
                         </Button>
                         <Button Content="{lex:Loc BtnStop_Content}" Margin="3" Command="{Binding StopCommand}"/>
                     </ToolBar>
-                    <ToolBar Header="{lex:Loc Edit}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
+                    <ToolBar Header="{lex:Loc Edit}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}"
+                             Visibility="{Binding IsChecked, ElementName=EditGroupToggle, Converter={StaticResource BoolToVis}}">
                         <Button Content="{lex:Loc Refresh}" Margin="3" Click="Refresh_Click"/>
                         <Button Content="{lex:Loc Undo}" Margin="3" Command="{Binding UndoCommand}"/>
                         <Button Content="{lex:Loc Redo}" Margin="3" Command="{Binding RedoCommand}"/>
@@ -125,7 +165,8 @@
                         <Button Content="{lex:Loc Paste}" Margin="3" Command="{Binding PasteStepCommand}"/>
                         <Button Content="{lex:Loc Delete}" Margin="3" Command="{Binding DelStepCommand}"/>
                     </ToolBar>
-                    <ToolBar Header="{lex:Loc Step}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
+                    <ToolBar Header="{lex:Loc Step}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}"
+                             Visibility="{Binding IsChecked, ElementName=StepGroupToggle, Converter={StaticResource BoolToVis}}">
                         <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
                                        >
                             <MenuItem Header="{lex:Loc AddImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImage"/>
@@ -154,6 +195,7 @@
                         <Button Content="{lex:Loc UserInput_StepName}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="UserInput"/>
                     </ToolBar>
                 </ToolBarTray>
+                </StackPanel>
             </ToolBarPanel>
             <!--步骤按钮-->
             <Grid Grid.Row="1">

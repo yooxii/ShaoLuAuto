@@ -32,6 +32,24 @@ namespace ShaoLu.Views
             Unloaded += (_, __) => HookLoginState(false);
         }
 
+        #region 工具栏分组折叠（编辑 / 步骤 互斥）
+
+        /// <summary>展开「编辑」组时收起「步骤」组</summary>
+        private void EditGroupToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            if (StepGroupToggle?.IsChecked == true)
+                StepGroupToggle.IsChecked = false;
+        }
+
+        /// <summary>展开「步骤」组时收起「编辑」组</summary>
+        private void StepGroupToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            if (EditGroupToggle?.IsChecked == true)
+                EditGroupToggle.IsChecked = false;
+        }
+
+        #endregion
+
         #region 登录状态 → 冻结字段刷新
 
         private bool _loginStateHooked;

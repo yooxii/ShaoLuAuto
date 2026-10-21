@@ -24,6 +24,15 @@
 //      ACBEL_INSERT_DATA   成功返回 "1"，失败返回 "0}…"（业务卡控）或 "2}…"（内部异常，需重试）
 //  两者都是 ANSI 字符串指针（PChar），不是整数。
 //
+//  运行环境（DLL 里硬编码的绝对路径，实测行为）：
+//      D:\CHROMA\FAC_CODE.txt   缺失 → OPEN 内部读取异常被吞掉，返回 "0}數據庫無法連接"（看着像连不上库）
+//                               内容第一行第一个字符决定 BDE 别名：H→BSFC / P→BSFC2 / E→ESFC / M→MMRP2，
+//                               其它字符→AMDB。文件必须是**无 BOM** 的纯文本，否则首字符不是 H。
+//      D:\AMZ_LOG\              缺失 → OPEN 一开始写 D:\AMZ_LOG\DB_LOG.txt 就抛 Delphi 异常（0xEEDFADE）冲出 DLL
+//      D:\TEST_DATA1\           缺失 → ACBEL_INSERT_DATA 写 D:\TEST_DATA1\LOG1.txt 时同样抛异常
+//      以上三项启动时自动补齐（只补缺失的，已存在不动）；--no-prepare-env 可关闭，
+//      --fac-code 可指定写入 FAC_CODE.txt 的厂区代码（默认 H）。
+//
 //  安全约束：
 //      * insert 必须先用 open 成功拿到 database 串，否则直接拒绝，**不会调用 DLL**；
 //      * insert 的第 2 个参数（上传资料）按 27 段字段规范二次校验（共享源码 Shared\AcbelInsertDataSpec.cs），
@@ -33,7 +42,8 @@
 //
 //  命令行：
 //      AcbelBridge.exe [--dll <Acbel_Chroma_Test.dll 路径>] [--call-timeout <秒>]
-//                      [--no-validate] [--allow-extra-fields] [--version]
+//                      [--no-validate] [--allow-extra-fields]
+//                      [--no-prepare-env] [--fac-code <厂区代码>] [--version]
 // -----------------------------------------------------------------------------
 
 using System;
@@ -71,8 +81,21 @@ namespace AcbelBridge
         private static int _callTimeoutMs = 60000;
         private static bool _validate = true;
         private static bool _allowExtraFields;
+        private static bool _prepareEnv = true;
+        private static string _facCode = "H";
+        private static string _envError;
         private static StreamWriter _out;
         private static StreamReader _in;
+
+        // ---- DLL 硬编码依赖的 D 盘运行环境（缺哪个会出什么事，见文件头注释） ----
+        private static readonly string[] EnvDirectories =
+        {
+            @"D:\AMZ_LOG",
+            @"D:\TEST_DATA1",
+            @"D:\CHROMA"
+        };
+
+        private const string FacCodePath = @"D:\CHROMA\FAC_CODE.txt";
 
         /// <summary>上一次 ACBEL_DATABASE_OPEN 成功返回的库名，作为 ACBEL_INSERT_DATA 的第 1 个参数。</summary>
         private static string _database;
@@ -88,6 +111,7 @@ namespace AcbelBridge
                 Console.OutputEncoding = new UTF8Encoding(false);
 
                 if (!ParseArgs(args)) return 2;
+                PrepareEnvironment();
 
                 string line;
                 while ((line = _in.ReadLine()) != null)
@@ -148,7 +172,7 @@ namespace AcbelBridge
                 {
                     case "--help":
                     case "-h":
-                        Console.Error.WriteLine("AcbelBridge [--dll <path>] [--call-timeout <seconds>] [--version]");
+                        Console.Error.WriteLine("AcbelBridge [--dll <path>] [--call-timeout <seconds>] [--no-validate] [--allow-extra-fields] [--no-prepare-env] [--fac-code <code>] [--version]");
                         return false;
                     case "--version":
                         Console.Error.WriteLine("AcbelBridge 1.0.0 (x86 bridge for Acbel_Chroma_Test.dll)");
@@ -169,6 +193,19 @@ namespace AcbelBridge
                     case "--allow-extra-fields":
                         _allowExtraFields = true;
                         break;
+                    case "--no-prepare-env":
+                        _prepareEnv = false;
+                        break;
+                    case "--fac-code":
+                        if (i + 1 >= args.Length) { Console.Error.WriteLine("--fac-code 缺少参数"); return false; }
+                        string code = args[++i];
+                        if (string.IsNullOrWhiteSpace(code) || code.IndexOf('\r') >= 0 || code.IndexOf('\n') >= 0)
+                        {
+                            Console.Error.WriteLine("--fac-code 需要一行非空文本（如 H）");
+                            return false;
+                        }
+                        _facCode = code.Trim();
+                        break;
                     default:
                         Console.Error.WriteLine("未知参数：" + args[i]);
                         return false;
@@ -178,6 +215,47 @@ namespace AcbelBridge
             string dir = Path.GetDirectoryName(_dllPath);
             if (!string.IsNullOrEmpty(dir)) SetDllDirectoryA(dir);
             return true;
+        }
+
+        // ------------------------------------------------------------------ 运行环境
+        /// <summary>
+        /// 补齐 DLL 硬编码依赖的 D 盘目录与 FAC_CODE.txt。只补缺失项，已存在的一律不动。
+        /// 失败时记录 _envError，由 open/insert 在调用 DLL 之前直接拒绝，避免把
+        /// “环境没准备好”伪装成 “0}數據庫無法連接”。
+        /// </summary>
+        private static void PrepareEnvironment()
+        {
+            if (!_prepareEnv) return;
+            try
+            {
+                foreach (string dir in EnvDirectories)
+                {
+                    if (Directory.Exists(dir)) continue;
+                    Directory.CreateDirectory(dir);
+                    Console.Error.WriteLine("[AcbelBridge] 已创建目录 " + dir);
+                }
+
+                if (!File.Exists(FacCodePath))
+                {
+                    // 必须写成无 BOM 的纯文本：DLL 取第一行第一个字符当厂区代码。
+                    File.WriteAllText(FacCodePath, _facCode, new UTF8Encoding(false));
+                    Console.Error.WriteLine("[AcbelBridge] 已创建 " + FacCodePath + "，内容=" + _facCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _envError = ex.GetType().Name + ": " + ex.Message;
+                Console.Error.WriteLine("[AcbelBridge] 运行环境准备失败：" + _envError);
+            }
+        }
+
+        /// <summary>调用 DLL 之前检查运行环境是否准备就绪。</summary>
+        private static void EnsureEnvironmentReady()
+        {
+            if (_envError == null) return;
+            throw new InvalidOperationException(
+                "DLL 依赖的 D 盘运行环境准备失败（D:\\AMZ_LOG、D:\\TEST_DATA1、D:\\CHROMA\\FAC_CODE.txt）："
+                + _envError + "。已拒绝调用 DLL。");
         }
 
         // ------------------------------------------------------------------ ping
@@ -192,6 +270,12 @@ namespace AcbelBridge
             sb.AppendLine("callTimeoutSeconds=" + (_callTimeoutMs / 1000));
             sb.AppendLine("validateInsertData=" + _validate.ToString().ToLowerInvariant());
             sb.AppendLine("allowExtraFields=" + _allowExtraFields.ToString().ToLowerInvariant());
+            sb.AppendLine("prepareEnvironment=" + _prepareEnv.ToString().ToLowerInvariant());
+            sb.AppendLine("env.amzLog=" + Directory.Exists(@"D:\AMZ_LOG").ToString().ToLowerInvariant());
+            sb.AppendLine("env.testData1=" + Directory.Exists(@"D:\TEST_DATA1").ToString().ToLowerInvariant());
+            sb.AppendLine("env.facCodeFile=" + File.Exists(FacCodePath).ToString().ToLowerInvariant());
+            sb.AppendLine("env.facCode=" + _facCode);
+            if (_envError != null) sb.AppendLine("env.error=" + _envError);
             sb.AppendLine("insertFieldCount=" + AcbelInsertDataSpec.FieldCount);
             sb.AppendLine("insertRequiredFields=" + string.Join("/", System.Linq.Enumerable.Select(AcbelInsertDataSpec.RequiredFields, f => f.Name)));
 
@@ -219,6 +303,7 @@ namespace AcbelBridge
         // ------------------------------------------------------------------ 调用
         private static string CallOpen()
         {
+            EnsureEnvironmentReady();
             string result = RunGuarded(ACBEL_DATABASE_OPEN);
             // 成功时返回库名（厂商文档：正确返回 database）；失败是 "0}…" / "2}…"
             if (!string.IsNullOrEmpty(result) && result[0] != '0' && result[0] != '2')
@@ -230,6 +315,7 @@ namespace AcbelBridge
 
         private static string CallInsert(string uploadData, string programFile)
         {
+            EnsureEnvironmentReady();
             if (string.IsNullOrEmpty(_database))
                 throw new InvalidOperationException(
                     "尚未成功执行 open：ACBEL_INSERT_DATA 的第 1 个参数必须是 ACBEL_DATABASE_OPEN 返回的库名。已拒绝调用（未写库）。");

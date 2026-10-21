@@ -23,6 +23,22 @@ ShaoLu.exe (x64)
 
 > 其余 21 个导出（`CHKBAR_CODE`、`ACBEL_SET_BASIC_INFO`、`ACBEL_SYS_DATA`…）暂未开放。
 
+## 运行环境（DLL 硬编码的 D 盘路径）
+
+DLL 内部写死了几个绝对路径，桥接进程**启动时自动补齐**（只补缺失项，已存在的一律不动）：
+
+| 路径 | 缺失时的实际表现 | 处理 |
+|---|---|---|
+| `D:\CHROMA\FAC_CODE.txt` | `open` 内部读取异常被吞掉，返回 `"0}數據庫無法連接"`（看着像连不上库，其实是缺文件） | 自动创建，内容为厂区代码（默认 `H`，`--fac-code` 可改） |
+| `D:\AMZ_LOG\` | `open` 一开头写 `D:\AMZ_LOG\DB_LOG.txt` 就抛 Delphi 异常（`0xEEDFADE`）冲出 DLL | 自动创建目录 |
+| `D:\TEST_DATA1\` | `insert` 写 `D:\TEST_DATA1\LOG1.txt` 时抛异常 | 自动创建目录 |
+
+`FAC_CODE.txt` 的**第一行第一个字符**决定 BDE 别名：`H`→`BSFC`、`P`→`BSFC2`、`E`→`ESFC`、`M`→`MMRP2`，其它字符→`AMDB`。
+文件必须写成**无 BOM、无换行**的纯文本（桥接就是这么写的），否则首字符不是 `H`，会退到 `AMDB`。
+厂区不同就要改这个文件——`H` 只对应 `BSFC`。
+
+准备失败（例如没有 D 盘、没权限）时，`open`/`insert` 会在调用 DLL 之前直接返回 `FAIL`，并在说明里点出是哪个路径没准备好。
+
 ## 协议
 
 UTF-8 文本，一行一请求、一行一响应；**所有参数一律 Base64(UTF-8)**，避免逗号/制表符/中文带来的转义问题。
@@ -42,6 +58,11 @@ dllExists=true
 callTimeoutSeconds=60
 validateInsertData=true
 allowExtraFields=false
+prepareEnvironment=true
+env.amzLog=true
+env.testData1=true
+env.facCodeFile=true
+env.facCode=H
 insertFieldCount=27
 insertRequiredFields=PASS/FAIL/INTERNAL_SR/MO_NO/STATION/LINE_NAME/START_TIME/END_TIME/TEST_DATE/UPD_USER
 loadLibrary=ok
@@ -53,10 +74,13 @@ export.ACBEL_INSERT_DATA=true
 
 ```
 AcbelBridge.exe [--dll <Acbel_Chroma_Test.dll 路径>] [--call-timeout <秒>]
-                [--no-validate] [--allow-extra-fields] [--version]
+                [--no-validate] [--allow-extra-fields]
+                [--no-prepare-env] [--fac-code <厂区代码>] [--version]
 ```
 
 默认从 exe 同级目录加载 `Acbel_Chroma_Test.dll`（工程已配置为随生成复制），调用超时默认 60 秒。
+`--no-prepare-env` 关闭运行环境自动补齐（站点机上路径已由 Chroma 装好时可用），
+`--fac-code` 指定写入 `FAC_CODE.txt` 的厂区代码（默认 `H`），只在文件缺失时才写入。
 
 ## 安全设计
 

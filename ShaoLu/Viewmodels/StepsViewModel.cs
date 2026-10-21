@@ -2052,7 +2052,7 @@ namespace ShaoLu.Viewmodels
         {
             var context = new StepExecutionContext();
             // 登记到全局上下文表并标注线程名，统计面板据此聚合数据并区分线程
-            StepExecutionContext.RegisterContext(context, $"子线程{threadIndex}");
+            StepExecutionContext.RegisterContext(context, LanguageService.GetLocalizedString("Msg_SubThread", "子线程{0}", threadIndex));
             context.StartTimer();
             try
             {

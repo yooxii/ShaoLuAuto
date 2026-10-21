@@ -1,4 +1,4 @@
-using ShaoLu.Viewmodels.AutomationStep;
+﻿using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Collections.Generic;
 
@@ -27,12 +27,12 @@ namespace ShaoLu.Services
 
             if (steps == null)
             {
-                error = "步骤列表为空，无法解析多线程区域";
+                error = LanguageService.GetLocalizedString("Msg_MtRangeEmpty", "步骤列表为空，无法解析多线程区域");
                 return false;
             }
             if (startIndex < 0 || startIndex >= steps.Count)
             {
-                error = string.Format("多线程开始步骤索引越界：{0}", startIndex);
+                error = LanguageService.GetLocalizedString("Msg_MtRangeStartIndex", "多线程开始步骤索引越界：{0}", startIndex);
                 return false;
             }
 
@@ -48,12 +48,12 @@ namespace ShaoLu.Services
                 int end = IndexOfUid(steps, rangeEndUid.Value);
                 if (end < 0)
                 {
-                    error = "结束步骤不存在（可能已被删除）";
+                    error = LanguageService.GetLocalizedString("Msg_MtRangeEndMissing", "结束步骤不存在（可能已被删除）");
                     return false;
                 }
                 if (end <= startIndex)
                 {
-                    error = "结束步骤必须位于多线程开始步骤之后";
+                    error = LanguageService.GetLocalizedString("Msg_MtRangeEndAfterStart", "结束步骤必须位于多线程开始步骤之后");
                     return false;
                 }
 
@@ -71,7 +71,7 @@ namespace ShaoLu.Services
                 }
             }
 
-            error = "未找到配对的「多线程区域结束」步骤";
+            error = LanguageService.GetLocalizedString("Msg_MtRangeEndNotPaired", "未找到配对的「多线程区域结束」步骤");
             return false;
         }
 

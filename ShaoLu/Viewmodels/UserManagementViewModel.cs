@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using System.Collections.ObjectModel;
@@ -20,7 +20,7 @@ namespace ShaoLu.Viewmodels
         private const int DefaultRoleIndex = UserRoleIndex;
 
         /// <summary>非管理员执行管理操作时的提示</summary>
-        private const string AdminRequiredMessage = "需要管理员权限才能管理用户";
+        private static readonly string AdminRequiredMessage = LanguageService.GetLocalizedString("Msg_AdminRequired", "需要管理员权限才能管理用户");
 
         public ObservableCollection<User> Users { get; } = new ObservableCollection<User>();
 
@@ -175,12 +175,12 @@ namespace ShaoLu.Viewmodels
             {
                 if (_userService.DeleteUser(SelectedUser.Username))
                 {
-                    StatusMessage = $"用户 '{SelectedUser.Username}' 已删除";
+                    StatusMessage = LanguageService.GetLocalizedString("Msg_UserDeleted", $"用户 '{SelectedUser.Username}' 已删除", SelectedUser.Username);
                     LoadUsers();
                 }
                 else
                 {
-                    StatusMessage = "删除失败（可能是最后一个管理员账户）";
+                    StatusMessage = LanguageService.GetLocalizedString("Msg_DeleteLastAdminFailed", "删除失败（可能是最后一个管理员账户）");
                 }
             }
         }
@@ -191,7 +191,7 @@ namespace ShaoLu.Viewmodels
 
             if (SelectedUser == null)
             {
-                StatusMessage = "请先选择要修改密码的用户";
+                StatusMessage = LanguageService.GetLocalizedString("Msg_SelectUserForPassword", "请先选择要修改密码的用户");
                 return;
             }
             // 修改他人密码属于管理操作：只有管理员可以执行
@@ -202,24 +202,24 @@ namespace ShaoLu.Viewmodels
             }
             if (string.IsNullOrWhiteSpace(OldPassword))
             {
-                StatusMessage = "请输入旧密码";
+                StatusMessage = LanguageService.GetLocalizedString("Msg_EnterOldPassword", "请输入旧密码");
                 return;
             }
             if (string.IsNullOrWhiteSpace(NewChangePassword))
             {
-                StatusMessage = "请输入新密码";
+                StatusMessage = LanguageService.GetLocalizedString("Msg_EnterNewPassword", "请输入新密码");
                 return;
             }
 
             if (_userService.ChangePassword(SelectedUser.Username, OldPassword, NewChangePassword))
             {
-                StatusMessage = $"用户 '{SelectedUser.Username}' 的密码已修改";
+                StatusMessage = LanguageService.GetLocalizedString("Msg_PasswordChanged", $"用户 '{SelectedUser.Username}' 的密码已修改", SelectedUser.Username);
                 OldPassword = string.Empty;
                 NewChangePassword = string.Empty;
             }
             else
             {
-                StatusMessage = "密码修改失败，请检查旧密码是否正确";
+                StatusMessage = LanguageService.GetLocalizedString("Msg_PasswordChangeFailed", "密码修改失败，请检查旧密码是否正确");
             }
         }
     }

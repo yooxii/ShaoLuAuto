@@ -16,8 +16,8 @@ namespace ShaoLu.Services
         /// <summary>归并的时间窗口（秒）：相邻两条记录间隔不超过该值才算重复</summary>
         private const double MergeWindowSeconds = 10.0;
 
-        private const string MainThreadText = "主线程";
-        private const string SubThreadText = "子线程";
+        private static readonly string MainThreadText = LanguageService.GetLocalizedString("Msg_MainThread", "主线程");
+        private static readonly string SubThreadText = LanguageService.GetLocalizedString("Msg_SubThreadPrefix", "子线程");
         private const string SubThreadMark = "[SubThread]";
         private const string TextSourceDirect = "Direct";
 
@@ -166,7 +166,9 @@ namespace ShaoLu.Services
                 return string.Empty;
 
             bool direct = string.Equals(log.TextSource, TextSourceDirect, StringComparison.OrdinalIgnoreCase);
-            return direct ? "[直接获取:" + log.OCRText + "]" : "[OCR:" + log.OCRText + "]";
+            return direct
+                ? $"[{LanguageService.GetLocalizedString("Msg_DirectRead", "直接获取")}:{log.OCRText}]"
+                : $"[OCR:{log.OCRText}]";
         }
     }
 }

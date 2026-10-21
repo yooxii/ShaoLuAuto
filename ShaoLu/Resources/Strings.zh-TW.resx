@@ -487,7 +487,7 @@
     <value>超時時間(s)</value>
   </data>
   <data name="GetInput_Timeout" xml:space="preserve">
-    <value>獲取輸入逾時（{0} 秒）</value>
+    <value>取得文字逾時（{0} 秒）</value>
   </data>
   <data name="FindTimeInterval" xml:space="preserve">
     <value>重新尋找的間隔時間(s)</value>
@@ -919,7 +919,7 @@
     <value>登出 ({0})</value>
   </data>
   <data name="AddGetInputStep" xml:space="preserve">
-    <value>獲取輸入</value>
+    <value>取得文字</value>
   </data>
   <data name="InputMode" xml:space="preserve">
     <value>獲取方式</value>
@@ -1700,5 +1700,290 @@
   </data>
   <data name="UserInput_FrozenNeedLogin" xml:space="preserve">
     <value>此欄位已凍結，請登入後再修改</value>
+  </data>
+  <data name="CondEnum_Mode_Default" xml:space="preserve">
+    <value>預設（使用步驟自身結果）</value>
+  </data>
+  <data name="CondEnum_Mode_Custom" xml:space="preserve">
+    <value>自訂（使用下方規則判斷）</value>
+  </data>
+  <data name="CondEnum_Var_ConstantTrue" xml:space="preserve">
+    <value>常數：真</value>
+  </data>
+  <data name="CondEnum_Var_ConstantFalse" xml:space="preserve">
+    <value>常數：假</value>
+  </data>
+  <data name="CondEnum_Var_Self_IsTrue" xml:space="preserve">
+    <value>本步驟 → 執行結果</value>
+  </data>
+  <data name="CondEnum_Var_Self_Similarity" xml:space="preserve">
+    <value>本步驟 → 相似度</value>
+  </data>
+  <data name="CondEnum_Var_Self_ExecutionTimeMs" xml:space="preserve">
+    <value>本步驟 → 執行耗時(ms)</value>
+  </data>
+  <data name="CondEnum_Var_Self_ClickX" xml:space="preserve">
+    <value>本步驟 → 點擊X座標</value>
+  </data>
+  <data name="CondEnum_Var_Self_ClickY" xml:space="preserve">
+    <value>本步驟 → 點擊Y座標</value>
+  </data>
+  <data name="CondEnum_Var_Self_PopupResult" xml:space="preserve">
+    <value>本步驟 → 彈窗選擇結果</value>
+  </data>
+  <data name="CondEnum_Var_Self_SignalValue" xml:space="preserve">
+    <value>本步驟 → 訊號內容</value>
+  </data>
+  <data name="CondEnum_Var_Step_IsTrue" xml:space="preserve">
+    <value>引用步驟 → 執行結果</value>
+  </data>
+  <data name="CondEnum_Var_Step_Similarity" xml:space="preserve">
+    <value>引用步驟 → 相似度</value>
+  </data>
+  <data name="CondEnum_Var_Step_ExecutionTimeMs" xml:space="preserve">
+    <value>引用步驟 → 執行耗時(ms)</value>
+  </data>
+  <data name="CondEnum_Var_Step_ClickX" xml:space="preserve">
+    <value>引用步驟 → 點擊X座標</value>
+  </data>
+  <data name="CondEnum_Var_Step_ClickY" xml:space="preserve">
+    <value>引用步驟 → 點擊Y座標</value>
+  </data>
+  <data name="CondEnum_Var_Step_PopupResult" xml:space="preserve">
+    <value>引用步驟 → 彈窗選擇結果</value>
+  </data>
+  <data name="CondEnum_Var_Step_SignalValue" xml:space="preserve">
+    <value>引用步驟 → 訊號內容</value>
+  </data>
+  <data name="CondEnum_Var_Step_UserInputField" xml:space="preserve">
+    <value>引用步驟 → 使用者輸入欄位</value>
+  </data>
+  <data name="CondEnum_Op_Equal" xml:space="preserve">
+    <value>等於 (==)</value>
+  </data>
+  <data name="CondEnum_Op_NotEqual" xml:space="preserve">
+    <value>不等於 (!=)</value>
+  </data>
+  <data name="CondEnum_Op_GreaterThan" xml:space="preserve">
+    <value>大於 (&gt;)</value>
+  </data>
+  <data name="CondEnum_Op_LessThan" xml:space="preserve">
+    <value>小於 (&lt;)</value>
+  </data>
+  <data name="CondEnum_Op_GreaterOrEqual" xml:space="preserve">
+    <value>大於等於 (&gt;=)</value>
+  </data>
+  <data name="CondEnum_Op_LessOrEqual" xml:space="preserve">
+    <value>小於等於 (&lt;=)</value>
+  </data>
+  <data name="CondEnum_Op_Contains" xml:space="preserve">
+    <value>包含</value>
+  </data>
+  <data name="CondEnum_Op_NotContains" xml:space="preserve">
+    <value>不包含</value>
+  </data>
+  <data name="CondEnum_Op_IsEmpty" xml:space="preserve">
+    <value>為空</value>
+  </data>
+  <data name="CondEnum_Op_IsNotEmpty" xml:space="preserve">
+    <value>不為空</value>
+  </data>
+  <data name="CondEnum_Logic_And" xml:space="preserve">
+    <value>並且 (AND)</value>
+  </data>
+  <data name="CondEnum_Logic_Or" xml:space="preserve">
+    <value>或者 (OR)</value>
+  </data>
+  <data name="CondEnum_Tip_ConstantTrue" xml:space="preserve">
+    <value>始終為真的常數值</value>
+  </data>
+  <data name="CondEnum_Tip_ConstantFalse" xml:space="preserve">
+    <value>始終為假的常數值</value>
+  </data>
+  <data name="CondEnum_Tip_Self_IsTrue" xml:space="preserve">
+    <value>目前步驟執行後是否成功（true/false）</value>
+  </data>
+  <data name="CondEnum_Tip_Self_Similarity" xml:space="preserve">
+    <value>目前步驟圖像比對的實際相似度（0~1）</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ExecutionTimeMs" xml:space="preserve">
+    <value>目前步驟執行所花費的時間（毫秒）</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ClickX" xml:space="preserve">
+    <value>目前步驟實際點擊的螢幕X座標</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ClickY" xml:space="preserve">
+    <value>目前步驟實際點擊的螢幕Y座標</value>
+  </data>
+  <data name="CondEnum_Tip_Self_PopupResult" xml:space="preserve">
+    <value>目前步驟彈出框使用者點擊的按鈕值</value>
+  </data>
+  <data name="CondEnum_Tip_Self_SignalValue" xml:space="preserve">
+    <value>目前步驟接收到的訊號內容（字串）</value>
+  </data>
+  <data name="CondEnum_Tip_Step_IsTrue" xml:space="preserve">
+    <value>指定行號步驟的執行結果（需在左側填寫行號）</value>
+  </data>
+  <data name="CondEnum_Tip_Step_Similarity" xml:space="preserve">
+    <value>指定行號步驟的圖像比對相似度</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ExecutionTimeMs" xml:space="preserve">
+    <value>指定行號步驟的執行耗時</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ClickX" xml:space="preserve">
+    <value>指定行號步驟的點擊X座標</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ClickY" xml:space="preserve">
+    <value>指定行號步驟的點擊Y座標</value>
+  </data>
+  <data name="CondEnum_Tip_Step_PopupResult" xml:space="preserve">
+    <value>指定行號步驟的彈出框選擇結果</value>
+  </data>
+  <data name="CondEnum_Tip_Step_SignalValue" xml:space="preserve">
+    <value>指定行號步驟接收到的訊號內容</value>
+  </data>
+  <data name="Msg_StepsEmpty" xml:space="preserve">
+    <value>步驟清單不能為空</value>
+  </data>
+  <data name="Msg_PathEmpty" xml:space="preserve">
+    <value>檔案路徑不能為空</value>
+  </data>
+  <data name="Msg_UnknownPath" xml:space="preserve">
+    <value>(未知路徑)</value>
+  </data>
+  <data name="Msg_CreateImageDirFailed" xml:space="preserve">
+    <value>建立圖片目錄失敗：{0}（{1}）</value>
+  </data>
+  <data name="Msg_ImageSaveFailed" xml:space="preserve">
+    <value>圖片寫入失敗：{0}（{1}）</value>
+  </data>
+  <data name="Msg_FileNotFound" xml:space="preserve">
+    <value>找不到檔案：{0}</value>
+  </data>
+  <data name="Msg_PackageNoStepsJson" xml:space="preserve">
+    <value>壓縮包 '{0}' 中找不到 steps.json。</value>
+  </data>
+  <data name="Msg_PackageStepsJsonInvalid" xml:space="preserve">
+    <value>壓縮包 '{0}' 中的 steps.json 內容為空或格式無效。</value>
+  </data>
+  <data name="Msg_JsonFileInvalid" xml:space="preserve">
+    <value>檔案 '{0}' 內容為空或格式無效，無法還原為步驟清單。</value>
+  </data>
+  <data name="Msg_AdminRequired" xml:space="preserve">
+    <value>需要管理員權限才能管理使用者</value>
+  </data>
+  <data name="Msg_UserDeleted" xml:space="preserve">
+    <value>使用者 '{0}' 已刪除</value>
+  </data>
+  <data name="Msg_DeleteLastAdminFailed" xml:space="preserve">
+    <value>刪除失敗（可能是最後一個管理員帳戶）</value>
+  </data>
+  <data name="Msg_SelectUserForPassword" xml:space="preserve">
+    <value>請先選擇要修改密碼的使用者</value>
+  </data>
+  <data name="Msg_EnterOldPassword" xml:space="preserve">
+    <value>請輸入舊密碼</value>
+  </data>
+  <data name="Msg_EnterNewPassword" xml:space="preserve">
+    <value>請輸入新密碼</value>
+  </data>
+  <data name="Msg_PasswordChanged" xml:space="preserve">
+    <value>使用者 '{0}' 的密碼已修改</value>
+  </data>
+  <data name="Msg_PasswordChangeFailed" xml:space="preserve">
+    <value>密碼修改失敗，請檢查舊密碼是否正確</value>
+  </data>
+  <data name="Msg_BridgeFailed" xml:space="preserve">
+    <value>橋接失敗：</value>
+  </data>
+  <data name="Msg_BridgeTimeout" xml:space="preserve">
+    <value>呼叫逾時：</value>
+  </data>
+  <data name="Msg_NoDescription" xml:space="preserve">
+    <value>(無說明)</value>
+  </data>
+  <data name="Msg_EmptyValue" xml:space="preserve">
+    <value>(空)</value>
+  </data>
+  <data name="Msg_BridgeExeNotFoundPrefix" xml:space="preserve">
+    <value>指定的橋接程式不存在：</value>
+  </data>
+  <data name="Msg_BridgeExeMissingHint" xml:space="preserve">
+    <value>找不到 AcbelBridge.exe。請先建置 AcbelBridge 專案，或設定 {0} 環境變數。</value>
+  </data>
+  <data name="Msg_BridgeExeNotFound" xml:space="preserve">
+    <value>找不到橋接程式：</value>
+  </data>
+  <data name="Msg_BridgeStartFailed" xml:space="preserve">
+    <value>橋接程序啟動失敗</value>
+  </data>
+  <data name="Msg_BridgeWriteFailed" xml:space="preserve">
+    <value>寫入橋接程序失敗：</value>
+  </data>
+  <data name="Msg_BridgeNoResponse" xml:space="preserve">
+    <value>橋接程序 {0} 秒未回應（資料庫無法連線或 DLL 彈出對話方塊）；已終止該程序。</value>
+  </data>
+  <data name="Msg_BridgeExited" xml:space="preserve">
+    <value>橋接程序已結束（stderr：{0}）</value>
+  </data>
+  <data name="Msg_MainThread" xml:space="preserve">
+    <value>主執行緒</value>
+  </data>
+  <data name="Msg_SubThread" xml:space="preserve">
+    <value>子執行緒{0}</value>
+  </data>
+  <data name="Msg_SubThreadPrefix" xml:space="preserve">
+    <value>子執行緒</value>
+  </data>
+  <data name="Msg_DirectRead" xml:space="preserve">
+    <value>直接取得</value>
+  </data>
+  <data name="Msg_MtRangeEmpty" xml:space="preserve">
+    <value>步驟清單為空，無法解析多執行緒區域</value>
+  </data>
+  <data name="Msg_MtRangeStartIndex" xml:space="preserve">
+    <value>多執行緒開始步驟索引越界：{0}</value>
+  </data>
+  <data name="Msg_MtRangeEndMissing" xml:space="preserve">
+    <value>結束步驟不存在（可能已被刪除）</value>
+  </data>
+  <data name="Msg_MtRangeEndAfterStart" xml:space="preserve">
+    <value>結束步驟必須位於多執行緒開始步驟之後</value>
+  </data>
+  <data name="Msg_MtRangeEndNotPaired" xml:space="preserve">
+    <value>找不到配對的「多執行緒區域結束」步驟</value>
+  </data>
+  <data name="Msg_ScreenshotFailed" xml:space="preserve">
+    <value>[截圖失敗]</value>
+  </data>
+  <data name="Msg_BurnInNoConfig" xml:space="preserve">
+    <value>未提供燒錄設定</value>
+  </data>
+  <data name="Msg_BurnInNoRegion" xml:space="preserve">
+    <value>未設定截圖區域</value>
+  </data>
+  <data name="Msg_BurnInEmptyCapture" xml:space="preserve">
+    <value>截圖傳回空影像</value>
+  </data>
+  <data name="Msg_OpenImageTitle" xml:space="preserve">
+    <value>開啟圖片</value>
+  </data>
+  <data name="Msg_ImageFilter" xml:space="preserve">
+    <value>影像檔案(*.jpg;*.jpeg;*.png;)|*.jpg;*.jpeg;*.png;</value>
+  </data>
+  <data name="Msg_ImageTooLarge" xml:space="preserve">
+    <value>圖片不能大於 1M </value>
+  </data>
+  <data name="Msg_Tip" xml:space="preserve">
+    <value>提示</value>
+  </data>
+  <data name="Msg_SelectImage" xml:space="preserve">
+    <value>請選擇圖片</value>
+  </data>
+  <data name="Msg_UnnamedField" xml:space="preserve">
+    <value>(未命名欄位)</value>
+  </data>
+  <data name="Msg_FieldName" xml:space="preserve">
+    <value>欄位{0}</value>
   </data>
 </root>

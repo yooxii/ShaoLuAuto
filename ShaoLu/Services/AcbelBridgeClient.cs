@@ -1,4 +1,4 @@
-// -----------------------------------------------------------------------------
+﻿// -----------------------------------------------------------------------------
 //  AcbelBridgeClient —— x64 主程序侧访问 x86 桥接进程的客户端
 //
 //  背景：Reference\Acbel_Chroma_Test.dll 是 32 位原生 DLL，x64 的 ShaoLu 无法在
@@ -58,9 +58,9 @@ namespace ShaoLu.Services
 
         public override string ToString()
         {
-            if (!TransportOk) return "桥接失败：" + (Error ?? "(无说明)");
-            if (TimedOut) return "调用超时：" + (Error ?? "(无说明)");
-            return Value ?? "(空)";
+            if (!TransportOk) return LanguageService.GetLocalizedString("Msg_BridgeFailed", "桥接失败：") + (Error ?? LanguageService.GetLocalizedString("Msg_NoDescription", "(无说明)"));
+            if (TimedOut) return LanguageService.GetLocalizedString("Msg_BridgeTimeout", "调用超时：") + (Error ?? LanguageService.GetLocalizedString("Msg_NoDescription", "(无说明)"));
+            return Value ?? LanguageService.GetLocalizedString("Msg_EmptyValue", "(空)");
         }
     }
 
@@ -105,7 +105,7 @@ namespace ShaoLu.Services
             {
                 string p = Path.GetFullPath(explicitPath);
                 if (File.Exists(p)) return p;
-                throw new FileNotFoundException("指定的桥接程序不存在：" + p);
+                throw new FileNotFoundException(LanguageService.GetLocalizedString("Msg_BridgeExeNotFoundPrefix", "指定的桥接程序不存在：") + p);
             }
 
             string env = Environment.GetEnvironmentVariable(EnvVarName);
@@ -126,7 +126,7 @@ namespace ShaoLu.Services
             }
 
             throw new FileNotFoundException(
-                "找不到 AcbelBridge.exe。请先构建 AcbelBridge 工程，或设置环境变量 " + EnvVarName + "。");
+                LanguageService.GetLocalizedString("Msg_BridgeExeMissingHint", "找不到 AcbelBridge.exe。请先构建 AcbelBridge 工程，或设置环境变量 {0}。", EnvVarName));
         }
 
         // ------------------------------------------------------------------ 生命周期
@@ -137,7 +137,7 @@ namespace ShaoLu.Services
             {
                 ThrowIfDisposed();
                 if (_proc != null && !_proc.HasExited) return true;
-                if (!File.Exists(_bridgeExe)) throw new FileNotFoundException("找不到桥接程序：" + _bridgeExe);
+                if (!File.Exists(_bridgeExe)) throw new FileNotFoundException(LanguageService.GetLocalizedString("Msg_BridgeExeNotFound", "找不到桥接程序：") + _bridgeExe);
 
                 var psi = new ProcessStartInfo
                 {
@@ -272,7 +272,7 @@ namespace ShaoLu.Services
             lock (_gate)
             {
                 ThrowIfDisposed();
-                if (!StartInternal()) { result.Error = "桥接进程启动失败"; return result; }
+                if (!StartInternal()) { result.Error = LanguageService.GetLocalizedString("Msg_BridgeStartFailed", "桥接进程启动失败"); return result; }
 
                 var sb = new StringBuilder(command);
                 foreach (string a in args) sb.Append('\t').Append(ToB64(a));
@@ -285,7 +285,7 @@ namespace ShaoLu.Services
                 }
                 catch (Exception ex)
                 {
-                    result.Error = "写入桥接进程失败：" + ex.Message;
+                    result.Error = LanguageService.GetLocalizedString("Msg_BridgeWriteFailed", "写入桥接进程失败：") + ex.Message;
                     KillProcess();
                     return result;
                 }
@@ -302,7 +302,7 @@ namespace ShaoLu.Services
                 if (!readTask.Wait(waitMs))
                 {
                     result.TimedOut = true;
-                    result.Error = "桥接进程 " + (_callTimeoutSeconds + 30) + " 秒未响应（数据库不可达或 DLL 弹出对话框）；已终止该进程。";
+                    result.Error = LanguageService.GetLocalizedString("Msg_BridgeNoResponse", "桥接进程 {0} 秒未响应（数据库不可达或 DLL 弹出对话框）；已终止该进程。", _callTimeoutSeconds + 30);
                     KillProcess();
                     return result;
                 }
@@ -310,7 +310,7 @@ namespace ShaoLu.Services
                 line = readTask.Result;
                 if (line == null)
                 {
-                    result.Error = "桥接进程已退出（stderr：" + StandardError.Trim() + "）";
+                    result.Error = LanguageService.GetLocalizedString("Msg_BridgeExited", "桥接进程已退出（stderr：{0}）", StandardError.Trim());
                     KillProcess();
                     return result;
                 }

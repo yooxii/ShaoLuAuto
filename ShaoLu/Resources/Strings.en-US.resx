@@ -919,7 +919,7 @@
     <value>Logout ({0})</value>
   </data>
   <data name="AddGetInputStep" xml:space="preserve">
-    <value>Get Input</value>
+    <value>Get Text</value>
   </data>
   <data name="InputMode" xml:space="preserve">
     <value>Input Method</value>
@@ -1345,7 +1345,7 @@
     <value>Only one Burn-In Config step is allowed.</value>
   </data>
   <data name="BurnIn_FinishStepHint" xml:space="preserve">
-    <value>The judgment method is determined by the burn-finish step type (mutually exclusive): selecting a Get-Input step uses keyword judgment (recognized text matched against keywords); selecting any other step type uses image criteria (the screen is captured and matched against the templates as soon as that step executes). Judgment runs each time the finish step executes, producing Good / Bad / Burn-Failed per round (each loop iteration is recorded separately).</value>
+    <value>The judgment method is determined by the burn-finish step type (mutually exclusive): selecting a Get-Text step uses keyword judgment (recognized text matched against keywords); selecting any other step type uses image criteria (the screen is captured and matched against the templates as soon as that step executes). Judgment runs each time the finish step executes, producing Good / Bad / Burn-Failed per round (each loop iteration is recorded separately).</value>
   </data>
   <data name="BurnIn_SessionCancelled" xml:space="preserve">
     <value>Burn-in information input was cancelled.</value>
@@ -1700,5 +1700,290 @@
   </data>
   <data name="UserInput_FrozenNeedLogin" xml:space="preserve">
     <value>This field is frozen. Please log in to change it.</value>
+  </data>
+  <data name="CondEnum_Mode_Default" xml:space="preserve">
+    <value>Default (use the step's own result)</value>
+  </data>
+  <data name="CondEnum_Mode_Custom" xml:space="preserve">
+    <value>Custom (use the rules below)</value>
+  </data>
+  <data name="CondEnum_Var_ConstantTrue" xml:space="preserve">
+    <value>Constant: true</value>
+  </data>
+  <data name="CondEnum_Var_ConstantFalse" xml:space="preserve">
+    <value>Constant: false</value>
+  </data>
+  <data name="CondEnum_Var_Self_IsTrue" xml:space="preserve">
+    <value>This step → result</value>
+  </data>
+  <data name="CondEnum_Var_Self_Similarity" xml:space="preserve">
+    <value>This step → similarity</value>
+  </data>
+  <data name="CondEnum_Var_Self_ExecutionTimeMs" xml:space="preserve">
+    <value>This step → elapsed (ms)</value>
+  </data>
+  <data name="CondEnum_Var_Self_ClickX" xml:space="preserve">
+    <value>This step → click X</value>
+  </data>
+  <data name="CondEnum_Var_Self_ClickY" xml:space="preserve">
+    <value>This step → click Y</value>
+  </data>
+  <data name="CondEnum_Var_Self_PopupResult" xml:space="preserve">
+    <value>This step → popup choice</value>
+  </data>
+  <data name="CondEnum_Var_Self_SignalValue" xml:space="preserve">
+    <value>This step → signal value</value>
+  </data>
+  <data name="CondEnum_Var_Step_IsTrue" xml:space="preserve">
+    <value>Referenced step → result</value>
+  </data>
+  <data name="CondEnum_Var_Step_Similarity" xml:space="preserve">
+    <value>Referenced step → similarity</value>
+  </data>
+  <data name="CondEnum_Var_Step_ExecutionTimeMs" xml:space="preserve">
+    <value>Referenced step → elapsed (ms)</value>
+  </data>
+  <data name="CondEnum_Var_Step_ClickX" xml:space="preserve">
+    <value>Referenced step → click X</value>
+  </data>
+  <data name="CondEnum_Var_Step_ClickY" xml:space="preserve">
+    <value>Referenced step → click Y</value>
+  </data>
+  <data name="CondEnum_Var_Step_PopupResult" xml:space="preserve">
+    <value>Referenced step → popup choice</value>
+  </data>
+  <data name="CondEnum_Var_Step_SignalValue" xml:space="preserve">
+    <value>Referenced step → signal value</value>
+  </data>
+  <data name="CondEnum_Var_Step_UserInputField" xml:space="preserve">
+    <value>Referenced step → user input field</value>
+  </data>
+  <data name="CondEnum_Op_Equal" xml:space="preserve">
+    <value>Equals (==)</value>
+  </data>
+  <data name="CondEnum_Op_NotEqual" xml:space="preserve">
+    <value>Not equal (!=)</value>
+  </data>
+  <data name="CondEnum_Op_GreaterThan" xml:space="preserve">
+    <value>Greater than (&gt;)</value>
+  </data>
+  <data name="CondEnum_Op_LessThan" xml:space="preserve">
+    <value>Less than (&lt;)</value>
+  </data>
+  <data name="CondEnum_Op_GreaterOrEqual" xml:space="preserve">
+    <value>Greater or equal (&gt;=)</value>
+  </data>
+  <data name="CondEnum_Op_LessOrEqual" xml:space="preserve">
+    <value>Less or equal (&lt;=)</value>
+  </data>
+  <data name="CondEnum_Op_Contains" xml:space="preserve">
+    <value>Contains</value>
+  </data>
+  <data name="CondEnum_Op_NotContains" xml:space="preserve">
+    <value>Does not contain</value>
+  </data>
+  <data name="CondEnum_Op_IsEmpty" xml:space="preserve">
+    <value>Is empty</value>
+  </data>
+  <data name="CondEnum_Op_IsNotEmpty" xml:space="preserve">
+    <value>Is not empty</value>
+  </data>
+  <data name="CondEnum_Logic_And" xml:space="preserve">
+    <value>And (AND)</value>
+  </data>
+  <data name="CondEnum_Logic_Or" xml:space="preserve">
+    <value>Or (OR)</value>
+  </data>
+  <data name="CondEnum_Tip_ConstantTrue" xml:space="preserve">
+    <value>A constant that is always true</value>
+  </data>
+  <data name="CondEnum_Tip_ConstantFalse" xml:space="preserve">
+    <value>A constant that is always false</value>
+  </data>
+  <data name="CondEnum_Tip_Self_IsTrue" xml:space="preserve">
+    <value>Whether the current step succeeded (true/false)</value>
+  </data>
+  <data name="CondEnum_Tip_Self_Similarity" xml:space="preserve">
+    <value>Actual image match similarity of the current step (0~1)</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ExecutionTimeMs" xml:space="preserve">
+    <value>Time spent by the current step (ms)</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ClickX" xml:space="preserve">
+    <value>Screen X coordinate actually clicked by the current step</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ClickY" xml:space="preserve">
+    <value>Screen Y coordinate actually clicked by the current step</value>
+  </data>
+  <data name="CondEnum_Tip_Self_PopupResult" xml:space="preserve">
+    <value>Button value the user clicked on the current step's popup</value>
+  </data>
+  <data name="CondEnum_Tip_Self_SignalValue" xml:space="preserve">
+    <value>Signal content received by the current step (string)</value>
+  </data>
+  <data name="CondEnum_Tip_Step_IsTrue" xml:space="preserve">
+    <value>Execution result of the step with the given line number (enter it on the left)</value>
+  </data>
+  <data name="CondEnum_Tip_Step_Similarity" xml:space="preserve">
+    <value>Image match similarity of the step with the given line number</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ExecutionTimeMs" xml:space="preserve">
+    <value>Elapsed time of the step with the given line number</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ClickX" xml:space="preserve">
+    <value>Click X coordinate of the step with the given line number</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ClickY" xml:space="preserve">
+    <value>Click Y coordinate of the step with the given line number</value>
+  </data>
+  <data name="CondEnum_Tip_Step_PopupResult" xml:space="preserve">
+    <value>Popup choice result of the step with the given line number</value>
+  </data>
+  <data name="CondEnum_Tip_Step_SignalValue" xml:space="preserve">
+    <value>Signal content received by the step with the given line number</value>
+  </data>
+  <data name="Msg_StepsEmpty" xml:space="preserve">
+    <value>Step list must not be empty</value>
+  </data>
+  <data name="Msg_PathEmpty" xml:space="preserve">
+    <value>File path must not be empty</value>
+  </data>
+  <data name="Msg_UnknownPath" xml:space="preserve">
+    <value>(unknown path)</value>
+  </data>
+  <data name="Msg_CreateImageDirFailed" xml:space="preserve">
+    <value>Failed to create the image folder: {0} ({1})</value>
+  </data>
+  <data name="Msg_ImageSaveFailed" xml:space="preserve">
+    <value>Failed to save the image: {0} ({1})</value>
+  </data>
+  <data name="Msg_FileNotFound" xml:space="preserve">
+    <value>File not found: {0}</value>
+  </data>
+  <data name="Msg_PackageNoStepsJson" xml:space="preserve">
+    <value>steps.json was not found in the package '{0}'.</value>
+  </data>
+  <data name="Msg_PackageStepsJsonInvalid" xml:space="preserve">
+    <value>steps.json in the package '{0}' is empty or invalid.</value>
+  </data>
+  <data name="Msg_JsonFileInvalid" xml:space="preserve">
+    <value>File '{0}' is empty or invalid and cannot be deserialized into a step list.</value>
+  </data>
+  <data name="Msg_AdminRequired" xml:space="preserve">
+    <value>Administrator permission is required to manage users</value>
+  </data>
+  <data name="Msg_UserDeleted" xml:space="preserve">
+    <value>User '{0}' has been deleted</value>
+  </data>
+  <data name="Msg_DeleteLastAdminFailed" xml:space="preserve">
+    <value>Delete failed (possibly the last administrator account)</value>
+  </data>
+  <data name="Msg_SelectUserForPassword" xml:space="preserve">
+    <value>Select the user whose password you want to change</value>
+  </data>
+  <data name="Msg_EnterOldPassword" xml:space="preserve">
+    <value>Enter the old password</value>
+  </data>
+  <data name="Msg_EnterNewPassword" xml:space="preserve">
+    <value>Enter the new password</value>
+  </data>
+  <data name="Msg_PasswordChanged" xml:space="preserve">
+    <value>Password of user '{0}' has been changed</value>
+  </data>
+  <data name="Msg_PasswordChangeFailed" xml:space="preserve">
+    <value>Failed to change the password; check that the old password is correct</value>
+  </data>
+  <data name="Msg_BridgeFailed" xml:space="preserve">
+    <value>Bridge failed: </value>
+  </data>
+  <data name="Msg_BridgeTimeout" xml:space="preserve">
+    <value>Call timed out: </value>
+  </data>
+  <data name="Msg_NoDescription" xml:space="preserve">
+    <value>(no details)</value>
+  </data>
+  <data name="Msg_EmptyValue" xml:space="preserve">
+    <value>(empty)</value>
+  </data>
+  <data name="Msg_BridgeExeNotFoundPrefix" xml:space="preserve">
+    <value>The specified bridge program does not exist: </value>
+  </data>
+  <data name="Msg_BridgeExeMissingHint" xml:space="preserve">
+    <value>AcbelBridge.exe was not found. Build the AcbelBridge project first, or set the {0} environment variable.</value>
+  </data>
+  <data name="Msg_BridgeExeNotFound" xml:space="preserve">
+    <value>Bridge program not found: </value>
+  </data>
+  <data name="Msg_BridgeStartFailed" xml:space="preserve">
+    <value>Failed to start the bridge process</value>
+  </data>
+  <data name="Msg_BridgeWriteFailed" xml:space="preserve">
+    <value>Failed to write to the bridge process: </value>
+  </data>
+  <data name="Msg_BridgeNoResponse" xml:space="preserve">
+    <value>The bridge process did not respond for {0} seconds (database unreachable or a dialog box is showing); the process was terminated.</value>
+  </data>
+  <data name="Msg_BridgeExited" xml:space="preserve">
+    <value>The bridge process exited (stderr: {0})</value>
+  </data>
+  <data name="Msg_MainThread" xml:space="preserve">
+    <value>Main thread</value>
+  </data>
+  <data name="Msg_SubThread" xml:space="preserve">
+    <value>Sub thread {0}</value>
+  </data>
+  <data name="Msg_SubThreadPrefix" xml:space="preserve">
+    <value>Sub thread</value>
+  </data>
+  <data name="Msg_DirectRead" xml:space="preserve">
+    <value>Direct read</value>
+  </data>
+  <data name="Msg_MtRangeEmpty" xml:space="preserve">
+    <value>The step list is empty; cannot parse the multi-thread region</value>
+  </data>
+  <data name="Msg_MtRangeStartIndex" xml:space="preserve">
+    <value>Multi-thread start step index is out of range: {0}</value>
+  </data>
+  <data name="Msg_MtRangeEndMissing" xml:space="preserve">
+    <value>The end step does not exist (it may have been deleted)</value>
+  </data>
+  <data name="Msg_MtRangeEndAfterStart" xml:space="preserve">
+    <value>The end step must come after the multi-thread start step</value>
+  </data>
+  <data name="Msg_MtRangeEndNotPaired" xml:space="preserve">
+    <value>The paired "Multi-thread region end" step was not found</value>
+  </data>
+  <data name="Msg_ScreenshotFailed" xml:space="preserve">
+    <value>[screenshot failed]</value>
+  </data>
+  <data name="Msg_BurnInNoConfig" xml:space="preserve">
+    <value>No burn-in configuration was provided</value>
+  </data>
+  <data name="Msg_BurnInNoRegion" xml:space="preserve">
+    <value>No screenshot region is configured</value>
+  </data>
+  <data name="Msg_BurnInEmptyCapture" xml:space="preserve">
+    <value>Screen capture returned an empty image</value>
+  </data>
+  <data name="Msg_OpenImageTitle" xml:space="preserve">
+    <value>Open image</value>
+  </data>
+  <data name="Msg_ImageFilter" xml:space="preserve">
+    <value>Image files (*.jpg;*.jpeg;*.png;)|*.jpg;*.jpeg;*.png;</value>
+  </data>
+  <data name="Msg_ImageTooLarge" xml:space="preserve">
+    <value>The image must not exceed 1 MB</value>
+  </data>
+  <data name="Msg_Tip" xml:space="preserve">
+    <value>Notice</value>
+  </data>
+  <data name="Msg_SelectImage" xml:space="preserve">
+    <value>Please select an image</value>
+  </data>
+  <data name="Msg_UnnamedField" xml:space="preserve">
+    <value>(unnamed field)</value>
+  </data>
+  <data name="Msg_FieldName" xml:space="preserve">
+    <value>Field {0}</value>
   </data>
 </root>

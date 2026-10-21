@@ -1,4 +1,4 @@
-using ShaoLu.Models;
+﻿using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
@@ -54,56 +54,56 @@ namespace ShaoLu.Converters
 
         public static string ConvertConditionMode(ConditionMode mode) => mode switch
         {
-            ConditionMode.Default => "默认（使用步骤自身结果）",
-            ConditionMode.Custom => "自定义（使用下方规则判断）",
+            ConditionMode.Default => LanguageService.GetLocalizedString("CondEnum_Mode_Default", "默认（使用步骤自身结果）"),
+            ConditionMode.Custom => LanguageService.GetLocalizedString("CondEnum_Mode_Custom", "自定义（使用下方规则判断）"),
             _ => mode.ToString(),
         };
 
         public static string ConvertConditionVariable(ConditionVariable v) => v switch
         {
-            ConditionVariable.ConstantTrue => "常量：真",
-            ConditionVariable.ConstantFalse => "常量：假",
-            ConditionVariable.Self_IsTrue => "本步骤 → 执行结果",
-            ConditionVariable.Self_Similarity => "本步骤 → 相似度",
-            ConditionVariable.Self_ExecutionTimeMs => "本步骤 → 执行耗时(ms)",
-            ConditionVariable.Self_ClickX => "本步骤 → 点击X坐标",
-            ConditionVariable.Self_ClickY => "本步骤 → 点击Y坐标",
+            ConditionVariable.ConstantTrue => LanguageService.GetLocalizedString("CondEnum_Var_ConstantTrue", "常量：真"),
+            ConditionVariable.ConstantFalse => LanguageService.GetLocalizedString("CondEnum_Var_ConstantFalse", "常量：假"),
+            ConditionVariable.Self_IsTrue => LanguageService.GetLocalizedString("CondEnum_Var_Self_IsTrue", "本步骤 → 执行结果"),
+            ConditionVariable.Self_Similarity => LanguageService.GetLocalizedString("CondEnum_Var_Self_Similarity", "本步骤 → 相似度"),
+            ConditionVariable.Self_ExecutionTimeMs => LanguageService.GetLocalizedString("CondEnum_Var_Self_ExecutionTimeMs", "本步骤 → 执行耗时(ms)"),
+            ConditionVariable.Self_ClickX => LanguageService.GetLocalizedString("CondEnum_Var_Self_ClickX", "本步骤 → 点击X坐标"),
+            ConditionVariable.Self_ClickY => LanguageService.GetLocalizedString("CondEnum_Var_Self_ClickY", "本步骤 → 点击Y坐标"),
             ConditionVariable.Self_OCRText => LanguageService.GetLocalizedString("ConditionVariable_Self_Text"),
-            ConditionVariable.Self_PopupResult => "本步骤 → 弹窗选择结果",
-            ConditionVariable.Self_SignalValue => "本步骤 → 信号内容",
-            ConditionVariable.Step_IsTrue => "引用步骤 → 执行结果",
-            ConditionVariable.Step_Similarity => "引用步骤 → 相似度",
-            ConditionVariable.Step_ExecutionTimeMs => "引用步骤 → 执行耗时(ms)",
-            ConditionVariable.Step_ClickX => "引用步骤 → 点击X坐标",
-            ConditionVariable.Step_ClickY => "引用步骤 → 点击Y坐标",
+            ConditionVariable.Self_PopupResult => LanguageService.GetLocalizedString("CondEnum_Var_Self_PopupResult", "本步骤 → 弹窗选择结果"),
+            ConditionVariable.Self_SignalValue => LanguageService.GetLocalizedString("CondEnum_Var_Self_SignalValue", "本步骤 → 信号内容"),
+            ConditionVariable.Step_IsTrue => LanguageService.GetLocalizedString("CondEnum_Var_Step_IsTrue", "引用步骤 → 执行结果"),
+            ConditionVariable.Step_Similarity => LanguageService.GetLocalizedString("CondEnum_Var_Step_Similarity", "引用步骤 → 相似度"),
+            ConditionVariable.Step_ExecutionTimeMs => LanguageService.GetLocalizedString("CondEnum_Var_Step_ExecutionTimeMs", "引用步骤 → 执行耗时(ms)"),
+            ConditionVariable.Step_ClickX => LanguageService.GetLocalizedString("CondEnum_Var_Step_ClickX", "引用步骤 → 点击X坐标"),
+            ConditionVariable.Step_ClickY => LanguageService.GetLocalizedString("CondEnum_Var_Step_ClickY", "引用步骤 → 点击Y坐标"),
             ConditionVariable.Step_OCRText => LanguageService.GetLocalizedString("ConditionVariable_Step_Text"),
-            ConditionVariable.Step_PopupResult => "引用步骤 → 弹窗选择结果",
-            ConditionVariable.Step_SignalValue => "引用步骤 → 信号内容",
+            ConditionVariable.Step_PopupResult => LanguageService.GetLocalizedString("CondEnum_Var_Step_PopupResult", "引用步骤 → 弹窗选择结果"),
+            ConditionVariable.Step_SignalValue => LanguageService.GetLocalizedString("CondEnum_Var_Step_SignalValue", "引用步骤 → 信号内容"),
             ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered"),
-            ConditionVariable.Step_UserInputField => "引用步骤 → 用户输入字段",
+            ConditionVariable.Step_UserInputField => LanguageService.GetLocalizedString("CondEnum_Var_Step_UserInputField", "引用步骤 → 用户输入字段"),
             _ => v.ToString(),
         };
 
         public static string ConvertConditionOperator(ConditionOperator op) => op switch
         {
-            ConditionOperator.Equal => "等于 (==)",
-            ConditionOperator.NotEqual => "不等于 (!=)",
-            ConditionOperator.GreaterThan => "大于 (>)",
-            ConditionOperator.LessThan => "小于 (<)",
-            ConditionOperator.GreaterOrEqual => "大于等于 (>=)",
-            ConditionOperator.LessOrEqual => "小于等于 (<=)",
-            ConditionOperator.Contains => "包含",
-            ConditionOperator.NotContains => "不包含",
+            ConditionOperator.Equal => LanguageService.GetLocalizedString("CondEnum_Op_Equal", "等于 (==)"),
+            ConditionOperator.NotEqual => LanguageService.GetLocalizedString("CondEnum_Op_NotEqual", "不等于 (!=)"),
+            ConditionOperator.GreaterThan => LanguageService.GetLocalizedString("CondEnum_Op_GreaterThan", "大于 (>)"),
+            ConditionOperator.LessThan => LanguageService.GetLocalizedString("CondEnum_Op_LessThan", "小于 (<)"),
+            ConditionOperator.GreaterOrEqual => LanguageService.GetLocalizedString("CondEnum_Op_GreaterOrEqual", "大于等于 (>=)"),
+            ConditionOperator.LessOrEqual => LanguageService.GetLocalizedString("CondEnum_Op_LessOrEqual", "小于等于 (<=)"),
+            ConditionOperator.Contains => LanguageService.GetLocalizedString("CondEnum_Op_Contains", "包含"),
+            ConditionOperator.NotContains => LanguageService.GetLocalizedString("CondEnum_Op_NotContains", "不包含"),
             ConditionOperator.RegexMatch => Services.LanguageService.GetLocalizedString("ConditionOperator_RegexMatch"),
-            ConditionOperator.IsEmpty => "为空",
-            ConditionOperator.IsNotEmpty => "不为空",
+            ConditionOperator.IsEmpty => LanguageService.GetLocalizedString("CondEnum_Op_IsEmpty", "为空"),
+            ConditionOperator.IsNotEmpty => LanguageService.GetLocalizedString("CondEnum_Op_IsNotEmpty", "不为空"),
             _ => op.ToString(),
         };
 
         public static string ConvertLogicConnector(LogicConnector c) => c switch
         {
-            LogicConnector.And => "并且 (AND)",
-            LogicConnector.Or => "或者 (OR)",
+            LogicConnector.And => LanguageService.GetLocalizedString("CondEnum_Logic_And", "并且 (AND)"),
+            LogicConnector.Or => LanguageService.GetLocalizedString("CondEnum_Logic_Or", "或者 (OR)"),
             _ => c.ToString(),
         };
 
@@ -216,24 +216,24 @@ namespace ShaoLu.Converters
         /// </summary>
         public static string GetVariableTooltip(ConditionVariable v) => v switch
         {
-            ConditionVariable.ConstantTrue => "始终为真的常量值",
-            ConditionVariable.ConstantFalse => "始终为假的常量值",
-            ConditionVariable.Self_IsTrue => "当前步骤执行后是否成功（true/false）",
-            ConditionVariable.Self_Similarity => "当前步骤图像匹配的实际相似度（0~1）",
-            ConditionVariable.Self_ExecutionTimeMs => "当前步骤执行所花费的时间（毫秒）",
-            ConditionVariable.Self_ClickX => "当前步骤实际点击的屏幕X坐标",
-            ConditionVariable.Self_ClickY => "当前步骤实际点击的屏幕Y坐标",
+            ConditionVariable.ConstantTrue => LanguageService.GetLocalizedString("CondEnum_Tip_ConstantTrue", "始终为真的常量值"),
+            ConditionVariable.ConstantFalse => LanguageService.GetLocalizedString("CondEnum_Tip_ConstantFalse", "始终为假的常量值"),
+            ConditionVariable.Self_IsTrue => LanguageService.GetLocalizedString("CondEnum_Tip_Self_IsTrue", "当前步骤执行后是否成功（true/false）"),
+            ConditionVariable.Self_Similarity => LanguageService.GetLocalizedString("CondEnum_Tip_Self_Similarity", "当前步骤图像匹配的实际相似度（0~1）"),
+            ConditionVariable.Self_ExecutionTimeMs => LanguageService.GetLocalizedString("CondEnum_Tip_Self_ExecutionTimeMs", "当前步骤执行所花费的时间（毫秒）"),
+            ConditionVariable.Self_ClickX => LanguageService.GetLocalizedString("CondEnum_Tip_Self_ClickX", "当前步骤实际点击的屏幕X坐标"),
+            ConditionVariable.Self_ClickY => LanguageService.GetLocalizedString("CondEnum_Tip_Self_ClickY", "当前步骤实际点击的屏幕Y坐标"),
             ConditionVariable.Self_OCRText => Services.LanguageService.GetLocalizedString("ConditionVariable_Self_Text_Tooltip"),
-            ConditionVariable.Self_PopupResult => "当前步骤弹出框用户点击的按钮值",
-            ConditionVariable.Self_SignalValue => "当前步骤接收到的信号内容（字符串）",
-            ConditionVariable.Step_IsTrue => "指定行号步骤的执行结果（需在左侧填写行号）",
-            ConditionVariable.Step_Similarity => "指定行号步骤的图像匹配相似度",
-            ConditionVariable.Step_ExecutionTimeMs => "指定行号步骤的执行耗时",
-            ConditionVariable.Step_ClickX => "指定行号步骤的点击X坐标",
-            ConditionVariable.Step_ClickY => "指定行号步骤的点击Y坐标",
+            ConditionVariable.Self_PopupResult => LanguageService.GetLocalizedString("CondEnum_Tip_Self_PopupResult", "当前步骤弹出框用户点击的按钮值"),
+            ConditionVariable.Self_SignalValue => LanguageService.GetLocalizedString("CondEnum_Tip_Self_SignalValue", "当前步骤接收到的信号内容（字符串）"),
+            ConditionVariable.Step_IsTrue => LanguageService.GetLocalizedString("CondEnum_Tip_Step_IsTrue", "指定行号步骤的执行结果（需在左侧填写行号）"),
+            ConditionVariable.Step_Similarity => LanguageService.GetLocalizedString("CondEnum_Tip_Step_Similarity", "指定行号步骤的图像匹配相似度"),
+            ConditionVariable.Step_ExecutionTimeMs => LanguageService.GetLocalizedString("CondEnum_Tip_Step_ExecutionTimeMs", "指定行号步骤的执行耗时"),
+            ConditionVariable.Step_ClickX => LanguageService.GetLocalizedString("CondEnum_Tip_Step_ClickX", "指定行号步骤的点击X坐标"),
+            ConditionVariable.Step_ClickY => LanguageService.GetLocalizedString("CondEnum_Tip_Step_ClickY", "指定行号步骤的点击Y坐标"),
             ConditionVariable.Step_OCRText => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Text_Tooltip"),
-            ConditionVariable.Step_PopupResult => "指定行号步骤的弹出框选择结果",
-            ConditionVariable.Step_SignalValue => "指定行号步骤接收到的信号内容",
+            ConditionVariable.Step_PopupResult => LanguageService.GetLocalizedString("CondEnum_Tip_Step_PopupResult", "指定行号步骤的弹出框选择结果"),
+            ConditionVariable.Step_SignalValue => LanguageService.GetLocalizedString("CondEnum_Tip_Step_SignalValue", "指定行号步骤接收到的信号内容"),
             ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered_Tooltip"),
             _ => string.Empty,
         };

@@ -1,4 +1,5 @@
 ﻿using ShaoLu.Converters;
+using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Collections.Generic;
@@ -88,9 +89,9 @@ namespace ShaoLu.Utils
         public static SavePackageResult SaveAsAutoStepPackage(ObservableCollection<AutomationStepBase> steps, string packagePath, bool includeSourceImages = false)
         {
             if (steps == null)
-                throw new ArgumentNullException(nameof(steps), "步骤列表不能为空");
+                throw new ArgumentNullException(nameof(steps), LanguageService.GetLocalizedString("Msg_StepsEmpty", "步骤列表不能为空"));
             if (string.IsNullOrWhiteSpace(packagePath))
-                throw new ArgumentException("文件路径不能为空", nameof(packagePath));
+                throw new ArgumentException(LanguageService.GetLocalizedString("Msg_PathEmpty", "文件路径不能为空"), nameof(packagePath));
 
             string targetPath = Path.GetFullPath(packagePath);
             string directory = Path.GetDirectoryName(targetPath);
@@ -158,11 +159,11 @@ namespace ShaoLu.Utils
         public static ObservableCollection<AutomationStepBase> LoadFromAutoStepPackage(string packagePath)
         {
             if (string.IsNullOrWhiteSpace(packagePath))
-                throw new ArgumentException("文件路径不能为空", nameof(packagePath));
+                throw new ArgumentException(LanguageService.GetLocalizedString("Msg_PathEmpty", "文件路径不能为空"), nameof(packagePath));
 
             string packageFullPath = Path.GetFullPath(packagePath);
             if (!File.Exists(packageFullPath))
-                throw new FileNotFoundException($"文件未找到: {packagePath}", packagePath);
+                throw new FileNotFoundException(LanguageService.GetLocalizedString("Msg_FileNotFound", $"文件未找到: {packagePath}", packagePath), packagePath);
 
             // 解压到工作目录: {packagePath所在目录}/{文件名WithoutExt}_images/
             string dir = Path.GetDirectoryName(packageFullPath);
@@ -179,7 +180,7 @@ namespace ShaoLu.Utils
                 // 在临时目录里完成读取与校验，失败时当前工作目录原样保留
                 string jsonPath = Path.Combine(tempDir, StepsJsonEntryName);
                 if (!File.Exists(jsonPath))
-                    throw new InvalidOperationException($"压缩包 '{packagePath}' 中未找到 steps.json。");
+                    throw new InvalidOperationException(LanguageService.GetLocalizedString("Msg_PackageNoStepsJson", $"压缩包 '{packagePath}' 中未找到 steps.json。", packagePath));
 
                 using (var stream = new FileStream(jsonPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
@@ -187,7 +188,7 @@ namespace ShaoLu.Utils
                 }
 
                 if (steps == null)
-                    throw new InvalidOperationException($"压缩包 '{packagePath}' 中的 steps.json 内容为空或格式无效。");
+                    throw new InvalidOperationException(LanguageService.GetLocalizedString("Msg_PackageStepsJsonInvalid", $"压缩包 '{packagePath}' 中的 steps.json 内容为空或格式无效。", packagePath));
 
                 // 后处理：解析旧格式 int 行号的 TrueGoto/FalseGoto 为 Uid
                 ResolveLegacyGotoLineNumbers(steps);
@@ -378,7 +379,7 @@ namespace ShaoLu.Utils
             // 缺失图片不再静默跳过：记录到结果里，由 UI 明确告警
             if (string.IsNullOrEmpty(fullPath) || !File.Exists(fullPath))
             {
-                result.MissingImages.Add($"{normalizedEntryName} ← {fullPath ?? "(未知路径)"}");
+                result.MissingImages.Add($"{normalizedEntryName} ← {fullPath ?? LanguageService.GetLocalizedString("Msg_UnknownPath", "(未知路径)")}");
                 return;
             }
 
@@ -405,7 +406,7 @@ namespace ShaoLu.Utils
             }
             catch (Exception ex)
             {
-                result.Warnings.Add($"创建图片目录失败：{result.WorkDir}（{ex.Message}）");
+                result.Warnings.Add(LanguageService.GetLocalizedString("Msg_CreateImageDirFailed", $"创建图片目录失败：{result.WorkDir}（{ex.Message}）", result.WorkDir, ex.Message));
                 return;
             }
 
@@ -430,7 +431,7 @@ namespace ShaoLu.Utils
                 }
                 catch (Exception ex)
                 {
-                    result.Warnings.Add($"图片落地失败：{entryName}（{ex.Message}）");
+                    result.Warnings.Add(LanguageService.GetLocalizedString("Msg_ImageSaveFailed", $"图片落地失败：{entryName}（{ex.Message}）", entryName, ex.Message));
                 }
             }
         }
@@ -475,10 +476,10 @@ namespace ShaoLu.Utils
         public static void SaveStepsToJson(ObservableCollection<AutomationStepBase> steps, string filePath)
         {
             if (steps == null)
-                throw new ArgumentNullException(nameof(steps), "步骤列表不能为空");
+                throw new ArgumentNullException(nameof(steps), LanguageService.GetLocalizedString("Msg_StepsEmpty", "步骤列表不能为空"));
 
             if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("文件路径不能为空", nameof(filePath));
+                throw new ArgumentException(LanguageService.GetLocalizedString("Msg_PathEmpty", "文件路径不能为空"), nameof(filePath));
 
             string directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -497,10 +498,10 @@ namespace ShaoLu.Utils
         public static ObservableCollection<AutomationStepBase> LoadStepsFromJson(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("文件路径不能为空", nameof(filePath));
+                throw new ArgumentException(LanguageService.GetLocalizedString("Msg_PathEmpty", "文件路径不能为空"), nameof(filePath));
 
             if (!File.Exists(filePath))
-                throw new FileNotFoundException($"文件未找到: {filePath}", filePath);
+                throw new FileNotFoundException(LanguageService.GetLocalizedString("Msg_FileNotFound", $"文件未找到: {filePath}", filePath), filePath);
 
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -508,7 +509,7 @@ namespace ShaoLu.Utils
 
                 if (steps == null)
                 {
-                    throw new InvalidOperationException($"文件 '{filePath}' 内容为空或格式无效，无法反序列化为步骤列表。");
+                    throw new InvalidOperationException(LanguageService.GetLocalizedString("Msg_JsonFileInvalid", $"文件 '{filePath}' 内容为空或格式无效，无法反序列化为步骤列表。", filePath));
                 }
 
                 // 后处理：解析旧格式 int 行号的 TrueGoto/FalseGoto 为 Uid

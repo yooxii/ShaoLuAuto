@@ -35,13 +35,13 @@ namespace ShaoLu.Views
 
         private void OnImportClickHandler(object sender, RoutedEventArgs e)
         {
-            var filePath = PathServices.OpenPathDialog("打开图片", "图像文件(*.jpg;*.jpeg;*.png;)|*.jpg;*.jpeg;*.png;");
+            var filePath = PathServices.OpenPathDialog(LanguageService.GetLocalizedString("Msg_OpenImageTitle", "打开图片"), LanguageService.GetLocalizedString("Msg_ImageFilter", "图像文件(*.jpg;*.jpeg;*.png;)|*.jpg;*.jpeg;*.png;"));
             var fileInfo = new FileInfo(filePath);
             var fileSize = fileInfo.Length;
             var mb = ConvertBytesToMB(fileSize);
             if (mb > 1)
             {
-                WPFDevelopers.Controls.MessageBox.Show("图片不能大于 1M ", "提示", MessageBoxButton.OK, MessageBoxImage.Error);
+                WPFDevelopers.Controls.MessageBox.Show(LanguageService.GetLocalizedString("Msg_ImageTooLarge", "图片不能大于 1M "), LanguageService.GetLocalizedString("Msg_Tip", "提示"), MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             var bitmap = new BitmapImage();
@@ -78,7 +78,7 @@ namespace ShaoLu.Views
         {
             if (MyCropImage.CurrentAreaBitmap == null)
             {
-                Toast.Push("请选择图片", ToastImage.Warning);
+                Toast.Push(LanguageService.GetLocalizedString("Msg_SelectImage", "请选择图片"), ToastImage.Warning);
                 return;
             }
             var dlg = new SaveFileDialog

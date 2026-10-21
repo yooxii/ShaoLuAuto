@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.IO;
 using WPFLocalizeExtension.Engine;
@@ -161,6 +161,26 @@ namespace ShaoLu.Services
         public static string GetLocalizedString(string key, string defaultValue)
         {
             return LocalizeDictionary.Instance.GetLocalizedObject(key, null, null)?.ToString() ?? defaultValue;
+        }
+
+        /// <summary>
+        /// 获取本地化字符串并按 {0}/{1} 占位符格式化；key 缺失时用 defaultValue 作为模板。
+        /// </summary>
+        public static string GetLocalizedString(string key, string defaultValue, params object[] args)
+        {
+            var value = LocalizeDictionary.Instance.GetLocalizedObject(key, null, null)?.ToString();
+            if (string.IsNullOrEmpty(value))
+                value = defaultValue;
+            if (args == null || args.Length == 0)
+                return value;
+            try
+            {
+                return string.Format(CultureInfo.CurrentCulture, value, args);
+            }
+            catch (FormatException)
+            {
+                return value;
+            }
         }
     }
 }

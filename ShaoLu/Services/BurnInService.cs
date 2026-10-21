@@ -1,4 +1,4 @@
-using OfficeOpenXml;
+﻿using OfficeOpenXml;
 using ShaoLu.Models;
 using ShaoLu.Utils;
 using System;
@@ -418,7 +418,7 @@ namespace ShaoLu.Services
                 {
                     // 截图失败不再静默：失败原因写入 remark 供导出与追溯
                     _logger.Warn("Capture failed for order {0}: {1}", orderNoForFile, capture.Error);
-                    string mark = string.IsNullOrEmpty(capture.Error) ? "[截图失败]" : $"[截图失败] {capture.Error}";
+                    string mark = string.IsNullOrEmpty(capture.Error) ? LanguageService.GetLocalizedString("Msg_ScreenshotFailed", "[截图失败]") : $"[截图失败] {capture.Error}";
                     remark = string.IsNullOrEmpty(remark) ? mark : $"{remark} | {mark}";
                     if (remark.Length > 500) remark = remark.Substring(0, 500);
                 }
@@ -465,8 +465,8 @@ namespace ShaoLu.Services
         /// </summary>
         public static CaptureResult CaptureAndSave(BurnInConfig config, string orderNo)
         {
-            if (config == null) return CaptureResult.Fail("未提供烧录配置");
-            if (!config.HasRegion) return CaptureResult.Fail("未配置截图区域");
+            if (config == null) return CaptureResult.Fail(LanguageService.GetLocalizedString("Msg_BurnInNoConfig", "未提供烧录配置"));
+            if (!config.HasRegion) return CaptureResult.Fail(LanguageService.GetLocalizedString("Msg_BurnInNoRegion", "未配置截图区域"));
 
             try
             {
@@ -478,7 +478,7 @@ namespace ShaoLu.Services
                     (int)ScreenCoordinates.ToPixelWidth(config.RegionW.Value, relative),
                     (int)ScreenCoordinates.ToPixelHeight(config.RegionH.Value, relative));
                 using Bitmap bmp = Autogui.CaptureScreenRegion(region);
-                if (bmp == null) return CaptureResult.Fail("截屏返回空图像");
+                if (bmp == null) return CaptureResult.Fail(LanguageService.GetLocalizedString("Msg_BurnInEmptyCapture", "截屏返回空图像"));
 
                 string dir = Path.Combine(GetEffectiveScreenshotDir(config), SanitizeFileName(orderNo ?? "unknown"));
                 Directory.CreateDirectory(dir);

@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using ShaoLu.Models;
@@ -103,7 +103,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public IReadOnlyList<string> MissingRequiredFieldNames => Fields?
             .Where(f => f != null && f.IsRequired && string.IsNullOrWhiteSpace(f.Value))
-            .Select(f => string.IsNullOrWhiteSpace(f.Name) ? "(未命名字段)" : f.Name.Trim())
+            .Select(f => string.IsNullOrWhiteSpace(f.Name) ? LanguageService.GetLocalizedString("Msg_UnnamedField", "(未命名字段)") : f.Name.Trim())
             .ToList() ?? new System.Collections.Generic.List<string>();
 
         #region 详情面板命令
@@ -113,7 +113,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public ICommand AddFieldCommand => _addFieldCommand ??= new RelayCommand(() =>
         {
-            Fields.Add(new UserInputField { Name = $"字段{Fields.Count + 1}" });
+            Fields.Add(new UserInputField { Name = LanguageService.GetLocalizedString("Msg_FieldName", "字段{0}", Fields.Count + 1) });
         });
 
         private RelayParameterCommand _removeFieldCommand;

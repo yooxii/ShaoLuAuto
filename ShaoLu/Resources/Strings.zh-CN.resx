@@ -487,7 +487,7 @@
     <value>超时时间(s)</value>
   </data>
   <data name="GetInput_Timeout" xml:space="preserve">
-    <value>获取输入超时（{0} 秒）</value>
+    <value>获取文本超时（{0} 秒）</value>
   </data>
   <data name="FindTimeInterval" xml:space="preserve">
     <value>重新寻找的间隔时间(s)</value>
@@ -919,7 +919,7 @@
     <value>注销 ({0})</value>
   </data>
   <data name="AddGetInputStep" xml:space="preserve">
-    <value>获取输入</value>
+    <value>获取文本</value>
   </data>
   <data name="InputMode" xml:space="preserve">
     <value>获取方式</value>
@@ -1345,7 +1345,7 @@
     <value>只能添加一个烧录配置步骤。</value>
   </data>
   <data name="BurnIn_FinishStepHint" xml:space="preserve">
-    <value>判定方式由烧录完成步骤的类型决定，两者互斥：选择“获取输入”步骤时按关键字判定（识别文本匹配关键字）；选择其他类型步骤时按图像判据判定（执行到该步骤时立即截屏与判据图比对）。每次执行到完成步骤即判定一次为良品/不良品/烧录失败（循环流程中每轮分别记录）。</value>
+    <value>判定方式由烧录完成步骤的类型决定，两者互斥：选择“获取文本”步骤时按关键字判定（识别文本匹配关键字）；选择其他类型步骤时按图像判据判定（执行到该步骤时立即截屏与判据图比对）。每次执行到完成步骤即判定一次为良品/不良品/烧录失败（循环流程中每轮分别记录）。</value>
   </data>
   <data name="BurnIn_SessionCancelled" xml:space="preserve">
     <value>已取消烧录信息输入。</value>
@@ -1700,5 +1700,290 @@
   </data>
   <data name="UserInput_FrozenNeedLogin" xml:space="preserve">
     <value>该字段已冻结，请登录后再修改</value>
+  </data>
+  <data name="CondEnum_Mode_Default" xml:space="preserve">
+    <value>默认（使用步骤自身结果）</value>
+  </data>
+  <data name="CondEnum_Mode_Custom" xml:space="preserve">
+    <value>自定义（使用下方规则判断）</value>
+  </data>
+  <data name="CondEnum_Var_ConstantTrue" xml:space="preserve">
+    <value>常量：真</value>
+  </data>
+  <data name="CondEnum_Var_ConstantFalse" xml:space="preserve">
+    <value>常量：假</value>
+  </data>
+  <data name="CondEnum_Var_Self_IsTrue" xml:space="preserve">
+    <value>本步骤 → 执行结果</value>
+  </data>
+  <data name="CondEnum_Var_Self_Similarity" xml:space="preserve">
+    <value>本步骤 → 相似度</value>
+  </data>
+  <data name="CondEnum_Var_Self_ExecutionTimeMs" xml:space="preserve">
+    <value>本步骤 → 执行耗时(ms)</value>
+  </data>
+  <data name="CondEnum_Var_Self_ClickX" xml:space="preserve">
+    <value>本步骤 → 点击X坐标</value>
+  </data>
+  <data name="CondEnum_Var_Self_ClickY" xml:space="preserve">
+    <value>本步骤 → 点击Y坐标</value>
+  </data>
+  <data name="CondEnum_Var_Self_PopupResult" xml:space="preserve">
+    <value>本步骤 → 弹窗选择结果</value>
+  </data>
+  <data name="CondEnum_Var_Self_SignalValue" xml:space="preserve">
+    <value>本步骤 → 信号内容</value>
+  </data>
+  <data name="CondEnum_Var_Step_IsTrue" xml:space="preserve">
+    <value>引用步骤 → 执行结果</value>
+  </data>
+  <data name="CondEnum_Var_Step_Similarity" xml:space="preserve">
+    <value>引用步骤 → 相似度</value>
+  </data>
+  <data name="CondEnum_Var_Step_ExecutionTimeMs" xml:space="preserve">
+    <value>引用步骤 → 执行耗时(ms)</value>
+  </data>
+  <data name="CondEnum_Var_Step_ClickX" xml:space="preserve">
+    <value>引用步骤 → 点击X坐标</value>
+  </data>
+  <data name="CondEnum_Var_Step_ClickY" xml:space="preserve">
+    <value>引用步骤 → 点击Y坐标</value>
+  </data>
+  <data name="CondEnum_Var_Step_PopupResult" xml:space="preserve">
+    <value>引用步骤 → 弹窗选择结果</value>
+  </data>
+  <data name="CondEnum_Var_Step_SignalValue" xml:space="preserve">
+    <value>引用步骤 → 信号内容</value>
+  </data>
+  <data name="CondEnum_Var_Step_UserInputField" xml:space="preserve">
+    <value>引用步骤 → 用户输入字段</value>
+  </data>
+  <data name="CondEnum_Op_Equal" xml:space="preserve">
+    <value>等于 (==)</value>
+  </data>
+  <data name="CondEnum_Op_NotEqual" xml:space="preserve">
+    <value>不等于 (!=)</value>
+  </data>
+  <data name="CondEnum_Op_GreaterThan" xml:space="preserve">
+    <value>大于 (&gt;)</value>
+  </data>
+  <data name="CondEnum_Op_LessThan" xml:space="preserve">
+    <value>小于 (&lt;)</value>
+  </data>
+  <data name="CondEnum_Op_GreaterOrEqual" xml:space="preserve">
+    <value>大于等于 (&gt;=)</value>
+  </data>
+  <data name="CondEnum_Op_LessOrEqual" xml:space="preserve">
+    <value>小于等于 (&lt;=)</value>
+  </data>
+  <data name="CondEnum_Op_Contains" xml:space="preserve">
+    <value>包含</value>
+  </data>
+  <data name="CondEnum_Op_NotContains" xml:space="preserve">
+    <value>不包含</value>
+  </data>
+  <data name="CondEnum_Op_IsEmpty" xml:space="preserve">
+    <value>为空</value>
+  </data>
+  <data name="CondEnum_Op_IsNotEmpty" xml:space="preserve">
+    <value>不为空</value>
+  </data>
+  <data name="CondEnum_Logic_And" xml:space="preserve">
+    <value>并且 (AND)</value>
+  </data>
+  <data name="CondEnum_Logic_Or" xml:space="preserve">
+    <value>或者 (OR)</value>
+  </data>
+  <data name="CondEnum_Tip_ConstantTrue" xml:space="preserve">
+    <value>始终为真的常量值</value>
+  </data>
+  <data name="CondEnum_Tip_ConstantFalse" xml:space="preserve">
+    <value>始终为假的常量值</value>
+  </data>
+  <data name="CondEnum_Tip_Self_IsTrue" xml:space="preserve">
+    <value>当前步骤执行后是否成功（true/false）</value>
+  </data>
+  <data name="CondEnum_Tip_Self_Similarity" xml:space="preserve">
+    <value>当前步骤图像匹配的实际相似度（0~1）</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ExecutionTimeMs" xml:space="preserve">
+    <value>当前步骤执行所花费的时间（毫秒）</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ClickX" xml:space="preserve">
+    <value>当前步骤实际点击的屏幕X坐标</value>
+  </data>
+  <data name="CondEnum_Tip_Self_ClickY" xml:space="preserve">
+    <value>当前步骤实际点击的屏幕Y坐标</value>
+  </data>
+  <data name="CondEnum_Tip_Self_PopupResult" xml:space="preserve">
+    <value>当前步骤弹出框用户点击的按钮值</value>
+  </data>
+  <data name="CondEnum_Tip_Self_SignalValue" xml:space="preserve">
+    <value>当前步骤接收到的信号内容（字符串）</value>
+  </data>
+  <data name="CondEnum_Tip_Step_IsTrue" xml:space="preserve">
+    <value>指定行号步骤的执行结果（需在左侧填写行号）</value>
+  </data>
+  <data name="CondEnum_Tip_Step_Similarity" xml:space="preserve">
+    <value>指定行号步骤的图像匹配相似度</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ExecutionTimeMs" xml:space="preserve">
+    <value>指定行号步骤的执行耗时</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ClickX" xml:space="preserve">
+    <value>指定行号步骤的点击X坐标</value>
+  </data>
+  <data name="CondEnum_Tip_Step_ClickY" xml:space="preserve">
+    <value>指定行号步骤的点击Y坐标</value>
+  </data>
+  <data name="CondEnum_Tip_Step_PopupResult" xml:space="preserve">
+    <value>指定行号步骤的弹出框选择结果</value>
+  </data>
+  <data name="CondEnum_Tip_Step_SignalValue" xml:space="preserve">
+    <value>指定行号步骤接收到的信号内容</value>
+  </data>
+  <data name="Msg_StepsEmpty" xml:space="preserve">
+    <value>步骤列表不能为空</value>
+  </data>
+  <data name="Msg_PathEmpty" xml:space="preserve">
+    <value>文件路径不能为空</value>
+  </data>
+  <data name="Msg_UnknownPath" xml:space="preserve">
+    <value>(未知路径)</value>
+  </data>
+  <data name="Msg_CreateImageDirFailed" xml:space="preserve">
+    <value>创建图片目录失败：{0}（{1}）</value>
+  </data>
+  <data name="Msg_ImageSaveFailed" xml:space="preserve">
+    <value>图片落地失败：{0}（{1}）</value>
+  </data>
+  <data name="Msg_FileNotFound" xml:space="preserve">
+    <value>文件未找到: {0}</value>
+  </data>
+  <data name="Msg_PackageNoStepsJson" xml:space="preserve">
+    <value>压缩包 '{0}' 中未找到 steps.json。</value>
+  </data>
+  <data name="Msg_PackageStepsJsonInvalid" xml:space="preserve">
+    <value>压缩包 '{0}' 中的 steps.json 内容为空或格式无效。</value>
+  </data>
+  <data name="Msg_JsonFileInvalid" xml:space="preserve">
+    <value>文件 '{0}' 内容为空或格式无效，无法反序列化为步骤列表。</value>
+  </data>
+  <data name="Msg_AdminRequired" xml:space="preserve">
+    <value>需要管理员权限才能管理用户</value>
+  </data>
+  <data name="Msg_UserDeleted" xml:space="preserve">
+    <value>用户 '{0}' 已删除</value>
+  </data>
+  <data name="Msg_DeleteLastAdminFailed" xml:space="preserve">
+    <value>删除失败（可能是最后一个管理员账户）</value>
+  </data>
+  <data name="Msg_SelectUserForPassword" xml:space="preserve">
+    <value>请先选择要修改密码的用户</value>
+  </data>
+  <data name="Msg_EnterOldPassword" xml:space="preserve">
+    <value>请输入旧密码</value>
+  </data>
+  <data name="Msg_EnterNewPassword" xml:space="preserve">
+    <value>请输入新密码</value>
+  </data>
+  <data name="Msg_PasswordChanged" xml:space="preserve">
+    <value>用户 '{0}' 的密码已修改</value>
+  </data>
+  <data name="Msg_PasswordChangeFailed" xml:space="preserve">
+    <value>密码修改失败，请检查旧密码是否正确</value>
+  </data>
+  <data name="Msg_BridgeFailed" xml:space="preserve">
+    <value>桥接失败：</value>
+  </data>
+  <data name="Msg_BridgeTimeout" xml:space="preserve">
+    <value>调用超时：</value>
+  </data>
+  <data name="Msg_NoDescription" xml:space="preserve">
+    <value>(无说明)</value>
+  </data>
+  <data name="Msg_EmptyValue" xml:space="preserve">
+    <value>(空)</value>
+  </data>
+  <data name="Msg_BridgeExeNotFoundPrefix" xml:space="preserve">
+    <value>指定的桥接程序不存在：</value>
+  </data>
+  <data name="Msg_BridgeExeMissingHint" xml:space="preserve">
+    <value>找不到 AcbelBridge.exe。请先构建 AcbelBridge 工程，或设置环境变量 {0}。</value>
+  </data>
+  <data name="Msg_BridgeExeNotFound" xml:space="preserve">
+    <value>找不到桥接程序：</value>
+  </data>
+  <data name="Msg_BridgeStartFailed" xml:space="preserve">
+    <value>桥接进程启动失败</value>
+  </data>
+  <data name="Msg_BridgeWriteFailed" xml:space="preserve">
+    <value>写入桥接进程失败：</value>
+  </data>
+  <data name="Msg_BridgeNoResponse" xml:space="preserve">
+    <value>桥接进程 {0} 秒未响应（数据库不可达或 DLL 弹出对话框）；已终止该进程。</value>
+  </data>
+  <data name="Msg_BridgeExited" xml:space="preserve">
+    <value>桥接进程已退出（stderr：{0}）</value>
+  </data>
+  <data name="Msg_MainThread" xml:space="preserve">
+    <value>主线程</value>
+  </data>
+  <data name="Msg_SubThread" xml:space="preserve">
+    <value>子线程{0}</value>
+  </data>
+  <data name="Msg_SubThreadPrefix" xml:space="preserve">
+    <value>子线程</value>
+  </data>
+  <data name="Msg_DirectRead" xml:space="preserve">
+    <value>直接获取</value>
+  </data>
+  <data name="Msg_MtRangeEmpty" xml:space="preserve">
+    <value>步骤列表为空，无法解析多线程区域</value>
+  </data>
+  <data name="Msg_MtRangeStartIndex" xml:space="preserve">
+    <value>多线程开始步骤索引越界：{0}</value>
+  </data>
+  <data name="Msg_MtRangeEndMissing" xml:space="preserve">
+    <value>结束步骤不存在（可能已被删除）</value>
+  </data>
+  <data name="Msg_MtRangeEndAfterStart" xml:space="preserve">
+    <value>结束步骤必须位于多线程开始步骤之后</value>
+  </data>
+  <data name="Msg_MtRangeEndNotPaired" xml:space="preserve">
+    <value>未找到配对的「多线程区域结束」步骤</value>
+  </data>
+  <data name="Msg_ScreenshotFailed" xml:space="preserve">
+    <value>[截图失败]</value>
+  </data>
+  <data name="Msg_BurnInNoConfig" xml:space="preserve">
+    <value>未提供烧录配置</value>
+  </data>
+  <data name="Msg_BurnInNoRegion" xml:space="preserve">
+    <value>未配置截图区域</value>
+  </data>
+  <data name="Msg_BurnInEmptyCapture" xml:space="preserve">
+    <value>截屏返回空图像</value>
+  </data>
+  <data name="Msg_OpenImageTitle" xml:space="preserve">
+    <value>打开图片</value>
+  </data>
+  <data name="Msg_ImageFilter" xml:space="preserve">
+    <value>图像文件(*.jpg;*.jpeg;*.png;)|*.jpg;*.jpeg;*.png;</value>
+  </data>
+  <data name="Msg_ImageTooLarge" xml:space="preserve">
+    <value>图片不能大于 1M </value>
+  </data>
+  <data name="Msg_Tip" xml:space="preserve">
+    <value>提示</value>
+  </data>
+  <data name="Msg_SelectImage" xml:space="preserve">
+    <value>请选择图片</value>
+  </data>
+  <data name="Msg_UnnamedField" xml:space="preserve">
+    <value>(未命名字段)</value>
+  </data>
+  <data name="Msg_FieldName" xml:space="preserve">
+    <value>字段{0}</value>
   </data>
 </root>

@@ -56,8 +56,8 @@ namespace ShaoLu.Views
 
             // 应用窗口配置
             Title = step.WindowTitle;
-            Left = step.WindowX;
-            Top = step.WindowY;
+            Left = Utils.ScreenCoordinates.ToPixelX(step.WindowX, step.WindowPositionRelative);
+            Top = Utils.ScreenCoordinates.ToPixelY(step.WindowY, step.WindowPositionRelative);
             Topmost = step.AlwaysOnTop;
             if (TitleText != null)
                 TitleText.Text = step.WindowTitle;
@@ -182,6 +182,10 @@ namespace ShaoLu.Views
             var grid = new Grid { Margin = new Thickness(10, 0, 0, 0) };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            // 结果表额外展示“线程”列，用于区分主线程/子线程
+            bool showThreadColumn = item.Type == StatisticsItemType.StepExecutionResult;
+            if (showThreadColumn)
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             // 表头
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -191,6 +195,12 @@ namespace ShaoLu.Views
             Grid.SetRow(headerValue, 0); Grid.SetColumn(headerValue, 1);
             grid.Children.Add(headerStep);
             grid.Children.Add(headerValue);
+            if (showThreadColumn)
+            {
+                var headerThread = CreateCell(LanguageService.GetLocalizedString("Stats_ColThread", "Thread"), true);
+                Grid.SetRow(headerThread, 0); Grid.SetColumn(headerThread, 2);
+                grid.Children.Add(headerThread);
+            }
 
             int rowIndex = 1;
             foreach (var step in steps)
@@ -205,6 +215,12 @@ namespace ShaoLu.Views
                 Grid.SetRow(valueCell, rowIndex); Grid.SetColumn(valueCell, 1);
                 grid.Children.Add(nameCell);
                 grid.Children.Add(valueCell);
+                if (showThreadColumn)
+                {
+                    var threadCell = CreateCell(GetStepThreadText(context, step.Uid), false);
+                    Grid.SetRow(threadCell, rowIndex); Grid.SetColumn(threadCell, 2);
+                    grid.Children.Add(threadCell);
+                }
                 rowIndex++;
             }
 
@@ -254,13 +270,25 @@ namespace ShaoLu.Views
 
         private string GetValueText(StatisticsItemType type, StepExecutionContext context, Guid uid)
         {
-            return type switch
+            switch (type)
             {
-                StatisticsItemType.StepExecutionTime => context.GetStepTime(uid) >= 0 ? $"{context.GetStepTime(uid):F0} ms" : "-",
-                StatisticsItemType.StepExecutionCount => $"{context.GetStepCount(uid)}",
-                StatisticsItemType.StepExecutionResult => context.GetStepResult(uid) ?? "-",
-                _ => "-",
-            };
+                case StatisticsItemType.StepExecutionTime:
+                    double timeAll = context.GetStepTimeAll(uid);
+                    return timeAll >= 0 ? $"{timeAll:F0} ms" : "-";
+                case StatisticsItemType.StepExecutionCount:
+                    return $"{context.GetStepCountAll(uid)}";
+                case StatisticsItemType.StepExecutionResult:
+                    return context.GetStepResultAll(uid, out _) ?? "-";
+                default:
+                    return "-";
+            }
+        }
+
+        /// <summary>步骤结果来源的线程标签（主线程/子线程N），无执行记录时显示 -</summary>
+        private string GetStepThreadText(StepExecutionContext context, Guid uid)
+        {
+            var result = context.GetStepResultAll(uid, out string threadName);
+            return result == null ? "-" : (string.IsNullOrEmpty(threadName) ? "主线程" : threadName);
         }
 
         /// <summary>自动关闭到时：先停表再关闭，防止重复触发</summary>
@@ -335,6 +363,8 @@ namespace ShaoLu.Views
 
             // 清空执行上下文（步骤耗时/次数/结果、总计时）
             StepExecutionContext.Instance.Clear();
+            // 重置统计时一并清空已登记的子线程上下文
+            StepExecutionContext.ClearChildContexts();
             // 重置本统计步骤的条件计数
             _step.ResetCounters();
             // 立即刷新界面

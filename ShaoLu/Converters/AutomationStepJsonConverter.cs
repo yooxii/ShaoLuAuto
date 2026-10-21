@@ -95,12 +95,18 @@ namespace ShaoLu.Converters
                 StepType.TypeTextMore => typeof(TypeTextMoreStep),
                 StepType.TypeTextFromFile => typeof(TypeTextFromFileStep),
                 StepType.Popup => typeof(PopupStep),
+                StepType.AcbelUpload => typeof(AcbelUploadStep),
                 StepType.Empty => typeof(EmptyStep),
                 StepType.GetInput => typeof(GetInputStep),
                 StepType.MouseAction => typeof(MouseActionStep),
                 StepType.Statistics => typeof(StatisticsStep),
                 StepType.BurnInConfig => typeof(BurnInConfigStep),
                 StepType.FocusWindow => typeof(FocusWindowStep),
+                StepType.MultiThread => typeof(MultiThreadStartStep),
+                StepType.MultiThreadEnd => typeof(MultiThreadEndStep),
+                StepType.SendSignal => typeof(SendSignalStep),
+                StepType.ReceiveSignal => typeof(ReceiveSignalStep),
+                StepType.Interrupt => typeof(InterruptStep),
                 // 添加其他映射...
                 _ => throw new JsonException($"No mapping found for StepType: {stepType}"),
             };

@@ -153,6 +153,15 @@
   <data name="Picture_similarity_threshold" xml:space="preserve">
     <value>Picture similarity threshold</value>
   </data>
+  <data name="HighPrecision" xml:space="preserve">
+    <value>High-precision recognition</value>
+  </data>
+  <data name="ColorThreshold" xml:space="preserve">
+    <value>Color similarity threshold</value>
+  </data>
+  <data name="HighPrecision_Hint" xml:space="preserve">
+    <value>When checked, the match must also satisfy the color similarity threshold — use it to tell apart shapes that differ only in color</value>
+  </data>
   <data name="Preview" xml:space="preserve">
     <value>Preview</value>
   </data>
@@ -254,6 +263,9 @@
   </data>
   <data name="TextPointSource_Relative" xml:space="preserve">
     <value>Image Relative</value>
+  </data>
+  <data name="TextPointSource_ScreenRelative" xml:space="preserve">
+    <value>Screen-relative coordinates</value>
   </data>
   <data name="Input_TextPointsHint" xml:space="preserve">
     <value>Read text at each point in list order; results are joined by newlines. A relative point matches its image on screen first, then reads text at the click positions set in the image edit window.</value>
@@ -413,6 +425,39 @@
   </data>
   <data name="AddPopupStep" xml:space="preserve">
     <value>AddPopupStep</value>
+  </data>
+  <data name="AddAcbelUploadStep" xml:space="preserve">
+    <value>AddAcbelUploadStep</value>
+  </data>
+  <data name="AcbelRequiredMark" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="AcbelProgramFile" xml:space="preserve">
+    <value>Laser program file</value>
+  </data>
+  <data name="AcbelDryRun" xml:space="preserve">
+    <value>Validate only (no DB write)</value>
+  </data>
+  <data name="AcbelOptionalFields" xml:space="preserve">
+    <value>Optional fields</value>
+  </data>
+  <data name="AcbelRefSteps" xml:space="preserve">
+    <value>Reference step</value>
+  </data>
+  <data name="AcbelRefClear" xml:space="preserve">
+    <value>Clear reference</value>
+  </data>
+  <data name="AcbelRefExecutionResult" xml:space="preserve">
+    <value>Execution result</value>
+  </data>
+  <data name="AcbelRefOcrText" xml:space="preserve">
+    <value>OCR text</value>
+  </data>
+  <data name="AcbelRefDirectText" xml:space="preserve">
+    <value>Direct text</value>
+  </data>
+  <data name="AcbelUploadFailed" xml:space="preserve">
+    <value>Acbel upload failed: </value>
   </data>
   <data name="StepTrueGoto" xml:space="preserve">
     <value>TrueGoto</value>
@@ -1053,8 +1098,17 @@
   <data name="PositionMode_Absolute" xml:space="preserve">
     <value>Absolute Coordinates</value>
   </data>
+  <data name="PositionMode_Relative" xml:space="preserve">
+    <value>Screen-relative coordinates</value>
+  </data>
   <data name="PositionMode_CurrentMouse" xml:space="preserve">
     <value>Current Mouse Position</value>
+  </data>
+  <data name="Coordinate_ScreenRelative" xml:space="preserve">
+    <value>Screen-relative coordinates</value>
+  </data>
+  <data name="Coordinate_ScreenRelative_Hint" xml:space="preserve">
+    <value>When checked, the coordinate is stored and resolved as a percentage (0–100) of the primary screen size</value>
   </data>
   <data name="StatsWindowTitle" xml:space="preserve">
     <value>Window Title</value>
@@ -1100,6 +1154,9 @@
   </data>
   <data name="Stats_ColResult" xml:space="preserve">
     <value>Result</value>
+  </data>
+  <data name="Stats_ColThread" xml:space="preserve">
+    <value>Thread</value>
   </data>
   <data name="Stats_CurrentStep" xml:space="preserve">
     <value>Current Executing Step</value>
@@ -1413,43 +1470,106 @@
   <data name="NoRecentFiles" xml:space="preserve">
     <value>(None)</value>
   </data>
-  <data name="BurnIn_TemplateSaveFailed" xml:space="preserve">
-    <value>Failed to save burn-in template</value>
+  <data name="MultiThreadGroup" xml:space="preserve">
+    <value>Multi-thread</value>
   </data>
-  <data name="BurnIn_LoadMore" xml:space="preserve">
-    <value>Load more</value>
+  <data name="AddMultiThreadStep" xml:space="preserve">
+    <value>Start Multi-thread</value>
   </data>
-  <data name="MissingStepAssets" xml:space="preserve">
-    <value>Images/templates referenced by the project are missing</value>
+  <data name="AddMultiThreadEndStep" xml:space="preserve">
+    <value>End Multi-thread Region</value>
   </data>
-  <data name="Save_Failed" xml:space="preserve">
-    <value>Save failed</value>
+  <data name="AddSendSignalStep" xml:space="preserve">
+    <value>Send Signal</value>
   </data>
-  <data name="SaveMissingImages" xml:space="preserve">
-    <value>These images are missing on disk and were not packed:</value>
+  <data name="AddReceiveSignalStep" xml:space="preserve">
+    <value>Receive Signal</value>
   </data>
-  <data name="SaveWarnings" xml:space="preserve">
-    <value>Problems occurred while copying images to the working directory:</value>
+  <data name="AddInterruptStep" xml:space="preserve">
+    <value>Interrupt</value>
   </data>
-  <data name="StopBeforeClose" xml:space="preserve">
-    <value>Automation is running. Stop it before closing the window.</value>
+  <data name="MT_ThreadCount" xml:space="preserve">
+    <value>Thread Count</value>
   </data>
-  <data name="StopBeforeFileOperation" xml:space="preserve">
-    <value>Automation is running. Stop it before creating or opening a project.</value>
+  <data name="MT_ThreadCountHint" xml:space="preserve">
+    <value>Each time this step is reached a new thread is created, up to this many threads. Once the limit is reached no more threads are created (every thread runs the same region).</value>
   </data>
-  <data name="TypeTextFromFile_ContentsFinished" xml:space="preserve">
-    <value>{0} contents are finished.</value>
+  <data name="MT_RangeMode" xml:space="preserve">
+    <value>Region Mode</value>
   </data>
-  <data name="UnsavedChangesPrompt" xml:space="preserve">
-    <value>The current project has unsaved changes. Discard them?</value>
+  <data name="MT_RangeMode_ByLineNo" xml:space="preserve">
+    <value>By end step</value>
   </data>
-  <data name="UserDoc" xml:space="preserve">
-    <value>User guide</value>
+  <data name="MT_RangeMode_ByEndStep" xml:space="preserve">
+    <value>By "End Multi-thread Region" step</value>
   </data>
-  <data name="ClickIntervalHint" xml:space="preserve">
-    <value>Click interval (s)</value>
+  <data name="MT_RangeEnd" xml:space="preserve">
+    <value>End Step</value>
   </data>
-  <data name="RequireAdminPermission" xml:space="preserve">
-    <value>Administrator permission is required to manage users.</value>
+  <data name="MT_RangeEnd_ToEnd" xml:space="preserve">
+    <value>To the end of the script</value>
+  </data>
+  <data name="MT_EndHint" xml:space="preserve">
+    <value>Region end marker: pairs with a "Start Multi-thread" step. The steps between the two are executed by the child thread, while the main thread skips the region and continues.</value>
+  </data>
+  <data name="Signal_Name" xml:space="preserve">
+    <value>Signal Name</value>
+  </data>
+  <data name="Signal_Kind" xml:space="preserve">
+    <value>Signal Type</value>
+  </data>
+  <data name="Signal_Kind_Bool" xml:space="preserve">
+    <value>Boolean</value>
+  </data>
+  <data name="Signal_Kind_Int" xml:space="preserve">
+    <value>Integer</value>
+  </data>
+  <data name="Signal_Kind_String" xml:space="preserve">
+    <value>String</value>
+  </data>
+  <data name="Signal_Value" xml:space="preserve">
+    <value>Signal Value</value>
+  </data>
+  <data name="Signal_Blocking" xml:space="preserve">
+    <value>Blocking Wait</value>
+  </data>
+  <data name="Signal_BlockingHint" xml:space="preserve">
+    <value>When checked, waits here until the signal arrives or the timeout expires; when unchecked it reads immediately (and may find nothing).</value>
+  </data>
+  <data name="Signal_Timeout" xml:space="preserve">
+    <value>Timeout (s)</value>
+  </data>
+  <data name="Signal_Timeout_Unlimited" xml:space="preserve">
+    <value>0 means no time limit</value>
+  </data>
+  <data name="Interrupt_Target" xml:space="preserve">
+    <value>Run from this step after interrupting</value>
+  </data>
+  <data name="Interrupt_Hint" xml:space="preserve">
+    <value>Issued by child threads only: interrupts the main thread and forces it to continue from the specified step. The main thread records a failure when it reaches this step.</value>
+  </data>
+  <data name="Msg_Signal_NameRequired" xml:space="preserve">
+    <value>Signal name cannot be empty</value>
+  </data>
+  <data name="Msg_Signal_WaitFailed" xml:space="preserve">
+    <value>Timed out or cancelled while waiting for the signal</value>
+  </data>
+  <data name="Msg_Signal_NotFound" xml:space="preserve">
+    <value>No signal received</value>
+  </data>
+  <data name="Msg_Signal_TypeMismatch" xml:space="preserve">
+    <value>Signal value type mismatch</value>
+  </data>
+  <data name="Msg_Interrupt_OnlyFromSubThread" xml:space="preserve">
+    <value>The interrupt step can only be issued by a child thread</value>
+  </data>
+  <data name="Msg_Interrupt_TargetRequired" xml:space="preserve">
+    <value>The interrupt step has no target step specified</value>
+  </data>
+  <data name="Msg_Interrupt_NotRunning" xml:space="preserve">
+    <value>The interrupt step can only be issued while an automation run is in progress</value>
+  </data>
+  <data name="MultiThreadRegionCollapse_ToolTip" xml:space="preserve">
+    <value>Collapse / expand this multi-thread region (display only)</value>
   </data>
 </root>

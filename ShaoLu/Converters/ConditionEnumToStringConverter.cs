@@ -40,6 +40,10 @@ namespace ShaoLu.Converters
                 return ConvertMouseActionType(actionType);
             if (value is TextPointSource pointSource)
                 return ConvertTextPointSource(pointSource);
+            if (value is MultiThreadRangeMode rangeMode)
+                return ConvertMultiThreadRangeMode(rangeMode);
+            if (value is SignalValueKind signalKind)
+                return ConvertSignalValueKind(signalKind);
             return value?.ToString() ?? string.Empty;
         }
 
@@ -66,6 +70,7 @@ namespace ShaoLu.Converters
             ConditionVariable.Self_ClickY => "本步骤 → 点击Y坐标",
             ConditionVariable.Self_OCRText => LanguageService.GetLocalizedString("ConditionVariable_Self_Text"),
             ConditionVariable.Self_PopupResult => "本步骤 → 弹窗选择结果",
+            ConditionVariable.Self_SignalValue => "本步骤 → 信号内容",
             ConditionVariable.Step_IsTrue => "引用步骤 → 执行结果",
             ConditionVariable.Step_Similarity => "引用步骤 → 相似度",
             ConditionVariable.Step_ExecutionTimeMs => "引用步骤 → 执行耗时(ms)",
@@ -73,6 +78,7 @@ namespace ShaoLu.Converters
             ConditionVariable.Step_ClickY => "引用步骤 → 点击Y坐标",
             ConditionVariable.Step_OCRText => LanguageService.GetLocalizedString("ConditionVariable_Step_Text"),
             ConditionVariable.Step_PopupResult => "引用步骤 → 弹窗选择结果",
+            ConditionVariable.Step_SignalValue => "引用步骤 → 信号内容",
             ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered"),
             _ => v.ToString(),
         };
@@ -141,6 +147,7 @@ namespace ShaoLu.Converters
         {
             PositionMode.Absolute => Services.LanguageService.GetLocalizedString("PositionMode_Absolute"),
             PositionMode.CurrentMouse => Services.LanguageService.GetLocalizedString("PositionMode_CurrentMouse"),
+            PositionMode.Relative => Services.LanguageService.GetLocalizedString("PositionMode_Relative"),
             _ => m.ToString(),
         };
 
@@ -184,7 +191,23 @@ namespace ShaoLu.Converters
         {
             TextPointSource.Absolute => Services.LanguageService.GetLocalizedString("TextPointSource_Absolute"),
             TextPointSource.Relative => Services.LanguageService.GetLocalizedString("TextPointSource_Relative"),
+            TextPointSource.ScreenRelative => Services.LanguageService.GetLocalizedString("TextPointSource_ScreenRelative"),
             _ => s.ToString(),
+        };
+
+        public static string ConvertMultiThreadRangeMode(MultiThreadRangeMode m) => m switch
+        {
+            MultiThreadRangeMode.ByLineNo => LanguageService.GetLocalizedString("MT_RangeMode_ByLineNo"),
+            MultiThreadRangeMode.ByEndStep => LanguageService.GetLocalizedString("MT_RangeMode_ByEndStep"),
+            _ => m.ToString(),
+        };
+
+        public static string ConvertSignalValueKind(SignalValueKind k) => k switch
+        {
+            SignalValueKind.Bool => LanguageService.GetLocalizedString("Signal_Kind_Bool"),
+            SignalValueKind.Int => LanguageService.GetLocalizedString("Signal_Kind_Int"),
+            SignalValueKind.String => LanguageService.GetLocalizedString("Signal_Kind_String"),
+            _ => k.ToString(),
         };
 
         /// <summary>
@@ -201,6 +224,7 @@ namespace ShaoLu.Converters
             ConditionVariable.Self_ClickY => "当前步骤实际点击的屏幕Y坐标",
             ConditionVariable.Self_OCRText => Services.LanguageService.GetLocalizedString("ConditionVariable_Self_Text_Tooltip"),
             ConditionVariable.Self_PopupResult => "当前步骤弹出框用户点击的按钮值",
+            ConditionVariable.Self_SignalValue => "当前步骤接收到的信号内容（字符串）",
             ConditionVariable.Step_IsTrue => "指定行号步骤的执行结果（需在左侧填写行号）",
             ConditionVariable.Step_Similarity => "指定行号步骤的图像匹配相似度",
             ConditionVariable.Step_ExecutionTimeMs => "指定行号步骤的执行耗时",
@@ -208,6 +232,7 @@ namespace ShaoLu.Converters
             ConditionVariable.Step_ClickY => "指定行号步骤的点击Y坐标",
             ConditionVariable.Step_OCRText => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Text_Tooltip"),
             ConditionVariable.Step_PopupResult => "指定行号步骤的弹出框选择结果",
+            ConditionVariable.Step_SignalValue => "指定行号步骤接收到的信号内容",
             ConditionVariable.Step_Triggered => Services.LanguageService.GetLocalizedString("ConditionVariable_Step_Triggered_Tooltip"),
             _ => string.Empty,
         };

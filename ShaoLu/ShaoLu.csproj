@@ -18,7 +18,9 @@
     <ProductName>AutoShaoLu%28自動化燒録%29</ProductName>
     <PublisherName>ORT</PublisherName>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>0.6.2.%2a</ApplicationVersion>
+    <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
+         AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
+    <ApplicationVersion>0.6.6.2620</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -142,7 +144,9 @@
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\BoolToInverseBoolConverter.cs" />
     <Compile Include="Converters\BoolToGoodBadConverter.cs" />
+    <Compile Include="Converters\RegionCollapseConverter.cs" />
     <Compile Include="Converters\SettingsTemplateSelector.cs" />
+    <Compile Include="Converters\RegionCollapseCellTemplateSelector.cs" />
     <Compile Include="Models\AutoguiModel.cs" />
     <Compile Include="Models\AutomationStepModel.cs" />
     <Compile Include="Models\ContentItem.cs" />
@@ -195,6 +199,17 @@
     <Compile Include="Services\Services.cs" />
     <Compile Include="Services\LanguageService.cs" />
     <Compile Include="Services\StepExecutionContext.cs" />
+    <Compile Include="Services\AcbelBridgeClient.cs" />
+    <Compile Include="Viewmodels\AcbelUploadStep.cs" />
+    <Compile Include="Services\SignalCenter.cs" />
+    <Compile Include="Services\MultiThreadRange.cs" />
+    <Compile Include="Services\SubThreadRunner.cs" />
+    <Compile Include="Services\StepsOrderMove.cs" />
+    <Compile Include="Services\ExecutionLogDisplay.cs" />
+    <!-- 与 AcbelBridge 共享同一份字段规范/校验源码（链接编译，规范只写一遍） -->
+    <Compile Include="..\Shared\AcbelInsertDataSpec.cs">
+      <Link>Services\AcbelInsertDataSpec.cs</Link>
+    </Compile>
     <Compile Include="Tools\ResxGenerator.cs" />
     <Compile Include="Utils\Autogui.cs" />
     <Compile Include="Converters\StepTemplateSelector.cs" />
@@ -203,6 +218,7 @@
     <Compile Include="Utils\ListBoxSelectedUidsBehavior.cs" />
     <Compile Include="Utils\RelayCommand.cs" />
     <Compile Include="Utils\RichTextHelper.cs" />
+    <Compile Include="Utils\ScreenCoordinates.cs" />
     <Compile Include="Utils\ScreenTextReader.cs" />
     <Compile Include="Utils\StepsFile.cs" />
     <Compile Include="Utils\TextHelper.cs" />
@@ -218,6 +234,7 @@
     <Compile Include="Viewmodels\StatisticsStep.cs" />
     <Compile Include="Viewmodels\BurnInConfigStep.cs" />
     <Compile Include="Viewmodels\FocusWindowStep.cs" />
+    <Compile Include="Viewmodels\MultiThreadSteps.cs" />
     <Compile Include="Viewmodels\UserManagementViewModel.cs" />
     <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />

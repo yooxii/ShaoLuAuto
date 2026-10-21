@@ -153,6 +153,15 @@
   <data name="Picture_similarity_threshold" xml:space="preserve">
     <value>相似閾值</value>
   </data>
+  <data name="HighPrecision" xml:space="preserve">
+    <value>高識別精度</value>
+  </data>
+  <data name="ColorThreshold" xml:space="preserve">
+    <value>顏色相似度閾值</value>
+  </data>
+  <data name="HighPrecision_Hint" xml:space="preserve">
+    <value>勾選後除結構相似度外還要求顏色相似度達標，適合區分形狀相同但顏色不同的畫面</value>
+  </data>
   <data name="Preview" xml:space="preserve">
     <value>預覽</value>
   </data>
@@ -254,6 +263,9 @@
   </data>
   <data name="TextPointSource_Relative" xml:space="preserve">
     <value>圖像相對定位</value>
+  </data>
+  <data name="TextPointSource_ScreenRelative" xml:space="preserve">
+    <value>螢幕相對座標</value>
   </data>
   <data name="Input_TextPointsHint" xml:space="preserve">
     <value>依清單順序在各位置取得文字，結果以換行合併；相對定位先在螢幕上匹配圖片，再依圖片編輯視窗設定的點擊點取得文字。</value>
@@ -413,6 +425,39 @@
   </data>
   <data name="AddPopupStep" xml:space="preserve">
     <value>彈出消息</value>
+  </data>
+  <data name="AddAcbelUploadStep" xml:space="preserve">
+    <value>上傳Acbel</value>
+  </data>
+  <data name="AcbelRequiredMark" xml:space="preserve">
+    <value>必填</value>
+  </data>
+  <data name="AcbelProgramFile" xml:space="preserve">
+    <value>鐳雕程式檔名</value>
+  </data>
+  <data name="AcbelDryRun" xml:space="preserve">
+    <value>僅校驗、不寫庫</value>
+  </data>
+  <data name="AcbelOptionalFields" xml:space="preserve">
+    <value>選填欄位</value>
+  </data>
+  <data name="AcbelRefSteps" xml:space="preserve">
+    <value>引用步驟</value>
+  </data>
+  <data name="AcbelRefClear" xml:space="preserve">
+    <value>清除引用</value>
+  </data>
+  <data name="AcbelRefExecutionResult" xml:space="preserve">
+    <value>執行結果</value>
+  </data>
+  <data name="AcbelRefOcrText" xml:space="preserve">
+    <value>OCR 文字</value>
+  </data>
+  <data name="AcbelRefDirectText" xml:space="preserve">
+    <value>直接取得文字</value>
+  </data>
+  <data name="AcbelUploadFailed" xml:space="preserve">
+    <value>上傳Acbel失敗：</value>
   </data>
   <data name="StepTrueGoto" xml:space="preserve">
     <value>若真則</value>
@@ -1053,8 +1098,17 @@
   <data name="PositionMode_Absolute" xml:space="preserve">
     <value>絕對座標</value>
   </data>
+  <data name="PositionMode_Relative" xml:space="preserve">
+    <value>螢幕相對座標</value>
+  </data>
   <data name="PositionMode_CurrentMouse" xml:space="preserve">
     <value>滑鼠目前位置</value>
+  </data>
+  <data name="Coordinate_ScreenRelative" xml:space="preserve">
+    <value>螢幕相對座標</value>
+  </data>
+  <data name="Coordinate_ScreenRelative_Hint" xml:space="preserve">
+    <value>勾選後該座標按佔主螢幕寬/高的百分比（0~100）儲存與換算</value>
   </data>
   <data name="StatsWindowTitle" xml:space="preserve">
     <value>視窗標題</value>
@@ -1100,6 +1154,9 @@
   </data>
   <data name="Stats_ColResult" xml:space="preserve">
     <value>結果</value>
+  </data>
+  <data name="Stats_ColThread" xml:space="preserve">
+    <value>執行緒</value>
   </data>
   <data name="Stats_CurrentStep" xml:space="preserve">
     <value>目前執行步驟</value>
@@ -1413,43 +1470,106 @@
   <data name="NoRecentFiles" xml:space="preserve">
     <value>（無）</value>
   </data>
-  <data name="BurnIn_TemplateSaveFailed" xml:space="preserve">
-    <value>儲存燒錄模板失敗</value>
+  <data name="MultiThreadGroup" xml:space="preserve">
+    <value>多執行緒</value>
   </data>
-  <data name="BurnIn_LoadMore" xml:space="preserve">
-    <value>載入更多</value>
+  <data name="AddMultiThreadStep" xml:space="preserve">
+    <value>多執行緒開始</value>
   </data>
-  <data name="MissingStepAssets" xml:space="preserve">
-    <value>專案引用的圖片/範本遺失</value>
+  <data name="AddMultiThreadEndStep" xml:space="preserve">
+    <value>多執行緒區域結束</value>
   </data>
-  <data name="Save_Failed" xml:space="preserve">
-    <value>儲存失敗</value>
+  <data name="AddSendSignalStep" xml:space="preserve">
+    <value>發出訊號</value>
   </data>
-  <data name="SaveMissingImages" xml:space="preserve">
-    <value>以下圖片在磁碟上不存在，未寫入專案封裝：</value>
+  <data name="AddReceiveSignalStep" xml:space="preserve">
+    <value>接收訊號</value>
   </data>
-  <data name="SaveWarnings" xml:space="preserve">
-    <value>圖片複製到工作目錄時發生問題：</value>
+  <data name="AddInterruptStep" xml:space="preserve">
+    <value>中斷</value>
   </data>
-  <data name="StopBeforeClose" xml:space="preserve">
-    <value>正在執行自動化，請先停止後再關閉視窗。</value>
+  <data name="MT_ThreadCount" xml:space="preserve">
+    <value>執行緒個數</value>
   </data>
-  <data name="StopBeforeFileOperation" xml:space="preserve">
-    <value>正在執行自動化，請先停止後再新建或開啟專案。</value>
+  <data name="MT_ThreadCountHint" xml:space="preserve">
+    <value>每次執行到該步驟會新建一個執行緒，最多建這麼多個；達到上限後不再新建（每個執行緒都執行同一段區域）</value>
   </data>
-  <data name="TypeTextFromFile_ContentsFinished" xml:space="preserve">
-    <value>{0} 的內容已用完。</value>
+  <data name="MT_RangeMode" xml:space="preserve">
+    <value>區域劃定方式</value>
   </data>
-  <data name="UnsavedChangesPrompt" xml:space="preserve">
-    <value>目前已開啟的專案有未儲存的變更，確定要放棄這些變更嗎？</value>
+  <data name="MT_RangeMode_ByLineNo" xml:space="preserve">
+    <value>按結束步驟選擇</value>
   </data>
-  <data name="UserDoc" xml:space="preserve">
-    <value>使用手冊</value>
+  <data name="MT_RangeMode_ByEndStep" xml:space="preserve">
+    <value>按「多執行緒區域結束」步驟</value>
   </data>
-  <data name="ClickIntervalHint" xml:space="preserve">
-    <value>點擊間隔（秒）</value>
+  <data name="MT_RangeEnd" xml:space="preserve">
+    <value>結束步驟</value>
   </data>
-  <data name="RequireAdminPermission" xml:space="preserve">
-    <value>需要管理員權限才能管理使用者。</value>
+  <data name="MT_RangeEnd_ToEnd" xml:space="preserve">
+    <value>到腳本末尾</value>
+  </data>
+  <data name="MT_EndHint" xml:space="preserve">
+    <value>區域結束標記：與「多執行緒開始」步驟配對，兩者之間的步驟由子執行緒執行，主執行緒跳過這段繼續往下</value>
+  </data>
+  <data name="Signal_Name" xml:space="preserve">
+    <value>訊號名</value>
+  </data>
+  <data name="Signal_Kind" xml:space="preserve">
+    <value>訊號類型</value>
+  </data>
+  <data name="Signal_Kind_Bool" xml:space="preserve">
+    <value>布林</value>
+  </data>
+  <data name="Signal_Kind_Int" xml:space="preserve">
+    <value>整數</value>
+  </data>
+  <data name="Signal_Kind_String" xml:space="preserve">
+    <value>字串</value>
+  </data>
+  <data name="Signal_Value" xml:space="preserve">
+    <value>訊號值</value>
+  </data>
+  <data name="Signal_Blocking" xml:space="preserve">
+    <value>阻塞等待</value>
+  </data>
+  <data name="Signal_BlockingHint" xml:space="preserve">
+    <value>勾選後在此等待，直到收到訊號或等待逾時；不勾選則立刻讀取（可能讀不到）</value>
+  </data>
+  <data name="Signal_Timeout" xml:space="preserve">
+    <value>等待逾時(s)</value>
+  </data>
+  <data name="Signal_Timeout_Unlimited" xml:space="preserve">
+    <value>0 表示不限時</value>
+  </data>
+  <data name="Interrupt_Target" xml:space="preserve">
+    <value>中斷後從該步驟開始執行</value>
+  </data>
+  <data name="Interrupt_Hint" xml:space="preserve">
+    <value>只由子執行緒發出：打斷主執行緒並強制其從指定步驟開始執行；主執行緒執行到本步驟會記失敗</value>
+  </data>
+  <data name="Msg_Signal_NameRequired" xml:space="preserve">
+    <value>訊號名不能為空</value>
+  </data>
+  <data name="Msg_Signal_WaitFailed" xml:space="preserve">
+    <value>等待訊號逾時或被取消</value>
+  </data>
+  <data name="Msg_Signal_NotFound" xml:space="preserve">
+    <value>未收到訊號</value>
+  </data>
+  <data name="Msg_Signal_TypeMismatch" xml:space="preserve">
+    <value>訊號值類型不匹配</value>
+  </data>
+  <data name="Msg_Interrupt_OnlyFromSubThread" xml:space="preserve">
+    <value>中斷步驟只能由子執行緒發出</value>
+  </data>
+  <data name="Msg_Interrupt_TargetRequired" xml:space="preserve">
+    <value>中斷步驟未指定目標步驟</value>
+  </data>
+  <data name="Msg_Interrupt_NotRunning" xml:space="preserve">
+    <value>中斷步驟只能在自動化運行中發出</value>
+  </data>
+  <data name="MultiThreadRegionCollapse_ToolTip" xml:space="preserve">
+    <value>折疊/展開該多執行緒區域（僅影響列表顯示）</value>
   </data>
 </root>

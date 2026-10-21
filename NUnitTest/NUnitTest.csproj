@@ -35,6 +35,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutomationStepTests.cs" />
+    <Compile Include="ColorMatchTests.cs" />
     <Compile Include="ConditionEvaluatorTests.cs" />
     <Compile Include="ConverterTests.cs" />
     <Compile Include="ModelTests.cs" />
@@ -54,6 +56,15 @@
     <Compile Include="StepsFileTests.cs" />
     <Compile Include="BurnInServiceTests.cs" />
     <Compile Include="RegressionTests.cs" />
+    <Compile Include="AcbelBridgeTests.cs" />
+    <Compile Include="AcbelInsertDataValidationTests.cs" />
+    <Compile Include="AcbelUploadStepTests.cs" />
+    <Compile Include="ScreenCoordinatesTests.cs" />
+    <Compile Include="MultiThreadTests.cs" />
+    <Compile Include="SubThreadRunnerTests.cs" />
+    <Compile Include="ImageThreadingTests.cs" />
+    <Compile Include="StepsOrderMoveTests.cs" />
+    <Compile Include="ExecutionLogDisplayTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FlaUI.UIA3">

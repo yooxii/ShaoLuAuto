@@ -11,24 +11,6 @@ namespace ShaoLu.Services
     /// </summary>
     public class ExecutionLogService
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
-        /// <summary>
-        /// 允许作为排序依据的列名白名单（防止把外部字符串直接拼进 SQL 排序子句）
-        /// </summary>
-        private static readonly HashSet<string> AllowedSortColumns = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "Id",
-            "StepUid",
-            "StepFileName",
-            "StepName",
-            "InputText",
-            "OCRText",
-            "ExecutedAt",
-        };
-
-        private const string DefaultSortColumn = "ExecutedAt";
-
         private static readonly Lazy<IFreeSql> _fsql = new(() =>
         {
             // 确保数据库目录存在
@@ -49,10 +31,11 @@ namespace ShaoLu.Services
             "AutoShaoLu", "execution_log.db");
 
         /// <summary>
-        /// 记录一条执行日志。
-        /// 返回 true 表示已成功落库；false 表示落库失败（已写 Warn 日志，不抛给调用方打断流程）。
+        /// 记录一条执行日志
         /// </summary>
-        public static bool Log(Guid stepUid, string stepFileName, string stepName, string inputText, string ocrText = null)
+        public static void Log(Guid stepUid, string stepFileName, string stepName, string inputText, string ocrText = null,
+            double? executionTimeMs = null, bool? isTrue = null, double? similarity = null,
+            string threadName = null, string textSource = null, string errorMessage = null)
         {
             try
             {
@@ -63,14 +46,19 @@ namespace ShaoLu.Services
                     StepName = stepName ?? string.Empty,
                     InputText = inputText ?? string.Empty,
                     OCRText = ocrText,
+                    ExecutionTimeMs = executionTimeMs,
+                    IsTrue = isTrue,
+                    Similarity = similarity,
+                    ThreadName = threadName,
+                    TextSource = textSource,
+                    ErrorMessage = errorMessage,
                     ExecutedAt = DateTime.Now
                 };
-                return Fsql.Insert(log).ExecuteAffrows() > 0;
+                Fsql.Insert(log).ExecuteAffrows();
             }
             catch (Exception ex)
             {
-                Logger.Warn(ex, "Failed to write execution log");
-                return false;
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "Failed to write execution log");
             }
         }
 
@@ -108,19 +96,18 @@ namespace ShaoLu.Services
                 query = query.Where(x => x.StepUid == stepUid.Value);
             }
 
-            // 时间范围：半开区间 [from, to)，调用方传"结束日期 + 1 天"以包含结束日当天
+            // 时间范围
             if (from.HasValue)
             {
                 query = query.Where(x => x.ExecutedAt >= from.Value);
             }
             if (to.HasValue)
             {
-                query = query.Where(x => x.ExecutedAt < to.Value);
+                query = query.Where(x => x.ExecutedAt <= to.Value);
             }
 
-            // 排序：列名必须命中白名单，否则回退默认列（不信任外部传入的字符串）
-            string sortColumn = AllowedSortColumns.Contains(orderBy ?? string.Empty) ? orderBy : DefaultSortColumn;
-            string sortExpression = descending ? $"{sortColumn} DESC" : $"{sortColumn} ASC";
+            // 排序
+            string sortExpression = descending ? $"{orderBy} DESC" : $"{orderBy} ASC";
             query = query.OrderBy(sortExpression);
 
             // 分页
@@ -155,10 +142,9 @@ namespace ShaoLu.Services
             {
                 query = query.Where(x => x.ExecutedAt >= from.Value);
             }
-            // 与 Query 保持一致：半开区间 [from, to)
             if (to.HasValue)
             {
-                query = query.Where(x => x.ExecutedAt < to.Value);
+                query = query.Where(x => x.ExecutedAt <= to.Value);
             }
 
             return query.Count();
@@ -193,7 +179,7 @@ namespace ShaoLu.Services
             }
             catch (Exception ex)
             {
-                Logger.Warn(ex, "Failed to cleanup old execution logs");
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "Failed to cleanup old execution logs");
             }
         }
     }

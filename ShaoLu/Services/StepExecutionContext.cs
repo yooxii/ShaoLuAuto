@@ -1,7 +1,9 @@
 using ShaoLu.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ShaoLu.Services
 {
@@ -13,10 +15,55 @@ namespace ShaoLu.Services
         private static StepExecutionContext _instance;
         public static StepExecutionContext Instance => _instance ??= new StepExecutionContext();
 
-        private readonly Dictionary<int, StepExecutionResult> _results = new();
-        private readonly Dictionary<Guid, StepExecutionResult> _resultsByUid = new();
-        private readonly Dictionary<Guid, int> _executionCounts = new();
+        // 子线程与 1 秒刷新的统计 UI 会并发读写，故使用线程安全集合
+        private readonly ConcurrentDictionary<int, StepExecutionResult> _results = new();
+        private readonly ConcurrentDictionary<Guid, StepExecutionResult> _resultsByUid = new();
+        private readonly ConcurrentDictionary<Guid, int> _executionCounts = new();
         private readonly Stopwatch _totalStopwatch = new();
+
+        // 已登记的子线程上下文（不含单例自身）
+        private static readonly List<StepExecutionContext> _childContexts = new();
+        private static readonly object _childContextsLock = new();
+
+        /// <summary>线程标签（主线程 / 子线程N）</summary>
+        public string ThreadName { get; set; } = "主线程";
+
+        /// <summary>所有上下文：第一个是单例（主线程），其后是已登记的子线程上下文</summary>
+        public static IReadOnlyList<StepExecutionContext> AllContexts
+        {
+            get
+            {
+                var list = new List<StepExecutionContext> { Instance };
+                lock (_childContextsLock)
+                {
+                    list.AddRange(_childContexts);
+                }
+                return list;
+            }
+        }
+
+        /// <summary>登记子线程上下文并标注线程名（供统计面板聚合展示）</summary>
+        public static void RegisterContext(StepExecutionContext ctx, string threadName)
+        {
+            if (ctx == null || ReferenceEquals(ctx, Instance))
+                return;
+
+            ctx.ThreadName = string.IsNullOrWhiteSpace(threadName) ? "子线程" : threadName;
+            lock (_childContextsLock)
+            {
+                if (!_childContexts.Contains(ctx))
+                    _childContexts.Add(ctx);
+            }
+        }
+
+        /// <summary>清空已登记的子线程上下文（新一轮执行开始或统计重置时调用）</summary>
+        public static void ClearChildContexts()
+        {
+            lock (_childContextsLock)
+            {
+                _childContexts.Clear();
+            }
+        }
 
         /// <summary>总执行时间(ms)</summary>
         public double TotalElapsedMs => _totalStopwatch.ElapsedMilliseconds;
@@ -47,8 +94,7 @@ namespace ShaoLu.Services
         public void SetResultByUid(Guid uid, StepExecutionResult result)
         {
             _resultsByUid[uid] = result;
-            _executionCounts.TryGetValue(uid, out int count);
-            _executionCounts[uid] = count + 1;
+            _executionCounts.AddOrUpdate(uid, 1, (key, count) => count + 1);
         }
 
         /// <summary>
@@ -102,6 +148,81 @@ namespace ShaoLu.Services
             return r.IsTrue ? "True" : "False";
         }
 
+        /// <summary>跨所有上下文取最近一次写入的执行结果，并输出其所在上下文的线程标签</summary>
+        private static StepExecutionResult FindLatestResult(Guid uid, out string threadName)
+        {
+            StepExecutionResult latest = null;
+            threadName = null;
+
+            foreach (var ctx in AllContexts)
+            {
+                if (ctx == null || !ctx._resultsByUid.TryGetValue(uid, out var r) || r == null)
+                    continue;
+
+                if (latest == null || r.ExecutedAt >= latest.ExecutedAt)
+                {
+                    latest = r;
+                    threadName = ctx.ThreadName;
+                }
+            }
+
+            return latest;
+        }
+
+        /// <summary>所有上下文中该步骤最近一次写入的耗时（毫秒），无数据返回 -1</summary>
+        public double GetStepTimeAll(Guid uid)
+        {
+            var latest = FindLatestResult(uid, out _);
+            return latest != null ? latest.ExecutionTimeMs : -1;
+        }
+
+        /// <summary>所有上下文中该步骤的执行次数之和</summary>
+        public int GetStepCountAll(Guid uid)
+        {
+            int total = 0;
+            foreach (var ctx in AllContexts)
+            {
+                if (ctx == null || !ctx._executionCounts.TryGetValue(uid, out int count))
+                    continue;
+                total += count;
+            }
+            return total;
+        }
+
+        /// <summary>所有上下文中最近一次写入的步骤结果描述，并输出该结果来源的线程标签</summary>
+        public string GetStepResultAll(Guid uid, out string threadName)
+        {
+            var latest = FindLatestResult(uid, out threadName);
+            if (latest == null)
+                return null;
+            if (!string.IsNullOrEmpty(latest.OCRText))
+                return latest.OCRText;
+            if (!string.IsNullOrEmpty(latest.PopupResult))
+                return latest.PopupResult;
+            return latest.IsTrue ? "True" : "False";
+        }
+
+        /// <summary>
+        /// 取所有上下文中最近一次执行的结果对象（按 ExecutedAt 取最新），并输出该结果来源的线程标签。
+        /// 供需要同时读取 IsTrue / OCRText / TextSource 的调用方使用；取不到时返回 false，不抛异常。
+        /// </summary>
+        public static bool TryGetLatestResult(Guid uid, out StepExecutionResult result, out string threadName)
+        {
+            result = null;
+            threadName = null;
+            if (uid == Guid.Empty)
+                return false;
+            try
+            {
+                result = FindLatestResult(uid, out threadName);
+            }
+            catch (Exception)
+            {
+                result = null;
+            }
+            return result != null;
+        }
+
         /// <summary>
         /// 解析条件变量的实际值
         /// </summary>
@@ -134,6 +255,8 @@ namespace ShaoLu.Services
                     return currentResult?.OCRText ?? string.Empty;
                 case ConditionVariable.Self_PopupResult:
                     return currentResult?.PopupResult ?? string.Empty;
+                case ConditionVariable.Self_SignalValue:
+                    return currentResult?.SignalValue ?? string.Empty;
 
                 // 引用其他步骤（通过 Uid 查找）
                 case ConditionVariable.Step_IsTrue:
@@ -150,6 +273,8 @@ namespace ShaoLu.Services
                     return GetResultByUid(stepUid)?.OCRText ?? string.Empty;
                 case ConditionVariable.Step_PopupResult:
                     return GetResultByUid(stepUid)?.PopupResult ?? string.Empty;
+                case ConditionVariable.Step_SignalValue:
+                    return GetResultByUid(stepUid)?.SignalValue ?? string.Empty;
                 case ConditionVariable.Step_Triggered:
                     // 仅当引用步骤是刚刚执行完成的步骤时为 true（每次步骤执行后只成立一次）
                     return stepUid.HasValue && CurrentStepUid.HasValue && stepUid.Value == CurrentStepUid.Value;

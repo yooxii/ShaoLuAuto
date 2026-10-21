@@ -306,6 +306,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 IsTrue = !string.IsNullOrWhiteSpace(text),
                 OCRText = text,
+                // 直接读取屏幕文本与 OCR 识别区分开，供执行记录窗口标注
+                TextSource = InputMode == GetInputMode.ScreenText ? "Direct" : "OCR",
                 ExecutedAt = DateTime.Now,
             };
 
@@ -392,8 +394,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var point = WindowSelectPoint.ShowAndSelect();
             if (point.HasValue)
             {
-                item.X = point.Value.X;
-                item.Y = point.Value.Y;
+                // 屏幕相对坐标模式存百分比，绝对坐标模式存逻辑像素
+                bool relative = item.Source == TextPointSource.ScreenRelative;
+                item.X = Utils.ScreenCoordinates.ConvertX(point.Value.X, false, relative);
+                item.Y = Utils.ScreenCoordinates.ConvertY(point.Value.Y, false, relative);
             }
         }
 
@@ -528,8 +532,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         /// <summary>
-        /// 按 TextPoints 顺序逐点获取文本：绝对坐标直接读取；相对定位先匹配图像再按偏移读取。结果以换行合并。
-        /// 相对定位图像未找到时抛出异常。
+        /// 按 TextPoints 顺序逐点获取文本：绝对坐标直接读取；屏幕相对坐标先按百分比换算为逻辑像素；图像相对定位先匹配图像再按偏移读取。结果以换行合并。
+        /// 图像相对定位未找到时抛出异常。
         /// </summary>
         private async Task<string> ReadScreenTextsAsync(CancellationToken cancellationToken)
         {
@@ -541,16 +545,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (item.Source == TextPointSource.Absolute)
+                if (item.Source == TextPointSource.Absolute || item.Source == TextPointSource.ScreenRelative)
                 {
+                    // 屏幕相对坐标先按百分比换算为逻辑像素，再统一乘 DPI 缩放得到物理像素
+                    bool relative = item.Source == TextPointSource.ScreenRelative;
+                    double logicalX = Utils.ScreenCoordinates.ToPixelX(item.X, relative);
+                    double logicalY = Utils.ScreenCoordinates.ToPixelY(item.Y, relative);
                     string text = await Task.Run(
-                        () => Utils.ScreenTextReader.ReadTextAtPoint(item.X * dpiX, item.Y * dpiY),
+                        () => Utils.ScreenTextReader.ReadTextAtPoint(logicalX * dpiX, logicalY * dpiY),
                         cancellationToken);
                     results.Add(text);
                     continue;
                 }
 
-                // 相对定位：匹配裁剪图后按点击点偏移读取（物理像素）
+                // 图像相对定位：匹配裁剪图后按点击点偏移读取（物理像素）
                 string fullPath = item.CroppedImageFullPath;
                 if (string.IsNullOrEmpty(fullPath) || !File.Exists(fullPath))
                     throw new Exception(LanguageService.GetLocalizedString("No_Cropimage_Warning", "No Croped picture"));

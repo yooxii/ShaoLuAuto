@@ -16,6 +16,8 @@ namespace ShaoLu.Models
         Absolute,
         /// <summary>图像相对定位：先在屏幕上匹配裁剪图，再按点击位置偏移取文本</summary>
         Relative,
+        /// <summary>屏幕相对坐标：横/纵坐标占屏幕宽度/高度的百分比</summary>
+        ScreenRelative,
     }
 
     /// <summary>
@@ -35,13 +37,29 @@ namespace ShaoLu.Models
         private List<Point> _clickOffsets = new();
         private double _similarityThreshold = 0.85;
 
-        /// <summary>定位方式</summary>
-        public TextPointSource Source { get => _source; set => SetProperty(ref _source, value); }
+        /// <summary>定位方式（绝对坐标与屏幕相对坐标之间切换时自动换算坐标单位）</summary>
+        public TextPointSource Source
+        {
+            get => _source;
+            set
+            {
+                var old = _source;
+                if (!SetProperty(ref _source, value)) return;
 
-        /// <summary>绝对坐标 X（逻辑像素，仅 Absolute 有效）</summary>
+                // 图像相对定位不占用 X/Y，仅"绝对坐标 ↔ 屏幕相对坐标"之间换算
+                bool fromRelative = old == TextPointSource.ScreenRelative;
+                bool toRelative = value == TextPointSource.ScreenRelative;
+                if (fromRelative == toRelative) return;
+
+                X = Utils.ScreenCoordinates.ConvertX(X, fromRelative, toRelative);
+                Y = Utils.ScreenCoordinates.ConvertY(Y, fromRelative, toRelative);
+            }
+        }
+
+        /// <summary>坐标 X（Absolute 模式为逻辑像素，ScreenRelative 模式为占屏幕宽度的百分比）</summary>
         public double X { get => _x; set { if (SetProperty(ref _x, value)) OnPropertyChanged(nameof(Summary)); } }
 
-        /// <summary>绝对坐标 Y（逻辑像素，仅 Absolute 有效）</summary>
+        /// <summary>坐标 Y（Absolute 模式为逻辑像素，ScreenRelative 模式为占屏幕高度的百分比）</summary>
         public double Y { get => _y; set { if (SetProperty(ref _y, value)) OnPropertyChanged(nameof(Summary)); } }
 
         /// <summary>原图绝对路径（仅记录，不打包）</summary>
@@ -61,7 +79,7 @@ namespace ShaoLu.Models
 
         /// <summary>所有定位方式（供 ComboBox 绑定）</summary>
         [JsonIgnore]
-        public List<TextPointSource> Sources { get; } = new() { TextPointSource.Absolute, TextPointSource.Relative };
+        public List<TextPointSource> Sources { get; } = new() { TextPointSource.Absolute, TextPointSource.ScreenRelative, TextPointSource.Relative };
 
         /// <summary>运行时从工作目录解析的裁剪图完整路径</summary>
         [JsonIgnore]
@@ -104,6 +122,12 @@ namespace ShaoLu.Models
                     return X == 0 && Y == 0
                         ? LanguageService.GetLocalizedString("OCR_NoRegion", "未选择位置")
                         : $"X:{X:F0}, Y:{Y:F0}";
+                }
+                if (Source == TextPointSource.ScreenRelative)
+                {
+                    return X == 0 && Y == 0
+                        ? LanguageService.GetLocalizedString("OCR_NoRegion", "未选择位置")
+                        : $"X:{X:F0}%, Y:{Y:F0}%";
                 }
                 return string.IsNullOrEmpty(CroppedImageName)
                     ? LanguageService.GetLocalizedString("No_img_Warning", "No picture selected")

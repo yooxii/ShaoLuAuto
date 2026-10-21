@@ -1068,6 +1068,15 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Color similarity threshold 的本地化字符串。
+        /// </summary>
+        public static string ColorThreshold {
+            get {
+                return ResourceManager.GetString("ColorThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Condition 的本地化字符串。
         /// </summary>
         public static string Condition {
@@ -1904,6 +1913,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 High-precision recognition 的本地化字符串。
+        /// </summary>
+        public static string HighPrecision {
+            get {
+                return ResourceManager.GetString("HighPrecision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 When checked, the match must also satisfy the color similarity threshold — use it to tell apart shapes that differ only in color 的本地化字符串。
+        /// </summary>
+        public static string HighPrecision_Hint {
+            get {
+                return ResourceManager.GetString("HighPrecision_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Image File 的本地化字符串。
         /// </summary>
         public static string Image_File {
@@ -2107,6 +2134,15 @@ namespace ShaoLu.Resources {
         public static string MouseAction_Drag {
             get {
                 return ResourceManager.GetString("MouseAction_Drag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Screen-relative coordinates 的本地化字符串。
+        /// </summary>
+        public static string TextPointSource_ScreenRelative {
+            get {
+                return ResourceManager.GetString("TextPointSource_ScreenRelative", resourceCulture);
             }
         }
         
@@ -2741,6 +2777,24 @@ namespace ShaoLu.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Screen-relative coordinates 的本地化字符串。
+        /// </summary>
+        public static string Coordinate_ScreenRelative {
+            get {
+                return ResourceManager.GetString("Coordinate_ScreenRelative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 When checked, the coordinate is stored and resolved as a percentage (0–100) of the primary screen size 的本地化字符串。
+        /// </summary>
+        public static string Coordinate_ScreenRelative_Hint {
+            get {
+                return ResourceManager.GetString("Coordinate_ScreenRelative_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Position 的本地化字符串。
         /// </summary>
         public static string PositionMode {
@@ -2764,6 +2818,15 @@ namespace ShaoLu.Resources {
         public static string PositionMode_CurrentMouse {
             get {
                 return ResourceManager.GetString("PositionMode_CurrentMouse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Screen-relative coordinates 的本地化字符串。
+        /// </summary>
+        public static string PositionMode_Relative {
+            get {
+                return ResourceManager.GetString("PositionMode_Relative", resourceCulture);
             }
         }
         
@@ -3881,5 +3944,312 @@ namespace ShaoLu.Resources {
                 return ResourceManager.GetString("Yes", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   查找类似 Multi-thread 的本地化字符串。
+        /// </summary>
+        public static string MultiThreadGroup {
+            get {
+                return ResourceManager.GetString("MultiThreadGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Start Multi-thread 的本地化字符串。
+        /// </summary>
+        public static string AddMultiThreadStep {
+            get {
+                return ResourceManager.GetString("AddMultiThreadStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 End Multi-thread Region 的本地化字符串。
+        /// </summary>
+        public static string AddMultiThreadEndStep {
+            get {
+                return ResourceManager.GetString("AddMultiThreadEndStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Send Signal 的本地化字符串。
+        /// </summary>
+        public static string AddSendSignalStep {
+            get {
+                return ResourceManager.GetString("AddSendSignalStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Receive Signal 的本地化字符串。
+        /// </summary>
+        public static string AddReceiveSignalStep {
+            get {
+                return ResourceManager.GetString("AddReceiveSignalStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Interrupt 的本地化字符串。
+        /// </summary>
+        public static string AddInterruptStep {
+            get {
+                return ResourceManager.GetString("AddInterruptStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Thread Count 的本地化字符串。
+        /// </summary>
+        public static string MT_ThreadCount {
+            get {
+                return ResourceManager.GetString("MT_ThreadCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Each time this step is reached a new thread is created, up to this many threads. Once the limit is reached no more threads are created (every thread runs the same region). 的本地化字符串。
+        /// </summary>
+        public static string MT_ThreadCountHint {
+            get {
+                return ResourceManager.GetString("MT_ThreadCountHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Region Mode 的本地化字符串。
+        /// </summary>
+        public static string MT_RangeMode {
+            get {
+                return ResourceManager.GetString("MT_RangeMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 By end step 的本地化字符串。
+        /// </summary>
+        public static string MT_RangeMode_ByLineNo {
+            get {
+                return ResourceManager.GetString("MT_RangeMode_ByLineNo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 By "End Multi-thread Region" step 的本地化字符串。
+        /// </summary>
+        public static string MT_RangeMode_ByEndStep {
+            get {
+                return ResourceManager.GetString("MT_RangeMode_ByEndStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 End Step 的本地化字符串。
+        /// </summary>
+        public static string MT_RangeEnd {
+            get {
+                return ResourceManager.GetString("MT_RangeEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 To the end of the script 的本地化字符串。
+        /// </summary>
+        public static string MT_RangeEnd_ToEnd {
+            get {
+                return ResourceManager.GetString("MT_RangeEnd_ToEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Region end marker: pairs with a "Start Multi-thread" step. The steps between the two are executed by the child thread, while the main thread skips the region and continues. 的本地化字符串。
+        /// </summary>
+        public static string MT_EndHint {
+            get {
+                return ResourceManager.GetString("MT_EndHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Signal Name 的本地化字符串。
+        /// </summary>
+        public static string Signal_Name {
+            get {
+                return ResourceManager.GetString("Signal_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Signal Type 的本地化字符串。
+        /// </summary>
+        public static string Signal_Kind {
+            get {
+                return ResourceManager.GetString("Signal_Kind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Boolean 的本地化字符串。
+        /// </summary>
+        public static string Signal_Kind_Bool {
+            get {
+                return ResourceManager.GetString("Signal_Kind_Bool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Integer 的本地化字符串。
+        /// </summary>
+        public static string Signal_Kind_Int {
+            get {
+                return ResourceManager.GetString("Signal_Kind_Int", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 String 的本地化字符串。
+        /// </summary>
+        public static string Signal_Kind_String {
+            get {
+                return ResourceManager.GetString("Signal_Kind_String", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Signal Value 的本地化字符串。
+        /// </summary>
+        public static string Signal_Value {
+            get {
+                return ResourceManager.GetString("Signal_Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Blocking Wait 的本地化字符串。
+        /// </summary>
+        public static string Signal_Blocking {
+            get {
+                return ResourceManager.GetString("Signal_Blocking", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 When checked, waits here until the signal arrives or the timeout expires; when unchecked it reads immediately (and may find nothing). 的本地化字符串。
+        /// </summary>
+        public static string Signal_BlockingHint {
+            get {
+                return ResourceManager.GetString("Signal_BlockingHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Timeout (s) 的本地化字符串。
+        /// </summary>
+        public static string Signal_Timeout {
+            get {
+                return ResourceManager.GetString("Signal_Timeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 0 means no time limit 的本地化字符串。
+        /// </summary>
+        public static string Signal_Timeout_Unlimited {
+            get {
+                return ResourceManager.GetString("Signal_Timeout_Unlimited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Run from this step after interrupting 的本地化字符串。
+        /// </summary>
+        public static string Interrupt_Target {
+            get {
+                return ResourceManager.GetString("Interrupt_Target", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Issued by child threads only: interrupts the main thread and forces it to continue from the specified step. The main thread records a failure when it reaches this step. 的本地化字符串。
+        /// </summary>
+        public static string Interrupt_Hint {
+            get {
+                return ResourceManager.GetString("Interrupt_Hint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Signal name cannot be empty 的本地化字符串。
+        /// </summary>
+        public static string Msg_Signal_NameRequired {
+            get {
+                return ResourceManager.GetString("Msg_Signal_NameRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Timed out or cancelled while waiting for the signal 的本地化字符串。
+        /// </summary>
+        public static string Msg_Signal_WaitFailed {
+            get {
+                return ResourceManager.GetString("Msg_Signal_WaitFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 No signal received 的本地化字符串。
+        /// </summary>
+        public static string Msg_Signal_NotFound {
+            get {
+                return ResourceManager.GetString("Msg_Signal_NotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Signal value type mismatch 的本地化字符串。
+        /// </summary>
+        public static string Msg_Signal_TypeMismatch {
+            get {
+                return ResourceManager.GetString("Msg_Signal_TypeMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The interrupt step can only be issued by a child thread 的本地化字符串。
+        /// </summary>
+        public static string Msg_Interrupt_OnlyFromSubThread {
+            get {
+                return ResourceManager.GetString("Msg_Interrupt_OnlyFromSubThread", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The interrupt step has no target step specified 的本地化字符串。
+        /// </summary>
+        public static string Msg_Interrupt_TargetRequired {
+            get {
+                return ResourceManager.GetString("Msg_Interrupt_TargetRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The interrupt step can only be issued while an automation run is in progress 的本地化字符串。
+        /// </summary>
+        public static string Msg_Interrupt_NotRunning {
+            get {
+                return ResourceManager.GetString("Msg_Interrupt_NotRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Collapse / expand this multi-thread region (display only) 的本地化字符串。
+        /// </summary>
+        public static string MultiThreadRegionCollapse_ToolTip {
+            get {
+                return ResourceManager.GetString("MultiThreadRegionCollapse_ToolTip", resourceCulture);
+            }
+        }
+        
     }
 }

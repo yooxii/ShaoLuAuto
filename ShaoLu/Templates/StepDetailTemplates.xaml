@@ -7,7 +7,8 @@
                     xmlns:conv="clr-namespace:ShaoLu.Converters"
                     xmlns:models="clr-namespace:ShaoLu.Models"
                     xmlns:utils="clr-namespace:ShaoLu.Utils"
-                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:svc="clr-namespace:ShaoLu.Services">
 
     <conv:ConditionModeToVisibilityConverter x:Key="ConditionModeToVisibility"/>
     <conv:ConditionEnumToStringConverter x:Key="ConditionEnumToString"/>
@@ -259,6 +260,12 @@
                 <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
                 <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
+            <CheckBox IsChecked="{Binding HighPrecision}" Content="{lex:Loc HighPrecision}" ToolTip="{lex:Loc HighPrecision_Hint}" Margin="0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2" Visibility="{Binding HighPrecision, Converter={StaticResource BoolToVis}}">
+                <Label Content="{lex:Loc ColorThreshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
+                <Slider Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WaitTime, UpdateSourceTrigger=LostFocus}" Width="70" Precision="3" Minimum="0" Interval="0.01"/>
@@ -332,6 +339,12 @@
                 <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
                 <Slider Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <CheckBox IsChecked="{Binding HighPrecision}" Content="{lex:Loc HighPrecision}" ToolTip="{lex:Loc HighPrecision_Hint}" Margin="0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2" Visibility="{Binding HighPrecision, Converter={StaticResource BoolToVis}}">
+                <Label Content="{lex:Loc ColorThreshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
+                <Slider Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
@@ -508,12 +521,39 @@
                 </ComboBox>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowPositionRelative}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <Label Content="{lex:Loc PopupWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
+            </StackPanel>
+            <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowPositionRelative}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc PopupWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <CheckBox IsChecked="{Binding WindowPositionRelative}" Content="{lex:Loc Coordinate_ScreenRelative}" ToolTip="{lex:Loc Coordinate_ScreenRelative_Hint}" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc PopupOpacity}" Padding="0,0,5,0" VerticalAlignment="Center"/>
@@ -655,6 +695,22 @@
                                     <wd:NumericBox Value="{Binding Y, Mode=TwoWay}" Width="65" Precision="0" Interval="1" Margin="0,0,5,0"/>
                                     <Button Content="{lex:Loc SelectPoint}" Command="{Binding DataContext.SelectTextPointCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
                                 </StackPanel>
+                                <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Source}" Value="{x:Static models:TextPointSource.ScreenRelative}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <wd:NumericBox Value="{Binding X, Mode=TwoWay}" Width="65" Precision="2" Interval="0.01" Margin="0,0,3,0"/>
+                                    <wd:NumericBox Value="{Binding Y, Mode=TwoWay}" Width="65" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                                    <Button Content="{lex:Loc SelectPoint}" Command="{Binding DataContext.SelectTextPointCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                </StackPanel>
                                 <!-- 相对定位：状态摘要 + 选图 + 编辑 -->
                                 <StackPanel Orientation="Horizontal">
                                     <StackPanel.Style>
@@ -728,6 +784,22 @@
                 <wd:NumericBox Value="{Binding TargetX, Mode=TwoWay}" Width="70" Precision="0" Margin="0,0,5,0"/>
                 <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding TargetY, Mode=TwoWay}" Width="70" Precision="0" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
+            </StackPanel>
+            <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PositionMode}" Value="Relative"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding TargetX, Mode=TwoWay}" Width="70" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding TargetY, Mode=TwoWay}" Width="70" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
                 <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectPositionCommand}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
@@ -841,12 +913,39 @@
                 <TextBox Text="{Binding WindowTitle, UpdateSourceTrigger=LostFocus}" MinWidth="120"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowPositionRelative}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <Label Content="{lex:Loc StatsWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="0" Margin="0,0,5,0"/>
                 <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectWindowPositionCommand}"/>
+            </StackPanel>
+            <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WindowPositionRelative}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc StatsWindowPos}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Label Content="X:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowX, Mode=TwoWay}" Width="60" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Label Content="Y:" Padding="0,0,3,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WindowY, Mode=TwoWay}" Width="60" Precision="2" Interval="0.01" Margin="0,0,5,0"/>
+                <Button Content="{lex:Loc SelectPoint}" Command="{Binding SelectWindowPositionCommand}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <CheckBox IsChecked="{Binding WindowPositionRelative}" Content="{lex:Loc Coordinate_ScreenRelative}" ToolTip="{lex:Loc Coordinate_ScreenRelative_Hint}" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <CheckBox IsChecked="{Binding AlwaysOnTop}" Content="{lex:Loc StatsAlwaysOnTop}" VerticalAlignment="Center"/>
@@ -953,6 +1052,12 @@
                     <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                     <wd:NumericBox Value="{Binding SimilarityThreshold}" Width="70" Minimum="0" Maximum="1" Precision="2" Interval="0.01"/>
                 </StackPanel>
+                <CheckBox IsChecked="{Binding HighPrecision}" Content="{lex:Loc HighPrecision}" ToolTip="{lex:Loc HighPrecision_Hint}" Margin="0,2"/>
+                <StackPanel Orientation="Horizontal" Margin="0,2" Visibility="{Binding HighPrecision, Converter={StaticResource BoolToVis}}">
+                    <Label Content="{lex:Loc ColorThreshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                    <wd:NumericBox Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70" Minimum="0" Maximum="1"/>
+                    <Slider Value="{Binding ColorThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="1" Width="120" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
             </StackPanel>
             <!-- 截图留痕 -->
             <CheckBox IsChecked="{Binding CaptureScreenshot}" Content="{lex:Loc BurnIn_EnableScreenshot}" Margin="0,5,0,2"/>
@@ -961,12 +1066,32 @@
                 <Label Content="{lex:Loc BurnIn_ScreenshotRegion}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <Button Content="{lex:Loc BurnIn_SelectRegion}" Command="{Binding SelectRegionCommand}" Padding="12,3"/>
                 <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Foreground="Gray">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Config.RegionRelative}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
                     <Run Text="X:"/><Run Text="{Binding Config.RegionX, Mode=OneWay, StringFormat=F0}"/>
                     <Run Text=" Y:"/><Run Text="{Binding Config.RegionY, Mode=OneWay, StringFormat=F0}"/>
                     <Run Text=" W:"/><Run Text="{Binding Config.RegionW, Mode=OneWay, StringFormat=F0}"/>
                     <Run Text=" H:"/><Run Text="{Binding Config.RegionH, Mode=OneWay, StringFormat=F0}"/>
                 </TextBlock>
             </StackPanel>
+            <!-- 屏幕相对坐标：按主屏宽/高的百分比（0~100），两位小数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2"
+                        Visibility="{Binding CaptureScreenshot, Converter={StaticResource BoolToVis}}">
+                <CheckBox IsChecked="{Binding Config.RegionRelative}" Content="{lex:Loc Coordinate_ScreenRelative}" ToolTip="{lex:Loc Coordinate_ScreenRelative_Hint}" VerticalAlignment="Center"/>
+                <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Foreground="Gray"
+                            Visibility="{Binding Config.RegionRelative, Converter={StaticResource BoolToVis}}">
+                    <Run Text="X:"/><Run Text="{Binding Config.RegionX, Mode=OneWay, StringFormat=F2}"/>
+                    <Run Text=" Y:"/><Run Text="{Binding Config.RegionY, Mode=OneWay, StringFormat=F2}"/>
+                    <Run Text=" W:"/><Run Text="{Binding Config.RegionW, Mode=OneWay, StringFormat=F2}"/>
+                    <Run Text=" H:"/><Run Text="{Binding Config.RegionH, Mode=OneWay, StringFormat=F2}"/>
+                </TextBlock>
+            </StackPanel>
+
             <StackPanel Orientation="Horizontal" Margin="0,2"
                         Visibility="{Binding CaptureScreenshot, Converter={StaticResource BoolToVis}}">
                 <Label Content="{lex:Loc BurnIn_ScreenshotDir}" Padding="0,0,5,0" VerticalAlignment="Center"/>
@@ -1010,6 +1135,309 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 多线程开始步骤 -->
+    <DataTemplate x:Key="MultiThreadStartTemplate" DataType="{x:Type AutoVM:MultiThreadStartStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc MT_ThreadCount}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding ThreadCount, Mode=TwoWay}" Width="80" Minimum="1" Precision="0"
+                               ToolTip="{lex:Loc MT_ThreadCountHint}"/>
+                <TextBlock Text="{lex:Loc MT_ThreadCountHint}" Foreground="Gray" FontSize="11" Margin="8,0,0,0"
+                           VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="260"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc MT_RangeMode}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Source={x:Static AutoVM:MultiThreadStartStep.RangeModes}}"
+                          SelectedItem="{Binding RangeMode}" MinWidth="170" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <!-- 仅「按结束步骤选择」方式需要指定结束步骤 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RangeMode}" Value="{x:Static AutoVM:MultiThreadRangeMode.ByLineNo}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc MT_RangeEnd}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding AllSteps}"
+                          SelectedValue="{Binding RangeEndUid, TargetNullValue={x:Static sys:Guid.Empty}}"
+                          SelectedValuePath="Uid"
+                          IsEditable="False"
+                          MinWidth="180" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text=" - "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Text="{lex:Loc MT_RangeEnd_ToEnd}" Foreground="Gray" FontSize="11" Margin="8,0,0,0"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 多线程区域结束步骤（纯区域标记，本身不执行动作） -->
+    <DataTemplate x:Key="MultiThreadEndTemplate" DataType="{x:Type AutoVM:MultiThreadEndStep}">
+        <StackPanel>
+            <TextBlock Text="{lex:Loc MT_EndHint}" Foreground="Gray" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 发出信号步骤 -->
+    <DataTemplate x:Key="SendSignalTemplate" DataType="{x:Type AutoVM:SendSignalStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Name}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SignalName, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Kind}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Source={x:Static AutoVM:SendSignalStep.SignalKinds}}"
+                          SelectedItem="{Binding SignalKind}" MinWidth="120" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <!-- 信号值：按信号类型切显隐 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Value}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SignalKind}" Value="{x:Static svc:SignalValueKind.Bool}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <CheckBox IsChecked="{Binding SignalBool}" Content="{lex:Loc Signal_Kind_Bool}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SignalKind}" Value="{x:Static svc:SignalValueKind.Int}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <wd:NumericBox Value="{Binding SignalInt, Mode=TwoWay}" Width="90" Precision="0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SignalKind}" Value="{x:Static svc:SignalValueKind.String}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBox Text="{Binding SignalString, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+                </StackPanel>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 接收信号步骤 -->
+    <DataTemplate x:Key="ReceiveSignalTemplate" DataType="{x:Type AutoVM:ReceiveSignalStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Name}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SignalName, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Signal_Kind}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Source={x:Static AutoVM:ReceiveSignalStep.SignalKinds}}"
+                          SelectedItem="{Binding SignalKind}" MinWidth="120" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <CheckBox IsChecked="{Binding Blocking}" Content="{lex:Loc Signal_Blocking}"
+                      ToolTip="{lex:Loc Signal_BlockingHint}" Margin="0,2"/>
+            <!-- 等待超时：仅阻塞等待时有效 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Blocking}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Label Content="{lex:Loc Signal_Timeout}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding SignalTimeout, Mode=TwoWay}" Width="80" Minimum="0" Precision="1"/>
+                <TextBlock Text="{lex:Loc Signal_Timeout_Unlimited}" Foreground="Gray" FontSize="11" Margin="8,0,0,0"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 中断步骤（仅子线程可用） -->
+    <DataTemplate x:Key="InterruptTemplate" DataType="{x:Type AutoVM:InterruptStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Interrupt_Target}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding AllSteps}"
+                          SelectedValue="{Binding InterruptTargetUid, TargetNullValue={x:Static sys:Guid.Empty}}"
+                          SelectedValuePath="Uid"
+                          IsEditable="False"
+                          MinWidth="200" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text=" - "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <TextBlock Text="{lex:Loc Interrupt_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,5" TextWrapping="Wrap"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- 上传Acbel：引用菜单样式（引用步骤 -> 步骤 -> 结果种类，以及清除引用） -->
+    <Style x:Key="AcbelRefLeafStyle" TargetType="{x:Type MenuItem}">
+        <Setter Property="Command" Value="{Binding Command}"/>
+    </Style>
+
+    <Style x:Key="AcbelRefStepStyle" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource AcbelRefLeafStyle}">
+        <Setter Property="ItemsSource" Value="{Binding Children}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AcbelRefLeafStyle}"/>
+    </Style>
+
+    <Style x:Key="AcbelRefRootStyle" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource AcbelRefLeafStyle}">
+        <Setter Property="ItemsSource" Value="{Binding Children}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AcbelRefStepStyle}"/>
+    </Style>
+
+    <!-- 上传Acbel：字段行（段名 + 固定文本输入框 / 引用标签 + ▾ 引用菜单） -->
+    <DataTemplate x:Key="AcbelUploadRowTemplate" DataType="{x:Type AutoVM:AcbelUploadRow}">
+        <Grid Margin="0,0,0,3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,4,0">
+                <TextBlock Text="{lex:Loc AcbelRequiredMark}" Foreground="#FFD32F2F" FontWeight="Bold" FontSize="11"
+                           Margin="0,0,3,0" VerticalAlignment="Center"
+                           Visibility="{Binding IsRequired, Converter={StaticResource BoolToVis}}"/>
+                <TextBlock Text="{Binding Name}" FontSize="11" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+            </StackPanel>
+            <Grid Grid.Column="1">
+                <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center">
+                    <TextBox.Style>
+                        <Style TargetType="{x:Type TextBox}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsReferenced}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                <Button Command="{Binding ClearReferenceCommand}" ToolTip="{Binding ReferenceLabel}"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                    <Button.Style>
+                        <Style TargetType="{x:Type Button}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type Button}">
+                                        <Border Background="#FFF0F6FC" BorderBrush="#FFB8CBE0" BorderThickness="1"
+                                                CornerRadius="2" Padding="4,1">
+                                            <TextBlock Text="{Binding ReferenceLabel}" Foreground="#FF1E6FB8" FontSize="11"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsReferenced}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+            <Menu Grid.Column="2" Background="Transparent" VerticalAlignment="Center" Padding="0">
+                <MenuItem Header="▾" Padding="4,1" ItemsSource="{Binding MenuNodes}"
+                          ItemContainerStyle="{StaticResource AcbelRefRootStyle}"/>
+            </Menu>
+        </Grid>
+    </DataTemplate>
+
+    <!-- 上传Acbel：ACBEL_INSERT_DATA 上传步骤 -->
+    <DataTemplate x:Key="AcbelUploadStepTemplate" DataType="{x:Type AutoVM:AcbelUploadStep}">
+        <StackPanel>
+            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <CheckBox IsChecked="{Binding DryRun}" Content="{lex:Loc AcbelDryRun}" Margin="0,0,0,5"/>
+            <TextBlock Text="{lex:Loc AcbelProgramFile}" FontWeight="Bold" Margin="0,0,0,2"/>
+            <ContentControl Content="{Binding ProgramFileRow}" ContentTemplate="{StaticResource AcbelUploadRowTemplate}"/>
+            <Separator Margin="0,5"/>
+            <ItemsControl ItemsSource="{Binding RequiredRows}" ItemTemplate="{StaticResource AcbelUploadRowTemplate}"/>
+            <Expander Margin="0,6,0,0">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{lex:Loc AcbelOptionalFields}"/>
+                        <TextBlock Text="{Binding OptionalRows.Count}" Margin="4,0,0,0"/>
+                    </StackPanel>
+                </Expander.Header>
+                <ItemsControl ItemsSource="{Binding OptionalRows}" ItemTemplate="{StaticResource AcbelUploadRowTemplate}"/>
+            </Expander>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
+        </StackPanel>
+    </DataTemplate>
+
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      EmptyStepTemplate="{StaticResource EmptyStepTemplate}"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
@@ -1018,9 +1446,15 @@
                      TypeTextMoreTemplate="{StaticResource TextStepMoreTemplate}"
                      TypeTextFromFileTemplate="{StaticResource TextStepFromFileTemplate}"
                      PopupTemplate="{StaticResource PopupStepTemplate}"
+                     AcbelUploadTemplate="{StaticResource AcbelUploadStepTemplate}"
                      GetInputTemplate="{StaticResource GetInputStepTemplate}"
                      MouseActionTemplate="{StaticResource MouseActionStepTemplate}"
                      StatisticsTemplate="{StaticResource StatisticsStepTemplate}"
                      BurnInConfigTemplate="{StaticResource BurnInConfigStepTemplate}"
-                     FocusWindowTemplate="{StaticResource FocusWindowStepTemplate}"/>
+                     FocusWindowTemplate="{StaticResource FocusWindowStepTemplate}"
+                     MultiThreadTemplate="{StaticResource MultiThreadStartTemplate}"
+                     MultiThreadEndTemplate="{StaticResource MultiThreadEndTemplate}"
+                     SendSignalTemplate="{StaticResource SendSignalTemplate}"
+                     ReceiveSignalTemplate="{StaticResource ReceiveSignalTemplate}"
+                     InterruptTemplate="{StaticResource InterruptTemplate}"/>
 </ResourceDictionary>

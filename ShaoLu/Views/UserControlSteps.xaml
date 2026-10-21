@@ -10,6 +10,8 @@
             xmlns:local="clr-namespace:ShaoLu"
             xmlns:utils="clr-namespace:ShaoLu.Utils"
             xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
+            xmlns:autovm="clr-namespace:ShaoLu.Viewmodels.AutomationStep"
+            xmlns:models="clr-namespace:ShaoLu.Models"
             xmlns:conv="clr-namespace:ShaoLu.Converters"
             d:DataContext="{d:DesignInstance Type=viewmodel:StepsViewModel}"
             mc:Ignorable="d"
@@ -19,7 +21,36 @@
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
             <conv:BoolToInverseBoolConverter x:Key="BoolToInverseBoolConverter"/>
+            <conv:RegionCollapseConverter x:Key="RegionCollapseConverter"/>
             <utils:SingletonLocator x:Key="VMLocator" />
+
+            <!-- 折叠开关模板只用于「多线程开始」行；其余步骤用空模板，避免绑定不存在的 IsRegionCollapsed 属性 -->
+            <DataTemplate x:Key="RegionCollapseToggleTemplate">
+                <ToggleButton x:Name="RegionCollapseToggle"
+                              Width="16" Height="16" Padding="0" Focusable="False"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              ToolTip="{lex:Loc MultiThreadRegionCollapse_ToolTip}"
+                              IsChecked="{Binding IsRegionCollapsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Content" Value="&#x25B8;"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Type}" Value="{x:Static models:StepType.MultiThread}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Content" Value="&#x25BE;"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
+            </DataTemplate>
+            <DataTemplate x:Key="RegionCollapseEmptyTemplate"/>
+            <conv:RegionCollapseCellTemplateSelector x:Key="RegionCollapseCellTemplateSelector"
+                                                     ToggleTemplate="{StaticResource RegionCollapseToggleTemplate}"
+                                                     EmptyTemplate="{StaticResource RegionCollapseEmptyTemplate}"/>
 
             <ContextMenu x:Key="DataGridMenu" DataContext="{Binding Steps, Source={StaticResource VMLocator}}">
                 <MenuItem Header="{lex:Loc Add}">
@@ -29,6 +60,7 @@
                     <MenuItem Header="{lex:Loc AddTextMoreStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeTextMore"/>
                     <MenuItem Header="{lex:Loc AddTextFromFileStep}" Command="{Binding AddStepCommand}" CommandParameter="TypeTextFromFile"/>
                     <MenuItem Header="{lex:Loc AddPopupStep}" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
+                    <MenuItem Header="{lex:Loc AddAcbelUploadStep}" Command="{Binding AddStepCommand}" CommandParameter="AcbelUpload"/>
                     <MenuItem Header="{lex:Loc AddGetInputStep}" Command="{Binding AddStepCommand}" CommandParameter="GetInput"/>
                     <MenuItem Header="{lex:Loc AddMouseActionStep}" Command="{Binding AddStepCommand}" CommandParameter="MouseAction"/>
                     <MenuItem Header="{lex:Loc AddStatisticsStep}" Command="{Binding AddStepCommand}" CommandParameter="Statistics"/>
@@ -48,8 +80,6 @@
                 <Separator/>
                 <MenuItem Header="{lex:Loc Undo}" Command="{Binding UndoCommand}"/>
                 <MenuItem Header="{lex:Loc Redo}" Command="{Binding RedoCommand}"/>
-                <MenuItem Header="{lex:Loc UndoStepEdit}" Command="{Binding UndoStepCommand}"/>
-                <MenuItem Header="{lex:Loc RedoStepEdit}" Command="{Binding RedoStepCommand}"/>
             </ContextMenu>
 
             <ResourceDictionary.MergedDictionaries>
@@ -111,7 +141,15 @@
                             <MenuItem Header="{lex:Loc AddFocusWindowStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="FocusWindow"/>
                             <MenuItem Header="{lex:Loc AddEmptyStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Empty"/>
                         </wd:SplitButton>
+                        <wd:SplitButton x:Name="AddMultiThreadStep" Content="{lex:Loc MultiThreadGroup}" CommandParameter="MultiThread" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                            <MenuItem Header="{lex:Loc AddMultiThreadStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="MultiThread"/>
+                            <MenuItem Header="{lex:Loc AddMultiThreadEndStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="MultiThreadEnd"/>
+                            <MenuItem Header="{lex:Loc AddSendSignalStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="SendSignal"/>
+                            <MenuItem Header="{lex:Loc AddReceiveSignalStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="ReceiveSignal"/>
+                            <MenuItem Header="{lex:Loc AddInterruptStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Interrupt"/>
+                        </wd:SplitButton>
                         <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
+                        <Button Content="{lex:Loc AddAcbelUploadStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="AcbelUpload"/>
                     </ToolBar>
                 </ToolBarTray>
             </ToolBarPanel>
@@ -136,6 +174,16 @@
                         <DataGrid.RowStyle>
                             <Style TargetType="DataGridRow" BasedOn="{StaticResource WD.DefaultDataGridRow}">
                                 <Style.Setters>
+                                    <!-- 折叠的多线程区域：区域内各行隐藏（多线程开始行与区域结束标记行始终显示） -->
+                                    <Setter Property="Visibility">
+                                        <Setter.Value>
+                                            <MultiBinding Converter="{StaticResource RegionCollapseConverter}">
+                                                <Binding/>
+                                                <Binding Path="ItemsSource" RelativeSource="{RelativeSource AncestorType=DataGrid}"/>
+                                                <Binding Source="{x:Static autovm:RegionCollapseNotifier.Instance}" Path="Revision"/>
+                                            </MultiBinding>
+                                        </Setter.Value>
+                                    </Setter>
                                     <Setter Property="BorderBrush" Value="Transparent"/>
                                     <Setter Property="BorderThickness" Value="1"/>
                                 </Style.Setters>
@@ -152,6 +200,9 @@
                             </Style>
                         </DataGrid.RowStyle>
                         <DataGrid.Columns>
+                            <!-- 多线程区域折叠开关：只出现在「多线程开始」行的首列 -->
+                            <DataGridTemplateColumn Width="22" CanUserSort="False" CanUserResize="False"
+                                                    CellTemplateSelector="{StaticResource RegionCollapseCellTemplateSelector}"/>
                             <DataGridCheckBoxColumn Header="" Binding="{Binding IsNeed,UpdateSourceTrigger=PropertyChanged}"/>
                             <DataGridTextColumn Header="" Binding="{Binding LineNo}" IsReadOnly="True"/>
                             <DataGridTextColumn Header="{lex:Loc StepType}" Binding="{Binding Type}" IsReadOnly="True" CanUserSort="False"/>
@@ -165,6 +216,12 @@
                 <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
                 <GroupBox x:Name="StepDetailsPanel" Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2"
                           IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
+                <DockPanel>
+                    <!-- 撤销/恢复本步骤编辑：固定在详情顶部，不随内容滚动 -->
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,3">
+                        <Button Content="{lex:Loc Undo}" ToolTip="{lex:Loc Undo}" Command="{Binding UndoStepCommand}" Padding="10,2" Margin="0,0,3,0"/>
+                        <Button Content="{lex:Loc Redo}" ToolTip="{lex:Loc Redo}" Command="{Binding RedoStepCommand}" Padding="10,2"/>
+                    </StackPanel>
                     <!-- 当 SelectedStep 为 null 时，可以显示提示文本 -->
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch">
                         <Grid>
@@ -178,6 +235,7 @@
                             Visibility="{Binding SelectedStep, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Inverse}"/>
                         </Grid>
                     </ScrollViewer>
+                </DockPanel>
                 </GroupBox>
             </Grid>
             <Grid Grid.Row="2" Margin="3 0 3 5">

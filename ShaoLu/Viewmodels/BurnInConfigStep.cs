@@ -154,6 +154,22 @@ namespace ShaoLu.Viewmodels.AutomationStep
             set { if (Config.SimilarityThreshold != value) { Config.SimilarityThreshold = value; OnPropertyChanged(nameof(SimilarityThreshold)); } }
         }
 
+        /// <summary>高识别精度（颜色识别）代理属性</summary>
+        [JsonIgnore]
+        public bool HighPrecision
+        {
+            get => Config.HighPrecision;
+            set { if (Config.HighPrecision != value) { Config.HighPrecision = value; OnPropertyChanged(nameof(HighPrecision)); } }
+        }
+
+        /// <summary>颜色相似度阈值（代理属性）</summary>
+        [JsonIgnore]
+        public double ColorThreshold
+        {
+            get => Config.ColorThreshold;
+            set { if (Config.ColorThreshold != value) { Config.ColorThreshold = value; OnPropertyChanged(nameof(ColorThreshold)); } }
+        }
+
         /// <summary>良品判据模板缩略图</summary>
         [JsonIgnore]
         public System.Windows.Media.ImageSource GoodTemplateThumb => LoadThumb(Config.GoodTemplateName);
@@ -253,10 +269,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
             var win = new Views.WindowSelectRegion();
             if (win.ShowDialog() == true && win.SelectedRegion != Rect.Empty)
             {
-                Config.RegionX = win.SelectedRegion.X;
-                Config.RegionY = win.SelectedRegion.Y;
-                Config.RegionW = win.SelectedRegion.Width;
-                Config.RegionH = win.SelectedRegion.Height;
+                // 相对模式下存百分比，绝对模式下存逻辑像素
+                var region = win.SelectedRegion;
+                bool relative = Config.RegionRelative;
+                Config.RegionX = Utils.ScreenCoordinates.ConvertX(region.X, false, relative);
+                Config.RegionY = Utils.ScreenCoordinates.ConvertY(region.Y, false, relative);
+                Config.RegionW = Utils.ScreenCoordinates.ConvertWidth(region.Width, false, relative);
+                Config.RegionH = Utils.ScreenCoordinates.ConvertHeight(region.Height, false, relative);
                 OnPropertyChanged(nameof(Config));
             }
         }
@@ -297,22 +316,16 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }), System.Windows.Threading.DispatcherPriority.Background);
             editWindow.editImageViewModel.OnImageSaved += (img, rect, clickThumbs, ocrRect) =>
             {
-                // 模板落盘结果回报给裁剪窗口：失败时不再提示“已保存”，并由 SaveCroppedImage 弹出明确错误
-                string saveError = SaveTemplate(img, kind);
-                editWindow.editImageViewModel.ReportSaveResult(saveError == null, saveError);
+                SaveTemplate(img, kind);
             };
         }
 
-        /// <summary>
-        /// 将裁剪图保存为指定类型判据模板（{工作目录}\images\burnin_{Uid}_{kind}.png）。
-        /// 返回 null 表示落盘成功；返回非空字符串表示落盘失败的原因（交由调用方显式告警，不再静默吞掉）。
-        /// </summary>
-        private string SaveTemplate(System.Windows.Media.ImageSource imageSource, string kind)
+        /// <summary>将裁剪图保存为指定类型判据模板（{工作目录}\images\burnin_{Uid}_{kind}.png）</summary>
+        private void SaveTemplate(System.Windows.Media.ImageSource imageSource, string kind)
         {
             try
             {
-                if (!(imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource))
-                    return LanguageService.GetLocalizedString("BurnIn_TemplateSaveFailed", "Failed to save template image") + ": image is not a BitmapSource";
+                if (!(imageSource is System.Windows.Media.Imaging.BitmapSource bitmapSource)) return;
 
                 var mainVM = Utils.SingletonLocator.Main;
                 string workDir = mainVM?.StepImageWorkDir;
@@ -359,15 +372,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         OnPropertyChanged(nameof(FailTemplateThumb));
                         break;
                 }
-
-                return null;
             }
             catch (Exception ex)
             {
-                // 落盘失败不再静默吞掉：记录错误并回传原因，由裁剪窗口显式提示用户
-                NLog.LogManager.GetCurrentClassLogger().Error(ex, "SaveTemplate failed");
-                return LanguageService.GetLocalizedString("BurnIn_TemplateSaveFailed", "Failed to save template image")
-                    + ": " + ex.Message;
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "SaveTemplate failed");
             }
         }
 
@@ -453,8 +461,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 BadTemplateName = src.BadTemplateName,
                 FailTemplateName = src.FailTemplateName,
                 SimilarityThreshold = src.SimilarityThreshold,
+                HighPrecision = src.HighPrecision,
+                ColorThreshold = src.ColorThreshold,
                 CaptureScreenshot = src.CaptureScreenshot,
-                ScreenshotDir = src.ScreenshotDir,
+                RegionRelative = src.RegionRelative,
                 RegionX = src.RegionX,
                 RegionY = src.RegionY,
                 RegionW = src.RegionW,

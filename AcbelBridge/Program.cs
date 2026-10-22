@@ -304,6 +304,7 @@ namespace AcbelBridge
         private static string CallOpen()
         {
             EnsureEnvironmentReady();
+            LogNetworkCheck("open");
             string result = RunGuarded(ACBEL_DATABASE_OPEN);
             // 成功时返回库名（厂商文档：正确返回 database）；失败是 "0}…" / "2}…"
             if (!string.IsNullOrEmpty(result) && result[0] != '0' && result[0] != '2')
@@ -313,9 +314,41 @@ namespace AcbelBridge
             return result;
         }
 
+        /// <summary>
+        /// 调用 DLL 前打印一次网络/环境检查（一律走 stderr，主程序会落进日志）。
+        /// DLL 内部的「验证网络」步骤由厂商 DLL 自己输出，这里补充我们这一侧能看到的信息。
+        /// </summary>
+        private static void LogNetworkCheck(string phase)
+        {
+            try
+            {
+                var sb = new StringBuilder();
+                sb.Append("[AcbelBridge] 网络检查(" + phase + ")：time=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                try
+                {
+                    sb.Append("; networkAvailable=" + System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable());
+                    int up = 0;
+                    foreach (var nic in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+                    {
+                        if (nic.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up) up++;
+                    }
+                    sb.Append("; nicsUp=" + up);
+                }
+                catch (Exception ex)
+                {
+                    sb.Append("; networkCheckError=" + ex.Message);
+                }
+                sb.Append("; dll=" + _dllPath);
+                sb.Append("; db=" + (_database ?? "（未 open）"));
+                Console.Error.WriteLine(sb.ToString());
+            }
+            catch { }
+        }
+
         private static string CallInsert(string uploadData, string programFile)
         {
             EnsureEnvironmentReady();
+            LogNetworkCheck("insert");
             if (string.IsNullOrEmpty(_database))
                 throw new InvalidOperationException(
                     "尚未成功执行 open：ACBEL_INSERT_DATA 的第 1 个参数必须是 ACBEL_DATABASE_OPEN 返回的库名。已拒绝调用（未写库）。");

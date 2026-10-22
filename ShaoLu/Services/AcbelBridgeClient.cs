@@ -1,4 +1,4 @@
-﻿// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 //  AcbelBridgeClient —— x64 主程序侧访问 x86 桥接进程的客户端
 //
 //  背景：Reference\Acbel_Chroma_Test.dll 是 32 位原生 DLL，x64 的 ShaoLu 无法在
@@ -73,6 +73,7 @@ namespace ShaoLu.Services
         private readonly string _bridgeExe;
         private readonly int _callTimeoutSeconds;
         private readonly StringBuilder _stderr = new StringBuilder();
+        private static readonly NLog.Logger _log = NLog.LogManager.GetCurrentClassLogger();
 
         private Process _proc;
         private StreamWriter _stdin;
@@ -166,6 +167,8 @@ namespace ShaoLu.Services
                         while ((line = err.ReadLine()) != null)
                         {
                             lock (_gate) { _stderr.AppendLine(line); }
+                            // 桥接进程（含 DLL 自身的输出）一律落进程序日志，便于现场排查网络/环境问题
+                            try { _log.Warn("AcbelBridge: " + line); } catch { }
                         }
                     }
                     catch { /* 进程退出时的正常异常 */ }

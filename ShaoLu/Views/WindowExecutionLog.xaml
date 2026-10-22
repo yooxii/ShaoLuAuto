@@ -75,20 +75,24 @@
                 <DataGridTextColumn Header="{lex:Loc ExecutedAt}" 
                                     Binding="{Binding ExecutedAt, StringFormat=yyyy-MM-dd HH:mm:ss}" 
                                     Width="auto" SortMemberPath="ExecutedAt"/>
-                <DataGridTextColumn Header="{lex:Loc StepFileName}" 
-                                    Binding="{Binding StepFileName}" 
-                                    Width="auto" SortMemberPath="StepFileName"/>
                 <DataGridTextColumn Header="{lex:Loc StepName}" 
                                     Binding="{Binding StepName}" 
                                     Width="auto" SortMemberPath="StepName"/>
-                <DataGridTextColumn Header="UID" 
-                                    Binding="{Binding StepUid}" 
-                                    Width="auto" SortMemberPath="StepUid"/>
                 <DataGridTemplateColumn Header="{lex:Loc Stats_ColResult}" SortMemberPath="InputText" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding ResultDisplay, Converter={StaticResource TruncateText}}"
                                        Tag="{Binding ResultDisplay}"
+                                       ToolTip="{lex:Loc ClickToPreview}"
+                                       MouseLeftButtonUp="LogText_Click" Cursor="Hand"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{lex:Loc Stats_ColDetails}" SortMemberPath="Details" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Details, Converter={StaticResource TruncateText}}"
+                                       Tag="{Binding Details}"
                                        ToolTip="{lex:Loc ClickToPreview}"
                                        MouseLeftButtonUp="LogText_Click" Cursor="Hand"/>
                         </DataTemplate>

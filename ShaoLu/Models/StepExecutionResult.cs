@@ -53,6 +53,11 @@ namespace ShaoLu.Models
         public string ErrorMessage { get; set; }
 
         /// <summary>
+        /// 执行细节（识别耗时、重试次数、点击坐标等，仅在步骤开启「更多细节」时生成并记录）
+        /// </summary>
+        public string Details { get; set; }
+
+        /// <summary>
         /// 执行时间
         /// </summary>
         public DateTime ExecutedAt { get; set; } = DateTime.Now;

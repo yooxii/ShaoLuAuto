@@ -30,6 +30,7 @@ namespace ShaoLu.Services
             "ThreadName",
             "TextSource",
             "ErrorMessage",
+            "Details",
             "ExecutedAt",
         };
 
@@ -50,6 +51,65 @@ namespace ShaoLu.Services
 
         private static IFreeSql Fsql => _fsql.Value;
 
+        private static readonly HashSet<string> SyncedTables = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly object TableSyncGate = new();
+
+        /// <summary>
+        /// 按步骤文件名派生分表名：ASCII 字母数字保留，其余转下划线，再附 8 位哈希防碰撞。
+        /// </summary>
+        public static string TableNameFor(string stepFileName)
+        {
+            string name = string.IsNullOrWhiteSpace(stepFileName) ? "unsaved" : stepFileName;
+            var sb = new System.Text.StringBuilder("StepLog_");
+            foreach (char c in name)
+                sb.Append(c < 128 && char.IsLetterOrDigit(c) ? c : '_');
+            string safe = sb.ToString();
+            if (safe.Length > 48) safe = safe.Substring(0, 48);
+            using (var md5 = System.Security.Cryptography.MD5.Create())
+            {
+                var hash = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(name));
+                safe += "_" + BitConverter.ToString(hash).Replace("-", string.Empty).Substring(0, 8);
+            }
+            return safe;
+        }
+
+        /// <summary>取（必要时创建）该文件对应的分表名。</summary>
+        private static string EnsureTable(string stepFileName)
+        {
+            string table = TableNameFor(stepFileName);
+            lock (TableSyncGate)
+            {
+                if (!SyncedTables.Contains(table))
+                {
+                    Fsql.CodeFirst.SyncStructure(typeof(StepExecutionLog), table);
+                    SyncedTables.Add(table);
+                }
+            }
+            return table;
+        }
+
+        private static bool TableExists(string table)
+        {
+            try { return Fsql.DbFirst.ExistsTable(table); }
+            catch { return false; }
+        }
+
+        /// <summary>所有日志表（主表 + 分表），供筛选/清理遍历使用。</summary>
+        private static List<string> LogTables()
+        {
+            var tables = new List<string> { "StepExecutionLog" };
+            try
+            {
+                foreach (var info in Fsql.DbFirst.GetTablesByDatabase())
+                {
+                    if (info?.Name != null && info.Name.StartsWith("StepLog_", StringComparison.OrdinalIgnoreCase))
+                        tables.Add(info.Name);
+                }
+            }
+            catch { }
+            return tables;
+        }
+
         private static string DbPath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "AutoShaoLu", "execution_log.db");
@@ -60,7 +120,7 @@ namespace ShaoLu.Services
         /// </summary>
         public static bool Log(Guid stepUid, string stepFileName, string stepName, string inputText, string ocrText = null,
             double? executionTimeMs = null, bool? isTrue = null, double? similarity = null,
-            string threadName = null, string textSource = null, string errorMessage = null)
+            string threadName = null, string textSource = null, string errorMessage = null, string details = null)
         {
             try
             {
@@ -77,15 +137,56 @@ namespace ShaoLu.Services
                     ThreadName = threadName,
                     TextSource = textSource,
                     ErrorMessage = errorMessage,
+                    Details = details,
                     ExecutedAt = DateTime.Now
                 };
-                return Fsql.Insert(log).ExecuteAffrows() > 0;
+                // 按步骤文件分表保存，单个文件的历史再长也不会拖慢其他文件的查询
+                string table = EnsureTable(log.StepFileName);
+                bool ok = Fsql.Insert(log).AsTable(old => table).ExecuteAffrows() > 0;
+                if (ok) NotifyLogWritten(log);
+                return ok;
             }
             catch (Exception ex)
             {
                 Logger.Warn(ex, "Failed to write execution log");
+                NotifyWriteFailure(ex);
                 return false;
             }
+        }
+
+        private static int _writeFailureNotified;
+
+        /// <summary>写入成功后触发（执行记录窗口据此实时刷新）。</summary>
+        public static event Action<StepExecutionLog> LogWritten;
+
+        private static void NotifyLogWritten(StepExecutionLog log)
+        {
+            try { LogWritten?.Invoke(log); } catch { }
+        }
+
+        /// <summary>每次运行开始时重置「写入失败已提示」标记，保证每次运行最多提示一次。</summary>
+        public static void ResetWriteFailureNotify()
+        {
+            System.Threading.Interlocked.Exchange(ref _writeFailureNotified, 0);
+        }
+
+        /// <summary>执行记录写不进数据库时弹一次警告（每次运行只弹一次，避免刷屏）。</summary>
+        private static void NotifyWriteFailure(Exception ex)
+        {
+            if (System.Threading.Interlocked.Exchange(ref _writeFailureNotified, 1) == 1) return;
+            try
+            {
+                var dispatcher = System.Windows.Application.Current?.Dispatcher;
+                if (dispatcher == null) return;
+                string title = LanguageService.GetLocalizedString("ExecLog_WriteFailedTitle", "执行记录写入失败");
+                string body = string.Format(
+                    LanguageService.GetLocalizedString("ExecLog_WriteFailedBody",
+                        "执行记录无法写入数据库，本次运行的记录会丢失。\n\n原因：{0}"),
+                    ex == null ? string.Empty : ex.Message);
+                dispatcher.BeginInvoke(new Action(() => WPFDevelopers.Controls.MessageBox.Show(
+                    body, title, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning)));
+            }
+            catch { }
         }
 
         /// <summary>
@@ -102,7 +203,16 @@ namespace ShaoLu.Services
             int page = 1,
             int pageSize = 100)
         {
-            var query = Fsql.Select<StepExecutionLog>();
+            // 按步骤文件分表：优先查该文件对应的分表，分表不存在时回退主表（历史数据）
+            string logTable = null;
+            if (!string.IsNullOrWhiteSpace(stepFileName))
+            {
+                string candidate = TableNameFor(stepFileName);
+                if (TableExists(candidate)) logTable = candidate;
+            }
+            var query = logTable == null
+                ? Fsql.Select<StepExecutionLog>()
+                : Fsql.Select<StepExecutionLog>().AsTable((t, o) => logTable);
 
             // 关键字搜索（匹配 InputText 或 StepName）
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -151,7 +261,15 @@ namespace ShaoLu.Services
             DateTime? from = null,
             DateTime? to = null)
         {
-            var query = Fsql.Select<StepExecutionLog>();
+            string logTable = null;
+            if (!string.IsNullOrWhiteSpace(stepFileName))
+            {
+                string candidate = TableNameFor(stepFileName);
+                if (TableExists(candidate)) logTable = candidate;
+            }
+            var query = logTable == null
+                ? Fsql.Select<StepExecutionLog>()
+                : Fsql.Select<StepExecutionLog>().AsTable((t, o) => logTable);
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -183,12 +301,20 @@ namespace ShaoLu.Services
         /// </summary>
         public static List<string> GetDistinctFileNames()
         {
-            return Fsql.Select<StepExecutionLog>()
-                .Distinct()
-                .ToList(x => x.StepFileName)
-                .Where(x => !string.IsNullOrEmpty(x))
-                .OrderBy(x => x)
-                .ToList();
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var table in LogTables())
+            {
+                try
+                {
+                    var list = table == "StepExecutionLog"
+                        ? Fsql.Select<StepExecutionLog>().Distinct().ToList(x => x.StepFileName)
+                        : Fsql.Select<StepExecutionLog>().AsTable((t, o) => table).Distinct().ToList(x => x.StepFileName);
+                    foreach (var n in list)
+                        if (!string.IsNullOrEmpty(n)) names.Add(n);
+                }
+                catch { }
+            }
+            return names.OrderBy(x => x).ToList();
         }
 
         /// <summary>
@@ -201,9 +327,21 @@ namespace ShaoLu.Services
             try
             {
                 var cutoff = DateTime.Now.AddDays(-retentionDays);
-                Fsql.Delete<StepExecutionLog>()
-                    .Where(x => x.ExecutedAt < cutoff)
-                    .ExecuteAffrows();
+                // 主表 + 各步骤文件分表都要清理，否则分表会无限增长
+                foreach (var table in LogTables())
+                {
+                    try
+                    {
+                        if (table == "StepExecutionLog")
+                            Fsql.Delete<StepExecutionLog>().Where(x => x.ExecutedAt < cutoff).ExecuteAffrows();
+                        else
+                            Fsql.Delete<StepExecutionLog>().AsTable(old => table).Where(x => x.ExecutedAt < cutoff).ExecuteAffrows();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warn(ex, "Failed to cleanup table " + table);
+                    }
+                }
             }
             catch (Exception ex)
             {

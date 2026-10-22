@@ -1,4 +1,4 @@
-﻿using ShaoLu.Converters;
+using ShaoLu.Converters;
 using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
@@ -253,41 +253,77 @@ namespace ShaoLu.Utils
             var missing = new List<string>();
             if (steps == null || string.IsNullOrEmpty(workDir)) return missing;
 
-            foreach (var step in steps)
+            for (int i = 0; i < steps.Count; i++)
             {
+                var step = steps[i];
                 if (step == null) continue;
+
+                int lineNo = i + 1;
+                string label = string.IsNullOrWhiteSpace(step.Name) ? $"#{lineNo}" : step.Name;
 
                 if (step is ImageRecognitionBase imageStep)
                 {
-                    AddIfMissing(Path.Combine(workDir, NormalizeEntryName(imageStep.CroppedImageName)), imageStep.CroppedImageName, missing);
+                    if (string.IsNullOrWhiteSpace(imageStep.CroppedImageName))
+                    {
+                        missing.Add(string.Format(LanguageService.GetLocalizedString("Missing_StepImage",
+                            "第 {0} 行「{1}」未设置识别图片"), lineNo, label));
+                    }
+                    else
+                    {
+                        AddIfMissing(SafeCombine(workDir, imageStep.CroppedImageName), imageStep.CroppedImageName, missing);
+                    }
                 }
                 else if (step is ImagesRecognitionBase imagesStep)
                 {
                     if (imagesStep.Images == null) continue;
+                    int index = 0;
                     foreach (var image in imagesStep.Images)
                     {
+                        index++;
                         if (image == null) continue;
-                        AddIfMissing(Path.Combine(workDir, NormalizeEntryName(image.CroppedImageName)), image.CroppedImageName, missing);
+                        if (string.IsNullOrWhiteSpace(image.CroppedImageName))
+                        {
+                            missing.Add(string.Format(LanguageService.GetLocalizedString("Missing_StepMultiImage",
+                                "第 {0} 行「{1}」第 {2} 张图片未设置"), lineNo, label, index));
+                            continue;
+                        }
+                        AddIfMissing(SafeCombine(workDir, image.CroppedImageName), image.CroppedImageName, missing);
                     }
                 }
                 else if (step is GetInputStep inputStep)
                 {
+                    if (inputStep.TextPoints == null) continue;
+                    int index = 0;
                     foreach (var point in inputStep.TextPoints)
                     {
+                        index++;
                         if (point == null) continue;
-                        AddIfMissing(Path.Combine(workDir, NormalizeEntryName(point.CroppedImageName)), point.CroppedImageName, missing);
+                        if (string.IsNullOrWhiteSpace(point.CroppedImageName))
+                        {
+                            missing.Add(string.Format(LanguageService.GetLocalizedString("Missing_StepPointImage",
+                                "第 {0} 行「{1}」第 {2} 个取点未设置图片"), lineNo, label, index));
+                            continue;
+                        }
+                        AddIfMissing(SafeCombine(workDir, point.CroppedImageName), point.CroppedImageName, missing);
                     }
                 }
                 else if (step is BurnInConfigStep burnStep)
                 {
                     foreach (var templateName in GetBurnInTemplateNames(burnStep))
                     {
-                        AddIfMissing(Path.Combine(workDir, NormalizeEntryName(templateName)), templateName, missing);
+                        AddIfMissing(SafeCombine(workDir, templateName), templateName, missing);
                     }
                 }
             }
 
             return missing;
+        }
+
+        /// <summary>拼接工作目录与条目名；条目名为空（步骤没配图）时返回 null，避免 Path.Combine 的 path2 空引用。</summary>
+        private static string SafeCombine(string dir, string entryName)
+        {
+            if (string.IsNullOrWhiteSpace(entryName)) return null;
+            return Path.Combine(dir, NormalizeEntryName(entryName));
         }
 
         private static void AddIfMissing(string fullPath, string displayName, List<string> missing)

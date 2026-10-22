@@ -76,6 +76,12 @@ namespace ShaoLu.Models
         /// </summary>
         public DateTime ExecutedAt { get; set; }
 
+        /// <summary>
+        /// 执行细节（识别耗时、重试次数、点击坐标等；步骤开启「更多细节」时才有值）
+        /// </summary>
+        [Column(StringLength = -1)]
+        public string Details { get; set; }
+
         /// <summary>展示用：连续相同结果的重复次数（默认 1）</summary>
         [Column(IsIgnore = true)]
         public int RepeatCount { get; set; } = 1;

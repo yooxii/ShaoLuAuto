@@ -2025,4 +2025,42 @@ Details:
   <data name="AcbelFailException" xml:space="preserve">
     <value>Execution exception</value>
   </data>
+  <data name="RecordDetails" xml:space="preserve">
+    <value>More details</value>
+  </data>
+  <data name="Stats_ColDetails" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="ExecLog_WriteFailedTitle" xml:space="preserve">
+    <value>Failed to write execution log</value>
+  </data>
+  <data name="ExecLog_WriteFailedBody" xml:space="preserve">
+    <value>Execution logs cannot be written to the database; this run will not be recorded.
+
+Reason: {0}</value>
+  </data>
+  <data name="FriendlyError_MissingStepSetting" xml:space="preserve">
+    <value>Some steps are missing required settings (an image step without a picture is the usual cause). Check the image/point steps in the step list.</value>
+  </data>
+  <data name="FriendlyError_FileNotFound" xml:space="preserve">
+    <value>The file to open was not found (it may have been moved or deleted).</value>
+  </data>
+  <data name="FriendlyError_DirNotFound" xml:space="preserve">
+    <value>A folder required by the project does not exist (it may have been moved or deleted).</value>
+  </data>
+  <data name="FriendlyError_NoAccess" xml:space="preserve">
+    <value>No permission to access the file or folder (in use, read-only, or blocked by security software).</value>
+  </data>
+  <data name="FriendlyError_Io" xml:space="preserve">
+    <value>File read/write failed (in use by another program or a disk error).</value>
+  </data>
+  <data name="Missing_StepImage" xml:space="preserve">
+    <value>Row {0} "{1}" has no recognition image</value>
+  </data>
+  <data name="Missing_StepMultiImage" xml:space="preserve">
+    <value>Row {0} "{1}" image #{2} is not set</value>
+  </data>
+  <data name="Missing_StepPointImage" xml:space="preserve">
+    <value>Row {0} "{1}" text point #{2} has no image</value>
+  </data>
 </root>

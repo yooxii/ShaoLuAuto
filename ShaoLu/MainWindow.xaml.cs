@@ -292,6 +292,35 @@ namespace ShaoLu
             }
         }
 
+        /// <summary>异常详情：类型 + 消息 + 内层异常 + 堆栈（截断），便于现场报错定位。</summary>
+        /// <summary>把打开工程的异常翻译成用户能理解的说明（完整堆栈只写日志，不塞给用户）。</summary>
+        private static string DescribeFriendlyError(Exception ex)
+        {
+            if (ex == null) return string.Empty;
+
+            switch (ex)
+            {
+                case ArgumentNullException arg when string.Equals(arg.ParamName, "path2", StringComparison.OrdinalIgnoreCase):
+                    return LanguageService.GetLocalizedString("FriendlyError_MissingStepSetting",
+                        "工程里有步骤缺少必要的设置（常见是图像类步骤还没选择图片），请检查步骤列表里的图像/取点步骤是否都已配置。");
+                case FileNotFoundException _:
+                    return LanguageService.GetLocalizedString("FriendlyError_FileNotFound",
+                        "找不到要打开的文件（可能已被移动或删除）。");
+                case DirectoryNotFoundException _:
+                    return LanguageService.GetLocalizedString("FriendlyError_DirNotFound",
+                        "工程需要的目录不存在（可能被移动或删除）。");
+                case UnauthorizedAccessException _:
+                    return LanguageService.GetLocalizedString("FriendlyError_NoAccess",
+                        "没有权限访问该文件或目录（可能被占用、只读或被安全软件拦截）。");
+                case IOException _:
+                    return LanguageService.GetLocalizedString("FriendlyError_Io",
+                        "文件读写失败（可能被其他程序占用或磁盘异常）。") + " " + ex.Message;
+            }
+
+            // 压缩包格式问题等：异常消息本身已是可读中文，直接展示
+            return ex.Message;
+        }
+
         private void Quit_Click(object sender, RoutedEventArgs e)
         {
             Close();
@@ -473,7 +502,7 @@ namespace ShaoLu
             {
                 NLog.LogManager.GetCurrentClassLogger().Error(ex, "Open file failed: {0}", filePath);
                 WindowAsyncPopup.Show(
-                    $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {ex.Message}",
+                    $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {DescribeFriendlyError(ex)}",
                     LanguageService.GetLocalizedString("OpenFile"),
                     PopupButtons.OK, MessageBoxImage.Error);
             }
@@ -631,7 +660,7 @@ namespace ShaoLu
             {
                 NLog.LogManager.GetCurrentClassLogger().Error(ex, "Open user document failed");
                 WindowAsyncPopup.Show(
-                    $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {ex.Message}",
+                    $"{LanguageService.GetLocalizedString("OpenFileFailed")}: {DescribeFriendlyError(ex)}",
                     LanguageService.GetLocalizedString("UserDoc"),
                     PopupButtons.OK, MessageBoxImage.Error);
             }

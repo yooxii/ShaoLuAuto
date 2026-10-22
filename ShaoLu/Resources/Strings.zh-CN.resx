@@ -2025,4 +2025,42 @@
   <data name="AcbelFailException" xml:space="preserve">
     <value>执行异常</value>
   </data>
+  <data name="RecordDetails" xml:space="preserve">
+    <value>更多细节</value>
+  </data>
+  <data name="Stats_ColDetails" xml:space="preserve">
+    <value>详情</value>
+  </data>
+  <data name="ExecLog_WriteFailedTitle" xml:space="preserve">
+    <value>执行记录写入失败</value>
+  </data>
+  <data name="ExecLog_WriteFailedBody" xml:space="preserve">
+    <value>执行记录无法写入数据库，本次运行的记录会丢失。
+
+原因：{0}</value>
+  </data>
+  <data name="FriendlyError_MissingStepSetting" xml:space="preserve">
+    <value>工程里有步骤缺少必要的设置（常见是图像类步骤还没选择图片），请检查步骤列表里的图像/取点步骤是否都已配置。</value>
+  </data>
+  <data name="FriendlyError_FileNotFound" xml:space="preserve">
+    <value>找不到要打开的文件（可能已被移动或删除）。</value>
+  </data>
+  <data name="FriendlyError_DirNotFound" xml:space="preserve">
+    <value>工程需要的目录不存在（可能被移动或删除）。</value>
+  </data>
+  <data name="FriendlyError_NoAccess" xml:space="preserve">
+    <value>没有权限访问该文件或目录（可能被占用、只读或被安全软件拦截）。</value>
+  </data>
+  <data name="FriendlyError_Io" xml:space="preserve">
+    <value>文件读写失败（可能被其他程序占用或磁盘异常）。</value>
+  </data>
+  <data name="Missing_StepImage" xml:space="preserve">
+    <value>第 {0} 行「{1}」未设置识别图片</value>
+  </data>
+  <data name="Missing_StepMultiImage" xml:space="preserve">
+    <value>第 {0} 行「{1}」第 {2} 张图片未设置</value>
+  </data>
+  <data name="Missing_StepPointImage" xml:space="preserve">
+    <value>第 {0} 行「{1}」第 {2} 个取点未设置图片</value>
+  </data>
 </root>

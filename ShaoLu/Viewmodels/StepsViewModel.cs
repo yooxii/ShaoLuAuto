@@ -1212,6 +1212,67 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
+        /// 生成执行细节文本（只在步骤勾选「更多细节」时写入执行记录）。
+        /// 汇总每类步骤真正有诊断价值的指标：耗时、相似度、点击坐标、动作数、取点与超时、弹窗选择、Acbel 试运行等。
+        /// 这些指标本身几乎零成本（都是执行中已有的数据），主要成本在入库，因此统一由开关控制。
+        /// </summary>
+        private static string BuildStepDetails(AutomationStepBase step, StepExecutionResult result)
+        {
+            // 按步骤类型分开取细节：每类只读自己真正有意义的字段，
+            // Acbel 这类不以图像识别为主的步骤不会去取相似度/点击坐标（这些字段对它也没意义）。
+            try
+            {
+                var parts = new List<string>();
+                if (result != null && result.ExecutionTimeMs > 0)
+                    parts.Add($"耗时 {result.ExecutionTimeMs:F0} ms");
+                if (step.WaitTime > 0) parts.Add($"等待 {step.WaitTime:F2} s");
+                // 失败原因（含上传Acbel 的连不上数据库/业务拒绝/函数执行失败等）统一写进详情，便于定位
+                if (result != null && !string.IsNullOrEmpty(result.ErrorMessage))
+                    parts.Add($"失败：{result.ErrorMessage}");
+
+                switch (step)
+                {
+                    case AcbelUploadStep acbel:
+                        parts.Add(acbel.DryRun ? "试运行（未写库）" : "写库上传");
+                        break;
+
+                    case MouseActionStep mouse:
+                        if (mouse.MouseActions != null)
+                            parts.Add($"动作 {mouse.MouseActions.Count}");
+                        break;
+
+                    case GetInputStep getInput:
+                        parts.Add($"超时 {getInput.Timeout:F1} s");
+                        if (getInput.TextPoints != null && getInput.TextPoints.Count > 0)
+                            parts.Add($"取点 {getInput.TextPoints.Count}");
+                        break;
+
+                    case ImageRecognitionBase image:
+                        // 图像识别步骤：相似度、点击坐标、识别文本
+                        if (result != null)
+                        {
+                            if (result.Similarity >= 0) parts.Add($"相似度 {result.Similarity:F3}");
+                            var click = result.ClickPosition;
+                            if (click.X > 0 || click.Y > 0) parts.Add($"点击 ({click.X:F0},{click.Y:F0})");
+                            if (!string.IsNullOrEmpty(result.OCRText)) parts.Add($"文本 {result.OCRText.Length} 字");
+                        }
+                        break;
+
+                    case PopupStep popup:
+                        if (result != null && !string.IsNullOrEmpty(result.PopupResult))
+                            parts.Add($"选择 {result.PopupResult}");
+                        break;
+                }
+
+                return parts.Count == 0 ? null : string.Join("；", parts);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 收集需要询问的「用户输入」步骤（只取有字段的，避免弹空窗）。
         /// askOnRun=true 用于开始运行前，false 用于打开工程时。
         /// </summary>
@@ -1316,6 +1377,8 @@ namespace ShaoLu.Viewmodels
                 return;
             }
             IsRunning = true;
+            // 每次运行重置「执行记录写入失败」提示标记，运行中出现写入失败时只提醒一次
+            ExecutionLogService.ResetWriteFailureNotify();
 
             // 烧录完成判定的运行时状态（声明于 try 外，供 finally 访问）：
             // burnConfigStep = 烧录配置步骤；burnFinishStepUid = 配置的烧录完成步骤；
@@ -1497,7 +1560,8 @@ namespace ShaoLu.Viewmodels
                                 similarity: result.Similarity,
                                 threadName: "主线程",
                                 textSource: result.TextSource,
-                                errorMessage: step.IsError ? step.ErrorMessage : null))
+                                errorMessage: step.IsError ? step.ErrorMessage : null,
+                                details: step.RecordDetails ? BuildStepDetails(step, result) : null))
                             {
                                 logger.Warn("执行日志未落库：{0}", step.Name);
                             }
@@ -2147,7 +2211,8 @@ namespace ShaoLu.Viewmodels
                                 similarity: result.Similarity,
                                 threadName: context.ThreadName,
                                 textSource: result.TextSource,
-                                errorMessage: step.IsError ? step.ErrorMessage : null))
+                                errorMessage: step.IsError ? step.ErrorMessage : null,
+                                details: step.RecordDetails ? BuildStepDetails(step, result) : null))
                             {
                                 logger.Warn("执行日志未落库（子线程）：{0}", step.Name);
                             }

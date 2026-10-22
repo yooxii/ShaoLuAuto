@@ -56,5 +56,5 @@ using System.Windows;
 //      2. 本文件的 AssemblyVersion              -> 程序集标识
 //      3. 本文件的 AssemblyFileVersion          -> 资源管理器里的「文件版本/产品版本」
 // 需要临时用别的号构建时：tools/build-app.ps1 -Version <号> / tools/pack-release.ps1 -Version <号>。
-[assembly: AssemblyVersion("0.6.8.2612")]
-[assembly: AssemblyFileVersion("0.6.8.2612")]
+[assembly: AssemblyVersion("0.6.9.2611")]
+[assembly: AssemblyFileVersion("0.6.9.2611")]

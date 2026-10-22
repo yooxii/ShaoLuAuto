@@ -18,6 +18,7 @@ namespace ShaoLu.Views
             InitializeComponent();
             _viewModel = new ExecutionLogViewModel();
             DataContext = _viewModel;
+            Closed += (_, __) => _viewModel.StopWatching();
         }
 
         private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)

@@ -20,6 +20,8 @@ namespace ShaoLu.Viewmodels
         private int _currentPage = 1;
         private int _pageSize = 100;
         private long _totalCount;
+        private readonly System.Windows.Threading.DispatcherTimer _refreshTimer;
+        private bool _refreshPending;
 
         public ExecutionLogViewModel()
         {
@@ -33,6 +35,38 @@ namespace ShaoLu.Viewmodels
 
             LoadFileNames();
             DoSearch();
+
+            // 运行中实时刷新：新日志写入后防抖重查（仅在用户停留第 1 页时刷新，避免打断翻历史）
+            _refreshTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
+            _refreshTimer.Tick += (s, e) =>
+            {
+                _refreshTimer.Stop();
+                if (_refreshPending)
+                {
+                    _refreshPending = false;
+                    DoSearch();
+                }
+            };
+            ExecutionLogService.LogWritten += OnLogWritten;
+        }
+
+        private void OnLogWritten(StepExecutionLog log)
+        {
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher == null) return;
+            dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (CurrentPage != 1) return;
+                _refreshPending = true;
+                if (!_refreshTimer.IsEnabled) _refreshTimer.Start();
+            }));
+        }
+
+        /// <summary>窗口关闭时取消订阅，避免静态事件持有 ViewModel。</summary>
+        public void StopWatching()
+        {
+            try { ExecutionLogService.LogWritten -= OnLogWritten; } catch { }
+            _refreshTimer?.Stop();
         }
 
         #region 属性
@@ -127,6 +161,16 @@ namespace ShaoLu.Viewmodels
                 {
                     FileNames.Add(name);
                 }
+
+                // 日志按步骤文件分表保存：默认选中当前工程文件，避免窗口只显示主表里的历史数据
+                try
+                {
+                    var current = System.IO.Path.GetFileNameWithoutExtension(
+                        ShaoLu.Utils.SingletonLocator.Main?.StepFilePath ?? string.Empty);
+                    if (!string.IsNullOrEmpty(current) && FileNames.Contains(current))
+                        SelectedFileName = current;
+                }
+                catch { }
             }
             catch { /* 数据库尚未创建时忽略 */ }
         }

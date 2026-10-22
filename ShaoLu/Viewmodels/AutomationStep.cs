@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Expression.Drawing.Core;
 using NLog;
@@ -297,6 +297,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// 是否记录执行日志
         /// </summary>
         public bool EnableLog { get => _enableLog; set => SetProperty(ref _enableLog, value); }
+
+        private bool _recordDetails;
+        /// <summary>
+        /// 是否记录「更多细节」（执行记录窗口的详情列）；默认关闭，避免高频执行时额外开销
+        /// </summary>
+        public bool RecordDetails { get => _recordDetails; set => SetProperty(ref _recordDetails, value); }
 
         #endregion
 

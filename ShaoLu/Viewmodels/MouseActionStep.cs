@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
 using ShaoLu.Utils;
 using System;
@@ -110,17 +110,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public MouseActionStep() : base()
         {
+            WaitTime = 0.01;
             Type = StepType.MouseAction;
         }
 
         public MouseActionStep(string name) : base()
         {
+            WaitTime = 0.01;
             Type = StepType.MouseAction;
             Name = name;
         }
 
         public MouseActionStep(string name, string description) : base()
         {
+            WaitTime = 0.01;
             Type = StepType.MouseAction;
             Name = name;
             Description = description;

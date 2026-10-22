@@ -292,7 +292,12 @@
     <!-- 识图点击步骤 -->
     <DataTemplate x:Key="ClickImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Select_target_pic}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding ImagePath}" IsReadOnly="True" MinWidth="120" MaxWidth="200" ToolTip="{Binding ImagePath}" VerticalAlignment="Center"/>
@@ -374,7 +379,12 @@
     <!-- 识图查找步骤 -->
     <DataTemplate x:Key="FindImageStepTemplate" DataType="{x:Type AutoVM:FindImageStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Select_target_pic}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding ImagePath}" IsReadOnly="True" MinWidth="120" MaxWidth="200" ToolTip="{Binding ImagePath}" VerticalAlignment="Center"/>
@@ -423,7 +433,12 @@
     <!-- 输入文字步骤 -->
     <DataTemplate x:Key="TextStepTemplate" DataType="{x:Type AutoVM:TypeTextStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Type_text}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding TextToType, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
@@ -444,7 +459,12 @@
     <!-- 输入文字(多)步骤 -->
     <DataTemplate x:Key="TextStepMoreTemplate" DataType="{x:Type AutoVM:TypeTextMoreStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Prefix}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding Prefix, UpdateSourceTrigger=LostFocus}" MinWidth="120"/>
@@ -480,7 +500,12 @@
     <!-- 从文件输入文字步骤 -->
     <DataTemplate x:Key="TextStepFromFileTemplate" DataType="{x:Type AutoVM:TypeTextFromFileStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.001"/>
@@ -524,7 +549,12 @@
     <!-- 弹出框步骤 -->
     <DataTemplate x:Key="PopupStepTemplate" DataType="{x:Type AutoVM:PopupStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Title}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
@@ -686,7 +716,12 @@
     <!-- 获取输入步骤 -->
     <DataTemplate x:Key="GetInputStepTemplate" DataType="{x:Type AutoVM:GetInputStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc InputMode}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding InputModes}" SelectedItem="{Binding InputMode}" MinWidth="150">
@@ -818,7 +853,12 @@
     <!-- 鼠标操作步骤 -->
     <DataTemplate x:Key="MouseActionStepTemplate" DataType="{x:Type AutoVM:MouseActionStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc PositionMode}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding PositionModes}" SelectedItem="{Binding PositionMode}" MinWidth="120">
@@ -967,7 +1007,12 @@
     <!-- 统计信息步骤 -->
     <DataTemplate x:Key="StatisticsStepTemplate" DataType="{x:Type AutoVM:StatisticsStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc StatsWindowTitle}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding WindowTitle, UpdateSourceTrigger=LostFocus}" MinWidth="120"/>
@@ -1056,7 +1101,12 @@
     <!-- 烧录配置步骤 -->
     <DataTemplate x:Key="BurnInConfigStepTemplate" DataType="{x:Type AutoVM:BurnInConfigStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc BurnIn_SelectBurnFinishStep}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding BurnSteps}"
@@ -1177,7 +1227,12 @@
     <!-- 窗口聚焦步骤 -->
     <DataTemplate x:Key="FocusWindowStepTemplate" DataType="{x:Type AutoVM:FocusWindowStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Focus_SelectedWindow}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding WindowTitles}" SelectedItem="{Binding SelectedWindowTitle}" MinWidth="240" VerticalContentAlignment="Center"/>
@@ -1200,7 +1255,12 @@
     <!-- 多线程开始步骤 -->
     <DataTemplate x:Key="MultiThreadStartTemplate" DataType="{x:Type AutoVM:MultiThreadStartStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc MT_ThreadCount}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding ThreadCount, Mode=TwoWay}" Width="80" Minimum="1" Precision="0"
@@ -1267,7 +1327,12 @@
     <!-- 发出信号步骤 -->
     <DataTemplate x:Key="SendSignalTemplate" DataType="{x:Type AutoVM:SendSignalStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Signal_Name}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding SignalName, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
@@ -1334,7 +1399,12 @@
     <!-- 接收信号步骤 -->
     <DataTemplate x:Key="ReceiveSignalTemplate" DataType="{x:Type AutoVM:ReceiveSignalStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Signal_Name}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding SignalName, UpdateSourceTrigger=LostFocus}" MinWidth="180"/>
@@ -1377,7 +1447,12 @@
     <!-- 中断步骤（仅子线程可用） -->
     <DataTemplate x:Key="InterruptTemplate" DataType="{x:Type AutoVM:InterruptStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Interrupt_Target}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding AllSteps}"
@@ -1480,7 +1555,12 @@
     <!-- 上传Acbel：ACBEL_INSERT_DATA 上传步骤 -->
     <DataTemplate x:Key="AcbelUploadStepTemplate" DataType="{x:Type AutoVM:AcbelUploadStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <CheckBox IsChecked="{Binding DryRun}" Content="{lex:Loc AcbelDryRun}" Margin="0,0,0,5"/>
             <TextBlock Text="{lex:Loc AcbelProgramFile}" FontWeight="Bold" Margin="0,0,0,2"/>
             <ContentControl Content="{Binding ProgramFileRow}" ContentTemplate="{StaticResource AcbelUploadRowTemplate}"/>
@@ -1503,7 +1583,12 @@
     <!-- 用户输入步骤：打开工程 / 开始运行前弹窗填写字段，字段值可被其他步骤按名称引用 -->
     <DataTemplate x:Key="UserInputStepTemplate" DataType="{x:Type AutoVM:UserInputStep}">
         <StackPanel>
-            <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding EnableLog}" Content="{lex:Loc EnableLog}"/>
+                <!-- 性能开关：只有勾选记录执行日志后才显示「更多细节」 -->
+                <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
+                          Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
             <!-- 弹窗标题（留空时占位显示「用户输入」） -->
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc UserInput_Title}" Padding="0,0,5,0" VerticalAlignment="Center"/>

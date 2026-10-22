@@ -106,9 +106,11 @@ namespace ShaoLu.Views
             popup.Opacity = Math.Min(1.0, Math.Max(0.05, opacity));
 
             // 1. 设置消息内容（支持富文本）
+            bool emptyDoc = true;
             if (popup.MessageViewer != null)
             {
                 var doc = Utils.RichTextHelper.Deserialize(message ?? string.Empty);
+                emptyDoc = doc.Blocks.Count == 0;
 
                 // 文档按视口宽度排版：ColumnWidth/PageWidth = NaN，绝不写超大的列宽（否则紧凑模式会被裁字）
                 doc.PagePadding = new Thickness(0);
@@ -146,10 +148,10 @@ namespace ShaoLu.Views
             // 尺寸规范：正常 320~600 × 140~540；紧凑 200~420 × 104~250（不打断、不占地）
             if (popup._compact)
             {
-                popup.MinWidth = 200;
+                popup.MinWidth = 100;
                 popup.MinHeight = 104;
-                popup.MaxWidth = 420;
-                popup.MaxHeight = 250;
+                popup.MaxWidth = 300;
+                popup.MaxHeight = 400;
                 if (popup.LayoutRoot != null)
                     popup.LayoutRoot.Margin = new Thickness(10, 8, 10, 8);
                 if (popup.IconImage != null)
@@ -165,10 +167,10 @@ namespace ShaoLu.Views
             }
             else
             {
-                popup.MinWidth = 320;
+                popup.MinWidth = 120;
                 popup.MinHeight = 140;
-                popup.MaxWidth = 600;
-                popup.MaxHeight = 540;
+                popup.MaxWidth = 400;
+                popup.MaxHeight = 400;
                 if (popup.ButtonHost != null)
                     popup.ButtonHost.Margin = new Thickness(0, 16, 0, 0);
                 if (popup.ButtonPanel != null)
@@ -198,6 +200,16 @@ namespace ShaoLu.Views
             if ((buttons?.Buttons?.Count ?? 0) == 0 && popup.ButtonPanel != null)
             {
                 popup.ButtonPanel.Visibility = Visibility.Collapsed;
+            }
+
+            // 3.1 无正文时：宽度只保留「能放下图标 + 50」再加两侧边距；
+            // 有正文时宽度按内容长度自适应（最多 400），超过的内容自动换到下一行。
+            if (emptyDoc && popup.IconImage != null)
+            {
+                double iconWidth = popup.IconImage.Visibility == Visibility.Collapsed ? 0 : popup.IconImage.Width;
+                double sideMargins = popup._compact ? 20 : 40;
+                popup.Width = Math.Max(popup.MinWidth, iconWidth + 50 + sideMargins);
+                popup.SizeToContent = SizeToContent.Height;
             }
 
             // 4. 处理窗口关闭事件（防止用户通过 Alt+F4 或右上角 X 关闭时任务挂起）

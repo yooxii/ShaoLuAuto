@@ -12,8 +12,8 @@
         Topmost="True"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
-        MinWidth="320" MinHeight="140"
-        MaxWidth="600" MaxHeight="540"
+        MinWidth="120" MinHeight="140"
+        MaxWidth="400" MaxHeight="400"
         Background="{DynamicResource WD.BackgroundBrush}">
     <!-- 原生窗口：标题栏自带最小化/最大化/关闭与拖拽；正文区是唯一滚动宿主，按钮区不参与压缩 -->
     <Grid x:Name="LayoutRoot" Margin="20,16,20,16">

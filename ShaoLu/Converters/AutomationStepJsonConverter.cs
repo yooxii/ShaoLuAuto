@@ -1,4 +1,5 @@
 using ShaoLu.Models;
+using ShaoLu.Viewmodels;
 using ShaoLu.Viewmodels.AutomationStep;
 using NLog;
 using System;
@@ -102,6 +103,7 @@ namespace ShaoLu.Converters
                 StepType.Popup => typeof(PopupStep),
                 StepType.AcbelUpload => typeof(AcbelUploadStep),
                 StepType.UserInput => typeof(UserInputStep),
+                StepType.ScanCode => typeof(ScanCodeStep),
                 StepType.Empty => typeof(EmptyStep),
                 StepType.GetInput => typeof(GetInputStep),
                 StepType.MouseAction => typeof(MouseActionStep),

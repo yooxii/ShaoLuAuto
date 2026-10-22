@@ -955,7 +955,7 @@ namespace ShaoLu.Viewmodels
                 if (row != null && row.RefStepUid == null)
                 {
                     row.RefStepUid = scan.Uid;
-                    row.RefKind = AcbelReferenceKind.OcrText;
+                    row.RefKind = AcbelReferenceKind.ScanResult;
                 }
             }
             catch { }

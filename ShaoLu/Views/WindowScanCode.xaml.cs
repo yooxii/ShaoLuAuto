@@ -14,7 +14,7 @@ namespace ShaoLu.Views
         public WindowScanCode()
         {
             InitializeComponent();
-            Loaded += (_, __) =>
+            Activated += (_, __) =>
             {
                 CodeBox.Focus();
                 Keyboard.Focus(CodeBox);
@@ -54,6 +54,9 @@ namespace ShaoLu.Views
             if (owner != null) window.Owner = owner;
             else if (Application.Current?.MainWindow != null) window.Owner = Application.Current.MainWindow;
 
+            // 弹出时把窗口与输入框都拿焦点，扫码枪输入直接落到输入框
+            window.ShowActivated = true;
+            window.Activate();
             return window.ShowDialog() == true ? window.ScannedCode : null;
         }
     }

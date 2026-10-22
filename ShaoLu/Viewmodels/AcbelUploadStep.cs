@@ -32,7 +32,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         DirectText = 3,
 
         /// <summary>用户输入字段（按字段名读取「用户输入」步骤填写的值）。</summary>
-        UserInput = 4
+        UserInput = 4,
+
+        /// <summary>扫码结果（扫码步骤的条码）。</summary>
+        ScanResult = 5
     }
 
     /// <summary>
@@ -212,6 +215,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     case AcbelReferenceKind.DirectText:
                         kind = AcbelUploadStep.Loc("AcbelRefDirectText", "直接获取文本");
                         break;
+                    case AcbelReferenceKind.ScanResult:
+                        kind = AcbelUploadStep.Loc("AcbelRefScanResult", "扫码结果");
+                        break;
                     default:
                         kind = string.Empty;
                         break;
@@ -251,6 +257,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
                             });
                         }
 
+                        root.Children.Add(stepNode);
+                        continue;
+                    }
+
+                    // 扫码步骤：直接暴露「扫码结果」（条码）
+                    if (step is ScanCodeStep)
+                    {
+                        stepNode.Children.Add(new AcbelRefMenuNode
+                        {
+                            Header = AcbelUploadStep.Loc("AcbelRefScanResult", "扫码结果"),
+                            StepUid = step.Uid,
+                            Kind = AcbelReferenceKind.ScanResult
+                        });
                         root.Children.Add(stepNode);
                         continue;
                     }
@@ -564,6 +583,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     case AcbelReferenceKind.ExecutionResult:
                         return result.IsTrue ? "PASS" : "FAIL";
+                    case AcbelReferenceKind.ScanResult:
+                        return result.OCRText ?? string.Empty;
                     case AcbelReferenceKind.OcrText:
                         return IsDirectTextSource(result.TextSource) ? string.Empty : (result.OCRText ?? string.Empty);
                     case AcbelReferenceKind.DirectText:

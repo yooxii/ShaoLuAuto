@@ -2118,4 +2118,7 @@
   <data name="ScanCode_FieldMapping" xml:space="preserve">
     <value>用户输入字段名</value>
   </data>
+  <data name="AcbelRefScanResult" xml:space="preserve">
+    <value>扫码结果</value>
+  </data>
 </root>

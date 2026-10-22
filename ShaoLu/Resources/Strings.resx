@@ -2118,4 +2118,7 @@ A scan step will be inserted before the upload step automatically.</value>
   <data name="ScanCode_FieldMapping" xml:space="preserve">
     <value>User input field names</value>
   </data>
+  <data name="AcbelRefScanResult" xml:space="preserve">
+    <value>Scan result</value>
+  </data>
 </root>

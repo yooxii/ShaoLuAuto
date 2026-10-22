@@ -2118,4 +2118,7 @@
   <data name="ScanCode_FieldMapping" xml:space="preserve">
     <value>使用者輸入欄位名稱</value>
   </data>
+  <data name="AcbelRefScanResult" xml:space="preserve">
+    <value>掃碼結果</value>
+  </data>
 </root>

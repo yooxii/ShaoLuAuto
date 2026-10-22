@@ -2010,4 +2010,19 @@ Details:
   <data name="AcbelBusinessFailNoCode" xml:space="preserve">
     <value>(no code parsed)</value>
   </data>
+  <data name="AcbelFailValidation" xml:space="preserve">
+    <value>Upload data validation failed</value>
+  </data>
+  <data name="AcbelFailDbConnect" xml:space="preserve">
+    <value>Cannot connect to the database</value>
+  </data>
+  <data name="AcbelFailUpload" xml:space="preserve">
+    <value>Upload rejected by business rules</value>
+  </data>
+  <data name="AcbelFailCall" xml:space="preserve">
+    <value>Function call failed</value>
+  </data>
+  <data name="AcbelFailException" xml:space="preserve">
+    <value>Execution exception</value>
+  </data>
 </root>

@@ -95,6 +95,9 @@ namespace ShaoLu.Viewmodels
 
         public string ImageFilePath { get => _imageFilePath; set => _imageFilePath = value; }
 
+        /// <summary>当前步骤列表视图模型（供菜单与状态栏绑定）</summary>
+        public StepsViewModel Steps => SingletonLocator.Steps;
+
 
         #endregion
 

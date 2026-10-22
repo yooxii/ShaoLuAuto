@@ -147,7 +147,7 @@ namespace ShaoLu.Services
                 if (log.Similarity.HasValue && log.Similarity.Value >= 0)
                     builder.Add("[Similarity:" + log.Similarity.Value.ToString("F3", CultureInfo.InvariantCulture) + "]");
                 if (!string.IsNullOrEmpty(log.ErrorMessage))
-                    builder.Add("[Error:" + log.ErrorMessage + "]");
+                    builder.Add("[FailResult:" + log.ErrorMessage + "]");
                 resultPart = string.Join(" ", builder);
             }
 

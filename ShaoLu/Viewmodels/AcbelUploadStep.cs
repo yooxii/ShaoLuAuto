@@ -589,7 +589,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 EnsureRows();
 
                 var validation = ValidateUploadData();
-                if (!validation.IsValid) return Fail(prefix + validation.ToErrorText());
+                if (!validation.IsValid) return Fail(prefix + Loc("AcbelFailValidation", "上传数据校验失败") + "：" + validation.ToErrorText());
 
                 // 仅校验、不写库：不 open、不 insert，也不改变库连接状态
                 if (DryRun) return Succeed();
@@ -599,7 +599,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
                 IAcbelBridgeChannel channel;
                 string openError;
-                if (!EnsureDatabaseOpen(out channel, out openError)) return Fail(prefix + openError);
+                if (!EnsureDatabaseOpen(out channel, out openError)) return Fail(prefix + Loc("AcbelFailDbConnect", "连不上数据库") + "：" + openError);
 
                 var call = channel.InsertData(uploadData, programFile);
 
@@ -619,11 +619,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     if (AcbelBridgeClient.IsBusinessFail(text))
                     {
                         ShowBusinessFailDialog(AcbelBridgeClient.ExtractErrorCode(text), text);
-                        return Fail(prefix + text);
+                        return Fail(prefix + Loc("AcbelFailUpload", "上传被业务规则拒绝") + "：" + text);
                     }
                 }
 
-                return Fail(prefix + Describe(call));
+                return Fail(prefix + Loc("AcbelFailCall", "函数执行失败") + "：" + Describe(call));
             }
             catch (OperationCanceledException)
             {
@@ -632,7 +632,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             catch (Exception ex)
             {
                 Logger.Error(ex, "AcbelUpload: 执行失败");
-                return Fail(prefix + ex.Message);
+                return Fail(prefix + Loc("AcbelFailException", "执行异常") + "：" + ex.Message);
             }
         }
 

@@ -2010,4 +2010,19 @@
   <data name="AcbelBusinessFailNoCode" xml:space="preserve">
     <value>(未解析出代碼)</value>
   </data>
+  <data name="AcbelFailValidation" xml:space="preserve">
+    <value>上傳資料驗證失敗</value>
+  </data>
+  <data name="AcbelFailDbConnect" xml:space="preserve">
+    <value>無法連線資料庫</value>
+  </data>
+  <data name="AcbelFailUpload" xml:space="preserve">
+    <value>上傳被業務規則拒絕</value>
+  </data>
+  <data name="AcbelFailCall" xml:space="preserve">
+    <value>函式執行失敗</value>
+  </data>
+  <data name="AcbelFailException" xml:space="preserve">
+    <value>執行例外</value>
+  </data>
 </root>

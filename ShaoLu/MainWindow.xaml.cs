@@ -1,4 +1,4 @@
-﻿using ShaoLu.Models;
+using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels;
@@ -287,6 +287,8 @@ namespace ShaoLu
             {
                 Services.LanguageService.SetLanguage(item.Tag as string);
                 Check_current_lang();
+                // 标题含本地化程序名，切换语言后刷新
+                (DataContext as Viewmodels.MainViewModel)?.RefreshLocalizedText();
             }
         }
 

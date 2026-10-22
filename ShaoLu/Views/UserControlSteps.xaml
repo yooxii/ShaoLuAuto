@@ -20,6 +20,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <conv:InMultiThreadRegionConverter x:Key="InMultiThreadRegionConverter"/>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
             <!-- 工具栏 SplitButton：去掉内置的竖分隔线，内容与下拉箭头直接并排 -->
@@ -52,16 +53,16 @@
                                                   Grid.Column="1"
                                                   Width="24"
                                                   MinHeight="20"
+                                                  Style="{x:Null}"
                                                   Background="Transparent"
                                                   BorderThickness="0"
                                                   ClickMode="Press"
                                                   Focusable="False"
                                                   Foreground="{TemplateBinding Foreground}"
                                                   IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                        <wd:PathIcon Kind="ChevronDown"
-                                                     Width="10" Height="6"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center"/>
+                                        <TextBlock Text="▼" FontSize="8"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
                                     </ToggleButton>
                                 </Grid>
                             </Border>
@@ -277,6 +278,17 @@
                                     <Setter Property="BorderThickness" Value="1"/>
                                 </Style.Setters>
                                 <Style.Triggers>
+                                    <!-- 多线程区域内的步骤：背景加深，与普通步骤区分（IsError 优先覆盖） -->
+                                    <DataTrigger Value="True">
+                                        <DataTrigger.Binding>
+                                            <MultiBinding Converter="{StaticResource InMultiThreadRegionConverter}">
+                                                <Binding/>
+                                                <Binding Path="ItemsSource" RelativeSource="{RelativeSource AncestorType=DataGrid}"/>
+                                                <Binding Source="{x:Static autovm:RegionCollapseNotifier.Instance}" Path="Revision"/>
+                                            </MultiBinding>
+                                        </DataTrigger.Binding>
+                                        <Setter Property="Background" Value="#FFE4E4E4"/>
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding IsError}" Value="True">
                                         <Setter Property="Background" Value="#FFFFCCCC"/>
                                         <Setter Property="ToolTip" Value="{Binding ErrorMessage}"/>

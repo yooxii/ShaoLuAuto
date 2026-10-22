@@ -1,4 +1,4 @@
-﻿using ShaoLu.Models;
+using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Viewmodels;
 using System;
@@ -93,93 +93,86 @@ namespace ShaoLu.Views
                 popup.Top = position.Value.Y;
             }
 
-            // 应用背景颜色与背景不透明度（仅影响背景，不影响内容）
-            var bgColor = System.Windows.Media.Colors.White;
-            try
+            // 应用背景颜色与不透明度：未指定时跟随主题；指定时整窗不透明度（原生窗口无法只透明背景）
+            if (!string.IsNullOrWhiteSpace(backgroundColor))
             {
-                if (!string.IsNullOrWhiteSpace(backgroundColor))
-                    bgColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(backgroundColor);
+                try
+                {
+                    var bgColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(backgroundColor);
+                    popup.Background = new System.Windows.Media.SolidColorBrush(bgColor);
+                }
+                catch { /* 解析失败保持主题背景 */ }
             }
-            catch { /* 解析失败使用默认白色 */ }
-            popup.Background = new System.Windows.Media.SolidColorBrush(bgColor)
-            {
-                Opacity = Math.Min(1.0, Math.Max(0.01, opacity))
-            };
-
-            // 无边框窗口：显示自定义标题和关闭按钮
-            if (!string.IsNullOrWhiteSpace(title) && popup.TitleText != null)
-            {
-                popup.TitleText.Text = title;
-                popup.TitleText.Visibility = Visibility.Visible;
-            }
-            if (popup.CloseButton != null)
-                popup.CloseButton.Visibility = Visibility.Visible;
-
-            popup._compact = windowStyle == ShaoLu.Models.PopupWindowStyle.Compact;
+            popup.Opacity = Math.Min(1.0, Math.Max(0.05, opacity));
 
             // 1. 设置消息内容（支持富文本）
             if (popup.MessageViewer != null)
             {
                 var doc = Utils.RichTextHelper.Deserialize(message ?? string.Empty);
 
-                // 紧凑模式：去除文档内边距，并让文档按内容测量（窗口大小自适应内容/标题）
-                if (popup._compact)
-                {
-                    doc.PagePadding = new Thickness(0);
-                    doc.ColumnWidth = 100000;
-                    doc.PageWidth = double.NaN;
-                    foreach (var block in doc.Blocks)
-                    {
-                        if (block is System.Windows.Documents.Paragraph paragraph)
-                            paragraph.Margin = new Thickness(0);
-                    }
-                }
+                // 文档按视口宽度排版：ColumnWidth/PageWidth = NaN，绝不写超大的列宽（否则紧凑模式会被裁字）
+                doc.PagePadding = new Thickness(0);
+                doc.ColumnWidth = double.NaN;
+                doc.PageWidth = double.NaN;
 
-                // 如果提供了字体模型，应用字体设置到 FlowDocument 级别
+                // 字体：未指定时回落到中英文都协调的字体链，避免 Arial 把中文交给度量不一致的回退字体
+                string family = string.IsNullOrWhiteSpace(font?.FontFamily) ? "Microsoft YaHei UI, Segoe UI" : font.FontFamily;
+                doc.FontFamily = new System.Windows.Media.FontFamily(family);
+
+                double size = font == null || font.FontSize <= 0 ? 14 : font.FontSize;
+                if (popup._compact) size = Math.Min(14, Math.Max(11, size));
+                doc.FontSize = size;
+
                 if (font != null)
                 {
-                    doc.FontFamily = new System.Windows.Media.FontFamily(font.FontFamily);
-                    doc.FontSize = font.FontSize;
                     doc.FontStyle = font.FontStyle;
                     doc.FontWeight = font.FontWeight;
-                    var color = System.Drawing.Color.FromArgb(font.FontColor);
-                    doc.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, color.R, color.G, color.B));
                 }
+
+                // 前景色：默认黑字；背景是深色且字体色仍是默认黑时自动反白，避免黑字黑底
+                var fg = System.Windows.Media.Colors.Black;
+                if (font != null)
+                {
+                    var color = System.Drawing.Color.FromArgb(font.FontColor);
+                    fg = System.Windows.Media.Color.FromArgb(255, color.R, color.G, color.B);
+                }
+                if (IsDarkBrush(popup.Background) && fg == System.Windows.Media.Colors.Black)
+                    fg = System.Windows.Media.Colors.White;
+                doc.Foreground = new SolidColorBrush(fg);
 
                 popup.MessageViewer.Document = doc;
             }
 
-            // 紧凑窗口：全面缩小尺寸与边距，并允许窗口按内容/标题自适应
+            // 尺寸规范：正常 320~600 × 140~540；紧凑 200~420 × 104~250（不打断、不占地）
             if (popup._compact)
             {
-                popup.MinWidth = 0;
-                popup.MinHeight = 0;
-                popup.MaxWidth = 460;
-                popup.MaxHeight = 420;
-                if (popup.ContentGrid != null)
-                    popup.ContentGrid.Margin = new Thickness(4);
-                if (popup.TitleText != null)
-                {
-                    popup.TitleText.FontSize = 12;
-                    popup.TitleText.Margin = new Thickness(0, 0, 20, 2);
-                }
-                if (popup.CloseButton != null)
-                {
-                    popup.CloseButton.Width = 16;
-                    popup.CloseButton.Height = 16;
-                }
+                popup.MinWidth = 200;
+                popup.MinHeight = 104;
+                popup.MaxWidth = 420;
+                popup.MaxHeight = 250;
+                if (popup.LayoutRoot != null)
+                    popup.LayoutRoot.Margin = new Thickness(10, 8, 10, 8);
                 if (popup.IconImage != null)
                 {
-                    popup.IconImage.Width = 20;
-                    popup.IconImage.Height = 20;
-                    popup.IconImage.Margin = new Thickness(0, 0, 4, 0);
+                    popup.IconImage.Width = 16;
+                    popup.IconImage.Height = 16;
+                    popup.IconImage.Margin = new Thickness(0, 0, 8, 0);
                 }
-                if (popup.MessageViewer != null)
-                    popup.MessageViewer.Margin = new Thickness(0);
-                if (popup.MessageScroll != null)
-                    popup.MessageScroll.MaxHeight = 200;
+                if (popup.ButtonHost != null)
+                    popup.ButtonHost.Margin = new Thickness(0, 10, 0, 0);
                 if (popup.ButtonPanel != null)
-                    popup.ButtonPanel.Margin = new Thickness(0, 4, 0, 0);
+                    popup.ButtonPanel.ItemHeight = 24;
+            }
+            else
+            {
+                popup.MinWidth = 320;
+                popup.MinHeight = 140;
+                popup.MaxWidth = 600;
+                popup.MaxHeight = 540;
+                if (popup.ButtonHost != null)
+                    popup.ButtonHost.Margin = new Thickness(0, 16, 0, 0);
+                if (popup.ButtonPanel != null)
+                    popup.ButtonPanel.ItemHeight = 32;
             }
             
             // 2. 设置图标（无图标时不占空间）
@@ -218,7 +211,15 @@ namespace ShaoLu.Views
                 popup._tcs = null;
             };
 
-            // 5. 非模态显示
+            // 5. 两段式尺寸：先按内容自适应，Loaded 后锁住，避免用户缩放被内容重算打回
+            popup.Loaded += (_, __) =>
+            {
+                popup.SizeToContent = SizeToContent.Manual;
+                if (popup.ActualWidth > 0) popup.Width = popup.ActualWidth;
+                if (popup.ActualHeight > 0) popup.Height = popup.ActualHeight;
+            };
+
+            // 6. 非模态显示
             popup.Show();
 
             // 6. 激活窗口并设置焦点，确保键盘交互正常
@@ -238,9 +239,10 @@ namespace ShaoLu.Views
                 var btn = new Button
                 {
                     Content = content,
-                    Width = _compact ? 54 : 80,
-                    Height = _compact ? 22 : 30,
-                    Margin = new Thickness(_compact ? 2 : 5, 0, 0, 0),
+                    MinWidth = _compact ? 56 : 88,
+                    Height = _compact ? 24 : 32,
+                    Padding = new Thickness(_compact ? 10 : 14, 0, _compact ? 10 : 14, 0),
+                    Margin = new Thickness(_compact ? 6 : 8, 0, 0, 0),
                     IsDefault = isDefault // 设置默认按钮，响应 Enter 键
                 };
 
@@ -272,6 +274,15 @@ namespace ShaoLu.Views
             }
         }
 
+        /// <summary>背景是否为深色（相对亮度阈值），用于默认黑字在深底上自动反白</summary>
+        private static bool IsDarkBrush(System.Windows.Media.Brush brush)
+        {
+            if (brush is not System.Windows.Media.SolidColorBrush solid) return false;
+            var c = solid.Color;
+            double luminance = (0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B) / 255.0;
+            return luminance < 0.45;
+        }
+
         private static ImageSource GetIconSourceDynamic(MessageBoxImage icon)
         {
             return icon switch
@@ -299,22 +310,6 @@ namespace ShaoLu.Views
             {
                 Close();
             }
-        }
-
-        /// <summary>
-        /// 无边框窗口：按住左键拖拽移动窗口
-        /// </summary>
-        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed && e.Source is not System.Windows.Controls.Primitives.ButtonBase)
-            {
-                try { DragMove(); } catch { }
-            }
-        }
-
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            CloseWithResult(string.Empty);
         }
     }
 

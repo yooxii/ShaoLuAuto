@@ -1,4 +1,4 @@
-﻿<Window x:Class="ShaoLu.MainWindow"
+<Window x:Class="ShaoLu.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -15,7 +15,7 @@
         d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
         mc:Ignorable="d"
         PreviewKeyDown="Window_PreviewKeyDown"
-        Title="{lex:Loc AppTitle}" Height="600" Width="1000">
+        Title="{Binding WindowTitle}" Height="600" Width="1000">
 
     <!-- 文件操作快捷键（仅主窗口内有效） -->
     <Window.InputBindings>
@@ -40,6 +40,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Menu>
             <MenuItem x:Name="File" Header="{lex:Loc}">
@@ -57,6 +58,14 @@
                           Command="{Binding Steps.UndoStepCommand, Source={StaticResource VMLocator}}"/>
                 <MenuItem x:Name="RedoStepEditMenuItem" Header="{lex:Loc RedoStepEdit}"
                           Command="{Binding Steps.RedoStepCommand, Source={StaticResource VMLocator}}"/>
+                <Separator/>
+                <MenuItem Header="{lex:Loc Up}" Command="{Binding Steps.UpStepCommand, Source={StaticResource VMLocator}}"/>
+                <MenuItem Header="{lex:Loc Down}" Command="{Binding Steps.DownStepCommand, Source={StaticResource VMLocator}}"/>
+                <Separator/>
+                <MenuItem Header="{lex:Loc Copy}" Command="{Binding Steps.CopyStepCommand, Source={StaticResource VMLocator}}"/>
+                <MenuItem Header="{lex:Loc Cut}" Command="{Binding Steps.CutStepCommand, Source={StaticResource VMLocator}}"/>
+                <MenuItem Header="{lex:Loc Paste}" Command="{Binding Steps.PasteStepCommand, Source={StaticResource VMLocator}}"/>
+                <MenuItem Header="{lex:Loc Delete}" Command="{Binding Steps.DelStepCommand, Source={StaticResource VMLocator}}"/>
             </MenuItem>
             <MenuItem x:Name="Setting" Header="{lex:Loc}" Click="Setting_Click">
             </MenuItem>
@@ -83,5 +92,14 @@
             <!--<MenuItem Header="测试裁剪" Click="TestCrop_Click"/>-->
         </Menu> <!--菜单-->
         <view:UserControlSteps Grid.Row="1" x:Name="Steps"/>
+        <!-- 状态栏：左侧当前运行步骤，右侧运行状态 -->
+        <StatusBar Grid.Row="2" Height="24">
+            <StatusBarItem HorizontalContentAlignment="Left">
+                <TextBlock Text="{Binding Steps.CurrentRunStepName}"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Text="{Binding Steps.RunStateText}"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>

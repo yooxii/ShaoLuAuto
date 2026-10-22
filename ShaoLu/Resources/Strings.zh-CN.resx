@@ -1986,4 +1986,28 @@
   <data name="Msg_FieldName" xml:space="preserve">
     <value>字段{0}</value>
   </data>
+  <data name="Title_Unsaved" xml:space="preserve">
+    <value>未保存</value>
+  </data>
+  <data name="RunState_Idle" xml:space="preserve">
+    <value>未运行</value>
+  </data>
+  <data name="RunState_Running" xml:space="preserve">
+    <value>运行中</value>
+  </data>
+  <data name="RunState_Paused" xml:space="preserve">
+    <value>已暂停</value>
+  </data>
+  <data name="AcbelBusinessFailTitle" xml:space="preserve">
+    <value>Acbel 上传业务卡控</value>
+  </data>
+  <data name="AcbelBusinessFailBody" xml:space="preserve">
+    <value>返回代码：{0}
+
+详情：
+{1}</value>
+  </data>
+  <data name="AcbelBusinessFailNoCode" xml:space="preserve">
+    <value>(未解析出代码)</value>
+  </data>
 </root>

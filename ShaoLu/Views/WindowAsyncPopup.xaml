@@ -1,63 +1,50 @@
-﻿<Window x:Class="ShaoLu.Views.WindowAsyncPopup"
+<Window x:Class="ShaoLu.Views.WindowAsyncPopup"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ShaoLu.Views"
-        xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
         mc:Ignorable="d"
-        WindowStartupLocation="CenterScreen"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="CanResize"
+        AllowsTransparency="False"
         SizeToContent="WidthAndHeight"
-        MinHeight="100" MinWidth="100" 
-        MaxWidth="500" MaxHeight="500"
-        WindowStyle="None"
-        AllowsTransparency="True"
+        WindowStartupLocation="CenterScreen"
         Topmost="True"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown">
-    <Border BorderBrush="#CCCCCC" BorderThickness="1">
-        <Grid x:Name="ContentGrid" Margin="20">
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        MinWidth="320" MinHeight="140"
+        MaxWidth="600" MaxHeight="540"
+        Background="{DynamicResource WD.BackgroundBrush}">
+    <!-- 原生窗口：标题栏自带最小化/最大化/关闭与拖拽；正文区是唯一滚动宿主，按钮区不参与压缩 -->
+    <Grid x:Name="LayoutRoot" Margin="20,16,20,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="BodyHost" Grid.Row="0" MinHeight="21">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <!-- 标题栏（可拖拽移动窗口） -->
-            <TextBlock x:Name="TitleText" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                       FontSize="14" FontWeight="Bold" Margin="0,0,0,10"
-                       Visibility="Collapsed"/>
-            <Button x:Name="CloseButton" Grid.Row="0" Grid.Column="1" Content="✕"
-                    Width="24" Height="24" HorizontalAlignment="Right" VerticalAlignment="Top"
-                    Background="Transparent" BorderThickness="0" Cursor="Hand"
-                    Click="CloseButton_Click" Visibility="Collapsed"/>
-
-            <!-- 图标显示区域 -->
-            <Image x:Name="IconImage" 
-                   Grid.Row="1" Grid.Column="0" 
-                   Width="48" Height="48" 
-                   Margin="0,0,15,10" 
+            <Image x:Name="IconImage"
+                   Grid.Column="0"
+                   Width="40" Height="40"
+                   Margin="0,0,16,0"
                    VerticalAlignment="Top"/>
-
-            <!-- 消息内容（支持富文本，可滚动） -->
-            <ScrollViewer x:Name="MessageScroll" Grid.Row="1" Grid.Column="1"
-                          VerticalScrollBarVisibility="Auto" 
-                          MaxHeight="300"
-                          VerticalAlignment="Center">
-                <FlowDocumentScrollViewer x:Name="MessageViewer" 
-                                          Margin="0,0,10,0"
-                                          IsToolBarVisible="False"/>
-            </ScrollViewer>
-
-            <!-- 按钮区域 -->
-            <StackPanel x:Name="ButtonPanel" 
-                        Grid.Row="2" Grid.ColumnSpan="2" 
-                        Orientation="Horizontal" 
-                        HorizontalAlignment="Right" 
-                        Margin="0,15,0,0"/>
+            <FlowDocumentScrollViewer x:Name="MessageViewer" Grid.Column="1"
+                                      IsToolBarVisible="False" IsTabStop="False"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Auto"/>
         </Grid>
-    </Border>
+
+        <ScrollViewer x:Name="ButtonHost" Grid.Row="1" Margin="0,16,0,0" MaxHeight="72"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <WrapPanel x:Name="ButtonPanel"
+                       Orientation="Horizontal"
+                       HorizontalAlignment="Right"
+                       ItemHeight="32"/>
+        </ScrollViewer>
+    </Grid>
 </Window>

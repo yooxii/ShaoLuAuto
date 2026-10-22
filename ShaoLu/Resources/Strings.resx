@@ -1986,4 +1986,28 @@
   <data name="Msg_FieldName" xml:space="preserve">
     <value>Field {0}</value>
   </data>
+  <data name="Title_Unsaved" xml:space="preserve">
+    <value>Unsaved</value>
+  </data>
+  <data name="RunState_Idle" xml:space="preserve">
+    <value>Idle</value>
+  </data>
+  <data name="RunState_Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="RunState_Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="AcbelBusinessFailTitle" xml:space="preserve">
+    <value>Acbel upload blocked</value>
+  </data>
+  <data name="AcbelBusinessFailBody" xml:space="preserve">
+    <value>Return code: {0}
+
+Details:
+{1}</value>
+  </data>
+  <data name="AcbelBusinessFailNoCode" xml:space="preserve">
+    <value>(no code parsed)</value>
+  </data>
 </root>

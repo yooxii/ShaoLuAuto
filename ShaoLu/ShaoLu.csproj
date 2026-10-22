@@ -145,6 +145,7 @@
     <Compile Include="Converters\BoolToInverseBoolConverter.cs" />
     <Compile Include="Converters\BoolToGoodBadConverter.cs" />
     <Compile Include="Converters\RegionCollapseConverter.cs" />
+    <Compile Include="Converters\InMultiThreadRegionConverter.cs" />
     <Compile Include="Converters\SettingsTemplateSelector.cs" />
     <Compile Include="Converters\RegionCollapseCellTemplateSelector.cs" />
     <Compile Include="Models\AutoguiModel.cs" />

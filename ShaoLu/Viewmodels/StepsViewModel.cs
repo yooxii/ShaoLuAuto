@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ShaoLu.Converters;
 using ShaoLu.Models;
@@ -58,7 +58,36 @@ namespace ShaoLu.Viewmodels
 
         private volatile bool _isPaused = false;
         /// <summary>是否处于暂停状态</summary>
-        public bool IsPaused { get => _isPaused; set => SetProperty(ref _isPaused, value); }
+        public bool IsPaused
+        {
+            get => _isPaused;
+            set
+            {
+                if (SetProperty(ref _isPaused, value))
+                    OnPropertyChanged(nameof(RunStateText));
+            }
+        }
+
+        private string _currentRunStepName = string.Empty;
+        /// <summary>状态栏：当前正在运行的步骤名（未运行时为空）</summary>
+        public string CurrentRunStepName
+        {
+            get => _currentRunStepName;
+            set => SetProperty(ref _currentRunStepName, value);
+        }
+
+        /// <summary>状态栏：运行状态文案（未运行 / 运行中 / 已暂停）</summary>
+        public string RunStateText
+        {
+            get
+            {
+                if (!IsRunning)
+                    return Services.LanguageService.GetLocalizedString("RunState_Idle");
+                return IsPaused
+                    ? Services.LanguageService.GetLocalizedString("RunState_Paused")
+                    : Services.LanguageService.GetLocalizedString("RunState_Running");
+            }
+        }
 
 
         public bool _isRunning = false;
@@ -69,6 +98,8 @@ namespace ShaoLu.Viewmodels
             {
                 if (SetProperty(ref _isRunning, value))
                 {
+                    OnPropertyChanged(nameof(RunStateText));
+                    if (!value) CurrentRunStepName = string.Empty;
                     RunCommand.RaiseCanExecuteChanged();
                     StopCommand.RaiseCanExecuteChanged();
                     AddStepCommand.RaiseCanExecuteChanged();
@@ -1382,6 +1413,7 @@ namespace ShaoLu.Viewmodels
                     try
                     {
                         SelectedStep = step;
+                        CurrentRunStepName = step.Name;
 
                         // 记录当前正在执行的步骤（供统计窗口展示）
                         _executionContext.RunningStepUid = step.Uid;

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using ShaoLu.Services;
 using ShaoLu.Utils;
 using System.IO;
@@ -59,7 +59,34 @@ namespace ShaoLu.Viewmodels
         /// <summary>
         /// 当前打开/保存的 .autostep 文件完整路径
         /// </summary>
-        public string StepFilePath { get => _stepFilePath; set => SetProperty(ref _stepFilePath, value); }
+        public string StepFilePath
+        {
+            get => _stepFilePath;
+            set
+            {
+                if (SetProperty(ref _stepFilePath, value))
+                    OnPropertyChanged(nameof(WindowTitle));
+            }
+        }
+
+        /// <summary>窗口标题：程序名 + 当前工程文件名（未保存时显示「未保存」）</summary>
+        public string WindowTitle
+        {
+            get
+            {
+                string app = Services.LanguageService.GetLocalizedString("AppTitle");
+                string file = string.IsNullOrWhiteSpace(_stepFilePath)
+                    ? Services.LanguageService.GetLocalizedString("Title_Unsaved")
+                    : System.IO.Path.GetFileNameWithoutExtension(_stepFilePath);
+                return $"{app} - {file}";
+            }
+        }
+
+        /// <summary>语言切换后刷新标题等本地化文案</summary>
+        public void RefreshLocalizedText()
+        {
+            OnPropertyChanged(nameof(WindowTitle));
+        }
 
         /// <summary>
         /// 当前步骤包的图片解压工作目录

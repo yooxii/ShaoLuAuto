@@ -102,6 +102,7 @@ namespace ShaoLu
         {
             InitializeComponent();
             DataContext = mainViewModel;
+            ApplyDefaultWindowSize();
 
             // 跟踪未保存修改：集合增删 + 单步属性变更（运行期状态变化不算用户编辑）
             stepsViewModel.AutomationStepBases.CollectionChanged += AutomationStepBases_CollectionChanged;
@@ -293,6 +294,21 @@ namespace ShaoLu
         }
 
         /// <summary>异常详情：类型 + 消息 + 内层异常 + 堆栈（截断），便于现场报错定位。</summary>
+        /// <summary>默认窗口尺寸取主屏的 60% 宽 × 60% 高（不超出屏幕，留边距）。</summary>
+        private void ApplyDefaultWindowSize()
+        {
+            try
+            {
+                double screenW = SystemParameters.PrimaryScreenWidth;
+                double screenH = SystemParameters.PrimaryScreenHeight;
+                if (screenW > 0)
+                    Width = Math.Max(800, Math.Min(screenW * 0.60, screenW - 40));
+                if (screenH > 0)
+                    Height = Math.Max(500, Math.Min(screenH * 0.60, screenH - 40));
+            }
+            catch { }
+        }
+
         /// <summary>把打开工程的异常翻译成用户能理解的说明（完整堆栈只写日志，不塞给用户）。</summary>
         private static string DescribeFriendlyError(Exception ex)
         {

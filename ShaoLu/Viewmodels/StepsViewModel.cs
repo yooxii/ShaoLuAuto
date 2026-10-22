@@ -751,6 +751,7 @@ namespace ShaoLu.Viewmodels
                     "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
                     "AcbelUpload" => new AcbelUploadStep($"AcbelUpload_{AutomationStepBases.Count(t => t.Type == StepType.AcbelUpload) + 1}"),
                     "UserInput" => new UserInputStep($"UserInput_{AutomationStepBases.Count(t => t.Type == StepType.UserInput) + 1}"),
+                    "ScanCode" => new ScanCodeStep($"ScanCode_{AutomationStepBases.Count(t => t.Type == StepType.ScanCode) + 1}"),
                     "GetInput" => new GetInputStep($"GetInput_{AutomationStepBases.Count(t => t.Type == StepType.GetInput) + 1}"),
                     "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
@@ -784,6 +785,180 @@ namespace ShaoLu.Viewmodels
                 AutomationStepBases.Add(step);
             }
             SelectedStep = step;
+
+            // 扫码 / 上传链条：缺用户输入步骤或扫码步骤时提示并自动补齐
+            try
+            {
+                if (step is ScanCodeStep scanStep) EnsureChainForScanCode(scanStep);
+                else if (step is AcbelUploadStep uploadStep) EnsureChainForUpload(uploadStep);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "扫码链条自动补齐失败");
+            }
+        }
+
+        /// <summary>
+        /// 扫码步骤依赖「用户输入」步骤提供工单号/站别/工号/线别：
+        /// 若没有用户输入步骤、或它在扫码步骤下方、或缺字段，提示后自动创建（放首行）并补齐四个字段。
+        /// </summary>
+        private void EnsureChainForScanCode(ScanCodeStep scanStep)
+        {
+            int scanIndex = AutomationStepBases.IndexOf(scanStep);
+            var userInput = AutomationStepBases.OfType<UserInputStep>().FirstOrDefault();
+            int uiIndex = userInput == null ? -1 : AutomationStepBases.IndexOf(userInput);
+
+            var requiredFields = new[] { "工单号", "站别", "工号", "线别" };
+            var missingFields = userInput == null
+                ? new List<string>(requiredFields)
+                : requiredFields.Where(n => !userInput.Fields.Any(f =>
+                    string.Equals((f?.Name ?? string.Empty).Trim(), n, StringComparison.OrdinalIgnoreCase))).ToList();
+
+            bool createNew = userInput == null || uiIndex > scanIndex;
+            if (!createNew && missingFields.Count == 0) return;
+
+            string title = LanguageService.GetLocalizedString("ScanCode_ChainTitle", "扫码步骤需要用户输入");
+            string message = LanguageService.GetLocalizedString("ScanCode_AutoAddUserInput",
+                "扫码步骤需要用户输入步骤提供工单号/站别/工号/线别。\n\n将自动创建用户输入步骤并放到首行（缺少的字段会补齐）。");
+            try
+            {
+                WPFDevelopers.Controls.MessageBox.Show(message, title,
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            }
+            catch { }
+
+            PushListUndoSnapshot();
+            if (createNew)
+            {
+                var ui = new UserInputStep($"UserInput_{AutomationStepBases.Count(t => t.Type == StepType.UserInput) + 1}")
+                {
+                    PromptTitle = LanguageService.GetLocalizedString("ScanCode_UserInputTitle", "扫码信息")
+                };
+                foreach (var name in requiredFields)
+                {
+                    ui.Fields.Add(new UserInputField
+                    {
+                        Name = name,
+                        FieldType = UserInputFieldType.Text,
+                        IsRequired = true
+                    });
+                }
+                ApplyDefaultSettings(ui);
+                AutomationStepBases.Insert(0, ui);
+            }
+            else
+            {
+                foreach (var name in missingFields)
+                {
+                    userInput.Fields.Add(new UserInputField
+                    {
+                        Name = name,
+                        FieldType = UserInputFieldType.Text,
+                        IsRequired = true
+                    });
+                }
+            }
+        }
+
+        /// <summary>
+        /// 确保存在「用户输入」步骤且位于扫码步骤之前、包含工单号/站别/工号/线别四个字段。
+        /// 不满足时先提示，再自动创建（首行）或补齐缺失字段。
+        /// </summary>
+        private void EnsureUserInputForScan(AutomationStepBase anchorStep)
+        {
+            int anchorIndex = AutomationStepBases.IndexOf(anchorStep);
+            var userInput = AutomationStepBases.OfType<UserInputStep>().FirstOrDefault();
+            int uiIndex = userInput == null ? -1 : AutomationStepBases.IndexOf(userInput);
+
+            var requiredFields = new[] { "工单号", "站别", "工号", "线别" };
+            var missingFields = userInput == null
+                ? new List<string>(requiredFields)
+                : requiredFields.Where(n => !userInput.Fields.Any(f =>
+                    string.Equals((f?.Name ?? string.Empty).Trim(), n, StringComparison.OrdinalIgnoreCase))).ToList();
+
+            bool createNew = userInput == null || uiIndex > anchorIndex;
+            if (!createNew && missingFields.Count == 0) return;
+
+            string title = LanguageService.GetLocalizedString("ScanCode_ChainTitle", "扫码步骤需要用户输入");
+            string message = LanguageService.GetLocalizedString("ScanCode_AutoAddUserInput",
+                "扫码步骤需要用户输入步骤提供工单号/站别/工号/线别。\n\n将自动创建用户输入步骤并放到首行（缺少的字段会补齐）。");
+            try
+            {
+                WPFDevelopers.Controls.MessageBox.Show(message, title,
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            }
+            catch { }
+
+            PushListUndoSnapshot();
+            if (createNew)
+            {
+                var ui = new UserInputStep($"UserInput_{AutomationStepBases.Count(t => t.Type == StepType.UserInput) + 1}")
+                {
+                    PromptTitle = LanguageService.GetLocalizedString("ScanCode_UserInputTitle", "扫码信息")
+                };
+                foreach (var name in requiredFields)
+                {
+                    ui.Fields.Add(new UserInputField
+                    {
+                        Name = name,
+                        FieldType = UserInputFieldType.Text,
+                        IsRequired = true
+                    });
+                }
+                ApplyDefaultSettings(ui);
+                AutomationStepBases.Insert(0, ui);
+            }
+            else
+            {
+                foreach (var name in missingFields)
+                {
+                    userInput.Fields.Add(new UserInputField
+                    {
+                        Name = name,
+                        FieldType = UserInputFieldType.Text,
+                        IsRequired = true
+                    });
+                }
+            }
+        }
+
+        /// <summary>上传步骤依赖扫码步骤：没有时提示并自动插入一个扫码步骤。</summary>
+        private void EnsureChainForUpload(AcbelUploadStep uploadStep)
+        {
+            var scan = AutomationStepBases.OfType<ScanCodeStep>().FirstOrDefault();
+            if (scan == null)
+            {
+                string title = LanguageService.GetLocalizedString("ScanCode_ChainTitle", "扫码步骤需要用户输入");
+                string message = LanguageService.GetLocalizedString("ScanCode_AutoAddScan",
+                    "上传步骤需要扫码步骤（验证网络 → 扫码 → 验证条码）。\n\n将在上传步骤前自动插入一个扫码步骤。");
+                try
+                {
+                    WPFDevelopers.Controls.MessageBox.Show(message, title,
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                }
+                catch { }
+
+                int uploadIndex = AutomationStepBases.IndexOf(uploadStep);
+                scan = new ScanCodeStep($"ScanCode_{AutomationStepBases.Count(t => t.Type == StepType.ScanCode) + 1}");
+                ApplyDefaultSettings(scan);
+                PushListUndoSnapshot();
+                AutomationStepBases.Insert(uploadIndex < 0 ? 0 : uploadIndex, scan);
+            }
+
+            // 上传链条同时要求「用户输入」步骤提供工单号/站别/工号/线别
+            EnsureUserInputForScan(scan);
+
+            // 把上传的 INTERNAL_SR（第 4 段，单体条码）引用到扫码步骤的文本；用户已配引用时不覆盖
+            try
+            {
+                var row = uploadStep.RequiredRows?.FirstOrDefault(r => r.Index == 4);
+                if (row != null && row.RefStepUid == null)
+                {
+                    row.RefStepUid = scan.Uid;
+                    row.RefKind = AcbelReferenceKind.OcrText;
+                }
+            }
+            catch { }
         }
 
         /// <summary>

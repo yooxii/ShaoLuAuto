@@ -2063,4 +2063,59 @@ Reason: {0}</value>
   <data name="Missing_StepPointImage" xml:space="preserve">
     <value>Row {0} "{1}" text point #{2} has no image</value>
   </data>
+  <data name="AddScanCodeStep" xml:space="preserve">
+    <value>Scan Code</value>
+  </data>
+  <data name="ScanCode_Title" xml:space="preserve">
+    <value>Scan</value>
+  </data>
+  <data name="ScanCode_Prompt" xml:space="preserve">
+    <value>Scan the barcode and press Enter</value>
+  </data>
+  <data name="ScanCode_Failed" xml:space="preserve">
+    <value>Scan failed: </value>
+  </data>
+  <data name="ScanCode_MissingInput" xml:space="preserve">
+    <value>Work order / station / employee / line are missing. Fill them in the User Input step first.</value>
+  </data>
+  <data name="ScanCode_NetworkFailed" xml:space="preserve">
+    <value>Network verification failed</value>
+  </data>
+  <data name="ScanCode_Canceled" xml:space="preserve">
+    <value>No code scanned or cancelled</value>
+  </data>
+  <data name="ScanCode_CheckFailed" xml:space="preserve">
+    <value>Barcode verification failed</value>
+  </data>
+  <data name="ScanCode_BasicFailed" xml:space="preserve">
+    <value>Failed to write basic info</value>
+  </data>
+  <data name="ScanCode_NoResponse" xml:space="preserve">
+    <value>No response from bridge</value>
+  </data>
+  <data name="ScanCode_Timeout" xml:space="preserve">
+    <value>Call timed out</value>
+  </data>
+  <data name="ScanCode_ChainTitle" xml:space="preserve">
+    <value>Scan step needs user input</value>
+  </data>
+  <data name="ScanCode_AutoAddUserInput" xml:space="preserve">
+    <value>The scan step needs a User Input step with work order / station / employee / line.
+
+A User Input step will be created at the top automatically (missing fields are added).</value>
+  </data>
+  <data name="ScanCode_AutoAddScan" xml:space="preserve">
+    <value>The upload step needs a scan step (verify network → scan → verify barcode).
+
+A scan step will be inserted before the upload step automatically.</value>
+  </data>
+  <data name="ScanCode_UserInputTitle" xml:space="preserve">
+    <value>Scan info</value>
+  </data>
+  <data name="ScanCode_Description" xml:space="preserve">
+    <value>Verify network → scan → verify barcode. The scanned code is exposed as this step text for referencing.</value>
+  </data>
+  <data name="ScanCode_FieldMapping" xml:space="preserve">
+    <value>User input field names</value>
+  </data>
 </root>

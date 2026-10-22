@@ -2063,4 +2063,59 @@
   <data name="Missing_StepPointImage" xml:space="preserve">
     <value>第 {0} 行「{1}」第 {2} 個取點未設定圖片</value>
   </data>
+  <data name="AddScanCodeStep" xml:space="preserve">
+    <value>掃碼</value>
+  </data>
+  <data name="ScanCode_Title" xml:space="preserve">
+    <value>掃碼</value>
+  </data>
+  <data name="ScanCode_Prompt" xml:space="preserve">
+    <value>請掃描條碼後按 Enter</value>
+  </data>
+  <data name="ScanCode_Failed" xml:space="preserve">
+    <value>掃碼失敗：</value>
+  </data>
+  <data name="ScanCode_MissingInput" xml:space="preserve">
+    <value>缺少工單號/站別/工號/線別，請先在使用者輸入步驟中填寫</value>
+  </data>
+  <data name="ScanCode_NetworkFailed" xml:space="preserve">
+    <value>驗證網路失敗</value>
+  </data>
+  <data name="ScanCode_Canceled" xml:space="preserve">
+    <value>未掃碼或已取消</value>
+  </data>
+  <data name="ScanCode_CheckFailed" xml:space="preserve">
+    <value>驗證條碼失敗</value>
+  </data>
+  <data name="ScanCode_BasicFailed" xml:space="preserve">
+    <value>寫入基礎資訊失敗</value>
+  </data>
+  <data name="ScanCode_NoResponse" xml:space="preserve">
+    <value>橋接無回應</value>
+  </data>
+  <data name="ScanCode_Timeout" xml:space="preserve">
+    <value>呼叫逾時</value>
+  </data>
+  <data name="ScanCode_ChainTitle" xml:space="preserve">
+    <value>掃碼步驟需要使用者輸入</value>
+  </data>
+  <data name="ScanCode_AutoAddUserInput" xml:space="preserve">
+    <value>掃碼步驟需要使用者輸入步驟提供工單號/站別/工號/線別。
+
+將自動建立使用者輸入步驟並放到首行（缺少的欄位會補齊）。</value>
+  </data>
+  <data name="ScanCode_AutoAddScan" xml:space="preserve">
+    <value>上傳步驟需要掃碼步驟（驗證網路 → 掃碼 → 驗證條碼）。
+
+將在上傳步驟前自動插入一個掃碼步驟。</value>
+  </data>
+  <data name="ScanCode_UserInputTitle" xml:space="preserve">
+    <value>掃碼資訊</value>
+  </data>
+  <data name="ScanCode_Description" xml:space="preserve">
+    <value>驗證網路 → 掃碼 → 驗證條碼，掃碼結果作為本步驟文字供上傳步驟引用。</value>
+  </data>
+  <data name="ScanCode_FieldMapping" xml:space="preserve">
+    <value>使用者輸入欄位名稱</value>
+  </data>
 </root>

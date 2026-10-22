@@ -68,6 +68,13 @@ namespace AcbelBridge
         [DllImport(DefaultDllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true)]
         private static extern IntPtr ACBEL_INSERT_DATA(string database, string uploadData, string programFile);
 
+        // 扫码流程：基础资料校验（db, 工单号, 站别/工号合并, 线别）与条码检查（条码, 站别/工号, 站别/工号）
+        [DllImport(DefaultDllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true)]
+        private static extern IntPtr ACBEL_SET_BASIC_INFO(string database, string workOrder, string stationEmp, string line);
+
+        [DllImport(DefaultDllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true)]
+        private static extern IntPtr CHKBAR_CODE(string barcode, string stationEmp, string stationEmp2);
+
         [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
         private static extern IntPtr LoadLibraryA(string path);
 
@@ -138,6 +145,33 @@ namespace AcbelBridge
                         continue;
                     }
                     if (cmd == "open") { ReplyOkOrFail(CallOpen); continue; }
+                    if (cmd == "set_basic_info")
+                    {
+                        if (parts.Length < 4) { ReplyFail("set_basic_info 需要 3 个参数：工单号、站别/工号、线别"); continue; }
+                        string wo, se, ln;
+                        try
+                        {
+                            wo = FromB64(parts[1]);
+                            se = FromB64(parts[2]);
+                            ln = FromB64(parts[3]);
+                        }
+                        catch (Exception ex) { ReplyFail("参数不是合法的 Base64：" + ex.Message); continue; }
+                        ReplyOkOrFail(() => CallSetBasicInfo(wo, se, ln));
+                        continue;
+                    }
+                    if (cmd == "chkbar_code")
+                    {
+                        if (parts.Length < 3) { ReplyFail("chkbar_code 需要 2 个参数：条码、站别/工号"); continue; }
+                        string barcode, se;
+                        try
+                        {
+                            barcode = FromB64(parts[1]);
+                            se = FromB64(parts[2]);
+                        }
+                        catch (Exception ex) { ReplyFail("参数不是合法的 Base64：" + ex.Message); continue; }
+                        ReplyOkOrFail(() => CallCheckBarcode(barcode, se));
+                        continue;
+                    }
                     if (cmd == "insert")
                     {
                         if (parts.Length < 3) { ReplyFail("insert 需要 2 个参数：上传资料、镭雕程式文件名"); continue; }
@@ -151,7 +185,7 @@ namespace AcbelBridge
                         ReplyOkOrFail(() => CallInsert(payload, program));
                         continue;
                     }
-                    ReplyFail("未知命令：" + cmd + "（可用：ping / open / insert / quit）");
+                    ReplyFail("未知命令：" + cmd + "（可用：ping / open / set_basic_info / chkbar_code / insert / quit）");
                 }
                 return 0;
             }
@@ -367,6 +401,28 @@ namespace AcbelBridge
 
             string db = _database;
             return RunGuarded(() => ACBEL_INSERT_DATA(db, uploadData, programFile ?? string.Empty));
+        }
+
+        /// <summary>基础资料校验（扫码后写入工单/站别工号/线别）。</summary>
+        private static string CallSetBasicInfo(string workOrder, string stationEmp, string line)
+        {
+            EnsureEnvironmentReady();
+            if (string.IsNullOrEmpty(_database))
+                throw new InvalidOperationException("尚未成功执行 open：ACBEL_SET_BASIC_INFO 的第 1 个参数必须是 ACBEL_DATABASE_OPEN 返回的库名。已拒绝调用。");
+            LogNetworkCheck("set_basic_info");
+            return RunGuarded(() => ACBEL_SET_BASIC_INFO(_database, workOrder ?? string.Empty, stationEmp ?? string.Empty, line ?? string.Empty));
+        }
+
+        /// <summary>条码检查（扫码得到的条码）。</summary>
+        private static string CallCheckBarcode(string barcode, string stationEmp)
+        {
+            EnsureEnvironmentReady();
+            if (string.IsNullOrEmpty(_database))
+                throw new InvalidOperationException("尚未成功执行 open：CHKBAR_CODE 需要先打开数据库。已拒绝调用。");
+            if (string.IsNullOrWhiteSpace(barcode))
+                throw new InvalidOperationException("条码为空，已拒绝调用。");
+            LogNetworkCheck("chkbar_code");
+            return RunGuarded(() => CHKBAR_CODE(barcode, stationEmp ?? string.Empty, stationEmp ?? string.Empty));
         }
 
         /// <summary>把 ANSI 字符串指针转成 string。</summary>

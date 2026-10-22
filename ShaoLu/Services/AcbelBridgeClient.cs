@@ -234,6 +234,18 @@ namespace ShaoLu.Services
             return Request("open");
         }
 
+        /// <summary>调用 ACBEL_SET_BASIC_INFO(db, 工单号, 站别/工号合并值, 线别)。</summary>
+        public AcbelCallResult SetBasicInfo(string workOrder, string stationEmp, string line)
+        {
+            return Request("set_basic_info", workOrder ?? string.Empty, stationEmp ?? string.Empty, line ?? string.Empty);
+        }
+
+        /// <summary>调用 CHKBAR_CODE(条码, 站别/工号合并值, 站别/工号合并值)。</summary>
+        public AcbelCallResult CheckBarcode(string barcode, string stationEmp)
+        {
+            return Request("chkbar_code", barcode ?? string.Empty, stationEmp ?? string.Empty);
+        }
+
         /// <summary>
         /// 调用 ACBEL_INSERT_DATA(db, 上传资料, 镭雕程式文件名)。★ 会写入 MES 生产库。
         /// db 由桥接进程缓存（必须已成功执行过 OpenDatabase）；未成功 open 时桥接会拒绝且不写库。

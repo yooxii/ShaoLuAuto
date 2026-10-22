@@ -44,6 +44,7 @@ namespace ShaoLu.Converters
                     StepType.TypeTextFromFile => TypeTextFromFileTemplate,
                     StepType.Popup => PopupTemplate,
                     StepType.AcbelUpload => AcbelUploadTemplate,
+                    StepType.ScanCode => EmptyStepTemplate,
                     StepType.GetInput => GetInputTemplate,
                     StepType.MouseAction => MouseActionTemplate,
                     StepType.Statistics => StatisticsTemplate,

@@ -147,7 +147,7 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <ToolBarPanel Margin="3">
-                <ToolBarTray Orientation="Horizontal">
+                <ToolBarTray x:Name="GroupToolBarTray" Orientation="Horizontal">
                     <ToolBar>
                         <Button Content="{lex:Loc BtnRun_Content}" Margin="3" Command="{Binding RunCommand}"/>
                         <Button Margin="3" Command="{Binding PauseCommand}">
@@ -238,7 +238,10 @@
                             <MenuItem Header="{lex:Loc AddInterruptStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Interrupt"/>
                         </wd:SplitButton>
                         <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
-                        <Button Content="{lex:Loc AddAcbelUploadStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="AcbelUpload"/>
+                        <wd:SplitButton x:Name="AddAcbelStep" Content="{lex:Loc AddScanCodeStep}" CommandParameter="ScanCode" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                            <MenuItem Header="{lex:Loc AddScanCodeStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ScanCode"/>
+                            <MenuItem Header="{lex:Loc AddAcbelUploadStep}" Click="MenuItemAddImageStep_Click" CommandParameter="AcbelUpload"/>
+                        </wd:SplitButton>
                         <Button Content="{lex:Loc UserInput_StepName}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="UserInput"/>
                     </ToolBar>
                 </ToolBarTray>

@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.6.9.2611</ApplicationVersion>
+    <ApplicationVersion>0.6.10.2611</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -239,6 +239,7 @@
     <Compile Include="Viewmodels\MultiThreadSteps.cs" />
     <Compile Include="Viewmodels\UserManagementViewModel.cs" />
     <Compile Include="Viewmodels\UserInputStep.cs" />
+    <Compile Include="Viewmodels\ScanCodeStep.cs" />
     <Compile Include="Viewmodels\SettingsViewModel.cs" />
     <Compile Include="Viewmodels\StepsViewModel.cs" />
     <Compile Include="Views\UserControlSteps.xaml.cs">
@@ -297,6 +298,9 @@
     </Compile>
     <Compile Include="Views\WindowUserInput.xaml.cs">
       <DependentUpon>WindowUserInput.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowScanCode.xaml.cs">
+      <DependentUpon>WindowScanCode.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowSelectPoint.xaml.cs">
       <DependentUpon>WindowSelectPoint.xaml</DependentUpon>
@@ -425,6 +429,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowUserInput.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowScanCode.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

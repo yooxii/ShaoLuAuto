@@ -24,6 +24,7 @@ namespace ShaoLu.Models
         Popup = 1000,
         AcbelUpload = 1001,     // 上传Acbel（ACBEL_INSERT_DATA）
         UserInput = 1002,       // 用户输入（打开工程/运行前弹窗填写，供其他步骤引用）
+        ScanCode = 1003,        // 扫码（验证网络 → 扫码 → 验证条码，供上传步骤引用条码）
 
         // 多线程步骤
         MultiThread = 300,      // 多线程开始

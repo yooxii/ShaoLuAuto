@@ -30,6 +30,9 @@ namespace ShaoLu.Views
             // 登录状态变化时刷新「用户输入」冻结字段的可编辑性
             Loaded += (_, __) => HookLoginState(true);
             Unloaded += (_, __) => HookLoginState(false);
+            // 宽度变化时自动决定组别是全部展开还是折叠
+            Loaded += (_, __) => RefreshToolbarGroupLayout();
+            SizeChanged += (_, __) => RefreshToolbarGroupLayout();
         }
 
         #region 工具栏分组折叠（编辑 / 步骤 互斥）
@@ -37,15 +40,54 @@ namespace ShaoLu.Views
         /// <summary>展开「编辑」组时收起「步骤」组</summary>
         private void EditGroupToggle_Checked(object sender, RoutedEventArgs e)
         {
+            if (_groupLayoutBusy) return;
+            // 不溢出时允许两组同时展开；溢出时才互斥
+            if (!_toolbarOverflow) return;
             if (StepGroupToggle?.IsChecked == true)
                 StepGroupToggle.IsChecked = false;
         }
 
-        /// <summary>展开「步骤」组时收起「编辑」组</summary>
+        /// <summary>展开「步骤」组时收起「编辑」组（仅溢出时）</summary>
         private void StepGroupToggle_Checked(object sender, RoutedEventArgs e)
         {
+            if (_groupLayoutBusy) return;
+            if (!_toolbarOverflow) return;
             if (EditGroupToggle?.IsChecked == true)
                 EditGroupToggle.IsChecked = false;
+        }
+
+        private bool _groupLayoutBusy;
+        private bool _toolbarOverflow;
+
+        /// <summary>
+        /// 根据可用宽度决定组别展开状态：全部展开后若放不下（溢出）就折叠编辑组；
+        /// 放得下则两组全部展开。布局期间绕过互斥，用户手动点击时仍互斥。
+        /// </summary>
+        private void RefreshToolbarGroupLayout()
+        {
+            if (_groupLayoutBusy || EditGroupToggle == null || StepGroupToggle == null) return;
+            _groupLayoutBusy = true;
+            try
+            {
+                EditGroupToggle.IsChecked = true;
+                StepGroupToggle.IsChecked = true;
+                UpdateLayout();
+
+                if (GroupToolBarTray == null) return;
+                GroupToolBarTray.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                double needed = GroupToolBarTray.DesiredSize.Width;
+                double available = ActualWidth;
+
+                // 放不下就折叠编辑组，只保留步骤组；结果同时决定手动点击是否互斥
+                _toolbarOverflow = needed > available - 4;
+                if (_toolbarOverflow)
+                    EditGroupToggle.IsChecked = false;
+            }
+            catch { }
+            finally
+            {
+                _groupLayoutBusy = false;
+            }
         }
 
         #endregion

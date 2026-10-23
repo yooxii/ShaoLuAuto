@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using System;
@@ -250,7 +250,7 @@ namespace NUnitTest
 
             Build(logs);
 
-            Assert.That(logs[0].ResultDisplay, Is.EqualTo("[Result:True] [Similarity:0.988] [Error:boom]"));
+            Assert.That(logs[0].ResultDisplay, Is.EqualTo("[Result:True] [Similarity:0.988] [FailResult:boom]"));
         }
 
         [Test]

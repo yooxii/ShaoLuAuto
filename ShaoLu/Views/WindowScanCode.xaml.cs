@@ -43,6 +43,19 @@ namespace ShaoLu.Views
             DialogResult = false;
         }
 
+        /// <summary>主窗口最小化/还原时，扫码窗口跟着一起最小化/还原。</summary>
+        private void Owner_StateChanged(object sender, System.EventArgs e)
+        {
+            try
+            {
+                if (Owner == null) return;
+                WindowState = Owner.WindowState == WindowState.Minimized
+                    ? WindowState.Minimized
+                    : WindowState.Normal;
+            }
+            catch { }
+        }
+
         /// <summary>在 UI 线程弹出扫码对话框并等待结果；取消返回 null。</summary>
         public static string ShowAndWait(Window owner = null)
         {
@@ -57,6 +70,12 @@ namespace ShaoLu.Views
             // 弹出时把窗口与输入框都拿焦点，扫码枪输入直接落到输入框
             window.ShowActivated = true;
             window.Activate();
+            // 跟随主窗口最小化/还原
+            if (window.Owner != null)
+            {
+                window.Owner.StateChanged += window.Owner_StateChanged;
+                window.Closed += (_, __) => window.Owner.StateChanged -= window.Owner_StateChanged;
+            }
             return window.ShowDialog() == true ? window.ScannedCode : null;
         }
     }

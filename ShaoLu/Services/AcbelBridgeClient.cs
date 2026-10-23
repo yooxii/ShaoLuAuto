@@ -153,6 +153,10 @@ namespace ShaoLu.Services
                     WorkingDirectory = Path.GetDirectoryName(_bridgeExe)
                 };
                 psi.Arguments = "--call-timeout " + _callTimeoutSeconds;
+#if DEBUG
+                // Debug 构建默认把桥接的每条命令/响应写入 AcbelBridge.log
+                psi.Arguments += " --log";
+#endif
 
                 _proc = Process.Start(psi);
                 _stdin = _proc.StandardInput;

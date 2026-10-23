@@ -73,7 +73,7 @@ namespace AcbelBridge
         private static extern IntPtr ACBEL_SET_BASIC_INFO(string database, string workOrder, string stationEmp, string line);
 
         [DllImport(DefaultDllName, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        private static extern IntPtr CHKBAR_CODE(string barcode, string stationEmp, string stationEmp2);
+        private static extern IntPtr CHKBAR_CODE(string stationEmp, string barcode, string stationEmp2);
 
         [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
         private static extern IntPtr LoadLibraryA(string path);
@@ -128,6 +128,7 @@ namespace AcbelBridge
 
                     string[] parts = line.Split('\t');
                     string cmd = parts[0].Trim().ToLowerInvariant();
+                    Log("→ " + line);
 
                     if (cmd == "quit") return 0;
                     if (cmd == "ping") { ReplyOk(PingReport()); continue; }
@@ -211,6 +212,12 @@ namespace AcbelBridge
                     case "--version":
                         Console.Error.WriteLine("AcbelBridge 1.0.0 (x86 bridge for Acbel_Chroma_Test.dll)");
                         return false;
+                    case "--log":
+                        _logEnabled = true;
+                        break;
+                    case "--no-log":
+                        _logEnabled = false;
+                        break;
                     case "--dll":
                         if (i + 1 >= args.Length) { Console.Error.WriteLine("--dll 缺少参数"); return false; }
                         _dllPath = Path.GetFullPath(args[++i]);
@@ -422,7 +429,8 @@ namespace AcbelBridge
             if (string.IsNullOrWhiteSpace(barcode))
                 throw new InvalidOperationException("条码为空，已拒绝调用。");
             LogNetworkCheck("chkbar_code");
-            return RunGuarded(() => CHKBAR_CODE(barcode, stationEmp ?? string.Empty, stationEmp ?? string.Empty));
+            // 参数顺序按厂商：先「站别+工号」，再「条码」
+            return RunGuarded(() => CHKBAR_CODE(stationEmp ?? string.Empty, barcode, stationEmp ?? string.Empty));
         }
 
         /// <summary>把 ANSI 字符串指针转成 string。</summary>
@@ -468,9 +476,34 @@ namespace AcbelBridge
 
         private static void WriteLine(string s)
         {
+            Log("← " + s);
             _out.Write(s);
             _out.Write('\n');
             _out.Flush();
+        }
+
+        private static readonly object _logGate = new object();
+
+#if DEBUG
+        private static bool _logEnabled = true;
+#else
+        private static bool _logEnabled = false;
+#endif
+
+        private static string _logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AcbelBridge.log");
+
+        /// <summary>把每一条命令与响应写入 AcbelBridge.log（Debug 默认开、Release 默认关，可用 --log / --no-log 覆盖）。</summary>
+        private static void Log(string text)
+        {
+            if (!_logEnabled) return;
+            try
+            {
+                string line = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + " " + text;
+                if (line.Length > 2000) line = line.Substring(0, 2000) + "…";
+                lock (_logGate)
+                    File.AppendAllText(_logPath, line + Environment.NewLine, Encoding.UTF8);
+            }
+            catch { }
         }
 
         private static string ToB64(string s) { return Convert.ToBase64String(Encoding.UTF8.GetBytes(s ?? string.Empty)); }

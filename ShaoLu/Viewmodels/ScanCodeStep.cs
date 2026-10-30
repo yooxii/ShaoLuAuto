@@ -84,12 +84,18 @@ namespace ShaoLu.Viewmodels
                 // 3) 验证条码
                 var check = client.CheckBarcode(barcode, stationEmp);
                 if (!IsOkCall(check))
+                {
+                    ShowBusinessFailIfAny(check);
                     return Fail(prefix + Loc("ScanCode_CheckFailed", "验证条码失败") + "：" + Describe(check));
+                }
 
                 // 4) 写入基础信息（工单/站别工号/线别）
                 var basic = client.SetBasicInfo(workOrder, stationEmp, line);
                 if (!IsOkCall(basic))
+                {
+                    ShowBusinessFailIfAny(basic);
                     return Fail(prefix + Loc("ScanCode_BasicFailed", "写入基础信息失败") + "：" + Describe(basic));
+                }
 
                 IsTrue = true;
                 IsError = false;
@@ -111,6 +117,17 @@ namespace ShaoLu.Viewmodels
 
         private static bool IsOkCall(AcbelCallResult result)
             => result != null && result.TransportOk && !result.TimedOut && AcbelBridgeClient.IsOk(result.Value);
+
+        /// <summary>业务卡控（0 类别）失败时弹窗给出返回代码与详情；其它失败只写进步骤错误信息。</summary>
+        private static void ShowBusinessFailIfAny(AcbelCallResult result)
+        {
+            if (result == null || !result.TransportOk || result.TimedOut) return;
+            string text = !string.IsNullOrEmpty(result.Value) ? result.Value : result.Error;
+            if (!AcbelBridgeClient.IsBusinessFail(text)) return;
+            AcbelDialogs.ShowBusinessFail(
+                AcbelBridgeClient.ExtractErrorCode(text), text,
+                Loc("AcbelBusinessFailTitle", "Acbel 扫码业务卡控"));
+        }
 
         private static string Describe(AcbelCallResult result)
         {

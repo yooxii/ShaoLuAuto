@@ -128,7 +128,7 @@ namespace AcbelBridge
 
                     string[] parts = line.Split('\t');
                     string cmd = parts[0].Trim().ToLowerInvariant();
-                    Log("→ " + line);
+                    Log("→ " + DescribeRequest(line));
 
                     if (cmd == "quit") return 0;
                     if (cmd == "ping") { ReplyOk(PingReport()); continue; }
@@ -476,7 +476,7 @@ namespace AcbelBridge
 
         private static void WriteLine(string s)
         {
-            Log("← " + s);
+            Log("← " + DescribeReply(s));
             _out.Write(s);
             _out.Write('\n');
             _out.Flush();
@@ -492,6 +492,34 @@ namespace AcbelBridge
 
         private static string _logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AcbelBridge.log");
 
+        /// <summary>请求日志：把 Base64 参数还原成文本（换行转义成 \n，保证一条请求只占一行）。</summary>
+        private static string DescribeRequest(string line)
+        {
+            string[] parts = line.Split('\t');
+            var sb = new StringBuilder(parts[0]);
+            for (int i = 1; i < parts.Length; i++)
+            {
+                sb.Append('\t');
+                try { sb.Append(FromB64(parts[i])); }
+                catch { sb.Append(parts[i]); }
+            }
+            return Escape(sb.ToString());
+        }
+
+        /// <summary>响应日志：把 Base64 负载还原成文本。</summary>
+        private static string DescribeReply(string s)
+        {
+            int tab = s.IndexOf('\t');
+            if (tab < 0) return Escape(s);
+            string payload;
+            try { payload = FromB64(s.Substring(tab + 1)); }
+            catch { payload = s.Substring(tab + 1); }
+            return s.Substring(0, tab) + "\t" + Escape(payload);
+        }
+
+        private static string Escape(string text)
+            => (text ?? string.Empty).Replace("\r", "\\r").Replace("\n", "\\n");
+
         /// <summary>把每一条命令与响应写入 AcbelBridge.log（Debug 默认开、Release 默认关，可用 --log / --no-log 覆盖）。</summary>
         private static void Log(string text)
         {
@@ -501,7 +529,7 @@ namespace AcbelBridge
                 string line = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + " " + text;
                 if (line.Length > 2000) line = line.Substring(0, 2000) + "…";
                 lock (_logGate)
-                    File.AppendAllText(_logPath, line + Environment.NewLine, Encoding.UTF8);
+                    File.AppendAllText(_logPath, line + Environment.NewLine, new UTF8Encoding(false));
             }
             catch { }
         }

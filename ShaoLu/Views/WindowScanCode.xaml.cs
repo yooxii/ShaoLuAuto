@@ -1,24 +1,77 @@
+using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Threading;
 
 namespace ShaoLu.Views
 {
     /// <summary>
     /// 扫码对话框：运行时弹出，扫码枪输入或手工输入条码，回车/确定返回。
+    /// 弹出时主动把窗口提到前台并让输入框拿到键盘焦点（自动化运行时主窗口常常不在前台，
+    /// Windows 会阻止后台程序抢焦点，所以这里先临时置顶一次再取消，并显式调用 SetForegroundWindow）。
     /// </summary>
     public partial class WindowScanCode : Window
     {
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
         /// <summary>扫码得到的条码（取消时为 null）</summary>
         public string ScannedCode { get; private set; }
 
         public WindowScanCode()
         {
             InitializeComponent();
-            Activated += (_, __) =>
+            Loaded += OnLoaded;
+            Activated += (_, __) => FocusCodeBox();
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            ActivateWindow();
+        }
+
+        /// <summary>把窗口提到前台、输入框拿到键盘焦点。</summary>
+        private void ActivateWindow()
+        {
+            try
+            {
+                // 临时置顶可绕开“后台程序不能抢前台”的限制，随后立刻取消，不改变正常层级
+                Topmost = true;
+                Topmost = false;
+                Activate();
+
+                IntPtr hwnd = new WindowInteropHelper(this).Handle;
+                if (hwnd != IntPtr.Zero) SetForegroundWindow(hwnd);
+
+                FocusCodeBox();
+
+                // 布局/激活完成后再抢一次，避免个别机器上第一次 Activate 被系统忽略
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        Activate();
+                        FocusCodeBox();
+                    }
+                    catch { }
+                }), DispatcherPriority.Input);
+            }
+            catch
+            {
+                // 抢焦点失败不影响输入框可用
+            }
+        }
+
+        private void FocusCodeBox()
+        {
+            try
             {
                 CodeBox.Focus();
                 Keyboard.Focus(CodeBox);
-            };
+            }
+            catch { }
         }
 
         private void CodeBox_KeyDown(object sender, KeyEventArgs e)
@@ -67,9 +120,7 @@ namespace ShaoLu.Views
             if (owner != null) window.Owner = owner;
             else if (Application.Current?.MainWindow != null) window.Owner = Application.Current.MainWindow;
 
-            // 弹出时把窗口与输入框都拿焦点，扫码枪输入直接落到输入框
             window.ShowActivated = true;
-            window.Activate();
             // 跟随主窗口最小化/还原
             if (window.Owner != null)
             {

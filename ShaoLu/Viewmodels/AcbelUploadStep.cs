@@ -720,32 +720,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         /// <summary>
         /// 业务卡控（0 类别）失败：弹窗显示厂商返回的代码与完整详情，方便现场截图报错。
-        /// 未在 UI 线程时通过 Dispatcher 回到 UI 线程显示。
+        /// 未在 UI 线程时通过 Dispatcher 回到 UI 线程显示（与扫码步骤共用同一套弹窗）。
         /// </summary>
         private void ShowBusinessFailDialog(string code, string detail)
-        {
-            try
-            {
-                string title = Loc("AcbelBusinessFailTitle", "Acbel 上传业务卡控");
-                string bodyTemplate = Loc("AcbelBusinessFailBody", "返回代码：{0}\n\n详情：\n{1}");
-                string noCode = Loc("AcbelBusinessFailNoCode", "(未解析出代码)");
-                string body = string.Format(bodyTemplate,
-                    string.IsNullOrWhiteSpace(code) ? noCode : code,
-                    detail ?? string.Empty);
-
-                var dispatcher = System.Windows.Application.Current?.Dispatcher;
-                if (dispatcher == null) return;
-
-                dispatcher.Invoke(() => WPFDevelopers.Controls.MessageBox.Show(
-                    body, title,
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Warning));
-            }
-            catch (Exception ex)
-            {
-                Logger.Warn(ex, "AcbelUpload: 业务失败弹窗显示失败");
-            }
-        }
+            => AcbelDialogs.ShowBusinessFail(code, detail, Loc("AcbelBusinessFailTitle", "Acbel 上传业务卡控"));
 
         public override AutomationStepBase Clone()
         {

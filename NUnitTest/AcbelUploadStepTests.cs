@@ -44,9 +44,11 @@ namespace NUnitTest
         private sealed class FakeAcbelChannel : IAcbelBridgeChannel
         {
             private readonly Queue<AcbelCallResult> _insertResults = new Queue<AcbelCallResult>();
+            private readonly Queue<AcbelCallResult> _basicResults = new Queue<AcbelCallResult>();
 
             public readonly List<string> Payloads = new List<string>();
             public readonly List<string> ProgramFiles = new List<string>();
+            public readonly List<BasicInfoCall> BasicInfos = new List<BasicInfoCall>();
             public AcbelCallResult OpenResult = Ok("database");
             public int OpenCount;
             public int DisposeCount;
@@ -57,6 +59,14 @@ namespace NUnitTest
             {
                 OpenCount++;
                 return OpenResult;
+            }
+
+            public AcbelCallResult SetBasicInfo(string workOrder, string stationEmp, string line)
+            {
+                BasicInfos.Add(new BasicInfoCall { WorkOrder = workOrder, StationEmp = stationEmp, Line = line });
+                if (_basicResults.Count > 0)
+                    return _basicResults.Dequeue();
+                return Ok("1");
             }
 
             public AcbelCallResult InsertData(string uploadData, string programFile)
@@ -74,10 +84,24 @@ namespace NUnitTest
                     _insertResults.Enqueue(r);
             }
 
+            public void EnqueueBasic(params AcbelCallResult[] results)
+            {
+                foreach (var r in results)
+                    _basicResults.Enqueue(r);
+            }
+
             public void Dispose()
             {
                 DisposeCount++;
             }
+        }
+
+        /// <summary>记录一次 SET_BASIC_INFO 的实参。</summary>
+        private sealed class BasicInfoCall
+        {
+            public string WorkOrder { get; set; }
+            public string StationEmp { get; set; }
+            public string Line { get; set; }
         }
 
         private static AcbelCallResult Ok(string value)
@@ -269,6 +293,48 @@ namespace NUnitTest
             Assert.That(step.IsTrue, Is.False);
             Assert.That(step.ErrorMessage, Does.Contain("數據庫無法連接"));
             Assert.That(_fake.InsertCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void 上传前写入基础信息_工单号取工令_站别工号拼接()
+        {
+            var step = CreateValidStep();
+
+            Assert.That(step.RunAsync().GetAwaiter().GetResult(), Is.True);
+
+            BasicInfoCall basic = _fake.BasicInfos.Single();
+            Assert.That(basic.WorkOrder, Is.EqualTo("HE47H1G001H18163"), "工单号取 MO_NO（工令）");
+            Assert.That(basic.StationEmp, Is.EqualTo("16521807605"), "站别与工号直接拼接");
+            Assert.That(basic.Line, Is.EqualTo("H18"));
+            Assert.That(_fake.InsertCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void 基础信息被卡控时判失败且不调用insert()
+        {
+            var step = CreateValidStep();
+            _fake.EnqueueBasic(Ok("0}B006-線別錯誤The line name is incorrect"));
+
+            bool ok = step.RunAsync().GetAwaiter().GetResult();
+
+            Assert.That(ok, Is.False);
+            Assert.That(step.IsTrue, Is.False);
+            Assert.That(step.ErrorMessage, Does.Contain("B006"));
+            Assert.That(step.LastResult.ErrorMessage, Does.Contain("B006"));
+            Assert.That(_fake.InsertCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void 基础信息内部异常_重试一次后继续插入()
+        {
+            var step = CreateValidStep();
+            _fake.EnqueueBasic(Ok("2}調用函數ACBEL_SET_BASIC_INFO錯誤"), Ok("1"));
+
+            bool ok = step.RunAsync().GetAwaiter().GetResult();
+
+            Assert.That(ok, Is.True);
+            Assert.That(_fake.BasicInfos.Count, Is.EqualTo(2));
+            Assert.That(_fake.InsertCount, Is.EqualTo(1));
         }
 
         [Test]

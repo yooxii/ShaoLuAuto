@@ -2016,6 +2016,9 @@
   <data name="AcbelFailDbConnect" xml:space="preserve">
     <value>無法連線資料庫</value>
   </data>
+  <data name="AcbelFailBasicInfo" xml:space="preserve">
+    <value>寫入基礎資訊失敗</value>
+  </data>
   <data name="AcbelFailUpload" xml:space="preserve">
     <value>上傳被業務規則拒絕</value>
   </data>

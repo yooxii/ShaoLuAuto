@@ -2016,6 +2016,9 @@ Details:
   <data name="AcbelFailDbConnect" xml:space="preserve">
     <value>Cannot connect to the database</value>
   </data>
+  <data name="AcbelFailBasicInfo" xml:space="preserve">
+    <value>Failed to write basic info</value>
+  </data>
   <data name="AcbelFailUpload" xml:space="preserve">
     <value>Upload rejected by business rules</value>
   </data>

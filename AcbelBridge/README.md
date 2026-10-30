@@ -11,17 +11,22 @@ ShaoLu.exe (x64)
                                                             └─ BDE(idapi32) → SQLORA8/OCI → Oracle
 ```
 
-## 当前暴露的接口（按需求，只有两个）
+## 当前暴露的接口
 
 | 命令 | 对应导出函数 | 说明 |
 |---|---|---|
 | `open` | `ACBEL_DATABASE_OPEN()` | **验证与 MES 数据库是否连通**。成功返回库名（通常 `"database"`）；失败返回 `"0}數據庫無法連接"` / `"連接DB Connection ERROR"` |
+| `set_basic_info` | `ACBEL_SET_BASIC_INFO(db, 工单号, 站别+工号, 线别)` | 写入基础资料（工单 `SIM40` / 站别 `SIM02` / 员工受训 `SIM501` / 线别 `SIM11` 校验）。成功 `"1"`，失败 `"0}B001-…"~"0}B006-…"`，`"2}…"` 需重调一次 |
+| `chkbar_code` | `CHKBAR_CODE(站别+工号, 条码)` | 扫码后的条码检查。成功 `"1"`，失败 `"0}C0xx-…"` |
 | `insert` | `ACBEL_INSERT_DATA(db, 上传资料, 镭雕程式文件名)` | ★**会写入 MES 生产库**。第 1 个参数（db）由桥接进程用上一次成功 `open` 的返回值自动填入 |
 | `validate` | ——（不调用 DLL） | 只按 27 段字段规范校验「上传资料」，离线可用，见 [ACBEL_INSERT_DATA-字段与校验.md](../Reference/ACBEL_INSERT_DATA-字段与校验.md) |
 
 另有两条控制命令：`ping`（自检，**不调用任何 DLL 函数**）、`quit`。
 
-> 其余 21 个导出（`CHKBAR_CODE`、`ACBEL_SET_BASIC_INFO`、`ACBEL_SYS_DATA`…）暂未开放。
+> 「上传Acbel」步骤的执行顺序：`open` → `set_basic_info` → `insert`。
+> `ACBEL_INSERT_DATA` 依赖 `ACBEL_SET_BASIC_INFO` 先写入基础资料，缺了会被业务卡控拒收；
+> 因此基础信息写入失败时该步骤直接判失败，不会继续写库。
+> 取值口径：**工单号 = MO_NO（工令）**、站别+工号 = `STATION` + `UPD_USER` 直接拼接、线别 = `LINE_NAME`。
 
 ## 运行环境（DLL 硬编码的 D 盘路径）
 

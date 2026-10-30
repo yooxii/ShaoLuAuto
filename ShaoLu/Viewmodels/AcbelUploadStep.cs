@@ -45,6 +45,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
     {
         AcbelCallResult OpenDatabase();
 
+        AcbelCallResult SetBasicInfo(string workOrder, string stationEmp, string line);
+
         AcbelCallResult InsertData(string uploadData, string programFile);
     }
 
@@ -61,6 +63,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         public AcbelCallResult OpenDatabase() => _client.OpenDatabase();
+
+        /// <summary>写入基础信息（工单号=工令、站别+工号、线别）。</summary>
+        public AcbelCallResult SetBasicInfo(string workOrder, string stationEmp, string line)
+            => _client.SetBasicInfo(workOrder, stationEmp, line);
 
         public AcbelCallResult InsertData(string uploadData, string programFile)
         {
@@ -424,8 +430,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
     }
 
     /// <summary>
-    /// 「上传Acbel」步骤：按字段规范组装 27 段上传资料并调用桥接进程的 ACBEL_INSERT_DATA 写入 Acbel MES。
-    /// 失败不抛异常，返回 false 并带上错误信息。
+    /// 「上传Acbel」步骤：按字段规范组装 27 段上传资料，
+    /// 先调用 ACBEL_SET_BASIC_INFO 写入基础资料（工单/站别工号/线别），
+    /// 再调用 ACBEL_INSERT_DATA 写入 Acbel MES。失败不抛异常，返回 false 并带上错误信息。
     /// </summary>
     public sealed class AcbelUploadStep : AutomationStepBase
     {
@@ -600,6 +607,55 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        /// <summary>取指定段号字段的当前值（含引用解析）。</summary>
+        public string RowValue(int index)
+        {
+            AcbelUploadRow row = FieldRows().FirstOrDefault(r => r.Index == index);
+            return row == null ? string.Empty : ResolveRowValue(row);
+        }
+
+        /// <summary>
+        /// 写入基础资料（ACBEL_SET_BASIC_INFO）。DLL 要求先写这项，ACBEL_INSERT_DATA 才能通过基础资料校验。
+        /// 取值与上传资料保持一致：工单号 = MO_NO（工令）、站别+工号 = STATION + UPD_USER、线别 = LINE_NAME。
+        /// 返回 false 时不再执行 insert（避免写库被拒后误报成上传失败）。
+        /// </summary>
+        private bool EnsureBasicInfo(IAcbelBridgeChannel channel, out string error)
+        {
+            error = null;
+
+            AcbelInsertDataField moField = AcbelInsertDataSpec.ByName("MO_NO");
+            AcbelInsertDataField stationField = AcbelInsertDataSpec.ByName("STATION");
+            AcbelInsertDataField userField = AcbelInsertDataSpec.ByName("UPD_USER");
+            AcbelInsertDataField lineField = AcbelInsertDataSpec.ByName("LINE_NAME");
+
+            string workOrder = moField == null ? string.Empty : RowValue(moField.Index);
+            string station = stationField == null ? string.Empty : RowValue(stationField.Index);
+            string employee = userField == null ? string.Empty : RowValue(userField.Index);
+            string lineName = lineField == null ? string.Empty : RowValue(lineField.Index);
+            // 厂商口径：站别与工号直接拼接成一个值（站别 165 + 工号 21807605 → 16521807605）
+            string stationEmp = (station ?? string.Empty) + (employee ?? string.Empty);
+
+            var call = channel.SetBasicInfo(workOrder, stationEmp, lineName);
+
+            // 内部异常（2}…）：厂商要求重调一次
+            if (IsRetryNeededCall(call))
+            {
+                Logger.Warn("AcbelUpload: 基础信息需要重试一次，返回值 {0}", call == null ? "null" : call.Value);
+                call = channel.SetBasicInfo(workOrder, stationEmp, lineName);
+            }
+
+            if (call != null && call.TransportOk && !call.TimedOut && AcbelBridgeClient.IsOk(call.Value)) return true;
+
+            string text = call == null ? null : (!string.IsNullOrEmpty(call.Value) ? call.Value : call.Error);
+            if (call != null && call.TransportOk && !call.TimedOut && AcbelBridgeClient.IsBusinessFail(text))
+            {
+                ShowBusinessFailDialog(AcbelBridgeClient.ExtractErrorCode(text), text);
+            }
+
+            error = Describe(call);
+            return false;
+        }
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken = default)
         {
             string prefix = Loc("AcbelUploadFailed", "上传Acbel失败：");
@@ -621,6 +677,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 IAcbelBridgeChannel channel;
                 string openError;
                 if (!EnsureDatabaseOpen(out channel, out openError)) return Fail(prefix + Loc("AcbelFailDbConnect", "连不上数据库") + "：" + openError);
+
+                // ACBEL_INSERT_DATA 依赖 ACBEL_SET_BASIC_INFO 写入的基础资料（工单/站别工号/线别），先写再上传
+                string basicError;
+                if (!EnsureBasicInfo(channel, out basicError))
+                    return Fail(prefix + Loc("AcbelFailBasicInfo", "写入基础信息失败") + "：" + basicError);
 
                 var call = channel.InsertData(uploadData, programFile);
 

@@ -35,7 +35,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
         UserInput = 4,
 
         /// <summary>扫码结果（扫码步骤的条码）。</summary>
-        ScanResult = 5
+        ScanResult = 5,
+
+        /// <summary>步骤开始执行的时间（HHmmss）。</summary>
+        StepStartTime = 6,
+
+        /// <summary>步骤执行结束的时间（HHmmss）。</summary>
+        StepEndTime = 7
     }
 
     /// <summary>
@@ -224,6 +230,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     case AcbelReferenceKind.ScanResult:
                         kind = AcbelUploadStep.Loc("AcbelRefScanResult", "扫码结果");
                         break;
+                    case AcbelReferenceKind.StepStartTime:
+                        kind = AcbelUploadStep.Loc("AcbelRefStepStartTime", "步骤开始时间");
+                        break;
+                    case AcbelReferenceKind.StepEndTime:
+                        kind = AcbelUploadStep.Loc("AcbelRefStepEndTime", "步骤结束时间");
+                        break;
                     default:
                         kind = string.Empty;
                         break;
@@ -263,6 +275,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                             });
                         }
 
+                        AddTimeNodes(stepNode, step);
                         root.Children.Add(stepNode);
                         continue;
                     }
@@ -276,6 +289,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                             StepUid = step.Uid,
                             Kind = AcbelReferenceKind.ScanResult
                         });
+                        AddTimeNodes(stepNode, step);
                         root.Children.Add(stepNode);
                         continue;
                     }
@@ -283,6 +297,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     stepNode.Children.Add(CreateKindNode("AcbelRefExecutionResult", "执行结果", step.Uid, AcbelReferenceKind.ExecutionResult));
                     stepNode.Children.Add(CreateKindNode("AcbelRefOcrText", "OCR 文本", step.Uid, AcbelReferenceKind.OcrText));
                     stepNode.Children.Add(CreateKindNode("AcbelRefDirectText", "直接获取文本", step.Uid, AcbelReferenceKind.DirectText));
+                    AddTimeNodes(stepNode, step);
                     root.Children.Add(stepNode);
                 }
 
@@ -402,6 +417,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 Kind = kind,
                 Command = new RelayCommand(() => SetReference(stepUid, kind))
             };
+        }
+
+        /// <summary>每个步骤都可以引用它的开始 / 结束时间（填到 START_TIME / END_TIME 这类时间字段）。</summary>
+        private void AddTimeNodes(AcbelRefMenuNode stepNode, AutomationStepBase step)
+        {
+            stepNode.Children.Add(CreateKindNode("AcbelRefStepStartTime", "步骤开始时间", step.Uid, AcbelReferenceKind.StepStartTime));
+            stepNode.Children.Add(CreateKindNode("AcbelRefStepEndTime", "步骤结束时间", step.Uid, AcbelReferenceKind.StepEndTime));
         }
     }
 
@@ -596,6 +618,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
                         return IsDirectTextSource(result.TextSource) ? string.Empty : (result.OCRText ?? string.Empty);
                     case AcbelReferenceKind.DirectText:
                         return IsDirectTextSource(result.TextSource) ? (result.OCRText ?? string.Empty) : string.Empty;
+                    case AcbelReferenceKind.StepStartTime:
+                        return FormatStepTime(GetStepStartTime(result));
+                    case AcbelReferenceKind.StepEndTime:
+                        return FormatStepTime(result.ExecutedAt);
                     default:
                         return string.Empty;
                 }
@@ -868,6 +894,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>TextSource 为 Direct 表示「直接获取文本」；其余（含旧数据的空值）按 OCR 处理。</summary>
         private static bool IsDirectTextSource(string textSource)
             => string.Equals(textSource, "Direct", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// 步骤开始时间：引擎在步骤结束时记录 ExecutedAt 与耗时，因此开始时间 = 结束时间 - 耗时。
+        /// 没有耗时数据时退化为结束时间本身。
+        /// </summary>
+        private static DateTime GetStepStartTime(StepExecutionResult result)
+        {
+            if (result == null) return DateTime.Now;
+            double ms = result.ExecutionTimeMs > 0 ? result.ExecutionTimeMs : 0;
+            return result.ExecutedAt.AddMilliseconds(-ms);
+        }
+
+        /// <summary>时间字段按厂商口径格式化成 HHmmss（例如 140735）。</summary>
+        private static string FormatStepTime(DateTime time)
+            => time.ToString("HHmmss", System.Globalization.CultureInfo.InvariantCulture);
 
         private bool Succeed()
         {

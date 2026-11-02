@@ -2124,4 +2124,10 @@
   <data name="AcbelRefScanResult" xml:space="preserve">
     <value>扫码结果</value>
   </data>
+  <data name="AcbelRefStepStartTime" xml:space="preserve">
+    <value>步骤开始时间</value>
+  </data>
+  <data name="AcbelRefStepEndTime" xml:space="preserve">
+    <value>步骤结束时间</value>
+  </data>
 </root>

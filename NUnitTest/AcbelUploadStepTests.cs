@@ -479,6 +479,37 @@ namespace NUnitTest
         }
 
         [Test]
+        public void 引用_步骤开始与结束时间按HHmmss()
+        {
+            var step = new AcbelUploadStep("t") { WaitTime = 0 };
+            var uid = Guid.NewGuid();
+            var startRow = new AcbelUploadRow { Index = 8 };   // START_TIME
+            startRow.SetReference(uid, AcbelReferenceKind.StepStartTime);
+            var endRow = new AcbelUploadRow { Index = 9 };     // END_TIME
+            endRow.SetReference(uid, AcbelReferenceKind.StepEndTime);
+
+            StepExecutionContext.Instance.SetResultByUid(uid, new StepExecutionResult
+            {
+                IsTrue = true,
+                ExecutionTimeMs = 5000,
+                ExecutedAt = new DateTime(2026, 1, 2, 14, 7, 35)
+            });
+
+            Assert.That(step.ResolveRowValue(startRow), Is.EqualTo("140730"), "开始时间 = 结束时间 - 耗时");
+            Assert.That(step.ResolveRowValue(endRow), Is.EqualTo("140735"));
+        }
+
+        [Test]
+        public void 引用_步骤时间未执行过时取空串()
+        {
+            var step = new AcbelUploadStep("t") { WaitTime = 0 };
+            var row = new AcbelUploadRow { Index = 8 };
+            row.SetReference(Guid.NewGuid(), AcbelReferenceKind.StepEndTime);
+
+            Assert.That(step.ResolveRowValue(row), Is.EqualTo(string.Empty));
+        }
+
+        [Test]
         public void 字段行按规范生成_9必填_18选填()
         {
             var step = new AcbelUploadStep("t");

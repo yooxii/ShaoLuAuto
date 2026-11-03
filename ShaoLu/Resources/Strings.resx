@@ -2130,4 +2130,7 @@ A scan step will be inserted before the upload step automatically.</value>
   <data name="AcbelRefStepEndTime" xml:space="preserve">
     <value>Step end time</value>
   </data>
+  <data name="AddStepMenu" xml:space="preserve">
+    <value>Add Step</value>
+  </data>
 </root>

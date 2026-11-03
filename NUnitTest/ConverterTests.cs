@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using ShaoLu.Converters;
 using ShaoLu.Models;
+using ShaoLu.Viewmodels.AutomationStep;
 using System;
 using System.Globalization;
 using System.Windows;
@@ -344,6 +345,59 @@ namespace NUnitTest
             {
                 var json = System.Text.Json.JsonSerializer.Serialize(PopupCloseMode.Timeout | PopupCloseMode.StepReached, Options);
                 Assert.That(json, Is.EqualTo("\"Timeout, StepReached\""));
+            }
+        }
+
+        [TestFixture]
+        public class InMultiThreadRegionConverterTests
+        {
+            private static bool IsInRegion(InMultiThreadRegionConverter converter, System.Collections.Generic.IReadOnlyList<AutomationStepBase> steps, AutomationStepBase row)
+            {
+                return (bool)converter.Convert(new object[] { row, steps, 0 }, typeof(bool), null, Culture);
+            }
+
+            [Test]
+            public void ByEndStep_IncludesStartInsideAndEndRows()
+            {
+                var converter = new InMultiThreadRegionConverter();
+                var before = new EmptyStep("before");
+                var start = new MultiThreadStartStep("mt") { RangeMode = MultiThreadRangeMode.ByEndStep };
+                var inside = new EmptyStep("inside");
+                var end = new MultiThreadEndStep("mtEnd");
+                var after = new EmptyStep("after");
+                var steps = new System.Collections.Generic.List<AutomationStepBase> { before, start, inside, end, after };
+
+                Assert.That(IsInRegion(converter, steps, start), Is.True, "开始行应与区域同色");
+                Assert.That(IsInRegion(converter, steps, inside), Is.True);
+                Assert.That(IsInRegion(converter, steps, end), Is.True, "结束标记行应与区域同色");
+                Assert.That(IsInRegion(converter, steps, before), Is.False);
+                Assert.That(IsInRegion(converter, steps, after), Is.False);
+            }
+
+            [Test]
+            public void ByLineNo_ToEndOfScript_ColorsStartAndFollowingRows()
+            {
+                var converter = new InMultiThreadRegionConverter();
+                var start = new MultiThreadStartStep("mt") { RangeMode = MultiThreadRangeMode.ByLineNo, RangeEndUid = null };
+                var inside = new EmptyStep("inside");
+                var end = new EmptyStep("end");
+                var steps = new System.Collections.Generic.List<AutomationStepBase> { start, inside, end };
+
+                Assert.That(IsInRegion(converter, steps, start), Is.True);
+                Assert.That(IsInRegion(converter, steps, inside), Is.True);
+                Assert.That(IsInRegion(converter, steps, end), Is.True);
+            }
+
+            [Test]
+            public void OrphanEndMarker_IsNotColored()
+            {
+                var converter = new InMultiThreadRegionConverter();
+                var orphanEnd = new MultiThreadEndStep("orphan");
+                var inside = new EmptyStep("inside");
+                var steps = new System.Collections.Generic.List<AutomationStepBase> { inside, orphanEnd };
+
+                Assert.That(IsInRegion(converter, steps, orphanEnd), Is.False);
+                Assert.That(IsInRegion(converter, steps, inside), Is.False);
             }
         }
 

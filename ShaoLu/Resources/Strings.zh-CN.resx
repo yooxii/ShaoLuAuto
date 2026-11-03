@@ -2130,4 +2130,7 @@
   <data name="AcbelRefStepEndTime" xml:space="preserve">
     <value>步骤结束时间</value>
   </data>
+  <data name="AddStepMenu" xml:space="preserve">
+    <value>添加步骤</value>
+  </data>
 </root>

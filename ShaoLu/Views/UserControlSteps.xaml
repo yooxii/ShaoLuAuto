@@ -281,7 +281,7 @@
                                     <Setter Property="BorderThickness" Value="1"/>
                                 </Style.Setters>
                                 <Style.Triggers>
-                                    <!-- 多线程区域内的步骤：背景加深，与普通步骤区分（IsError 优先覆盖） -->
+                                    <!-- 多线程区域：区域内各行与开始/结束行使用淡蓝色背景，与普通步骤区分（IsError 优先覆盖） -->
                                     <DataTrigger Value="True">
                                         <DataTrigger.Binding>
                                             <MultiBinding Converter="{StaticResource InMultiThreadRegionConverter}">
@@ -290,7 +290,7 @@
                                                 <Binding Source="{x:Static autovm:RegionCollapseNotifier.Instance}" Path="Revision"/>
                                             </MultiBinding>
                                         </DataTrigger.Binding>
-                                        <Setter Property="Background" Value="#FFE4E4E4"/>
+                                        <Setter Property="Background" Value="#FFE8F3FF"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsError}" Value="True">
                                         <Setter Property="Background" Value="#FFFFCCCC"/>

@@ -8,11 +8,12 @@ using System.Windows.Data;
 namespace ShaoLu.Converters
 {
     /// <summary>
-    /// 判断某个步骤是否落在「多线程区域」内（用于列表行加深背景色，与普通步骤区分）。
+    /// 判断某个步骤是否属于「多线程区域」（用于列表行淡蓝背景，与普通步骤区分）。
     /// values[0] = 当前行步骤；values[1] = 步骤总表；values[2] = 折叠状态版本号（仅用于触发重算）。
     /// 判定口径：遍历步骤总表里每个「多线程开始」步骤（不要求折叠），
     /// 用 MultiThreadRange.TryResolve 解析它圈定的区域（开始行之后、结束标记之前），
-    /// 行索引落在区域内返回 true；开始行与结束标记行本身返回 false。
+    /// 区域内各行、以及「多线程开始」行与配对的「多线程区域结束」标记行本身都返回 true，
+    /// 这样从开始到结束的整段区域颜色一致；未配对的孤立标记行不算。
     /// </summary>
     public class InMultiThreadRegionConverter : IMultiValueConverter
     {
@@ -20,9 +21,6 @@ namespace ShaoLu.Converters
         {
             var row = values != null && values.Length > 0 ? values[0] as AutomationStepBase : null;
             if (row == null || values.Length < 2) return false;
-
-            // 开始行与结束标记行本身不算「区域内」
-            if (row is MultiThreadStartStep || row is MultiThreadEndStep) return false;
 
             var steps = ToStepList(values[1]);
             if (steps == null) return false;
@@ -38,7 +36,14 @@ namespace ShaoLu.Converters
                 // 区域解析失败时按「不在区域内」处理，避免误标
                 if (!MultiThreadRange.TryResolve(steps, i, start.RangeMode, start.RangeEndUid, out int endIndex, out _)) continue;
 
+                // 开始行本身
+                if (rowIndex == i) return true;
+
+                // 区域内的步骤
                 if (rowIndex > i && rowIndex <= endIndex) return true;
+
+                // 与区域配对的「多线程区域结束」标记行（它本身不在区域执行范围内，但属于整段区域）
+                if (rowIndex == endIndex + 1 && rowIndex < steps.Count && steps[rowIndex] is MultiThreadEndStep) return true;
             }
 
             return false;

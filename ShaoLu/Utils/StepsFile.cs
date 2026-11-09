@@ -81,12 +81,13 @@ namespace ShaoLu.Utils
 
         /// <summary>
         /// 将步骤保存为 .autostep 压缩包（zip 格式）
-        /// 包含 steps.json 和 images/ 目录下的裁剪图片；可选一并打包原图（供其他电脑重新编辑）
+        /// 包含 steps.json、images/ 目录下的裁剪图片，并默认一并打包原图（原图按「时间字符串 + 编号」命名，
+        /// 供其他电脑重新编辑图片）。
         ///
         /// 原子写入：先序列化到内存 → 写临时文件 → 成功后 File.Replace 替换原文件并保留 .bak。
         /// 任何一步失败都不会破坏已有工程文件。
         /// </summary>
-        public static SavePackageResult SaveAsAutoStepPackage(ObservableCollection<AutomationStepBase> steps, string packagePath, bool includeSourceImages = false)
+        public static SavePackageResult SaveAsAutoStepPackage(ObservableCollection<AutomationStepBase> steps, string packagePath, bool includeSourceImages = true)
         {
             if (steps == null)
                 throw new ArgumentNullException(nameof(steps), LanguageService.GetLocalizedString("Msg_StepsEmpty", "步骤列表不能为空"));
@@ -99,6 +100,10 @@ namespace ShaoLu.Utils
                 Directory.CreateDirectory(directory);
 
             var result = new SavePackageResult { WorkDir = GetWorkDirPath(targetPath) };
+
+            // 0. 原图先定好包内名称（时间字符串 + 编号）：必须在序列化之前，名字才会写进 steps.json
+            if (includeSourceImages)
+                PrepareSourceImageNames(steps);
 
             // 1. 先序列化到内存：序列化异常（如无限值、坏数据）在上一步就抛，旧文件完好无损
             string jsonString = JsonSerializer.Serialize(steps, _writeOptions);
@@ -149,7 +154,127 @@ namespace ShaoLu.Utils
             //    解决"另存为后 StepImageWorkDir 指向空目录，第二次保存图片全丢"的问题
             LandImagesToWorkDir(imagesToLand, result);
 
+            // 5. 原图路径改指向工程目录里的副本：临时目录被系统清理后仍能继续编辑
+            if (includeSourceImages)
+                RelinkSourceImages(steps, result.WorkDir);
+
             return result;
+        }
+
+        /// <summary>
+        /// 给还没有包内名称的原图按「时间字符串 + 编号」生成名称，并消除重名
+        /// （步骤复制/粘贴会让多个步骤挂着同一个原图名称，同一条目名在 zip 里出现两次会导致解压失败）。
+        /// 必须在序列化 steps.json 之前调用，名字才会随工程一起保存。
+        /// </summary>
+        private static void PrepareSourceImageNames(ObservableCollection<AutomationStepBase> steps)
+        {
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var pending = new List<ImageRecognitionBase>();
+
+            // 第一遍：登记已有名称，重复的清空后重新生成
+            foreach (var step in steps)
+            {
+                if (step is not ImageRecognitionBase imageStep)
+                    continue;
+
+                // 只有确实能找到原图才需要名称（只有裁剪图的步骤不打包原图）
+                string sourcePath = ResolveSourceImagePath(imageStep);
+                if (string.IsNullOrWhiteSpace(sourcePath))
+                    continue;
+
+                pending.Add(imageStep);
+
+                string name = imageStep.SourceImageName;
+                if (string.IsNullOrWhiteSpace(name))
+                    continue;
+                if (!used.Add(NormalizeEntryName(name)))
+                    imageStep.SourceImageName = null;
+            }
+
+            // 第二遍：补齐名称
+            foreach (var imageStep in pending)
+            {
+                if (!string.IsNullOrWhiteSpace(imageStep.SourceImageName))
+                    continue;
+
+                string sourcePath = ResolveSourceImagePath(imageStep);
+
+                // 原图本来就在工程目录 images/ 里（老工程、上次已落地）：沿用文件原名，不另起新名
+                string existingName = GetWorkDirImageName(sourcePath);
+                if (!string.IsNullOrWhiteSpace(existingName) && used.Add(existingName))
+                {
+                    imageStep.SourceImageName = existingName;
+                    continue;
+                }
+
+                string extension = Path.GetExtension(sourcePath);
+                if (string.IsNullOrWhiteSpace(extension))
+                    extension = StepSourceImageStore.DefaultExtension;
+                imageStep.SourceImageName = StepSourceImageStore.CreatePackageEntryName(used, extension);
+            }
+        }
+
+        /// <summary>
+        /// 原图位于当前工作目录 images/ 下时，返回它的相对条目名（images/xxx.png），否则返回 null
+        /// </summary>
+        private static string GetWorkDirImageName(string fullPath)
+        {
+            if (string.IsNullOrWhiteSpace(fullPath))
+                return null;
+
+            try
+            {
+                string workDir = GetCurrentWorkDir();
+                if (string.IsNullOrEmpty(workDir))
+                    return null;
+
+                string root = Path.GetFullPath(workDir)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                string full = Path.GetFullPath(fullPath);
+                if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                    return null;
+
+                string relative = full.Substring(root.Length).Replace('\\', '/');
+                return relative.StartsWith("images/", StringComparison.OrdinalIgnoreCase) ? relative : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 已打包原图落地后，把步骤里的原图路径改指向工程目录里的副本。
+        /// 临时目录里的原图会被系统清理，工程目录里的副本才是稳定来源。
+        /// </summary>
+        private static void RelinkSourceImages(ObservableCollection<AutomationStepBase> steps, string workDir)
+        {
+            if (steps == null || string.IsNullOrEmpty(workDir))
+                return;
+
+            foreach (var step in steps)
+            {
+                if (step is not ImageRecognitionBase imageStep || string.IsNullOrWhiteSpace(imageStep.SourceImageName))
+                    continue;
+
+                string landed = Path.Combine(workDir, NormalizeEntryName(imageStep.SourceImageName).Replace('/', Path.DirectorySeparatorChar));
+                if (!File.Exists(landed))
+                    continue;
+
+                bool alreadyLanded;
+                try
+                {
+                    alreadyLanded = !string.IsNullOrEmpty(imageStep.ImagePath)
+                        && Path.GetFullPath(landed).Equals(Path.GetFullPath(imageStep.ImagePath), StringComparison.OrdinalIgnoreCase);
+                }
+                catch
+                {
+                    alreadyLanded = false;
+                }
+
+                if (!alreadyLanded)
+                    imageStep.ImagePath = landed;
+            }
         }
 
         /// <summary>
@@ -341,9 +466,21 @@ namespace ShaoLu.Utils
             if (step is ImageRecognitionBase imageStep)
             {
                 WriteCroppedImageToArchive(imageStep.CroppedImageFullPath, imageStep.CroppedImageName, archive, imagesToLand, result);
-                // 可选打包原图：images/{Uid}_src{扩展名}，加载时按约定回退查找
-                if (includeSourceImages && !string.IsNullOrEmpty(imageStep.ImagePath))
-                    WriteCroppedImageToArchive(imageStep.ImagePath, $"images/{imageStep.Uid}_src{Path.GetExtension(imageStep.ImagePath)}", archive, imagesToLand, result);
+                // 原图：默认按「时间字符串 + 编号」的包内名称打包（旧数据没有名称时回退 images/{Uid}_src{扩展名}）
+                if (includeSourceImages)
+                {
+                    string sourcePath = ResolveSourceImagePath(imageStep);
+                    if (!string.IsNullOrEmpty(sourcePath))
+                    {
+                        string extension = Path.GetExtension(sourcePath);
+                        if (string.IsNullOrWhiteSpace(extension))
+                            extension = StepSourceImageStore.DefaultExtension;
+                        string entryName = string.IsNullOrWhiteSpace(imageStep.SourceImageName)
+                            ? $"images/{imageStep.Uid}_src{extension}"
+                            : imageStep.SourceImageName;
+                        WriteCroppedImageToArchive(sourcePath, entryName, archive, imagesToLand, result);
+                    }
+                }
             }
             else if (step is ImagesRecognitionBase imagesStep)
             {
@@ -377,6 +514,22 @@ namespace ShaoLu.Utils
                         : Path.Combine(sourceWorkDir, NormalizeEntryName(templateName));
                     WriteCroppedImageToArchive(sourcePath, templateName, archive, imagesToLand, result);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 取步骤当前可用的原图路径（优先步骤里记录的原图路径，其次工程目录里的原图）。
+        /// 单测环境可能没有 DI 容器，解析失败时退回原始路径，不抛异常。
+        /// </summary>
+        private static string ResolveSourceImagePath(ImageRecognitionBase imageStep)
+        {
+            try
+            {
+                return imageStep.SourceImageFullPath;
+            }
+            catch
+            {
+                return imageStep.ImagePath;
             }
         }
 

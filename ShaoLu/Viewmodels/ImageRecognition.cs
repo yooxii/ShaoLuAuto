@@ -33,14 +33,75 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private string _imagePath;
         private string _croppedImageName;
+        private string _sourceImageName;
 
         /// <summary>
-        /// 原图绝对路径（用户选取的外部图片）
+        /// 原图路径。
+        /// 截图时指向临时目录里的原图，保存工程包后指向工程目录里的副本；
+        /// 用户自己选的图则保持其原始路径。
         /// </summary>
         public string ImagePath
         {
             get => _imagePath;
-            set => SetProperty(ref _imagePath, value);
+            set
+            {
+                if (SetProperty(ref _imagePath, value))
+                {
+                    // 路径换了，界面上的图片名与预览图都要跟着换
+                    OnPropertyChanged(nameof(SourceImageFullPath));
+                    OnPropertyChanged(nameof(SourceImageDisplayText));
+                    OnPropertyChanged(nameof(ImgSrc));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 原图在工程包内的相对路径，如 "images/20261109_113012_1.png"。
+        /// 命名规则为「时间字符串 + 编号」；保存工程包时按此名打包，加载后按此名找回原图，
+        /// 所以换机打开工程也能继续编辑原图。
+        /// </summary>
+        public string SourceImageName
+        {
+            get => _sourceImageName;
+            set
+            {
+                if (SetProperty(ref _sourceImageName, value))
+                {
+                    OnPropertyChanged(nameof(SourceImageFullPath));
+                    OnPropertyChanged(nameof(SourceImageDisplayText));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 原图当前真实可用的路径：优先 ImagePath（存在时），
+        /// 其次工程目录里的原图（SourceImageName），最后回退历史格式 images/{Uid}_src.*。
+        /// 都找不到时返回 null。
+        /// </summary>
+        [JsonIgnore]
+        public string SourceImageFullPath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(ImagePath) && File.Exists(ImagePath))
+                    return ImagePath;
+                return FindPackagedSourceImage();
+            }
+        }
+
+        /// <summary>
+        /// 详情面板路径框显示的文本：只有图片名，完整路径放在提示里（换机后路径会变，名字不会）
+        /// </summary>
+        [JsonIgnore]
+        public string SourceImageDisplayText
+        {
+            get
+            {
+                string path = SourceImageFullPath;
+                if (string.IsNullOrEmpty(path))
+                    return LanguageService.GetLocalizedString("SourceImage_None", "未选择图片");
+                return Path.GetFileName(path);
+            }
         }
 
         /// <summary>
@@ -82,10 +143,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             get
             {
-                var img = LoadImage(ImagePath);
-                // 原图路径失效时回退到包内打包的原图（images/{Uid}_src.*，保存时可选打包）
-                if (img == null)
-                    img = LoadImage(FindPackagedSourceImage());
+                // 原图路径可能已失效（换机、临时目录被清理），由 SourceImageFullPath 统一回退到包内原图
+                var img = LoadImage(SourceImageFullPath);
                 if (img == null)
                 {
                     IsError = true;
@@ -95,13 +154,23 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
-        /// <summary>在工作目录中查找打包的原图（约定名 images/{Uid}_src.*）；未找到返回 null</summary>
+        /// <summary>
+        /// 在工作目录中查找打包的原图：先按 SourceImageName 精确查找（新格式），
+        /// 再回退到历史约定名 images/{Uid}_src.*；未找到返回 null
+        /// </summary>
         private string FindPackagedSourceImage()
         {
             try
             {
                 string workDir = mainVM?.StepImageWorkDir;
                 if (string.IsNullOrEmpty(workDir)) return null;
+
+                if (!string.IsNullOrEmpty(SourceImageName))
+                {
+                    string exact = Path.Combine(workDir, SourceImageName.Replace('/', Path.DirectorySeparatorChar));
+                    if (File.Exists(exact)) return exact;
+                }
+
                 string imagesDir = Path.Combine(workDir, "images");
                 if (!Directory.Exists(imagesDir)) return null;
                 return Directory.GetFiles(imagesDir, $"{Uid}_src.*").FirstOrDefault();
@@ -272,7 +341,142 @@ namespace ShaoLu.Viewmodels.AutomationStep
         {
             var title = LanguageService.GetLocalizedString("Select_target_pic", "Open Image File");
             var filter = LanguageService.GetLocalizedString("Image_File", "Image Files") + "(*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg";
-            ImagePath = PathServices.OpenPathDialog(title, filter);
+            string path = PathServices.OpenPathDialog(title, filter);
+            if (string.IsNullOrEmpty(path)) return;
+
+            // 换图后旧的原图名字作废：保存工程包时按「时间字符串 + 编号」重新生成
+            SourceImageName = null;
+            ImagePath = path;
+        }
+
+        /// <summary>
+        /// 重命名原图（详情面板路径框的右键菜单）。
+        /// 文件名改了，工程包里的原图名称一起改，保存后仍然对得上。
+        /// </summary>
+        [RelayCommand]
+        private void RenameSourceImage()
+        {
+            string current = SourceImageFullPath;
+            if (string.IsNullOrEmpty(current))
+            {
+                ShowMessage(LanguageService.GetLocalizedString("SourceImage_None", "未选择图片"), MessageBoxImage.Information);
+                return;
+            }
+
+            string dir = Path.GetDirectoryName(current);
+            string oldBaseName = Path.GetFileNameWithoutExtension(current);
+            string extension = Path.GetExtension(current);
+            if (string.IsNullOrEmpty(extension)) extension = StepSourceImageStore.DefaultExtension;
+
+            string input = WindowTextInput.ShowAndWait(
+                LanguageService.GetLocalizedString("SourceImage_RenameTitle", "重命名图片"),
+                LanguageService.GetLocalizedString("SourceImage_RenamePrompt", "输入新的图片名称（不用写扩展名）："),
+                oldBaseName);
+            if (string.IsNullOrEmpty(input)) return; // 取消
+
+            string newBaseName = Path.GetFileNameWithoutExtension(input.Trim());
+            string newExtension = Path.GetExtension(input.Trim());
+            if (string.IsNullOrEmpty(newExtension)) newExtension = extension;
+            string newFileName = newBaseName + newExtension;
+
+            if (newFileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || string.IsNullOrWhiteSpace(newBaseName))
+            {
+                ShowMessage(LanguageService.GetLocalizedString("SourceImage_InvalidName",
+                    "图片名称不能为空，也不能包含这些字符：\\ / : * ? \" < > |"), MessageBoxImage.Warning);
+                return;
+            }
+
+            string newPath = Path.Combine(dir ?? string.Empty, newFileName);
+            if (string.Equals(Path.GetFullPath(newPath), Path.GetFullPath(current), StringComparison.OrdinalIgnoreCase))
+                return; // 名字没变
+
+            if (File.Exists(newPath))
+            {
+                ShowMessage(string.Format(LanguageService.GetLocalizedString("SourceImage_NameExists", "同名图片已存在：{0}"), newFileName),
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                File.Move(current, newPath);
+                ImagePath = newPath;
+                SourceImageName = BuildSourceImageName(newPath);
+                IsError = false;
+                _logger.Info("Source image renamed: {0} -> {1}", current, newPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Rename source image failed: {0}", current);
+                ShowMessage(string.Format(LanguageService.GetLocalizedString("SourceImage_RenameFailed", "重命名失败：{0}"), ex.Message),
+                    MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>在资源管理器里定位原图（右键菜单）</summary>
+        [RelayCommand]
+        private void OpenSourceImageFolder()
+        {
+            string current = SourceImageFullPath;
+            if (string.IsNullOrEmpty(current))
+            {
+                ShowMessage(LanguageService.GetLocalizedString("SourceImage_None", "未选择图片"), MessageBoxImage.Information);
+                return;
+            }
+            StepSourceImageStore.ShowInExplorer(current);
+        }
+
+        /// <summary>复制原图完整路径（右键菜单）</summary>
+        [RelayCommand]
+        private void CopySourceImagePath()
+        {
+            string current = SourceImageFullPath;
+            if (string.IsNullOrEmpty(current)) return;
+            try
+            {
+                Clipboard.SetText(current);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn(ex, "Copy source image path failed: {0}", current);
+            }
+        }
+
+        /// <summary>
+        /// 给定原图文件路径，算出它在工程包里的名称：
+        /// 已在工程目录里的按相对路径登记，临时目录/外部文件按 images/{文件名} 登记。
+        /// </summary>
+        private string BuildSourceImageName(string fullPath)
+        {
+            if (string.IsNullOrWhiteSpace(fullPath)) return null;
+
+            try
+            {
+                string workDir = mainVM?.StepImageWorkDir;
+                if (!string.IsNullOrEmpty(workDir))
+                {
+                    string root = Path.GetFullPath(workDir)
+                        .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                    string full = Path.GetFullPath(fullPath);
+                    if (full.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                        return full.Substring(root.Length).Replace('\\', '/');
+                }
+            }
+            catch
+            {
+                // 路径异常时退回按文件名登记
+            }
+
+            return StepSourceImageStore.GetPackageEntryName(fullPath);
+        }
+
+        /// <summary>提示消息（异步弹窗，不阻塞步骤编辑）</summary>
+        private static void ShowMessage(string message, MessageBoxImage icon)
+        {
+            var (_, task) = WindowAsyncPopup.Show(message,
+                LanguageService.GetLocalizedString("SourceImage_RenameTitle", "重命名图片"),
+                PopupButtons.OK, icon);
+            _ = task;
         }
 
         [RelayCommand]
@@ -367,23 +571,16 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         /// <summary>
-        /// 截图落地为新原图：保存到工作目录、重置裁剪/点击点状态并打开图片编辑窗口
+        /// 截图落地为新原图：原图先存到本机临时目录（保存工程包时再打包进包内），
+        /// 重置裁剪/点击点状态并打开图片编辑窗口
         /// </summary>
         private void ApplyCapture(System.Drawing.Bitmap bmp)
         {
             if (bmp == null) return;
             try
             {
-                string workDir = mainVM.StepImageWorkDir;
-                if (string.IsNullOrEmpty(workDir))
-                {
-                    workDir = Path.Combine(Path.GetTempPath(), "AutoShaoLu", "images");
-                    mainVM.StepImageWorkDir = workDir;
-                }
-                string imagesDir = Path.Combine(workDir, "images");
-                Directory.CreateDirectory(imagesDir);
-
-                string fullPath = Path.Combine(imagesDir, $"{Uid}_src.png");
+                // 时间字符串 + 编号命名，落到临时目录：不占工程目录，保存时才打包
+                string fullPath = StepSourceImageStore.CreateTempImagePath();
                 bmp.Save(fullPath, System.Drawing.Imaging.ImageFormat.Png);
 
                 // 重置裁剪与点击点状态，截图作为新原图
@@ -391,6 +588,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _croppedImg = null;
                 CroppedRect = new Rect();
                 ClickThumbs = [];
+                SourceImageName = StepSourceImageStore.GetPackageEntryName(fullPath);
                 ImagePath = fullPath;
                 IsError = false;
                 OnPropertyChanged(nameof(ImgSrc));
@@ -633,6 +831,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 EnableLog = EnableLog,
                 SelfReferenceLimit = SelfReferenceLimit,
                 ImagePath = ImagePath,
+                SourceImageName = SourceImageName,
                 // 复用原步骤在包内的裁剪图，保证克隆体保存后仍能解析到同一张图
                 CroppedImageName = CroppedImageName,
                 CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
@@ -800,6 +999,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 ImagePath = ImagePath,
+                SourceImageName = SourceImageName,
                 // 复用原步骤在包内的裁剪图，保证克隆体保存后仍能解析到同一张图
                 CroppedImageName = CroppedImageName,
                 CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),

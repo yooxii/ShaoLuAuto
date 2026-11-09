@@ -615,7 +615,7 @@
 
 | 数据类型 | 位置 |
 |----------|------|
-| 步骤文件 | 用户选择的位置（.autostep 打包格式，裁剪图与烧录判据模板随包保存） |
+| 步骤文件 | 用户选择的位置（.autostep 打包格式，裁剪图、原图与烧录判据模板随包保存） |
 | 用户账号 | `%APPDATA%\AutoShaoLu\users.db`（SQLite） |
 | 程序设置 | `%APPDATA%\AutoShaoLu\settings.json` |
 | 烧录记录 | `%APPDATA%\AutoShaoLu\burn_in.db`（SQLite） |

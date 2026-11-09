@@ -27,6 +27,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 WaitTime = WaitTime,
                 ImagePath = ImagePath,
+                SourceImageName = SourceImageName,
                 CroppedImageName = CroppedImageName,
                 CroppedRect = new(CroppedRect.X, CroppedRect.Y, CroppedRect.Width, CroppedRect.Height),
                 ClickThumbs = ClickThumbs?.Select(t => t.Clone()).ToList(),

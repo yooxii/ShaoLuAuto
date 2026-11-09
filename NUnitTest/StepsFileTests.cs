@@ -437,6 +437,190 @@ namespace NUnitTest
 
         #endregion
 
+        #region 原图（截图）打包
+
+        /// <summary>1×1 的 PNG，测试用最小图片</summary>
+        private static readonly byte[] TinyPng = Convert.FromBase64String(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==");
+
+        private string CreatePngFile(string fileName)
+        {
+            string path = Path.Combine(_testDir, fileName);
+            File.WriteAllBytes(path, TinyPng);
+            return path;
+        }
+
+        [Test]
+        public void StepSourceImageStore_CreateTempImagePath_UsesTimestampAndIndex()
+        {
+            string first = StepSourceImageStore.CreateTempImagePath();
+            string second;
+            try
+            {
+                Assert.That(Path.GetFileNameWithoutExtension(first), Does.Match(@"^\d{8}_\d{6}_\d+$"),
+                    "默认命名方式应为 时间字符串 + 编号");
+
+                File.WriteAllBytes(first, TinyPng);
+                second = StepSourceImageStore.CreateTempImagePath();
+
+                Assert.That(second, Is.Not.EqualTo(first), "同一秒内再次截图不能覆盖已有原图");
+                Assert.That(Path.GetFileNameWithoutExtension(second), Does.Match(@"^\d{8}_\d{6}_\d+$"));
+                Assert.That(StepSourceImageStore.IsTempPath(first), Is.True);
+            }
+            finally
+            {
+                if (File.Exists(first)) File.Delete(first);
+            }
+
+            if (File.Exists(second)) File.Delete(second);
+        }
+
+        [Test]
+        public void SaveAsAutoStepPackage_PacksSourceImageByDefault_WithTimestampName()
+        {
+            EnsureImageStepServicesConfigured();
+            var original = StepsFile.WorkDirResolver;
+            try
+            {
+                string source = CreatePngFile("shot.png");
+                var step = new ClickImageStep("识图点击") { ImagePath = source };
+                var steps = new ObservableCollection<AutomationStepBase> { step };
+                string packagePath = Path.Combine(_testDir, "source_default.autostep");
+
+                var result = StepsFile.SaveAsAutoStepPackage(steps, packagePath);
+
+                Assert.That(result.MissingImages, Is.Empty);
+                Assert.That(step.SourceImageName, Is.Not.Null.And.Not.Empty, "保存时必须给原图定好包内名称");
+                Assert.That(step.SourceImageName, Does.Match(@"^images/\d{8}_\d{6}_\d+\.png$"),
+                    "原图包内名称应为 images/{时间字符串}_{编号}.png");
+
+                using (var zip = System.IO.Compression.ZipFile.OpenRead(packagePath))
+                {
+                    Assert.That(zip.GetEntry(step.SourceImageName), Is.Not.Null, "原图必须默认打包进工程包");
+                }
+
+                string landed = Path.Combine(result.WorkDir, step.SourceImageName.Replace('/', Path.DirectorySeparatorChar));
+                Assert.That(File.Exists(landed), Is.True, "原图要落地到工程目录");
+                Assert.That(step.ImagePath, Is.EqualTo(landed), "保存后原图路径应指向工程内副本");
+                Assert.That(File.Exists(source), Is.True, "临时目录里的原图不应被删除");
+
+                // 再存一次：名称保持稳定，不会每存一次换一个名字
+                string nameBefore = step.SourceImageName;
+                var second = StepsFile.SaveAsAutoStepPackage(steps, packagePath);
+                Assert.That(second.MissingImages, Is.Empty);
+                Assert.That(step.SourceImageName, Is.EqualTo(nameBefore));
+            }
+            finally
+            {
+                StepsFile.WorkDirResolver = original;
+            }
+        }
+
+        [Test]
+        public void SaveAsAutoStepPackage_DuplicateSourceImageNames_AreMadeUnique()
+        {
+            var original = StepsFile.WorkDirResolver;
+            try
+            {
+                string source = CreatePngFile("shared.png");
+                // 复制/粘贴步骤会让两个步骤挂着同一个原图名称
+                const string sharedName = "images/20260101_000000_1.png";
+                var stepA = new ClickImageStep("A") { ImagePath = source, SourceImageName = sharedName };
+                var stepB = new ClickImageStep("B") { ImagePath = source, SourceImageName = sharedName };
+                var steps = new ObservableCollection<AutomationStepBase> { stepA, stepB };
+                string packagePath = Path.Combine(_testDir, "source_unique.autostep");
+
+                StepsFile.SaveAsAutoStepPackage(steps, packagePath);
+
+                Assert.That(stepA.SourceImageName, Is.Not.EqualTo(stepB.SourceImageName),
+                    "同名的原图条目必须拆开，否则解压会失败");
+
+                using (var zip = System.IO.Compression.ZipFile.OpenRead(packagePath))
+                {
+                    var entries = new System.Collections.Generic.List<string>();
+                    foreach (var entry in zip.Entries)
+                    {
+                        if (entry.FullName.StartsWith("images/") && entry.FullName.EndsWith(".png"))
+                            entries.Add(entry.FullName);
+                    }
+                    Assert.That(entries, Does.Contain(stepA.SourceImageName));
+                    Assert.That(entries, Does.Contain(stepB.SourceImageName));
+                    Assert.That(new System.Collections.Generic.HashSet<string>(entries).Count, Is.EqualTo(entries.Count),
+                        "包内不能出现同名条目");
+                }
+            }
+            finally
+            {
+                StepsFile.WorkDirResolver = original;
+            }
+        }
+
+        [Test]
+        public void SaveAsAutoStepPackage_SourceImageName_RoundTripsThroughStepsJson()
+        {
+            EnsureImageStepServicesConfigured();
+            var original = StepsFile.WorkDirResolver;
+            try
+            {
+                string source = CreatePngFile("roundtrip.png");
+                var step = new ClickImageStep("识图点击") { ImagePath = source };
+                var steps = new ObservableCollection<AutomationStepBase> { step };
+                string packagePath = Path.Combine(_testDir, "source_roundtrip.autostep");
+
+                StepsFile.SaveAsAutoStepPackage(steps, packagePath);
+                string expectedName = step.SourceImageName;
+                Assert.That(expectedName, Is.Not.Null.And.Not.Empty);
+
+                var loaded = StepsFile.LoadFromAutoStepPackage(packagePath);
+
+                Assert.That(loaded.Count, Is.EqualTo(1));
+                var loadedStep = loaded[0] as ClickImageStep;
+                Assert.That(loadedStep, Is.Not.Null);
+                Assert.That(loadedStep.SourceImageName, Is.EqualTo(expectedName),
+                    "原图名称必须随工程保存，换机后才能找回原图");
+
+                // 模拟换机：原图绝对路径不存在，必须回退到工程目录里的原图
+                loadedStep.ImagePath = Path.Combine(_testDir, "not_exists.png");
+                string expectedLanding = Path.Combine(StepsFile.GetWorkDirPath(packagePath),
+                    expectedName.Replace('/', Path.DirectorySeparatorChar));
+                Assert.That(loadedStep.SourceImageFullPath, Is.EqualTo(expectedLanding),
+                    "原图路径失效时应回退到工程目录里的原图");
+            }
+            finally
+            {
+                StepsFile.WorkDirResolver = original;
+            }
+        }
+
+        [Test]
+        public void SaveAsAutoStepPackage_IncludeSourceImagesFalse_SkipsSourceImage()
+        {
+            var original = StepsFile.WorkDirResolver;
+            try
+            {
+                string source = CreatePngFile("skip.png");
+                var step = new ClickImageStep("识图点击") { ImagePath = source };
+                var steps = new ObservableCollection<AutomationStepBase> { step };
+                string packagePath = Path.Combine(_testDir, "source_skip.autostep");
+
+                StepsFile.SaveAsAutoStepPackage(steps, packagePath, includeSourceImages: false);
+
+                using (var zip = System.IO.Compression.ZipFile.OpenRead(packagePath))
+                {
+                    foreach (var entry in zip.Entries)
+                    {
+                        Assert.That(entry.FullName, Does.Not.StartWith("images/"), "关闭原图打包时不应写入原图");
+                    }
+                }
+            }
+            finally
+            {
+                StepsFile.WorkDirResolver = original;
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// ImageRecognitionBase 的字段初始化经 SingletonLocator 解析 MainViewModel / FileServices，
         /// 而单元测试进程没有 App.xaml.cs 里的 DI 注册，这里补一个最小实现（Ioc 全进程只允许配置一次）。

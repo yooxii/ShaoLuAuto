@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.6.10.2615</ApplicationVersion>
+    <ApplicationVersion>0.6.10.2616</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -224,6 +224,7 @@
     <Compile Include="Utils\ScreenCoordinates.cs" />
     <Compile Include="Utils\ScreenTextReader.cs" />
     <Compile Include="Utils\StepsFile.cs" />
+    <Compile Include="Utils\StepSourceImageStore.cs" />
     <Compile Include="Utils\TextHelper.cs" />
     <Compile Include="Utils\SingletonLocator.cs" />
     <Compile Include="Viewmodels\AutomationStep.cs" />
@@ -311,6 +312,9 @@
     </Compile>
     <Compile Include="Views\WindowTextPreview.xaml.cs">
       <DependentUpon>WindowTextPreview.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowTextInput.xaml.cs">
+      <DependentUpon>WindowTextInput.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\WindowLogin.xaml.cs">
       <DependentUpon>WindowLogin.xaml</DependentUpon>
@@ -446,6 +450,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowTextPreview.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowTextInput.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

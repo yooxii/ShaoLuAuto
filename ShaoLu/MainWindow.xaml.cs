@@ -700,7 +700,7 @@ namespace ShaoLu
         /// <summary>
         /// 保存：已有文件路径时直接覆盖原文件，否则弹出另存为对话框；示例文件只允许另存为，不可直接覆盖
         /// </summary>
-        private async void Save_Click(object sender, RoutedEventArgs e)
+        private void Save_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;
 
@@ -711,7 +711,7 @@ namespace ShaoLu
                 return;
             }
 
-            DoSave(filePath, await AskIncludeSourceImages());
+            DoSave(filePath);
         }
 
         /// <summary>判断文件是否位于程序自带的 Examples 目录（示例文件）</summary>
@@ -731,7 +731,7 @@ namespace ShaoLu
         /// <summary>
         /// 另存为：始终弹出对话框选择新路径
         /// </summary>
-        private async void SaveAs_Click(object sender, RoutedEventArgs e)
+        private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureLoggedIn()) return;
 
@@ -741,22 +741,11 @@ namespace ShaoLu
                 saveName: "NewSteps.autostep");
             if (filePath != null)
             {
-                DoSave(filePath, await AskIncludeSourceImages());
+                DoSave(filePath);
             }
         }
 
-        /// <summary>询问保存时是否将原图一并打包（供其他电脑重新编辑图片）</summary>
-        private static async Task<bool> AskIncludeSourceImages()
-        {
-            var (_, popupTask) = WindowAsyncPopup.Show(
-                LanguageService.GetLocalizedString("SaveWithSourceImages"),
-                LanguageService.GetLocalizedString("Save"),
-                PopupButtons.YesNo, MessageBoxImage.Question);
-            string result = await popupTask;
-            return result == PopupButton.YesValue;
-        }
-
-        private void DoSave(string filePath, bool includeSourceImages = false)
+        private void DoSave(string filePath, bool includeSourceImages = true)
         {
             var savedFlags = stepsViewModel.AutomationStepBases
                 .Select(step => (Step: step, step.IsSave))

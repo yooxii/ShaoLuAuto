@@ -1,4 +1,4 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:VM="clr-namespace:ShaoLu.Viewmodels"
                     xmlns:AutoVM="clr-namespace:ShaoLu.Viewmodels.AutomationStep"
@@ -289,6 +289,35 @@
         </StackPanel>
     </DataTemplate>
 
+    <!-- 图像步骤通用区块：截图在上，目标图片在下（标签和两个按钮在上，路径框在下） -->
+    <DataTemplate x:Key="TargetImagePanelTemplate">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Capture}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc Capture_FullScreen}" Command="{Binding CaptureFullScreenCommand}" Margin="0,0,3,0" Padding="8,2"/>
+                <Button Content="{lex:Loc Capture_Window}" Command="{Binding CaptureWindowCommand}" Margin="0,0,3,0" Padding="8,2"/>
+                <Button Content="{lex:Loc Capture_Region}" Command="{Binding CaptureRegionCommand}" Padding="8,2"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Label Content="{lex:Loc Select_target_pic}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="0,0,3,0"/>
+                <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}"/>
+            </StackPanel>
+            <!-- 原图路径框：右键可重命名、打开所在文件夹、复制路径 -->
+            <TextBox Text="{Binding SourceImageDisplayText, Mode=OneWay}" IsReadOnly="True"
+                     Margin="0,2,0,0" MinWidth="200" HorizontalAlignment="Stretch"
+                     ToolTip="{Binding SourceImageFullPath}">
+                <TextBox.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="{lex:Loc SourceImage_Rename}" Command="{Binding RenameSourceImageCommand}"/>
+                        <MenuItem Header="{lex:Loc SourceImage_OpenFolder}" Command="{Binding OpenSourceImageFolderCommand}"/>
+                        <MenuItem Header="{lex:Loc SourceImage_CopyPath}" Command="{Binding CopySourceImagePathCommand}"/>
+                    </ContextMenu>
+                </TextBox.ContextMenu>
+            </TextBox>
+        </StackPanel>
+    </DataTemplate>
+
     <!-- 识图点击步骤 -->
     <DataTemplate x:Key="ClickImageStepTemplate" DataType="{x:Type AutoVM:ClickImageStep}">
         <StackPanel>
@@ -298,18 +327,7 @@
                 <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
                           Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <Label Content="{lex:Loc Select_target_pic}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding ImagePath}" IsReadOnly="True" MinWidth="120" MaxWidth="200" ToolTip="{Binding ImagePath}" VerticalAlignment="Center"/>
-                <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
-                <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <Label Content="{lex:Loc Capture}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                <Button Content="{lex:Loc Capture_FullScreen}" Command="{Binding CaptureFullScreenCommand}" Margin="0,0,3,0" Padding="8,2"/>
-                <Button Content="{lex:Loc Capture_Window}" Command="{Binding CaptureWindowCommand}" Margin="0,0,3,0" Padding="8,2"/>
-                <Button Content="{lex:Loc Capture_Region}" Command="{Binding CaptureRegionCommand}" Padding="8,2"/>
-            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TargetImagePanelTemplate}"/>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>
@@ -385,18 +403,7 @@
                 <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
                           Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <Label Content="{lex:Loc Select_target_pic}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                <TextBox Text="{Binding ImagePath}" IsReadOnly="True" MinWidth="120" MaxWidth="200" ToolTip="{Binding ImagePath}" VerticalAlignment="Center"/>
-                <Button Content="{lex:Loc Select}" Command="{Binding SelectImageCommand}" Margin="3,0,0,0"/>
-                <Button Content="{lex:Loc Edit}" Command="{Binding EditImageCommand}" Margin="3,0,0,0"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Margin="0,2">
-                <Label Content="{lex:Loc Capture}" Padding="0,0,5,0" VerticalAlignment="Center"/>
-                <Button Content="{lex:Loc Capture_FullScreen}" Command="{Binding CaptureFullScreenCommand}" Margin="0,0,3,0" Padding="8,2"/>
-                <Button Content="{lex:Loc Capture_Window}" Command="{Binding CaptureWindowCommand}" Margin="0,0,3,0" Padding="8,2"/>
-                <Button Content="{lex:Loc Capture_Region}" Command="{Binding CaptureRegionCommand}" Padding="8,2"/>
-            </StackPanel>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource TargetImagePanelTemplate}"/>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Picture_similarity_threshold}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <wd:NumericBox Value="{Binding SimilarityThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Precision="3" Interval="0.001" Width="70"/>

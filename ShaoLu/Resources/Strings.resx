@@ -177,6 +177,33 @@
   <data name="Select_target_pic" xml:space="preserve">
     <value>Select target image</value>
   </data>
+  <data name="SourceImage_None" xml:space="preserve">
+    <value>No image selected</value>
+  </data>
+  <data name="SourceImage_Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="SourceImage_RenameTitle" xml:space="preserve">
+    <value>Rename image</value>
+  </data>
+  <data name="SourceImage_RenamePrompt" xml:space="preserve">
+    <value>Enter a new image name (extension optional):</value>
+  </data>
+  <data name="SourceImage_OpenFolder" xml:space="preserve">
+    <value>Open containing folder</value>
+  </data>
+  <data name="SourceImage_CopyPath" xml:space="preserve">
+    <value>Copy full path</value>
+  </data>
+  <data name="SourceImage_InvalidName" xml:space="preserve">
+    <value>The image name cannot be empty or contain any of: \ / : * ? &quot; &lt; &gt; |</value>
+  </data>
+  <data name="SourceImage_NameExists" xml:space="preserve">
+    <value>An image with that name already exists: {0}</value>
+  </data>
+  <data name="SourceImage_RenameFailed" xml:space="preserve">
+    <value>Rename failed: {0}</value>
+  </data>
   <data name="Setting_Header" xml:space="preserve">
     <value>Setting</value>
   </data>

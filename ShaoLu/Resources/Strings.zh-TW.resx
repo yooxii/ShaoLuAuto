@@ -177,6 +177,33 @@
   <data name="Select_target_pic" xml:space="preserve">
     <value>目標圖片:</value>
   </data>
+  <data name="SourceImage_None" xml:space="preserve">
+    <value>未選擇圖片</value>
+  </data>
+  <data name="SourceImage_Rename" xml:space="preserve">
+    <value>重新命名</value>
+  </data>
+  <data name="SourceImage_RenameTitle" xml:space="preserve">
+    <value>重新命名圖片</value>
+  </data>
+  <data name="SourceImage_RenamePrompt" xml:space="preserve">
+    <value>輸入新的圖片名稱（不用寫副檔名）：</value>
+  </data>
+  <data name="SourceImage_OpenFolder" xml:space="preserve">
+    <value>開啟所在的資料夾</value>
+  </data>
+  <data name="SourceImage_CopyPath" xml:space="preserve">
+    <value>複製完整路徑</value>
+  </data>
+  <data name="SourceImage_InvalidName" xml:space="preserve">
+    <value>圖片名稱不能為空，也不能包含這些字元：\ / : * ? &quot; &lt; &gt; |</value>
+  </data>
+  <data name="SourceImage_NameExists" xml:space="preserve">
+    <value>同名圖片已存在：{0}</value>
+  </data>
+  <data name="SourceImage_RenameFailed" xml:space="preserve">
+    <value>重新命名失敗：{0}</value>
+  </data>
   <data name="Setting_Header" xml:space="preserve">
     <value>設置</value>
   </data>

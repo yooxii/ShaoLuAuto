@@ -1,4 +1,5 @@
 using ShaoLu.Converters;
+using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
@@ -423,6 +424,12 @@ namespace ShaoLu.Utils
                     {
                         index++;
                         if (point == null) continue;
+
+                        // 只有「图像相对定位」的取点才需要图片；
+                        // 屏幕绝对坐标 / 屏幕相对坐标运行时直接读屏幕，没有图片是正常的，不能报缺失
+                        if (point.Source != TextPointSource.Relative)
+                            continue;
+
                         if (string.IsNullOrWhiteSpace(point.CroppedImageName))
                         {
                             missing.Add(string.Format(LanguageService.GetLocalizedString("Missing_StepPointImage",

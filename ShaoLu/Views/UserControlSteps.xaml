@@ -86,7 +86,6 @@
                         <Style TargetType="ToggleButton">
                             <Setter Property="Visibility" Value="Collapsed"/>
                             <Setter Property="Cursor" Value="Hand"/>
-                            <Setter Property="Foreground" Value="#FF444444"/>
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ToggleButton">

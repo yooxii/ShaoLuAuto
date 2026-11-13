@@ -25,7 +25,6 @@ namespace ShaoLu.Viewmodels
 
         public ExecutionLogViewModel()
         {
-            Logs = [];
             FileNames = [];
 
             SearchCommand = new RelayCommand(DoSearch);
@@ -71,7 +70,16 @@ namespace ShaoLu.Viewmodels
 
         #region 属性
 
-        public ObservableCollection<StepExecutionLog> Logs { get; }
+        private string _logText = string.Empty;
+
+        /// <summary>
+        /// 文本视图内容：一行一条原始执行日志，可直接阅读、选中、复制
+        /// </summary>
+        public string LogText
+        {
+            get => _logText;
+            set => SetProperty(ref _logText, value);
+        }
 
         public ObservableCollection<string> FileNames { get; }
 
@@ -212,7 +220,7 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
-        /// 切换排序（由 DataGrid 列头点击触发）
+        /// 切换排序（新界面不再有列头，保留给后续按需调用）
         /// </summary>
         public void ToggleSort(string columnName)
         {
@@ -254,17 +262,16 @@ namespace ShaoLu.Viewmodels
                     page: CurrentPage,
                     pageSize: PageSize);
 
-                // 生成展示列（结果 / 执行时间 / 线程）并归并 10 秒内的连续相同结果
-                ExecutionLogDisplay.Build(results);
+                // 文本视图：不归并重复记录，一行一条原始日志（时间 | 线程 | 步骤 | 结果 | 耗时 | 详情）
+                ExecutionLogDisplay.Build(results, mergeRepeats: false);
 
-                Logs.Clear();
-                foreach (var log in results)
+                if (results.Count == 0)
                 {
-                    // 被归并进上一行的重复记录不再显示，重复次数由组首的「 ×N」体现
-                    if (log.IsMergedAway)
-                        continue;
-
-                    Logs.Add(log);
+                    LogText = LanguageService.GetLocalizedString("ExecutionLog_Empty", "暂无执行日志");
+                }
+                else
+                {
+                    LogText = ExecutionLogDisplay.BuildText(results);
                 }
 
                 // 通知 TotalPages 变更

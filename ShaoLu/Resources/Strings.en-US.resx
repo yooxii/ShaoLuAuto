@@ -727,7 +727,10 @@
     <value>Enable Execution Log</value>
   </data>
   <data name="ExecutionLog" xml:space="preserve">
-    <value>Execution Record</value>
+    <value>Execution Log</value>
+  </data>
+  <data name="ExecutionLog_Empty" xml:space="preserve">
+    <value>No execution log yet</value>
   </data>
   <data name="Search" xml:space="preserve">
     <value>Search</value>

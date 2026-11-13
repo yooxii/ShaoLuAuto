@@ -24,8 +24,11 @@ namespace ShaoLu.Services
         /// <summary>兼容旧数据：从 InputText 文本中提取耗时</summary>
         private static readonly Regex TimePattern = new Regex(@"\[Time:(\d+)ms\]", RegexOptions.Compiled);
 
-        /// <summary>为每条记录填充展示属性，并将相邻重复记录归并</summary>
-        public static void Build(IReadOnlyList<StepExecutionLog> logs)
+        /// <summary>
+        /// 为每条记录填充展示属性；<paramref name="mergeRepeats"/> 为 true 时把相邻重复记录归并（表格视图用），
+        /// 为 false 时保留每一条记录原样（文本视图用，一条记录一行更贴近原始日志）。
+        /// </summary>
+        public static void Build(IReadOnlyList<StepExecutionLog> logs, bool mergeRepeats = true)
         {
             if (logs == null)
                 return;
@@ -41,7 +44,69 @@ namespace ShaoLu.Services
                 log.ResultDisplay = BuildResult(log);
             }
 
-            MergeRepeats(logs);
+            if (mergeRepeats)
+                MergeRepeats(logs);
+        }
+
+        /// <summary>
+        /// 文本视图用：把一条记录渲染成一行原始日志
+        /// 「时间 | 线程 | 步骤 | 结果 | 耗时 | 详情」。详情里的换行压成空格，保证一条记录只占一行。
+        /// </summary>
+        public static string BuildLine(StepExecutionLog log)
+        {
+            if (log == null)
+                return string.Empty;
+
+            var parts = new List<string>
+            {
+                log.ExecutedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                string.IsNullOrWhiteSpace(log.ThreadDisplay) ? ResolveThread(log) : log.ThreadDisplay,
+            };
+
+            if (!string.IsNullOrWhiteSpace(log.StepName))
+                parts.Add(log.StepName);
+
+            string result = string.IsNullOrWhiteSpace(log.ResultDisplay) ? BuildResult(log) : log.ResultDisplay;
+            if (!string.IsNullOrWhiteSpace(result))
+                parts.Add(result);
+
+            string time = string.IsNullOrWhiteSpace(log.ExecutionTimeDisplay)
+                ? ResolveExecutionTime(log)
+                : log.ExecutionTimeDisplay;
+            if (!string.IsNullOrWhiteSpace(time) && time != "-")
+                parts.Add(time);
+
+            string line = string.Join(" | ", parts);
+
+            if (!string.IsNullOrWhiteSpace(log.Details))
+                line += " | " + FlattenSingleLine(log.Details);
+
+            return line;
+        }
+
+        /// <summary>文本视图用：把整批记录拼成多行日志文本</summary>
+        public static string BuildText(IReadOnlyList<StepExecutionLog> logs)
+        {
+            if (logs == null || logs.Count == 0)
+                return string.Empty;
+
+            var builder = new System.Text.StringBuilder();
+            foreach (var log in logs)
+            {
+                string line = BuildLine(log);
+                if (string.IsNullOrEmpty(line))
+                    continue;
+                if (builder.Length > 0)
+                    builder.AppendLine();
+                builder.Append(line);
+            }
+            return builder.ToString();
+        }
+
+        /// <summary>把多行文本压成单行（换行换成空格），日志里一条记录只占一行</summary>
+        private static string FlattenSingleLine(string text)
+        {
+            return text.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
         }
 
         /// <summary>

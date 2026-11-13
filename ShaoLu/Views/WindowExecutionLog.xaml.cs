@@ -1,13 +1,11 @@
-using ShaoLu.Models;
 using ShaoLu.Viewmodels;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace ShaoLu.Views
 {
     /// <summary>
-    /// WindowExecutionLog.xaml 的交互逻辑
+    /// WindowExecutionLog.xaml 的交互逻辑。
+    /// 窗口以文本方式直接展示原始执行日志（一行一条记录），可阅读、选中、复制。
     /// </summary>
     public partial class WindowExecutionLog : Window
     {
@@ -21,26 +19,17 @@ namespace ShaoLu.Views
             Closed += (_, __) => _viewModel.StopWatching();
         }
 
-        private void DataGrid_Sorting(object sender, DataGridSortingEventArgs e)
+        /// <summary>复制当前显示的执行日志全文</summary>
+        private void CopyAll_Click(object sender, RoutedEventArgs e)
         {
-            // 阻止 DataGrid 默认的本地排序，改用 ViewModel 的服务端排序
-            e.Handled = true;
-            string columnName = e.Column.SortMemberPath;
-            if (!string.IsNullOrEmpty(columnName))
+            try
             {
-                _viewModel.ToggleSort(columnName);
+                if (!string.IsNullOrEmpty(LogTextBox.Text))
+                    Clipboard.SetText(LogTextBox.Text);
             }
-        }
-
-        /// <summary>
-        /// 点击截断的日志文本时预览完整内容
-        /// </summary>
-        private void LogText_Click(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is TextBlock textBlock && textBlock.Tag is string fullText && !string.IsNullOrEmpty(fullText))
+            catch
             {
-                string title = textBlock.DataContext is StepExecutionLog log ? log.StepName : null;
-                WindowTextPreview.Show(title, fullText);
+                // 剪贴板被占用等异常不影响查看
             }
         }
     }

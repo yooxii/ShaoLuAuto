@@ -75,6 +75,7 @@
             <utils:SingletonLocator x:Key="VMLocator" />
 
             <!-- 折叠开关模板只用于「多线程开始」行；其余步骤用空模板，避免绑定不存在的 IsRegionCollapsed 属性 -->
+            <!-- 只显示箭头本身（去掉按钮边框/背景）：展开时朝下 ▼，已折叠时朝右 ▶ -->
             <DataTemplate x:Key="RegionCollapseToggleTemplate">
                 <ToggleButton x:Name="RegionCollapseToggle"
                               Width="16" Height="16" Padding="0" Focusable="False"
@@ -84,14 +85,30 @@
                     <ToggleButton.Style>
                         <Style TargetType="ToggleButton">
                             <Setter Property="Visibility" Value="Collapsed"/>
-                            <Setter Property="Content" Value="&#x25B8;"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Foreground" Value="#FF444444"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <TextBlock x:Name="ArrowGlyph"
+                                                   Text="&#x25BE;"
+                                                   FontSize="11"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{TemplateBinding Foreground}"/>
+                                        <ControlTemplate.Triggers>
+                                            <!-- 已折叠：箭头朝右 -->
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="ArrowGlyph" Property="Text" Value="&#x25B8;"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Type}" Value="{x:Static models:StepType.MultiThread}">
                                     <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter Property="Content" Value="&#x25BE;"/>
-                                </Trigger>
                             </Style.Triggers>
                         </Style>
                     </ToggleButton.Style>

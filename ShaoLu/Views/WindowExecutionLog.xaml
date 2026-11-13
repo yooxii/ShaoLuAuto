@@ -5,14 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:lex="http://wpflocalizeextension.codeplex.com"
         xmlns:vm="clr-namespace:ShaoLu.Viewmodels"
-        xmlns:conv="clr-namespace:ShaoLu.Converters"
         d:DataContext="{d:DesignInstance Type=vm:ExecutionLogViewModel}"
         mc:Ignorable="d"
         Title="{lex:Loc ExecutionLog}" Height="550" Width="900"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <conv:TruncateTextConverter x:Key="TruncateText"/>
     </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -60,69 +58,39 @@
             </Expander>
         </StackPanel>
 
-        <!-- 数据表格 -->
-        <DataGrid Grid.Row="1" 
-                  ItemsSource="{Binding Logs}" 
-                  AutoGenerateColumns="False" 
-                  IsReadOnly="True"
-                  CanUserSortColumns="True"
-                  HorizontalScrollBarVisibility="Auto"
-                  SelectionMode="Single"
-                  GridLinesVisibility="Horizontal"
-                  AlternatingRowBackground="#F5F5F5"
-                  Sorting="DataGrid_Sorting">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="{lex:Loc ExecutedAt}" 
-                                    Binding="{Binding ExecutedAt, StringFormat=yyyy-MM-dd HH:mm:ss}" 
-                                    Width="auto" SortMemberPath="ExecutedAt"/>
-                <DataGridTextColumn Header="{lex:Loc StepName}" 
-                                    Binding="{Binding StepName}" 
-                                    Width="auto" SortMemberPath="StepName"/>
-                <DataGridTemplateColumn Header="{lex:Loc Stats_ColResult}" SortMemberPath="InputText" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding ResultDisplay, Converter={StaticResource TruncateText}}"
-                                       Tag="{Binding ResultDisplay}"
-                                       ToolTip="{lex:Loc ClickToPreview}"
-                                       MouseLeftButtonUp="LogText_Click" Cursor="Hand"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{lex:Loc Stats_ColDetails}" SortMemberPath="Details" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Details, Converter={StaticResource TruncateText}}"
-                                       Tag="{Binding Details}"
-                                       ToolTip="{lex:Loc ClickToPreview}"
-                                       MouseLeftButtonUp="LogText_Click" Cursor="Hand"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="{lex:Loc Stats_ColTime}"
-                                    Binding="{Binding ExecutionTimeDisplay}"
-                                    Width="auto" SortMemberPath="ExecutionTimeMs"/>
-                <DataGridTextColumn Header="{lex:Loc Stats_ColThread}"
-                                    Binding="{Binding ThreadDisplay}"
-                                    Width="auto" SortMemberPath="ThreadName"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <!-- 原始执行日志：一行一条记录，可直接阅读、选中、复制 -->
+        <TextBox x:Name="LogTextBox" Grid.Row="1"
+                 Text="{Binding LogText, Mode=OneWay}"
+                 IsReadOnly="True" IsReadOnlyCaretVisible="True"
+                 FontFamily="Consolas" FontSize="12" Padding="6"
+                 AcceptsReturn="True" TextWrapping="NoWrap"
+                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                 BorderBrush="#FFD0D0D0" BorderThickness="1" Background="#FFFCFCFC"/>
 
         <!-- 分页栏 -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-            <Button Content="{lex:Loc PrevPage}" Command="{Binding PrevPageCommand}" 
-                    MinWidth="70" Margin="0,0,10,0" Padding="8,3"/>
-            <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">
-                <Run Text="{Binding CurrentPage, Mode=OneWay}"/>
-                <Run Text=" / "/>
-                <Run Text="{Binding TotalPages, Mode=OneWay}"/>
-            </TextBlock>
-            <Button Content="{lex:Loc NextPage}" Command="{Binding NextPageCommand}" 
-                    MinWidth="70" Margin="0,0,20,0" Padding="8,3"/>
-            <TextBlock VerticalAlignment="Center">
-                <Run Text="{lex:Loc TotalRecords}"/>
-                <Run Text=": "/>
-                <Run Text="{Binding TotalCount, Mode=OneWay}"/>
-            </TextBlock>
-        </StackPanel>
+        <Grid Grid.Row="2" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="{lex:Loc PrevPage}" Command="{Binding PrevPageCommand}"
+                        MinWidth="70" Margin="0,0,10,0" Padding="8,3"/>
+                <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Run Text="{Binding CurrentPage, Mode=OneWay}"/>
+                    <Run Text=" / "/>
+                    <Run Text="{Binding TotalPages, Mode=OneWay}"/>
+                </TextBlock>
+                <Button Content="{lex:Loc NextPage}" Command="{Binding NextPageCommand}"
+                        MinWidth="70" Margin="0,0,20,0" Padding="8,3"/>
+                <TextBlock VerticalAlignment="Center">
+                    <Run Text="{lex:Loc TotalRecords}"/>
+                    <Run Text=": "/>
+                    <Run Text="{Binding TotalCount, Mode=OneWay}"/>
+                </TextBlock>
+            </StackPanel>
+            <Button Grid.Column="1" Content="{lex:Loc Copy}" Click="CopyAll_Click"
+                    MinWidth="70" Padding="8,3" VerticalAlignment="Center"/>
+        </Grid>
     </Grid>
 </Window>

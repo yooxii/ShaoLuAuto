@@ -167,7 +167,7 @@
 2. OCR 方式：点击「选择区域」框选屏幕区域
 3. ScreenText 方式：点「+」添加文本获取点，逐个选择坐标来源与位置
 4. 点「测试」可预览获取结果，点击结果框可查看全文
-5. 结果写入步骤执行结果，可用条件变量 `Self_OCRText` 被后续步骤引用；执行记录里 OCR 识别标注为 `[OCR:…]`、直接读取屏幕标注为 `[直接获取:…]`
+5. 结果写入步骤执行结果，可用条件变量 `Self_OCRText` 被后续步骤引用；执行日志里 OCR 识别标注为 `[OCR:…]`、直接读取屏幕标注为 `[直接获取:…]`
 
 ---
 
@@ -629,6 +629,7 @@
 | 烧录截图 | `%APPDATA%\AutoShaoLu\screenshots\{工令}\yyyyMMdd_HHmmss_fff.png`（保存目录可在烧录配置中改） |
 | 最近文件 | `%APPDATA%\AutoShaoLu\recent_files.json`（最多保留 10 条） |
 | 执行日志 | `%APPDATA%\AutoShaoLu\execution_log.db`（SQLite） |
+| 程序日志 | 程序目录 `logs\{日期}.log`（按天分文件，固定保留 7 天，启动时清理） |
 | 界面语言 | `%APPDATA%\AutoShaoLu\current_language.txt` |
 | OCR 语言数据 | 程序目录下的 `tessdata\`（chi_sim / chi_tra / eng / jpn / equ 等） |
 

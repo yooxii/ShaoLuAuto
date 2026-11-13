@@ -106,6 +106,10 @@ namespace ShaoLu.Utils
             if (includeSourceImages)
                 PrepareSourceImageNames(steps);
 
+            // 0.1 裁剪图条目名也要唯一：复制/粘贴图像步骤会让两条步骤共用同一个图片名，
+            //     同一条目名在 zip 里出现两次，工程解压会直接失败（重新打开时报图片不存在）
+            PrepareCroppedImageNames(steps);
+
             // 1. 先序列化到内存：序列化异常（如无限值、坏数据）在上一步就抛，旧文件完好无损
             string jsonString = JsonSerializer.Serialize(steps, _writeOptions);
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
@@ -113,6 +117,8 @@ namespace ShaoLu.Utils
             // 2. 写临时文件（与目标同目录，保证 File.Replace 同卷原子性）
             string tempPath = targetPath + ".tmp-" + Guid.NewGuid().ToString("N");
             var imagesToLand = new List<(string SourcePath, string EntryName)>();
+            // 已写入包的条目名：zip 里同名条目出现两次会让解压失败，这里做最后一道兜底
+            var writtenEntries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             try
             {
@@ -128,7 +134,7 @@ namespace ShaoLu.Utils
                     // 收集并写入图片（可选含原图）
                     foreach (var step in steps)
                     {
-                        CollectAndWriteImages(step, archive, includeSourceImages, imagesToLand, result);
+                        CollectAndWriteImages(step, archive, includeSourceImages, imagesToLand, writtenEntries, result);
                     }
                 }
 
@@ -248,8 +254,7 @@ namespace ShaoLu.Utils
         /// 已打包原图落地后，把步骤里的原图路径改指向工程目录里的副本。
         /// 临时目录里的原图会被系统清理，工程目录里的副本才是稳定来源。
         /// </summary>
-        private static void RelinkSourceImages(ObservableCollection<AutomationStepBase> steps, string workDir)
-        {
+        private static void RelinkSourceImages(ObservableCollection<AutomationStepBase> steps, string workDir)        {
             if (steps == null || string.IsNullOrEmpty(workDir))
                 return;
 
@@ -279,6 +284,178 @@ namespace ShaoLu.Utils
         }
 
         /// <summary>
+        /// 裁剪图条目名唯一化：复制/粘贴图像步骤时，克隆体继承原步骤的图片名，两条步骤抢同一个文件。
+        /// 同一条目名在 zip 里出现两次会让工程解压失败（重新打开时报图片不存在），
+        /// 因此序列化前把重名的裁剪图改成「以自身 Uid 命名」的新条目，并把图片文件复制到新条目名下，
+        /// 让每条步骤都有自己的图片，之后各自保存、删除互不影响。
+        /// </summary>
+        private static void PrepareCroppedImageNames(ObservableCollection<AutomationStepBase> steps)
+        {
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var owner in CollectCroppedImageOwners(steps))
+            {
+                string name = owner.GetEntryName();
+                if (string.IsNullOrWhiteSpace(name))
+                    continue;
+
+                string normalized = NormalizeEntryName(name);
+                if (used.Add(normalized))
+                {
+                    if (!string.Equals(normalized, name, StringComparison.Ordinal))
+                        owner.SetEntryName(normalized);
+                    continue;
+                }
+
+                // 重名：图片文件还在时复制成自己的条目名；文件本来就不存在时不用改名（没有条目可写）
+                string sourcePath = owner.GetFullPath();
+                if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
+                    continue;
+
+                string extension = Path.GetExtension(normalized);
+                if (string.IsNullOrWhiteSpace(extension))
+                    extension = StepSourceImageStore.DefaultExtension;
+
+                string newEntry = CreateUniqueCroppedEntryName(used, owner.Uid, extension);
+                if (string.IsNullOrEmpty(newEntry))
+                    continue;
+
+                try
+                {
+                    string directory = Path.GetDirectoryName(sourcePath);
+                    string target = Path.Combine(directory ?? string.Empty, Path.GetFileName(newEntry));
+                    if (!File.Exists(target))
+                        File.Copy(sourcePath, target, overwrite: false);
+
+                    owner.SetEntryName(newEntry);
+                }
+                catch (Exception ex)
+                {
+                    // 复制失败时保留原名：写入环节会跳过同名条目，两条步骤仍共用包内那一张图（不会毁掉工程）
+                    NLog.LogManager.GetCurrentClassLogger()
+                        .Warn(ex, "PrepareCroppedImageNames: copy {0} -> {1} failed", sourcePath, newEntry);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 列出一条工程里所有的裁剪图引用（单图步骤 / 多图步骤的每张图 / 获取文本步骤的相对定位取点）
+        /// </summary>
+        private static List<CroppedImageOwner> CollectCroppedImageOwners(ObservableCollection<AutomationStepBase> steps)
+        {
+            var owners = new List<CroppedImageOwner>();
+            if (steps == null) return owners;
+
+            foreach (var step in steps)
+            {
+                if (step == null) continue;
+
+                if (step is ImageRecognitionBase imageStep)
+                {
+                    // 闭包捕获必须用局部变量，否则所有委托都会指向循环最后一项
+                    var owner = imageStep;
+                    owners.Add(new CroppedImageOwner
+                    {
+                        Uid = owner.Uid,
+                        GetEntryName = () => owner.CroppedImageName,
+                        SetEntryName = name => owner.CroppedImageName = name,
+                        GetFullPath = () => owner.CroppedImageFullPath,
+                    });
+                }
+                else if (step is ImagesRecognitionBase imagesStep)
+                {
+                    if (imagesStep.Images == null) continue;
+                    foreach (var image in imagesStep.Images)
+                    {
+                        if (image == null) continue;
+                        var owner = image;
+                        owners.Add(new CroppedImageOwner
+                        {
+                            Uid = owner.Uid,
+                            GetEntryName = () => owner.CroppedImageName,
+                            SetEntryName = name => owner.CroppedImageName = name,
+                            GetFullPath = () => owner.CroppedImageFullPath,
+                        });
+                    }
+                }
+                else if (step is GetInputStep inputStep)
+                {
+                    if (inputStep.TextPoints == null) continue;
+                    foreach (var point in inputStep.TextPoints)
+                    {
+                        // 只有「图像相对定位」的取点才有裁剪图，其余取点直接读屏幕
+                        if (point == null || point.Source != TextPointSource.Relative) continue;
+                        var owner = point;
+                        owners.Add(new CroppedImageOwner
+                        {
+                            Uid = owner.Id,
+                            GetEntryName = () => owner.CroppedImageName,
+                            SetEntryName = name => owner.CroppedImageName = name,
+                            GetFullPath = () => owner.CroppedImageFullPath,
+                        });
+                    }
+                }
+            }
+
+            return owners;
+        }
+
+        /// <summary>生成一个未被占用的裁剪图条目名：images/{Uid}{扩展名}，冲突时追加序号</summary>
+        private static string CreateUniqueCroppedEntryName(ISet<string> used, Guid uid, string extension)
+        {
+            string baseName = $"{StepSourceImageStore.PackageFolder}/{uid}";
+            for (int index = 1; index <= 1000; index++)
+            {
+                string candidate = index == 1 ? baseName + extension : $"{baseName}_{index}{extension}";
+                if (used.Add(candidate))
+                    return candidate;
+            }
+
+            return null;
+        }
+
+        /// <summary>一条裁剪图引用：谁在引用、当前条目名、怎么改名</summary>
+        private sealed class CroppedImageOwner
+        {
+            public Guid Uid { get; set; }
+            public Func<string> GetEntryName { get; set; }
+            public Action<string> SetEntryName { get; set; }
+            public Func<string> GetFullPath { get; set; }
+        }
+
+        /// <summary>
+        /// 把工程包解压到指定目录。
+        /// 不用 ZipFile.ExtractToDirectory：它遇到「同名条目已存在」会直接失败，
+        /// 而旧版本保存的工程包可能含有同名图片条目（复制步骤共用图片名）。
+        /// 这里逐条目解压、同名以最后一次为准，让这类旧包仍能打开，重新保存一次就能修好。
+        /// </summary>
+        private static void ExtractPackage(string packagePath, string targetDir)
+        {
+            string root = Path.GetFullPath(targetDir)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+            using var archive = ZipFile.OpenRead(packagePath);
+            foreach (var entry in archive.Entries)
+            {
+                // 目录条目：文件条目会按需创建目录，这里跳过
+                if (string.IsNullOrEmpty(entry.Name))
+                    continue;
+
+                string destination = Path.GetFullPath(Path.Combine(
+                    targetDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar)));
+
+                // 防目录穿越：条目名里带 .. 时不能写到临时目录外面
+                if (!destination.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException($"工程包内条目路径非法：{entry.FullName}");
+
+                string directory = Path.GetDirectoryName(destination);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+
+                entry.ExtractToFile(destination, overwrite: true);
+            }
+        }
+
+        /// <summary>
         /// 从 .autostep 压缩包加载步骤
         /// 先解压到临时目录并完成 JSON 校验，成功后替换工作目录；打开损坏包不会破坏当前图片。
         /// </summary>
@@ -301,7 +478,7 @@ namespace ShaoLu.Utils
             try
             {
                 Directory.CreateDirectory(tempDir);
-                ZipFile.ExtractToDirectory(packageFullPath, tempDir);
+                ExtractPackage(packageFullPath, tempDir);
 
                 // 在临时目录里完成读取与校验，失败时当前工作目录原样保留
                 string jsonPath = Path.Combine(tempDir, StepsJsonEntryName);
@@ -466,13 +643,15 @@ namespace ShaoLu.Utils
 
         /// <summary>
         /// 收集步骤里的图片并写入压缩包，同时记录需要落地到工作目录的图片。
+        /// <paramref name="writtenEntries"/> 记录已经写过的条目名，同名条目只写一次
+        /// （重复条目会让 zip 解压失败，工程重新打开时报错）。
         /// </summary>
         private static void CollectAndWriteImages(AutomationStepBase step, ZipArchive archive, bool includeSourceImages,
-            List<(string SourcePath, string EntryName)> imagesToLand, SavePackageResult result)
+            List<(string SourcePath, string EntryName)> imagesToLand, ISet<string> writtenEntries, SavePackageResult result)
         {
             if (step is ImageRecognitionBase imageStep)
             {
-                WriteCroppedImageToArchive(imageStep.CroppedImageFullPath, imageStep.CroppedImageName, archive, imagesToLand, result);
+                WriteCroppedImageToArchive(imageStep.CroppedImageFullPath, imageStep.CroppedImageName, archive, imagesToLand, writtenEntries, result);
                 // 原图：默认按「时间字符串 + 编号」的包内名称打包（旧数据没有名称时回退 images/{Uid}_src{扩展名}）
                 if (includeSourceImages)
                 {
@@ -485,7 +664,7 @@ namespace ShaoLu.Utils
                         string entryName = string.IsNullOrWhiteSpace(imageStep.SourceImageName)
                             ? $"images/{imageStep.Uid}_src{extension}"
                             : imageStep.SourceImageName;
-                        WriteCroppedImageToArchive(sourcePath, entryName, archive, imagesToLand, result);
+                        WriteCroppedImageToArchive(sourcePath, entryName, archive, imagesToLand, writtenEntries, result);
                     }
                 }
             }
@@ -495,7 +674,7 @@ namespace ShaoLu.Utils
                 foreach (var image in imagesStep.Images)
                 {
                     if (image == null) continue;
-                    WriteCroppedImageToArchive(image.CroppedImageFullPath, image.CroppedImageName, archive, imagesToLand, result);
+                    WriteCroppedImageToArchive(image.CroppedImageFullPath, image.CroppedImageName, archive, imagesToLand, writtenEntries, result);
                 }
             }
             else if (step is GetInputStep inputStep)
@@ -504,9 +683,9 @@ namespace ShaoLu.Utils
                 foreach (var point in inputStep.TextPoints)
                 {
                     if (point == null) continue;
-                    WriteCroppedImageToArchive(point.CroppedImageFullPath, point.CroppedImageName, archive, imagesToLand, result);
+                    WriteCroppedImageToArchive(point.CroppedImageFullPath, point.CroppedImageName, archive, imagesToLand, writtenEntries, result);
                     if (includeSourceImages && !string.IsNullOrEmpty(point.ImagePath))
-                        WriteCroppedImageToArchive(point.ImagePath, $"images/{point.Id}_src{Path.GetExtension(point.ImagePath)}", archive, imagesToLand, result);
+                        WriteCroppedImageToArchive(point.ImagePath, $"images/{point.Id}_src{Path.GetExtension(point.ImagePath)}", archive, imagesToLand, writtenEntries, result);
                 }
             }
             else if (step is BurnInConfigStep burnStep)
@@ -519,7 +698,7 @@ namespace ShaoLu.Utils
                     string sourcePath = string.IsNullOrEmpty(sourceWorkDir)
                         ? null
                         : Path.Combine(sourceWorkDir, NormalizeEntryName(templateName));
-                    WriteCroppedImageToArchive(sourcePath, templateName, archive, imagesToLand, result);
+                    WriteCroppedImageToArchive(sourcePath, templateName, archive, imagesToLand, writtenEntries, result);
                 }
             }
         }
@@ -565,7 +744,7 @@ namespace ShaoLu.Utils
         }
 
         private static void WriteCroppedImageToArchive(string fullPath, string entryName, ZipArchive archive,
-            List<(string SourcePath, string EntryName)> imagesToLand, SavePackageResult result)
+            List<(string SourcePath, string EntryName)> imagesToLand, ISet<string> writtenEntries, SavePackageResult result)
         {
             if (string.IsNullOrEmpty(entryName))
                 return;
@@ -578,6 +757,11 @@ namespace ShaoLu.Utils
                 result.MissingImages.Add($"{normalizedEntryName} ← {fullPath ?? LanguageService.GetLocalizedString("Msg_UnknownPath", "(未知路径)")}");
                 return;
             }
+
+            // 同一条目名只写一次（重名的两条步骤共用同一张图片，解压后都还能用）；
+            // zip 里出现同名条目会让整个工程解压失败，所以这里必须挡住
+            if (writtenEntries != null && !writtenEntries.Add(normalizedEntryName))
+                return;
 
             var entry = archive.CreateEntry(normalizedEntryName, CompressionLevel.Optimal);
             using (var entryStream = entry.Open())

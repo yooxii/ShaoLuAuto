@@ -63,6 +63,7 @@
     <Compile Include="MultiThreadTests.cs" />
     <Compile Include="SubThreadRunnerTests.cs" />
     <Compile Include="ImageThreadingTests.cs" />
+    <Compile Include="ImageStepCopyTests.cs" />
     <Compile Include="StepsOrderMoveTests.cs" />
     <Compile Include="ExecutionLogDisplayTests.cs" />
     <Compile Include="UserInputStepTests.cs" />

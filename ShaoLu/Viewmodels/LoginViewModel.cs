@@ -52,14 +52,14 @@ namespace ShaoLu.Viewmodels
 
             if (string.IsNullOrWhiteSpace(Username))
             {
-                ErrorMessage = Loc("Error_EmptyUsername");
+                FailLogin(Loc("Error_EmptyUsername"), System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
             // 密码由 View code-behind 通过 Password 属性传入
             if (string.IsNullOrEmpty(Password))
             {
-                ErrorMessage = Loc("Error_EmptyPassword");
+                FailLogin(Loc("Error_EmptyPassword"), System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
@@ -70,7 +70,28 @@ namespace ShaoLu.Viewmodels
             }
             else
             {
-                ErrorMessage = Loc("Error_LoginFailed");
+                FailLogin(Loc("Error_LoginFailed"), System.Windows.MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// 登录失败：窗口里的红字提示照旧保留，同时弹出错误提示窗口。
+        /// 登录窗口是拖动式小窗，提示被滚动出可视区或被别的窗口挡住时用户看不到失败原因，所以再弹一次。
+        /// </summary>
+        private void FailLogin(string message, System.Windows.MessageBoxImage icon)
+        {
+            ErrorMessage = message;
+            if (string.IsNullOrWhiteSpace(message)) return;
+
+            try
+            {
+                var (_, task) = Views.WindowAsyncPopup.Show(message, Loc("LoginTitle"), PopupButtons.OK, icon);
+                _ = task;
+            }
+            catch (Exception ex)
+            {
+                // 弹窗失败不影响按钮上的红字提示，这里只留一条日志
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "Show login error popup failed");
             }
         }
 

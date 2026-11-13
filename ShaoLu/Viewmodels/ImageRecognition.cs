@@ -199,18 +199,21 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 // 裁剪图在运行时段会被后台线程使用：赋值时先尽量冻结，未冻结对象跨线程访问会抛异常
                 Autogui.FreezeIfPossible(value);
-                if (SetProperty(ref _croppedImg, value))
+                bool changed = SetProperty(ref _croppedImg, value);
+
+                if (value == null)
+                    return;
+
+                // 图片编辑窗口点「保存」时传进来的可能就是缓存里的同一个对象（没有重新裁剪 → 引用没变），
+                // 这种也要落盘：复制出来的步骤此前共用原步骤的图片文件，保存工程后该步骤的图片就找不到了。
+                if (!changed && IsCroppedImagePersisted())
+                    return;
+
+                // 落盘失败必须显式记录（IsError/ErrorMessage + 日志），不能吞掉后仍提示“已保存”
+                if (!SaveCroppedImageToDisk(value))
                 {
-                    if (value != null)
-                    {
-                        // 当裁剪图更新时，自动保存到磁盘。
-                        // 落盘失败必须显式记录（IsError/ErrorMessage + 日志），不能吞掉后仍提示“已保存”
-                        if (!SaveCroppedImageToDisk(value))
-                        {
-                            IsError = true;
-                            ErrorMessage = LanguageService.GetLocalizedString("SaveFailed", "Save failed");
-                        }
-                    }
+                    IsError = true;
+                    ErrorMessage = LanguageService.GetLocalizedString("SaveFailed", "Save failed");
                 }
             }
         }
@@ -674,13 +677,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 if (!Directory.Exists(imagesDir))
                     Directory.CreateDirectory(imagesDir);
 
-                string extension = ".png";
-                if (!string.IsNullOrEmpty(ImagePath))
-                {
-                    var ext = Path.GetExtension(ImagePath)?.ToLower();
-                    if (!string.IsNullOrEmpty(ext)) extension = ext;
-                }
-
+                string extension = ResolveCroppedImageExtension();
                 string fileName = $"{Uid}{extension}";
                 string fullPath = Path.Combine(imagesDir, fileName);
 
@@ -694,7 +691,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                             encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
                             encoder.Save(stream);
                         }
-                        CroppedImageName = $"images/{fileName}";
+                        CroppedImageName = BuildCroppedImageEntryName();
                         _lastCroppedImageSaved = true;
                         _logger.Info("Cropped image saved to: {0}", fullPath);
                         return true;
@@ -712,6 +709,32 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 _logger.Error(ex, "Failed to save cropped image");
                 return false;
             }
+        }
+
+        /// <summary>裁剪图条目名：images/{本步骤 Uid}{扩展名}</summary>
+        private string BuildCroppedImageEntryName() => $"images/{Uid}{ResolveCroppedImageExtension()}";
+
+        /// <summary>裁剪图扩展名：跟随原图扩展名，未知时用 .png</summary>
+        private string ResolveCroppedImageExtension()
+        {
+            string extension = string.IsNullOrEmpty(ImagePath) ? null : Path.GetExtension(ImagePath)?.ToLower();
+            return string.IsNullOrEmpty(extension) ? ".png" : extension;
+        }
+
+        /// <summary>
+        /// 裁剪图是否已经按本步骤自己的 Uid 落过盘（条目名对得上且文件真实存在）。
+        /// 复制出来的步骤带着原步骤的图片名，必须视为“还没落盘”，否则它会一直引用别人的图片文件。
+        /// </summary>
+        private bool IsCroppedImagePersisted()
+        {
+            if (string.IsNullOrEmpty(CroppedImageName))
+                return false;
+
+            string fullPath = CroppedImageFullPath;
+            if (string.IsNullOrEmpty(fullPath) || !File.Exists(fullPath))
+                return false;
+
+            return string.Equals(CroppedImageName, BuildCroppedImageEntryName(), StringComparison.OrdinalIgnoreCase);
         }
 
         private BitmapEncoder GetEncoderByExtension(string extension)

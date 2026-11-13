@@ -96,6 +96,62 @@ namespace NUnitTest
             }
         }
 
+        // ---------------------------------------------------------------- 控制台命令集
+        private static string RunConsole(string exe, params string[] commands)
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo(exe, "--console")
+            {
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                StandardOutputEncoding = System.Text.Encoding.UTF8,
+                StandardErrorEncoding = System.Text.Encoding.UTF8,
+            };
+
+            using (var p = System.Diagnostics.Process.Start(psi))
+            {
+                foreach (string c in commands) p.StandardInput.WriteLine(c);
+                p.StandardInput.WriteLine("quit");
+                p.StandardInput.Close();
+
+                string output = p.StandardOutput.ReadToEnd();
+                p.StandardError.ReadToEnd();
+                Assert.That(p.WaitForExit(30000), Is.True, "控制台模式应能正常退出");
+                return output;
+            }
+        }
+
+        [Test]
+        public void Console_Help_列出全部导出与用法()
+        {
+            string exe = ResolveBridgeOrNull();
+            if (exe == null)
+                Assert.Ignore("未找到 AcbelBridge.exe：请先构建 AcbelBridge 工程。");
+
+            string output = RunConsole(exe, "help", "help ACBEL_INSERT_DATA");
+
+            Assert.That(output, Does.Contain("23 个导出"), "应提示命令总数");
+            Assert.That(output, Does.Contain("ACBEL_INSERT_DATA"));
+            Assert.That(output, Does.Contain("写入类（需要 --allow-write）"));
+            Assert.That(output, Does.Contain("用法：ACBEL_INSERT_DATA"));
+            Assert.That(output, Does.Contain("镭雕程式文件名"));
+        }
+
+        [Test]
+        public void Console_未加allow_write时拒绝写库命令()
+        {
+            string exe = ResolveBridgeOrNull();
+            if (exe == null)
+                Assert.Ignore("未找到 AcbelBridge.exe：请先构建 AcbelBridge 工程。");
+
+            string output = RunConsole(exe, "ACBEL_INSERT_DATA db payload program");
+
+            Assert.That(output, Does.Contain("已拒绝"), "没有 --allow-write 时必须拒绝写库命令");
+            Assert.That(output, Does.Contain("--allow-write"));
+        }
+
         // ---------------------------------------------------------------- 需要站点环境
         [Test]
         [Explicit("会真正尝试连接 MES 数据库：需在站点机（内网 + BDE 别名 + Oracle 客户端）上手动运行；离线环境请勿执行。")]

@@ -91,8 +91,22 @@ namespace AcbelBridge
         private static bool _prepareEnv = true;
         private static string _facCode = "H";
         private static string _envError;
+        private static bool _consoleMode;
+        private static bool _allowWrite;
         private static StreamWriter _out;
         private static StreamReader _in;
+
+        /// <summary>--console：进入控制台命令集（手工控制全部 23 个导出）。</summary>
+        internal static bool AllowWrite { get { return _allowWrite; } }
+        internal static string DllPath { get { return _dllPath; } }
+        internal static int CallTimeoutMs { get { return _callTimeoutMs; } }
+
+        /// <summary>当前库名（open 成功后的返回值），控制台里可用 @db 引用。</summary>
+        internal static string Database
+        {
+            get { return _database; }
+            set { _database = value; }
+        }
 
         // ---- DLL 硬编码依赖的 D 盘运行环境（缺哪个会出什么事，见文件头注释） ----
         private static readonly string[] EnvDirectories =
@@ -120,6 +134,9 @@ namespace AcbelBridge
                 if (!ParseArgs(args)) return 2;
                 PrepareEnvironment();
 
+                // 控制台模式：直接手工执行命令，不走主程序的行协议
+                if (_consoleMode) return ConsoleSession.Run();
+
                 string line;
                 while ((line = _in.ReadLine()) != null)
                 {
@@ -132,6 +149,7 @@ namespace AcbelBridge
 
                     if (cmd == "quit") return 0;
                     if (cmd == "ping") { ReplyOk(PingReport()); continue; }
+                    if (cmd == "help") { ReplyOk(ConsoleSession.BuildHelp()); continue; }
                     if (cmd == "validate")
                     {
                         if (parts.Length < 2) { ReplyFail("validate 需要 1 个参数：上传资料"); continue; }
@@ -186,7 +204,7 @@ namespace AcbelBridge
                         ReplyOkOrFail(() => CallInsert(payload, program));
                         continue;
                     }
-                    ReplyFail("未知命令：" + cmd + "（可用：ping / open / set_basic_info / chkbar_code / insert / quit）");
+                    ReplyFail("未知命令：" + cmd + "（可用：ping / help / open / set_basic_info / chkbar_code / insert / quit）");
                 }
                 return 0;
             }
@@ -207,11 +225,19 @@ namespace AcbelBridge
                 {
                     case "--help":
                     case "-h":
-                        Console.Error.WriteLine("AcbelBridge [--dll <path>] [--call-timeout <seconds>] [--no-validate] [--allow-extra-fields] [--no-prepare-env] [--fac-code <code>] [--version]");
+                        Console.Error.WriteLine("AcbelBridge [--console] [--allow-write] [--dll <path>] [--call-timeout <seconds>] [--no-validate] [--allow-extra-fields] [--no-prepare-env] [--fac-code <code>] [--log|--no-log] [--version]");
+                        Console.Error.WriteLine("  --console       进入控制台命令集（手工控制 DLL 全部 23 个导出，输入 help 查看）");
+                        Console.Error.WriteLine("  --allow-write   允许执行会写 MES 生产库的命令（控制台默认拒绝）");
                         return false;
                     case "--version":
-                        Console.Error.WriteLine("AcbelBridge 1.0.0 (x86 bridge for Acbel_Chroma_Test.dll)");
+                        Console.Error.WriteLine("AcbelBridge 1.1.0 (x86 bridge for Acbel_Chroma_Test.dll)");
                         return false;
+                    case "--console":
+                        _consoleMode = true;
+                        break;
+                    case "--allow-write":
+                        _allowWrite = true;
+                        break;
                     case "--log":
                         _logEnabled = true;
                         break;
@@ -291,7 +317,7 @@ namespace AcbelBridge
         }
 
         /// <summary>调用 DLL 之前检查运行环境是否准备就绪。</summary>
-        private static void EnsureEnvironmentReady()
+        internal static void EnsureEnvironmentReady()
         {
             if (_envError == null) return;
             throw new InvalidOperationException(
@@ -301,7 +327,7 @@ namespace AcbelBridge
 
         // ------------------------------------------------------------------ ping
         /// <summary>只做 LoadLibrary/GetProcAddress，不调用任何 DLL 函数。</summary>
-        private static string PingReport()
+        internal static string PingReport()
         {
             var sb = new StringBuilder();
             bool x86 = !Environment.Is64BitProcess;
@@ -342,7 +368,7 @@ namespace AcbelBridge
         }
 
         // ------------------------------------------------------------------ 调用
-        private static string CallOpen()
+        internal static string CallOpen()
         {
             EnsureEnvironmentReady();
             LogNetworkCheck("open");
@@ -359,7 +385,7 @@ namespace AcbelBridge
         /// 调用 DLL 前打印一次网络/环境检查（一律走 stderr，主程序会落进日志）。
         /// DLL 内部的「验证网络」步骤由厂商 DLL 自己输出，这里补充我们这一侧能看到的信息。
         /// </summary>
-        private static void LogNetworkCheck(string phase)
+        internal static void LogNetworkCheck(string phase)
         {
             try
             {
@@ -442,13 +468,19 @@ namespace AcbelBridge
         /// <summary>带超时地执行一次 DLL 调用；超时抛 TimeoutException（不阻塞桥接进程）。</summary>
         private static string RunGuarded(Func<IntPtr> call)
         {
-            string result = null;
+            return PtrToString(RunGuardedPtr(call));
+        }
+
+        /// <summary>带超时地执行一次 DLL 调用，返回原始指针（控制台命令需要读回输出参数）。</summary>
+        internal static IntPtr RunGuardedPtr(Func<IntPtr> call)
+        {
+            IntPtr result = IntPtr.Zero;
             Exception error = null;
             var done = new ManualResetEventSlim(false);
 
             var t = new Thread(() =>
             {
-                try { result = PtrToString(call()); }
+                try { result = call(); }
                 catch (Exception ex) { error = ex; }
                 finally { done.Set(); }
             });

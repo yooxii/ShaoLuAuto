@@ -40,6 +40,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="DllFunctions.cs" />
+    <Compile Include="ConsoleSession.cs" />
     <!-- 与 ShaoLu 主程序共享同一份字段规范/校验源码（链接编译，规范只写一遍） -->
     <Compile Include="..\Shared\AcbelInsertDataSpec.cs">
       <Link>Shared\AcbelInsertDataSpec.cs</Link>

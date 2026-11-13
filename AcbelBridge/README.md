@@ -78,14 +78,64 @@ export.ACBEL_INSERT_DATA=true
 ## 命令行
 
 ```
-AcbelBridge.exe [--dll <Acbel_Chroma_Test.dll 路径>] [--call-timeout <秒>]
+AcbelBridge.exe [--console] [--allow-write] [--dll <Acbel_Chroma_Test.dll 路径>] [--call-timeout <秒>]
                 [--no-validate] [--allow-extra-fields]
-                [--no-prepare-env] [--fac-code <厂区代码>] [--version]
+                [--no-prepare-env] [--fac-code <厂区代码>] [--log|--no-log] [--version]
 ```
 
 默认从 exe 同级目录加载 `Acbel_Chroma_Test.dll`（工程已配置为随生成复制），调用超时默认 60 秒。
 `--no-prepare-env` 关闭运行环境自动补齐（站点机上路径已由 Chroma 装好时可用），
 `--fac-code` 指定写入 `FAC_CODE.txt` 的厂区代码（默认 `H`），只在文件缺失时才写入。
+`--console` 进入**控制台命令集**（见下一节），`--allow-write` 允许控制台执行写库命令。
+
+## 控制台命令集（`--console`）
+
+手工控制 DLL 全部 **23 个导出**，参数直接写文本（不用 Base64）：
+
+```powershell
+.\AcbelBridge.exe --console
+```
+
+```
+AcbelBridge 控制台 — Acbel_Chroma_Test.dll（23 个导出）
+DLL：D:\...\AcbelBridge\bin\Debug\Acbel_Chroma_Test.dll
+允许写 MES：否（写入类命令需 --allow-write）
+输入 help 查看命令，help <命令> 看用法，quit 退出。
+
+AcbelBridge> help ACBEL_SET_BASIC_INFO
+命令：ACBEL_SET_BASIC_INFO
+说明：写入基础资料（工单/站别工号/线别），ACBEL_INSERT_DATA 之前必须先调它
+用法：ACBEL_SET_BASIC_INFO db "工单号(工令)" "站别+工号" 线别
+参数：
+  1) db
+  2) 工单号(工令)
+  3) 站别+工号
+  4) 线别
+返回：成功 1；失败 0}B001~B006（B006=線別錯誤）；2} 需重调一次
+示例：set_basic_info @db HE47H1G001H18163 16521807605 H18
+
+AcbelBridge> open
+返回：database
+判定：成功
+已记住库名 database，后续参数可用 @db
+```
+
+约定：
+
+- 命令名 = 导出名（大小写不敏感），另提供 `open` / `close` / `insert` / `basic` / `chkbar` /
+  `chkucl` / `chkml` / `get_program` / `sys_data` / `smt_lab_chk` … 等简写；
+- 含空格的参数用双引号包起来，空参数写 `""` 或 `-`；
+- `db` 参数写 `@db` 会自动用上一次 `open` 成功的库名（也可 `db <库名>` 手动设置）；
+- **写入类命令**（`insert`、`sys_data`、`change_barcode_dc`、`aoi_insert`、`amz_mapping`、
+  `upload_data`、`ict_insert`、`fun_value`、`smt_lab_ins`、`smt_lab_lk`、`aoi_up`、
+  `greatr_bar_code`、`mapping_station`）默认拒绝执行，启动时加 `--allow-write` 才放行；
+- 输出参数（`错误信息(out)`、`MODEL_PROGRAM(out)` 等）调用后会打印“写回的参数”，
+  便于看清 DLL 往缓冲区里写了什么；缓冲区 8 KB，超长会被截断；
+- 每个参数的缓冲区都是可写的 8 KB ANSI 缓冲区，所以厂商文档里那些“输出缓冲区”也能直接用；
+- `ping` 只做自检（不调任何函数），`env` 看运行环境，`db` 看/改当前库名。
+
+> 行协议（主程序用）不受影响：`--console` 是另一条入口；协议模式也新增了 `help` 命令，
+> 返回同样的命令清单。
 
 ## 安全设计
 

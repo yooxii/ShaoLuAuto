@@ -648,7 +648,8 @@
 - **本地化：** WPFLocalizeExtension（简体中文 / 繁体中文 / 英文）
 - **日志：** NLog
 - **表格导入导出：** EPPlus（xlsx）
-- **文档预览：** Microsoft.Web.WebView2（PDF 预览窗口）
+- **文档预览：** Microsoft.Web.WebView2（「帮助 → 使用文档」用内置 WebView2 窗口打开 HTML 版说明书，没有 HTML 时打开 PDF）
+- **说明书构建：** `tools\build-manual.ps1`：pandoc 把仓库根目录的 `使用说明书.md` 渲染成自包含 HTML（图片内嵌），再用 Edge 无头打印成 PDF，两个成品输出到 `ShaoLu\Docs\`；`tools\manual.css` 提供排版样式
 - **模拟输入：** InputSimulator
 - **文本编码识别：** UTF.Unknown
 - **JSON：** System.Text.Json

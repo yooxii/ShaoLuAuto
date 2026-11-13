@@ -514,7 +514,7 @@
     <None Include="Docs\*.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Docs\*.xps">
+    <None Include="Docs\*.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="NLog.config">
@@ -598,7 +598,6 @@
   <ItemGroup>
     <Resource Include="Docs\README.txt" />
     <Resource Include="Examples\README.txt" />
-    <Content Include="Docs\AutoShaoLu（自动化烧录）使用说明书.xps" />
     <Content Include="tessdata\chi_sim.traineddata">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

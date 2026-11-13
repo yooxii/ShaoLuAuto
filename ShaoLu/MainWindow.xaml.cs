@@ -651,14 +651,15 @@ namespace ShaoLu
         {
             try
             {
-                // 启动时已检测 OS 版本：Win10+ 且已安装 WebView2 时用 WebView2 浏览 PDF，否则回退到 DocumentViewer 浏览 XPS
-                bool usePdf = OsVersionHelper.IsWindows10OrLater && OsVersionHelper.IsWebView2Installed;
+                // 使用说明书优先用 HTML（WebView2 里就是网页形式，目录与链接可点），没有 HTML 再用 PDF；
+                // 没有 WebView2 的机器（含 Win7）交给系统默认程序打开 HTML / PDF，实在都没有才回退旧的 XPS 阅读器。
+                bool hasWebView2 = OsVersionHelper.IsWindows10OrLater && OsVersionHelper.IsWebView2Installed;
                 string docsDir = Path.Combine(AppContext.BaseDirectory, "Docs");
-                string docPath = FindDoc(docsDir, usePdf ? "*.pdf" : "*.xps");
-                if (docPath == null)
-                    docPath = FindDoc(docsDir, usePdf ? "*.xps" : "*.pdf");
+                string htmlPath = FindDoc(docsDir, "*.html");
+                string pdfPath = FindDoc(docsDir, "*.pdf");
+                string xpsPath = FindDoc(docsDir, "*.xps");
 
-                if (docPath == null)
+                if (htmlPath == null && pdfPath == null && xpsPath == null)
                 {
                     WindowAsyncPopup.Show(
                         LanguageService.GetLocalizedString("UserDocNotFound"),
@@ -667,10 +668,27 @@ namespace ShaoLu
                     return;
                 }
 
-                if (usePdf && docPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
-                    new WindowPdfViewer(docPath).Show();
+                if (hasWebView2)
+                {
+                    string target = htmlPath ?? pdfPath;
+                    if (target != null)
+                    {
+                        new WindowPdfViewer(target).Show();
+                        return;
+                    }
+                }
                 else
-                    new WindowDocumentViewer(docPath).Show();
+                {
+                    string target = pdfPath ?? htmlPath;
+                    if (target != null)
+                    {
+                        System.Diagnostics.Process.Start(
+                            new System.Diagnostics.ProcessStartInfo(target) { UseShellExecute = true });
+                        return;
+                    }
+                }
+
+                new WindowDocumentViewer(xpsPath).Show();
             }
             catch (Exception ex)
             {

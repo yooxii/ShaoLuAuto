@@ -2202,4 +2202,16 @@ A scan step will be inserted before the upload step automatically.</value>
   <data name="AddStepMenu" xml:space="preserve">
     <value>Add Step</value>
   </data>
+  <data name="Ocr_ExtensionMissing" xml:space="preserve">
+    <value>OCR requires the OCR extension: put the extension package's Ocr folder under the program's extensions folder.</value>
+  </data>
+  <data name="Ocr_ExtensionBroken" xml:space="preserve">
+    <value>The OCR extension folder exists but contains no usable extension (check that the package was extracted to extensions\Ocr).</value>
+  </data>
+  <data name="Ocr_Disabled_Hint" xml:space="preserve">
+    <value>OCR extension not installed - OCR features are disabled</value>
+  </data>
+  <data name="Ocr_ExtensionTitle" xml:space="preserve">
+    <value>OCR extension</value>
+  </data>
 </root>

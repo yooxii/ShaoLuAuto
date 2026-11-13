@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.7.1.0</ApplicationVersion>
+    <ApplicationVersion>0.7.2.2611</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -127,9 +127,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Reference\WPFDevelopers.dll</HintPath>
     </Reference>
-    <Reference Include="TesseractOCR">
-      <HintPath>$(NuGetPackageRoot)tesseractocr\5.5.2\lib\netstandard2.0\TesseractOCR.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -195,6 +192,8 @@
     <Compile Include="Services\BurnInService.cs" />
     <Compile Include="Services\RecentFilesService.cs" />
     <Compile Include="Services\OCRService.cs" />
+    <!-- OCR 扩展宿主：契约在 OcrContract 工程里（扩展与之共用），主程序只依赖契约 -->
+    <Compile Include="Services\Ocr\OcrExtensionHost.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\IUserService.cs" />
     <Compile Include="Services\UserService.cs" />
@@ -560,7 +559,6 @@
     <PackageReference Include="OpenCvSharp4.runtime.win.slim">
       <Version>4.13.0.20260627</Version>
     </PackageReference>
-    <PackageReference Include="TesseractOCR" Version="5.5.2" ExcludeAssets="compile;runtime" />
     <PackageReference Include="System.Drawing.Common">
       <Version>10.0.10</Version>
     </PackageReference>
@@ -598,33 +596,16 @@
   <ItemGroup>
     <Resource Include="Docs\README.txt" />
     <Resource Include="Examples\README.txt" />
-    <Content Include="tessdata\chi_sim.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tessdata\chi_sim_vert.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tessdata\chi_tra.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tessdata\chi_tra_vert.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tessdata\eng.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tessdata\equ.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tessdata\jpn.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="tessdata\jpn_vert.traineddata">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Examples\*.autostep">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- OCR 扩展契约（与 extensions\Ocr 下的扩展共用同一份接口定义） -->
+    <ProjectReference Include="..\OcrContract\OcrContract.csproj">
+      <Project>{A72D3C41-5B98-4E27-9D14-6C0F8B7E5213}</Project>
+      <Name>OcrContract</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -2202,4 +2202,16 @@
   <data name="AddStepMenu" xml:space="preserve">
     <value>新增步驟</value>
   </data>
+  <data name="Ocr_ExtensionMissing" xml:space="preserve">
+    <value>OCR 功能需要先安裝 OCR 擴充：把擴充包裡的 Ocr 資料夾放到程式目錄的 extensions 下。</value>
+  </data>
+  <data name="Ocr_ExtensionBroken" xml:space="preserve">
+    <value>OCR 擴充目錄存在，但沒有可用的擴充（檢查擴充包是否完整解壓到 extensions\Ocr）。</value>
+  </data>
+  <data name="Ocr_Disabled_Hint" xml:space="preserve">
+    <value>OCR 擴充未安裝，OCR 相關功能已停用</value>
+  </data>
+  <data name="Ocr_ExtensionTitle" xml:space="preserve">
+    <value>OCR 擴充</value>
+  </data>
 </root>

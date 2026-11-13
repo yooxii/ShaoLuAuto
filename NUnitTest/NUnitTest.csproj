@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -64,6 +64,7 @@
     <Compile Include="SubThreadRunnerTests.cs" />
     <Compile Include="ImageThreadingTests.cs" />
     <Compile Include="ImageStepCopyTests.cs" />
+    <Compile Include="OcrExtensionTests.cs" />
     <Compile Include="StepsOrderMoveTests.cs" />
     <Compile Include="ExecutionLogDisplayTests.cs" />
     <Compile Include="UserInputStepTests.cs" />
@@ -85,6 +86,11 @@
     <ProjectReference Include="..\ShaoLu\ShaoLu.csproj">
       <Project>{6326f714-723e-4eab-8f52-0dfdda17b648}</Project>
       <Name>ShaoLu</Name>
+    </ProjectReference>
+    <!-- OCR 扩展契约（主程序与扩展共用，测试直接引用以便构造假引擎） -->
+    <ProjectReference Include="..\OcrContract\OcrContract.csproj">
+      <Project>{A72D3C41-5B98-4E27-9D14-6C0F8B7E5213}</Project>
+      <Name>OcrContract</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

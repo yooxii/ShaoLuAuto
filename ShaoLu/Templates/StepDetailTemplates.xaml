@@ -431,6 +431,9 @@
                 <TextBlock Text="{lex:Loc FindImage_OCR_Group}" Margin="0,0,0,2"/>
                 <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" IsReadOnly="True" MinWidth="180" HorizontalAlignment="Left"/>
                 <TextBlock Text="{lex:Loc FindImage_OCR_Hint}" Foreground="Gray" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                <!-- OCR 引擎由单独的扩展提供：未安装时提示安装，OCR 识别会被跳过 -->
+                <TextBlock Text="{Binding OcrUnavailableHint}" Foreground="#C0504D" FontSize="11" Margin="0,3,0,0"
+                           TextWrapping="Wrap" Visibility="{Binding OcrUnavailableVisibility}"/>
             </StackPanel>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource GotoPanelTemplate}"/>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ConditionEntryTemplate}"/>
@@ -751,8 +754,12 @@
                 </StackPanel.Style>
                 <Label Content="{lex:Loc OCR_Region}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding OCRRegionText, Mode=OneWay}" IsReadOnly="True" MinWidth="150" VerticalAlignment="Center"/>
-                <Button Content="{lex:Loc OCR_SelectRegion}" Command="{Binding SelectRegionCommand}" Margin="3,0,0,0"/>
+                <Button Content="{lex:Loc OCR_SelectRegion}" Command="{Binding SelectRegionCommand}" Margin="3,0,0,0"
+                        IsEnabled="{Binding IsOcrAvailable}"/>
             </StackPanel>
+            <!-- OCR 扩展未安装时的提示：OCR 模式需要单独的扩展包 -->
+            <TextBlock Text="{Binding OcrUnavailableHint}" Foreground="#C0504D" FontSize="11" Margin="0,2,0,0"
+                       TextWrapping="Wrap" Visibility="{Binding OcrUnavailableVisibility}"/>
             <!-- ScreenText 模式配置：文本获取点列表（按顺序获取，结果换行合并） -->
             <StackPanel Margin="0,2">
                 <StackPanel.Style>

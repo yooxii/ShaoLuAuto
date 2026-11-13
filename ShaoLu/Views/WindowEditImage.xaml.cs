@@ -1,4 +1,4 @@
-﻿using ShaoLu.Services;
+using ShaoLu.Services;
 using ShaoLu.Viewmodels;
 using System;
 using System.IO;
@@ -123,10 +123,24 @@ namespace ShaoLu.Views
 
         private void SetOCRRegion_Click(object sender, RoutedEventArgs e)
         {
+            if (!EnsureOcrAvailable()) return;
             _isDrawingOCR = true;
             OCRCanvas.Visibility = Visibility.Visible;
             OCRCanvas.Cursor = Cursors.Cross;
             OCRRectOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>OCR 扩展未安装时给出安装提示（菜单项本身已禁用，这里兜底并用提示说明原因）</summary>
+        private static bool EnsureOcrAvailable()
+        {
+            if (Services.OCRService.IsAvailable) return true;
+
+            WindowAsyncPopup.Show(
+                Services.OCRService.UnavailableReason,
+                LanguageService.GetLocalizedString("Ocr_ExtensionTitle", "OCR 扩展"),
+                PopupButtons.OK,
+                MessageBoxImage.Information);
+            return false;
         }
 
         private void ClearOCRRegion_Click(object sender, RoutedEventArgs e)

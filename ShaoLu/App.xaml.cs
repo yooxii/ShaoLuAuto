@@ -75,6 +75,12 @@ namespace ShaoLu
                 ExecutionLogService.CleanupOldLogs(ShaoLu.Utils.SingletonLocator.Settings.App.LogRetentionDays);
                 ProgramLogService.CleanupOldLogs();
 
+                // 5.1 准备 OCR 扩展（OCR 引擎单独发布，未安装时 OCR 相关功能在界面上禁用）
+                Services.Ocr.OcrExtensionHost.Initialize();
+                Logger.Info(Services.Ocr.OcrExtensionHost.IsAvailable
+                    ? $"OCR extension ready: {Services.Ocr.OcrExtensionHost.Description}"
+                    : $"OCR extension not available: {Services.Ocr.OcrExtensionHost.UnavailableReason}");
+
                 // 4. 直接显示主窗口（登录改为编辑时触发）
                 Logger.Info("Showing MainWindow directly.");
                 var mainWindow = new MainWindow();
@@ -107,6 +113,8 @@ namespace ShaoLu
                 }
             }
             fileServices.CommitPendingDeletions();
+            // 释放 OCR 扩展引擎（扩展可能加载了原生库，正常退出时收尾）
+            OCRService.Dispose();
             Logger.Info("Finished.");
 
             base.OnExit(e);

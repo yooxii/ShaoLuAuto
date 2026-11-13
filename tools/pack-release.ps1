@@ -143,6 +143,24 @@ foreach ($item in $stagingItems) {
 
 if ($copied -eq 0) { throw "Staging tree is empty: $staging" }
 
+# ---------- OCR 运行时不得进入主体包 ----------
+# OCR（TesseractOCR.dll + tesseract55/leptonica + tessdata 语言包，约 100 MB）改为单独发布的扩展：
+# 主体包里一旦出现这些文件就说明构建又把它带回来了，直接报错，避免包体悄悄变大。
+$ocrLeftovers = @(
+    'tessdata',
+    'TesseractOCR.dll',
+    'TesseractOCR.xml',
+    'x64\tesseract55.dll',
+    'x64\leptonica-1.85.0.dll',
+    'x86\tesseract55.dll',
+    'x86\leptonica-1.85.0.dll'
+)
+foreach ($relative in $ocrLeftovers) {
+    if (Test-Path -LiteralPath (Join-Path $packageDir $relative)) {
+        throw "主体包不应包含 OCR 运行时：$relative（OCR 由 tools\pack-ocr-extension.ps1 单独打包）"
+    }
+}
+
 # ---------- 复制 AcbelBridge ----------
 # 只复制 exe 与原生 DLL（不带 pdb），放到包目录根：ResolveBridgeExe 第 3 条就是找 ShaoLu.exe 旁边。
 $bridgeOutputs = @('AcbelBridge.exe', 'Acbel_Chroma_Test.dll')
@@ -165,3 +183,4 @@ Write-Host ''
 Write-Host "==> Package folder: $packageDir"
 if ($Zip) { Write-Host "==> Package zip:    $zipPath" }
 Write-Host "==> File count:     $copied"
+Write-Host "==> 注意：OCR 功能需另装扩展包（tools\pack-ocr-extension.ps1 产出，装到 extensions\Ocr）"

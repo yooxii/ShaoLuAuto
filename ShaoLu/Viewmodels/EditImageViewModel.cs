@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Services;
 using ShaoLu.Views;
@@ -82,6 +82,18 @@ namespace ShaoLu.Viewmodels
         }
 
         public double ThumbSize => 20;
+
+        /// <summary>OCR 扩展是否可用（OCR 区域相关菜单项按此禁用）</summary>
+        [JsonIgnore]
+        public bool IsOcrAvailable => OCRService.IsAvailable;
+
+        /// <summary>OCR 扩展不可用提示（可用时为空）</summary>
+        [JsonIgnore]
+        public string OcrUnavailableHint => OCRService.IsAvailable ? string.Empty : OCRService.UnavailableReason;
+
+        /// <summary>禁用状态下的悬停提示：可用时为 null（不显示提示）</summary>
+        [JsonIgnore]
+        public string OcrMenuToolTip => OCRService.IsAvailable ? null : OCRService.UnavailableReason;
 
         public ObservableCollection<ClickThumb> Thumbs { get; set; } = [];
 

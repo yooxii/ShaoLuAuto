@@ -44,9 +44,32 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// </summary>
         public GetInputMode InputMode { get => _inputMode; set => SetProperty(ref _inputMode, value); }
 
-        /// <summary>所有获取方式（供 ComboBox 绑定）</summary>
+        /// <summary>所有获取方式（供 ComboBox 绑定）；OCR 扩展未安装时不列 OCR 模式</summary>
         [JsonIgnore]
-        public List<GetInputMode> InputModes { get; } = new() { GetInputMode.OCR, GetInputMode.ScreenText };
+        public List<GetInputMode> InputModes { get; } = BuildInputModes();
+
+        private static List<GetInputMode> BuildInputModes()
+        {
+            var modes = new List<GetInputMode>();
+            if (OCRService.IsAvailable)
+                modes.Add(GetInputMode.OCR);
+            modes.Add(GetInputMode.ScreenText);
+            return modes;
+        }
+
+        /// <summary>OCR 扩展是否可用（不可用时界面把 OCR 相关控件禁用并给出提示）</summary>
+        [JsonIgnore]
+        public bool IsOcrAvailable => OCRService.IsAvailable;
+
+        /// <summary>OCR 扩展不可用的提示文字（可用时为空字符串）</summary>
+        [JsonIgnore]
+        public string OcrUnavailableHint => OCRService.IsAvailable ? string.Empty : OCRService.UnavailableReason;
+
+        /// <summary>OCR 扩展不可用提示的可见性（XAML 直接绑定，避免再挂转换器）</summary>
+        [JsonIgnore]
+        public System.Windows.Visibility OcrUnavailableVisibility => OCRService.IsAvailable
+            ? System.Windows.Visibility.Collapsed
+            : System.Windows.Visibility.Visible;
 
         /// <summary>
         /// 获取输入的超时时间（秒），小于等于 0 表示不限制。
@@ -276,7 +299,16 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
             else
             {
-                // OCR 模式
+                // OCR 模式：OCR 引擎由单独的扩展提供，未安装时这一步直接判失败并给出安装提示
+                if (!OCRService.IsAvailable)
+                {
+                    IsError = true;
+                    ErrorType = StepErrorType.OCRError;
+                    ErrorMessage = OCRService.UnavailableReason;
+                    IsTrue = false;
+                    return false;
+                }
+
                 if (OCRRegion == null || OCRRegion.IsEmpty || OCRRegion.Width <= 0 || OCRRegion.Height <= 0)
                 {
                     IsError = true;
@@ -380,12 +412,28 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private void SelectRegion()
         {
+            if (!EnsureOcrAvailable()) return;
+
             var region = WindowEditOCR.ShowAndSelect();
             if (!region.IsEmpty)
             {
                 OCRRegion = region;
                 OnPropertyChanged(nameof(OCRRegionText));
             }
+        }
+
+        /// <summary>OCR 扩展未安装时给出安装提示并返回 false（按钮本身也会禁用，这里兜底）</summary>
+        private bool EnsureOcrAvailable()
+        {
+            if (OCRService.IsAvailable) return true;
+
+            OCRResultFull = OCRService.UnavailableReason;
+            var (_, task) = WindowAsyncPopup.Show(
+                OCRService.UnavailableReason,
+                LanguageService.GetLocalizedString("Ocr_ExtensionTitle", "OCR 扩展"),
+                PopupButtons.OK, MessageBoxImage.Information);
+            _ = task;
+            return false;
         }
 
         private void SelectTextPoint(object parameter)
@@ -625,6 +673,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                     OCRResultFull = LanguageService.GetLocalizedString("OCR_NoRegion", "未选择区域");
                     return;
                 }
+
+                // OCR 扩展未安装时不再尝试识别，直接把安装提示显示在结果框里
+                if (!EnsureOcrAvailable()) return;
 
                 // 标示 OCR 区域
                 if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)

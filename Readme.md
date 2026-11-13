@@ -603,6 +603,7 @@
 | 清除 OCR 区域 | 顶部菜单 → 「清除OCR区域」 |
 
 > 区域坐标相对原图像素保存；设置后该步骤的 OCR 识别组才会显示在详情面板中。
+> 未安装 OCR 扩展时「设置OCR区域」为禁用状态，鼠标悬停显示安装说明。
 
 ### 保存与返回
 
@@ -615,9 +616,31 @@
 
 ---
 
+## OCR 扩展（单独发布）
+
+OCR 引擎（Tesseract 5.5.2）、原生库（`tesseract55.dll` / `leptonica-1.85.0.dll`）与语言数据（`tessdata\`，约 100 MB）不随主程序打包，改由单独的 **OCR 扩展包** 提供：
+
+| 项 | 说明 |
+|----|------|
+| 安装位置 | `<程序目录>\extensions\Ocr\`（扩展包里就带这个 `Ocr` 文件夹，整个复制过去即可） |
+| 生效判断 | 「帮助 → 日志 → 程序日志」出现 `OCR extension loaded: Tesseract OCR …` 即已加载 |
+| 未安装时 | 「获取输入」的输入方式里没有「OCR 识别」；图像编辑窗口的「设置OCR区域」禁用并提示安装方法；已设置过 OCR 区域的图像步骤照常匹配图像、跳过文字识别并提示原因；其余功能不受影响 |
+| 卸载 | 关闭程序后删除 `extensions\Ocr` 文件夹 |
+| 版本 | 扩展包文件名带主程序版本号，与主体包一一对应 |
+
+**打包脚本：**
+
+| 脚本 | 作用 |
+|------|------|
+| `tools\pack-release.ps1` | 只打主体包 `AutoShaoLu_<版本>\`；脚本会校验主体包里没有混入 OCR 运行时文件 |
+| `tools\pack-ocr-extension.ps1` | 打 OCR 扩展包 `AutoShaoLu_<版本>_OcrExtension\`（内含 `Ocr\` 与「安装说明.txt」），加 `-Zip` 额外产出压缩包 |
+| `tools\install-ocr-extension.ps1` | 本地调试用：把扩展装到 `ShaoLu\bin\x64\<配置>\extensions\Ocr`，`-Uninstall` 移除 |
+
+---
+
 ## 数据存储位置
 
-用户数据统一放在 `%APPDATA%\AutoShaoLu\` 下，OCR 语言数据随程序放在程序目录。
+用户数据统一放在 `%APPDATA%\AutoShaoLu\` 下；OCR 扩展（引擎 + 语言数据）单独安装到程序目录的 `extensions\Ocr\`。
 
 | 数据类型 | 位置 |
 |----------|------|
@@ -632,7 +655,7 @@
 | 执行日志 | `%APPDATA%\AutoShaoLu\execution_log.db`（SQLite） |
 | 程序日志 | 程序目录 `logs\{日期}.log`（按天分文件，固定保留 7 天，启动时清理） |
 | 界面语言 | `%APPDATA%\AutoShaoLu\current_language.txt` |
-| OCR 语言数据 | 程序目录下的 `tessdata\`（chi_sim / chi_tra / eng / jpn / equ 等） |
+| OCR 扩展 | 程序目录 `extensions\Ocr\`（引擎、原生库与 `tessdata\` 语言数据；未安装时 OCR 功能禁用） |
 
 **执行日志分表：** 日志按步骤文件分表保存在同一个 `execution_log.db` 内，表名由步骤文件名派生（保留 ASCII 字母数字，其余字符转下划线，再附 8 位哈希防碰撞，前缀 `StepLog_`；未保存的工程记为 `unsaved`）。未分表的历史数据仍留在主表 `StepExecutionLog` 中。
 
@@ -642,7 +665,7 @@
 
 - **框架：** .NET Framework 4.8 + WPF（x64）
 - **架构：** CommunityToolkit.Mvvm（MVVM）；System.Reactive（图像编辑工具的截图与全局快捷键）
-- **OCR：** TesseractOCR 5.5.2（`tessdata\` 随程序发布）
+- **OCR：** 可选扩展 `extensions\Ocr`（TesseractOCR 5.5.2 + `tessdata\`，单独打包发布；未安装时 OCR 相关功能自动禁用）
 - **图像识别：** OpenCvSharp4（含 Windows 运行时）
 - **屏幕文本读取：** UIAutomationClient（读取可选择文本）
 - **数据库：** SQLite（FreeSql.Provider.Sqlite）

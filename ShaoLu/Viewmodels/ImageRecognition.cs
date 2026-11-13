@@ -969,6 +969,23 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         public bool HasOCRRegion => !OCRRect.IsEmpty && OCRRect.Width > 0 && OCRRect.Height > 0;
 
+        /// <summary>OCR 扩展是否可用（OCR 区域识别需要单独的扩展包）</summary>
+        [JsonIgnore]
+        public bool IsOcrAvailable => Services.OCRService.IsAvailable;
+
+        /// <summary>OCR 扩展不可用提示文字（可用时为空字符串）</summary>
+        [JsonIgnore]
+        public string OcrUnavailableHint => Services.OCRService.IsAvailable
+            ? string.Empty
+            : Services.OCRService.UnavailableReason;
+
+        /// <summary>OCR 扩展不可用提示的可见性（已设置 OCR 区域但扩展未安装时提示）</summary>
+        [JsonIgnore]
+        public System.Windows.Visibility OcrUnavailableVisibility =>
+            !Services.OCRService.IsAvailable && HasOCRRegion
+                ? System.Windows.Visibility.Visible
+                : System.Windows.Visibility.Collapsed;
+
         private string _ocrResultPreview;
         /// <summary>
         /// OCR 识别结果预览
@@ -1091,25 +1108,34 @@ namespace ShaoLu.Viewmodels.AutomationStep
             string ocrText = null;
             if (EnableOCR && IsTrue && HasOCRRegion)
             {
-                // res.LeftTop 是物理像素坐标（来自 OpenCV 模板匹配），需除以 DPI 缩放转为逻辑像素
-                // OCRRect 是相对于原图的坐标，需减去 CroppedRect 偏移得到相对于裁剪图的坐标
-                double dpiX = Services.OCRService.CachedDpiX;
-                double dpiY = Services.OCRService.CachedDpiY;
-                double ocrScreenX = (res.LeftTop.X + OCRRect.X - CroppedRect.X) / dpiX;
-                double ocrScreenY = (res.LeftTop.Y + OCRRect.Y - CroppedRect.Y) / dpiY;
-                var screenRegion = new Rect(ocrScreenX, ocrScreenY, OCRRect.Width / dpiX, OCRRect.Height / dpiY);
-
-                // 如果设置开启，在屏幕上标示 OCR 区域
-                if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
+                if (!Services.OCRService.IsAvailable)
                 {
-                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                        Views.WindowRegionOverlay.ShowRegion(screenRegion, Utils.SingletonLocator.Settings.Step.OCRRegionOverlay.Color, Utils.SingletonLocator.Settings.Step.OCRRegionOverlay.Duration));
+                    // OCR 引擎由单独的扩展提供：未安装时图像匹配照常成功，只跳过文字识别并提示原因
+                    OCRResultPreview = Services.OCRService.UnavailableReason;
+                    _logger.Warn("OCR skipped (extension not installed): {0}", Name);
                 }
+                else
+                {
+                    // res.LeftTop 是物理像素坐标（来自 OpenCV 模板匹配），需除以 DPI 缩放转为逻辑像素
+                    // OCRRect 是相对于原图的坐标，需减去 CroppedRect 偏移得到相对于裁剪图的坐标
+                    double dpiX = Services.OCRService.CachedDpiX;
+                    double dpiY = Services.OCRService.CachedDpiY;
+                    double ocrScreenX = (res.LeftTop.X + OCRRect.X - CroppedRect.X) / dpiX;
+                    double ocrScreenY = (res.LeftTop.Y + OCRRect.Y - CroppedRect.Y) / dpiY;
+                    var screenRegion = new Rect(ocrScreenX, ocrScreenY, OCRRect.Width / dpiX, OCRRect.Height / dpiY);
 
-                ocrText = await Task.Run(() => Services.OCRService.RecognizeRegion(screenRegion), cancellationToken);
-                OCRResultPreview = string.IsNullOrWhiteSpace(ocrText)
-                    ? LanguageService.GetLocalizedString("OCR_NoResult", "未识别到文本")
-                    : ocrText;
+                    // 如果设置开启，在屏幕上标示 OCR 区域
+                    if (Utils.SingletonLocator.Settings.Step.ShowOCRRegionOnRun)
+                    {
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                            Views.WindowRegionOverlay.ShowRegion(screenRegion, Utils.SingletonLocator.Settings.Step.OCRRegionOverlay.Color, Utils.SingletonLocator.Settings.Step.OCRRegionOverlay.Duration));
+                    }
+
+                    ocrText = await Task.Run(() => Services.OCRService.RecognizeRegion(screenRegion), cancellationToken);
+                    OCRResultPreview = string.IsNullOrWhiteSpace(ocrText)
+                        ? LanguageService.GetLocalizedString("OCR_NoResult", "未识别到文本")
+                        : ocrText;
+                }
             }
 
             // 填充执行结果

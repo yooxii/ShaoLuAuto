@@ -78,7 +78,7 @@ export.ACBEL_INSERT_DATA=true
 ## 命令行
 
 ```
-AcbelBridge.exe [--console] [--allow-write] [--dll <Acbel_Chroma_Test.dll 路径>] [--call-timeout <秒>]
+AcbelBridge.exe [--console|--protocol] [--allow-write] [--dll <Acbel_Chroma_Test.dll 路径>] [--call-timeout <秒>]
                 [--no-validate] [--allow-extra-fields]
                 [--no-prepare-env] [--fac-code <厂区代码>] [--log|--no-log] [--version]
 ```
@@ -86,11 +86,18 @@ AcbelBridge.exe [--console] [--allow-write] [--dll <Acbel_Chroma_Test.dll 路径
 默认从 exe 同级目录加载 `Acbel_Chroma_Test.dll`（工程已配置为随生成复制），调用超时默认 60 秒。
 `--no-prepare-env` 关闭运行环境自动补齐（站点机上路径已由 Chroma 装好时可用），
 `--fac-code` 指定写入 `FAC_CODE.txt` 的厂区代码（默认 `H`），只在文件缺失时才写入。
-`--console` 进入**控制台命令集**（见下一节），`--allow-write` 允许控制台执行写库命令。
+
+启动方式：
+
+- **双击 exe（或加 `--console`）＝控制台命令集**：直接看到中文命令表，`help` 输出也是文本；
+- **被主程序用管道拉起（stdin 被重定向）时自动走行协议**（响应 Base64），主程序无需改参数；
+- 需要强制走行协议时加 `--protocol`（例如想用脚本喂 Base64 命令）。
+
+`--allow-write` 允许控制台执行写库命令。
 
 ## 控制台命令集（`--console`）
 
-手工控制 DLL 全部 **23 个导出**，参数直接写文本（不用 Base64）：
+手工控制 DLL 全部 **23 个导出**，参数直接写文本（不用 Base64）。**直接双击 exe** 即进入控制台（也可显式 `--console`）：
 
 ```powershell
 .\AcbelBridge.exe --console

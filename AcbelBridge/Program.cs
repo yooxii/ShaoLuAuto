@@ -92,6 +92,7 @@ namespace AcbelBridge
         private static string _facCode = "H";
         private static string _envError;
         private static bool _consoleMode;
+        private static bool _protocolMode;
         private static bool _allowWrite;
         private static StreamWriter _out;
         private static StreamReader _in;
@@ -134,8 +135,9 @@ namespace AcbelBridge
                 if (!ParseArgs(args)) return 2;
                 PrepareEnvironment();
 
-                // 控制台模式：直接手工执行命令，不走主程序的行协议
-                if (_consoleMode) return ConsoleSession.Run();
+                // 双击启动（标准输入没被重定向）＝人机交互，直接进控制台；
+                // 被主程序拉起（stdin 走管道）时保持行协议。--console / --protocol 可强制指定。
+                if (_consoleMode || (!_protocolMode && !Console.IsInputRedirected)) return ConsoleSession.Run();
 
                 string line;
                 while ((line = _in.ReadLine()) != null)
@@ -225,8 +227,9 @@ namespace AcbelBridge
                 {
                     case "--help":
                     case "-h":
-                        Console.Error.WriteLine("AcbelBridge [--console] [--allow-write] [--dll <path>] [--call-timeout <seconds>] [--no-validate] [--allow-extra-fields] [--no-prepare-env] [--fac-code <code>] [--log|--no-log] [--version]");
-                        Console.Error.WriteLine("  --console       进入控制台命令集（手工控制 DLL 全部 23 个导出，输入 help 查看）");
+                        Console.Error.WriteLine("AcbelBridge [--console|--protocol] [--allow-write] [--dll <path>] [--call-timeout <seconds>] [--no-validate] [--allow-extra-fields] [--no-prepare-env] [--fac-code <code>] [--log|--no-log] [--version]");
+                        Console.Error.WriteLine("  双击运行（或加 --console）＝控制台命令集；被主程序用管道拉起时自动走行协议。");
+                        Console.Error.WriteLine("  --protocol      强制走行协议（stdin 管道 + Base64）");
                         Console.Error.WriteLine("  --allow-write   允许执行会写 MES 生产库的命令（控制台默认拒绝）");
                         return false;
                     case "--version":
@@ -234,6 +237,9 @@ namespace AcbelBridge
                         return false;
                     case "--console":
                         _consoleMode = true;
+                        break;
+                    case "--protocol":
+                        _protocolMode = true;
                         break;
                     case "--allow-write":
                         _allowWrite = true;

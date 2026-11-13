@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.6.10.2619</ApplicationVersion>
+    <ApplicationVersion>0.6.10.2620</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -209,6 +209,7 @@
     <Compile Include="Services\SubThreadRunner.cs" />
     <Compile Include="Services\StepsOrderMove.cs" />
     <Compile Include="Services\ExecutionLogDisplay.cs" />
+    <Compile Include="Services\ProgramLogService.cs" />
     <!-- 与 AcbelBridge 共享同一份字段规范/校验源码（链接编译，规范只写一遍） -->
     <Compile Include="..\Shared\AcbelInsertDataSpec.cs">
       <Link>Services\AcbelInsertDataSpec.cs</Link>
@@ -230,6 +231,7 @@
     <Compile Include="Viewmodels\AutomationStep.cs" />
     <Compile Include="Viewmodels\EditImageViewModel.cs" />
     <Compile Include="Viewmodels\ExecutionLogViewModel.cs" />
+    <Compile Include="Viewmodels\ProgramLogViewModel.cs" />
     <Compile Include="Viewmodels\BurnInViewModel.cs" />
     <Compile Include="Viewmodels\MainViewModel.cs" />
     <Compile Include="Viewmodels\LoginViewModel.cs" />

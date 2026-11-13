@@ -732,6 +732,33 @@
   <data name="ExecutionLog_Empty" xml:space="preserve">
     <value>No execution log yet</value>
   </data>
+  <data name="LogMenu" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="ProgramLog" xml:space="preserve">
+    <value>Program Log</value>
+  </data>
+  <data name="ProgramLog_Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="ProgramLog_Level" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="ProgramLog_LevelHint" xml:space="preserve">
+    <value>Show this level and anything more severe</value>
+  </data>
+  <data name="ProgramLog_SearchHint" xml:space="preserve">
+    <value>Search logger name or message</value>
+  </data>
+  <data name="ProgramLog_AllLevels" xml:space="preserve">
+    <value>All levels</value>
+  </data>
+  <data name="ProgramLog_Empty" xml:space="preserve">
+    <value>No program log yet</value>
+  </data>
+  <data name="ProgramLog_NoMatch" xml:space="preserve">
+    <value>No log entry matches the filter</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Search</value>
   </data>

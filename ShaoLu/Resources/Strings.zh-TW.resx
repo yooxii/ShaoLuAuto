@@ -732,6 +732,33 @@
   <data name="ExecutionLog_Empty" xml:space="preserve">
     <value>暫無執行日誌</value>
   </data>
+  <data name="LogMenu" xml:space="preserve">
+    <value>日誌</value>
+  </data>
+  <data name="ProgramLog" xml:space="preserve">
+    <value>程式日誌</value>
+  </data>
+  <data name="ProgramLog_Date" xml:space="preserve">
+    <value>日期</value>
+  </data>
+  <data name="ProgramLog_Level" xml:space="preserve">
+    <value>等級</value>
+  </data>
+  <data name="ProgramLog_LevelHint" xml:space="preserve">
+    <value>選中某個等級後，顯示該等級以及更嚴重的日誌</value>
+  </data>
+  <data name="ProgramLog_SearchHint" xml:space="preserve">
+    <value>搜尋記錄器名稱或日誌內容</value>
+  </data>
+  <data name="ProgramLog_AllLevels" xml:space="preserve">
+    <value>全部等級</value>
+  </data>
+  <data name="ProgramLog_Empty" xml:space="preserve">
+    <value>暫無程式日誌</value>
+  </data>
+  <data name="ProgramLog_NoMatch" xml:space="preserve">
+    <value>沒有符合條件的日誌</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>搜尋</value>
   </data>

@@ -66,6 +66,7 @@
     <Compile Include="StepsOrderMoveTests.cs" />
     <Compile Include="ExecutionLogDisplayTests.cs" />
     <Compile Include="UserInputStepTests.cs" />
+    <Compile Include="ScanBurstTrackerTests.cs" />
     <Compile Include="SmokeTests.cs" />
   </ItemGroup>
   <ItemGroup>

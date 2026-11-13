@@ -1072,7 +1072,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
                 if (closeByTimeout)
                 {
-                    _ = ClosePopupAfterTimeoutAsync(popupWindow, TimeSpan.FromSeconds(AutoCloseSeconds), defaultResult, cancellationToken);
+                    // 这里不跟随步骤令牌：步骤执行结束后引擎会释放该步骤的取消源，
+                    // 若计时用的令牌随之失效，弹窗就再也不会按超时自动关闭
+                    _ = ClosePopupAfterTimeoutAsync(popupWindow, TimeSpan.FromSeconds(AutoCloseSeconds), defaultResult, CancellationToken.None);
                 }
 
                 IsTrue = true;

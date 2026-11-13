@@ -35,6 +35,10 @@ namespace ShaoLu.Viewmodels
         private Guid? _pendingInterruptUid;
         /// <summary>待处理的「结束本次运行」请求（中断步骤的「结束本次运行」动作）</summary>
         private bool _pendingStopRun;
+
+        /// <summary>当前正在执行步骤的取消源（中断可立刻中止它，不必等这一步跑完）</summary>
+        private readonly object _currentStepLock = new object();
+        private CancellationTokenSource _currentStepCts;
         private readonly StepSettingsModel _stepSettings = SingletonLocator.Settings.Step;
         private readonly StepExecutionContext _executionContext = StepExecutionContext.Instance;
 
@@ -1660,6 +1664,14 @@ namespace ShaoLu.Viewmodels
                     // 计时器放在 try 之外，异常路径也要用它记录耗时
                     var sw = Stopwatch.StartNew();
 
+                    // 每一步单独的取消源（链接运行总令牌）：中断/结束运行可以立刻中止「正在执行」的步骤，
+                    // 不必等这一步自己跑完（例如自引用、单步循环、超时很长的步骤）
+                    var stepCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+                    lock (_currentStepLock)
+                    {
+                        _currentStepCts = stepCts;
+                    }
+
                     try
                     {
                         SelectedStep = step;
@@ -1668,7 +1680,7 @@ namespace ShaoLu.Viewmodels
                         // 记录当前正在执行的步骤（供统计窗口展示）
                         _executionContext.RunningStepUid = step.Uid;
 
-                        await step.RunAsync(token);
+                        await step.RunAsync(stepCts.Token);
                         sw.Stop();
 
                         step.IsError = false;
@@ -1782,9 +1794,20 @@ namespace ShaoLu.Viewmodels
                     }
                     catch (OperationCanceledException)
                     {
-                        logger.Info("Operation Canceled");
-                        step.ErrorType = StepErrorType.CancelledByUser;
-                        break;
+                        sw.Stop();
+
+                        if (token.IsCancellationRequested)
+                        {
+                            // 用户点停止：与改动前一致，结束本次运行
+                            logger.Info("Operation Canceled");
+                            step.ErrorType = StepErrorType.CancelledByUser;
+                            break;
+                        }
+
+                        // 被中断（跳到目标步骤 / 结束本次运行）打断：这一步不算失败，
+                        // 交给循环顶部的中断处理决定「跳转」还是「结束运行」
+                        logger.Info("Interrupt: step \"{0}\" aborted by interrupt", step.Name);
+                        step.ErrorType = StepErrorType.None;
                     }
                     catch (Exception ex)
                     {
@@ -1813,6 +1836,16 @@ namespace ShaoLu.Viewmodels
                         {
                             step.IsTrue = false;
                         }
+                    }
+                    finally
+                    {
+                        // 这一步结束后不再接受中断取消，释放链接令牌
+                        lock (_currentStepLock)
+                        {
+                            if (ReferenceEquals(_currentStepCts, stepCts))
+                                _currentStepCts = null;
+                        }
+                        stepCts.Dispose();
                     }
 
                     // 确定下一个执行索引（通过 Uid 查找目标步骤，含自引用上限处理）
@@ -2274,6 +2307,42 @@ namespace ShaoLu.Viewmodels
             {
                 _pendingInterruptUid = targetUid;
             }
+            // 立刻中止「正在执行」的步骤，否则遇到单步自循环/长超时步骤只能干等
+            AbortCurrentStep();
+        }
+
+        /// <summary>
+        /// 中止当前正在执行的步骤（在 UI 线程上取消该步骤的令牌）。
+        /// 只在两步之间到达的中断不需要中止：循环顶部会直接消费。
+        /// </summary>
+        private void AbortCurrentStep()
+        {
+            CancellationTokenSource stepCts;
+            lock (_currentStepLock)
+            {
+                stepCts = _currentStepCts;
+            }
+            if (stepCts == null) return;
+
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.CheckAccess())
+            {
+                try { stepCts.Cancel(); } catch (ObjectDisposedException) { }
+                return;
+            }
+
+            // 中断通常由子线程发出：切回 UI 线程再取消，避免各步骤的取消回调在子线程上执行
+            try
+            {
+                dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try { stepCts.Cancel(); } catch (ObjectDisposedException) { }
+                }));
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Interrupt: abort current step failed");
+            }
         }
 
         /// <summary>取走待处理中断（消费）</summary>
@@ -2299,6 +2368,8 @@ namespace ShaoLu.Viewmodels
             {
                 _pendingStopRun = true;
             }
+            // 同样立刻中止当前步骤，让流程尽快停下来
+            AbortCurrentStep();
         }
 
         /// <summary>取走「结束本次运行」请求（消费）</summary>

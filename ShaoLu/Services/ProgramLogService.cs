@@ -35,6 +35,11 @@ namespace ShaoLu.Services
         /// <summary>单次最多读取的日志条数（只保留最近的这些条，避免大文件拖慢界面）</summary>
         public const int DefaultMaxEntries = 3000;
 
+        /// <summary>
+        /// 程序日志保留天数：固定一周，过期文件在启动时删除（不受「执行日志保留天数」设置影响）。
+        /// </summary>
+        public const int DefaultRetentionDays = 7;
+
         private static readonly string[] TimeFormats =
         {
             "yyyy-MM-dd HH:mm:ss.ffff",
@@ -137,6 +142,83 @@ namespace ShaoLu.Services
             // 文件里是从旧到新，展示时反过来：最新的在最上面
             entries.Reverse();
             return entries;
+        }
+
+        /// <summary>
+        /// 删除过期的日志文件（文件名即日期，如 <c>2026-11-13.log</c>）。
+        /// 只处理 <c>*.log</c>，日期取文件名里的日期（解析不出来时用文件的最后写入时间）；
+        /// 删除失败（例如文件仍被占用）只记一条警告，不影响启动。
+        /// </summary>
+        /// <param name="retentionDays">保留天数，小于等于 0 时不清理</param>
+        /// <param name="directory">日志目录，默认用 <see cref="LogDirectory"/>（单测可指定临时目录）</param>
+        /// <returns>删除的文件数</returns>
+        public static int CleanupOldLogs(int retentionDays = DefaultRetentionDays, string directory = null)
+        {
+            if (retentionDays <= 0)
+                return 0;
+
+            string dir = string.IsNullOrWhiteSpace(directory) ? LogDirectory : directory;
+            if (!Directory.Exists(dir))
+                return 0;
+
+            int removed = 0;
+            DateTime cutoff = DateTime.Today.AddDays(-retentionDays);
+
+            string[] files;
+            try
+            {
+                files = Directory.GetFiles(dir, "*.log");
+            }
+            catch
+            {
+                return 0;
+            }
+
+            foreach (string file in files)
+            {
+                try
+                {
+                    DateTime fileDate = ResolveLogDate(file);
+                    if (fileDate >= cutoff)
+                        continue;
+
+                    File.Delete(file);
+                    removed++;
+                }
+                catch (Exception ex)
+                {
+                    NLog.LogManager.GetCurrentClassLogger()
+                        .Warn(ex, "Failed to delete expired program log: {0}", file);
+                }
+            }
+
+            if (removed > 0)
+            {
+                NLog.LogManager.GetCurrentClassLogger()
+                    .Info("Removed {0} expired program log file(s) (retention: {1} days).", removed, retentionDays);
+            }
+
+            return removed;
+        }
+
+        /// <summary>
+        /// 取日志文件的日期：优先按文件名 <c>yyyy-MM-dd.log</c> 解析，解析不出来用最后写入时间
+        /// </summary>
+        private static DateTime ResolveLogDate(string filePath)
+        {
+            string name = Path.GetFileNameWithoutExtension(filePath);
+            if (DateTime.TryParseExact(name, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out DateTime date))
+                return date;
+
+            try
+            {
+                return File.GetLastWriteTime(filePath).Date;
+            }
+            catch
+            {
+                return DateTime.Today;
+            }
         }
 
         /// <summary>把一条日志渲染成一行文本：时间 | 等级 | 记录器 | 内容</summary>

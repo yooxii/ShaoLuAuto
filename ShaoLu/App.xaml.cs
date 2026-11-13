@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using OfficeOpenXml;
 using ShaoLu.Services;
@@ -71,8 +71,9 @@ namespace ShaoLu
 
                 ExcelPackage.License.SetNonCommercialPersonal("ORT");
 
-                // 5. 根据设置清理过期执行日志
+                // 5. 根据设置清理过期执行日志；程序日志固定保留一周，过期文件一并清掉
                 ExecutionLogService.CleanupOldLogs(ShaoLu.Utils.SingletonLocator.Settings.App.LogRetentionDays);
+                ProgramLogService.CleanupOldLogs();
 
                 // 4. 直接显示主窗口（登录改为编辑时触发）
                 Logger.Info("Showing MainWindow directly.");

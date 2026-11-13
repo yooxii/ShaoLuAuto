@@ -759,6 +759,9 @@
   <data name="ProgramLog_NoMatch" xml:space="preserve">
     <value>没有符合条件的日志</value>
   </data>
+  <data name="ProgramLog_RetentionHint" xml:space="preserve">
+    <value>程序日志固定保留 7 天，过期会在启动时自动清理。</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>搜索</value>
   </data>
@@ -790,7 +793,7 @@
     <value>结束日期</value>
   </data>
   <data name="LogRetentionDays" xml:space="preserve">
-    <value>日志保留天数</value>
+    <value>执行日志保留天数</value>
   </data>
   <data name="ConfirmBeforeRun" xml:space="preserve">
     <value>运行前确认</value>

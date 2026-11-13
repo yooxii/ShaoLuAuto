@@ -759,6 +759,9 @@
   <data name="ProgramLog_NoMatch" xml:space="preserve">
     <value>No log entry matches the filter</value>
   </data>
+  <data name="ProgramLog_RetentionHint" xml:space="preserve">
+    <value>Program log is kept for 7 days and old files are cleaned up at startup.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Search</value>
   </data>
@@ -790,7 +793,7 @@
     <value>To</value>
   </data>
   <data name="LogRetentionDays" xml:space="preserve">
-    <value>Log Retention Days</value>
+    <value>Execution log retention (days)</value>
   </data>
   <data name="ConfirmBeforeRun" xml:space="preserve">
     <value>Confirm Before Run</value>

@@ -1,4 +1,4 @@
-﻿using ShaoLu.Services;
+using ShaoLu.Services;
 using System.Text.Json.Serialization;
 using System.Windows.Input;
 
@@ -25,9 +25,9 @@ namespace ShaoLu.Models
         public FontModel WindowFont { get; set; } = new FontModel();
 
         /// <summary>
-        /// 执行日志保留天数（0 = 永不清理）
+        /// 执行日志保留天数（默认一个月；0 = 永不清理）。程序日志固定保留 7 天，不受此设置影响。
         /// </summary>
-        public int LogRetentionDays { get; set; } = 0;
+        public int LogRetentionDays { get; set; } = 30;
 
     }
     public class StepSettingsModel

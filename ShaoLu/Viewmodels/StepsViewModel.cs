@@ -2560,6 +2560,9 @@ namespace ShaoLu.Viewmodels
                     }
                     i = nextIndex - 1; // -1 因为 for 循环会 i++
                 }
+
+                // 便于排查「区域里到底跑没跑到中断步骤」：区域跑完记一条
+                logger.Info("MultiThread: region [{0},{1}] finished in thread {2}", regionStart, regionEnd, threadIndex);
             }
             finally
             {

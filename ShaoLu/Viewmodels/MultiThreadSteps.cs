@@ -595,9 +595,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 {
                     IsTrue = false;
                     ErrorMessage = LanguageService.GetLocalizedString("Msg_Interrupt_NotRunning", "中断步骤只能在自动化运行中发出");
+                    _logger.Warn("Interrupt: request stop failed - {0}", ErrorMessage);
                     return Task.FromResult(false);
                 }
 
+                _logger.Info("Interrupt: stop run requested ({0})", MultiThreadInterruptBridge.InChildThread ? "sub thread" : "main thread");
                 IsTrue = true;
                 ErrorMessage = null;
                 return Task.FromResult(true);
@@ -607,6 +609,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 IsTrue = false;
                 ErrorMessage = LanguageService.GetLocalizedString("Msg_Interrupt_TargetRequired", "中断步骤未指定目标步骤");
+                _logger.Warn("Interrupt: request failed - no target step");
                 return Task.FromResult(false);
             }
 
@@ -615,9 +618,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 IsTrue = false;
                 ErrorMessage = LanguageService.GetLocalizedString("Msg_Interrupt_NotRunning", "中断步骤只能在自动化运行中发出");
+                _logger.Warn("Interrupt: request failed - {0}", ErrorMessage);
                 return Task.FromResult(false);
             }
 
+            _logger.Info("Interrupt: jump requested ({0}) target={1}",
+                MultiThreadInterruptBridge.InChildThread ? "sub thread" : "main thread", InterruptTargetUid.Value);
             IsTrue = true;
             ErrorMessage = null;
             return Task.FromResult(true);

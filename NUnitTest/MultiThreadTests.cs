@@ -705,14 +705,97 @@ namespace NUnitTest
         }
 
         [Test]
-        public void InterruptStep_OutsideSubThread_Fails()
+        public void InterruptStep_OutsideSubThread_RegistersPendingInterrupt()
         {
+            // 主线程自己发出的「跳到目标步骤」也生效（下一次循环迭代时从目标步骤继续）
+            Guid captured = Guid.Empty;
+            MultiThreadInterruptBridge.RegisterHandler(uid => captured = uid);
+            try
+            {
+                MultiThreadInterruptBridge.InChildThread = false;
+                var target = Guid.NewGuid();
+                var step = new InterruptStep("i") { InterruptTargetUid = target };
+
+                Assert.That(step.RunAsync().GetAwaiter().GetResult(), Is.True);
+                Assert.That(step.IsTrue, Is.True);
+                Assert.That(captured, Is.EqualTo(target));
+            }
+            finally
+            {
+                MultiThreadInterruptBridge.RegisterHandler(null);
+            }
+        }
+
+        [Test]
+        public void InterruptStep_OutsideSubThread_WithoutHandler_Fails()
+        {
+            MultiThreadInterruptBridge.RegisterHandler(null);
             MultiThreadInterruptBridge.InChildThread = false;
             var step = new InterruptStep("i") { InterruptTargetUid = Guid.NewGuid() };
 
             Assert.That(step.RunAsync().GetAwaiter().GetResult(), Is.False);
             Assert.That(step.IsTrue, Is.False);
             Assert.That(step.ErrorMessage, Is.Not.Null.And.Not.Empty);
+        }
+
+        [Test]
+        public void InterruptStep_StopRun_RequestsStopRun()
+        {
+            // 「结束本次运行」不要求目标步骤，子线程/主线程发出都应生效
+            int stopCalls = 0;
+            MultiThreadInterruptBridge.RegisterStopHandler(() => stopCalls++);
+            try
+            {
+                MultiThreadInterruptBridge.InChildThread = false;
+                var step = new InterruptStep("i") { Action = InterruptAction.StopRun };
+
+                Assert.That(step.RunAsync().GetAwaiter().GetResult(), Is.True);
+                Assert.That(step.IsTrue, Is.True);
+                Assert.That(stopCalls, Is.EqualTo(1));
+            }
+            finally
+            {
+                MultiThreadInterruptBridge.RegisterStopHandler(null);
+            }
+        }
+
+        [Test]
+        public void InterruptStep_StopRun_WithoutHandler_Fails()
+        {
+            MultiThreadInterruptBridge.RegisterStopHandler(null);
+            MultiThreadInterruptBridge.InChildThread = true;
+            try
+            {
+                var step = new InterruptStep("i") { Action = InterruptAction.StopRun };
+
+                Assert.That(step.RunAsync().GetAwaiter().GetResult(), Is.False);
+                Assert.That(step.ErrorMessage, Is.Not.Null.And.Not.Empty);
+            }
+            finally
+            {
+                MultiThreadInterruptBridge.InChildThread = false;
+            }
+        }
+
+        [Test]
+        public void InterruptStep_Clone_CopiesActionAndTarget()
+        {
+            var target = Guid.NewGuid();
+            var step = new InterruptStep("i") { Action = InterruptAction.StopRun, InterruptTargetUid = target };
+
+            var clone = (InterruptStep)step.Clone();
+
+            Assert.That(clone.Action, Is.EqualTo(InterruptAction.StopRun));
+            Assert.That(clone.InterruptTargetUid, Is.EqualTo(target));
+        }
+
+        [Test]
+        public void InterruptStep_Defaults_ToGotoTarget()
+        {
+            var step = new InterruptStep("i");
+
+            Assert.That(step.Action, Is.EqualTo(InterruptAction.GotoTarget), "旧数据没有动作字段时按「跳到目标步骤」处理");
+            Assert.That(step.NeedsTarget, Is.True);
         }
 
         [Test]

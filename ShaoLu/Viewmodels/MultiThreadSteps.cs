@@ -24,13 +24,14 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
     /// <summary>
     /// 子线程 → 主线程的中断登记桥。
-    /// 引擎在每次运行开始时注册处理器（主线程负责处理「待处理中断」）；
-    /// 子线程执行器把 InChildThread 置位，中断步骤据此判断自己是否运行在子线程中。
+    /// 引擎在每次运行开始时注册处理器（主线程负责处理「待处理中断」与「结束运行」请求）；
+    /// 中断步骤由子线程或主线程发出都可以。
     /// </summary>
     public static class MultiThreadInterruptBridge
     {
         private static readonly object _handlerLock = new object();
         private static Action<Guid> _handler;
+        private static Action _stopHandler;
         private static readonly AsyncLocal<bool> _inChildThread = new AsyncLocal<bool>();
 
         /// <summary>当前执行流是否位于子线程中（由子线程执行器设置）</summary>
@@ -49,6 +50,15 @@ namespace ShaoLu.Viewmodels.AutomationStep
             }
         }
 
+        /// <summary>注册主线程的「结束运行」处理器（运行开始时调用，null 表示注销）</summary>
+        public static void RegisterStopHandler(Action handler)
+        {
+            lock (_handlerLock)
+            {
+                _stopHandler = handler;
+            }
+        }
+
         /// <summary>登记一个待处理中断（多次中断覆盖为最新）；未注册处理器时返回 false</summary>
         public static bool RequestInterrupt(Guid targetUid)
         {
@@ -60,6 +70,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
             if (handler == null) return false;
 
             handler(targetUid);
+            return true;
+        }
+
+        /// <summary>登记一个「结束本次运行」请求（中断步骤的「结束本次运行」动作用）；未注册处理器时返回 false</summary>
+        public static bool RequestStopRun()
+        {
+            Action handler;
+            lock (_handlerLock)
+            {
+                handler = _stopHandler;
+            }
+            if (handler == null) return false;
+
+            handler();
             return true;
         }
     }
@@ -477,15 +501,53 @@ namespace ShaoLu.Viewmodels.AutomationStep
     }
 
     /// <summary>
-    /// 中断步骤：只能由子线程发出，登记主线程的待处理中断（打断主线程并从目标步骤开始执行）。
+    /// 中断步骤的动作
+    /// </summary>
+    public enum InterruptAction
+    {
+        /// <summary>跳到目标步骤：主线程从指定步骤继续执行（目标在循环里就继续循环）</summary>
+        GotoTarget = 0,
+
+        /// <summary>结束本次运行：真正跳出主线程的循环，整个流程结束</summary>
+        StopRun = 1,
+    }
+
+    /// <summary>
+    /// 中断步骤：由子线程（或主线程自己）发出，打断主线程。
+    /// 「跳到目标步骤」= 主线程从指定步骤继续执行；「结束本次运行」= 直接结束整个流程。
     /// </summary>
     public class InterruptStep : AutomationStepBase
     {
         private Guid? _interruptTargetUid;
+        private InterruptAction _action = InterruptAction.GotoTarget;
 
-        /// <summary>主线程从此步骤开始执行</summary>
+        /// <summary>主线程从此步骤开始执行（「跳到目标步骤」动作用）</summary>
         [JsonPropertyName("InterruptTargetUid")]
         public Guid? InterruptTargetUid { get => _interruptTargetUid; set => SetProperty(ref _interruptTargetUid, value); }
+
+        /// <summary>中断动作：跳到目标步骤 / 结束本次运行</summary>
+        [JsonPropertyName("InterruptAction")]
+        public InterruptAction Action
+        {
+            get => _action;
+            set
+            {
+                if (SetProperty(ref _action, value))
+                    OnPropertyChanged(nameof(NeedsTarget));
+            }
+        }
+
+        /// <summary>当前动作是否需要目标步骤（只有「跳到目标步骤」需要）</summary>
+        [JsonIgnore]
+        public bool NeedsTarget => Action == InterruptAction.GotoTarget;
+
+        /// <summary>动作下拉的候选值</summary>
+        [JsonIgnore]
+        public List<InterruptAction> Actions { get; } = new()
+        {
+            InterruptAction.GotoTarget,
+            InterruptAction.StopRun,
+        };
 
         #region 构造
 
@@ -512,6 +574,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             return new InterruptStep(Name, Description)
             {
                 InterruptTargetUid = InterruptTargetUid,
+                Action = Action,
                 WaitTime = WaitTime,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
@@ -525,11 +588,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         public override Task<bool> RunAsync(CancellationToken cancellationToken = default)
         {
-            if (!MultiThreadInterruptBridge.InChildThread)
+            // 结束本次运行：不要求目标步骤，子线程/主线程发出都生效
+            if (Action == InterruptAction.StopRun)
             {
-                IsTrue = false;
-                ErrorMessage = LanguageService.GetLocalizedString("Msg_Interrupt_OnlyFromSubThread", "中断步骤只能由子线程发出");
-                return Task.FromResult(false);
+                if (!MultiThreadInterruptBridge.RequestStopRun())
+                {
+                    IsTrue = false;
+                    ErrorMessage = LanguageService.GetLocalizedString("Msg_Interrupt_NotRunning", "中断步骤只能在自动化运行中发出");
+                    return Task.FromResult(false);
+                }
+
+                IsTrue = true;
+                ErrorMessage = null;
+                return Task.FromResult(true);
             }
 
             if (!InterruptTargetUid.HasValue || InterruptTargetUid.Value == Guid.Empty)
@@ -539,6 +610,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 return Task.FromResult(false);
             }
 
+            // 子线程发出：打断主线程；主线程自己发出：下一次循环迭代时从目标步骤继续
             if (!MultiThreadInterruptBridge.RequestInterrupt(InterruptTargetUid.Value))
             {
                 IsTrue = false;

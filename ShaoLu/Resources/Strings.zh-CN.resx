@@ -1605,8 +1605,17 @@
   <data name="Interrupt_Target" xml:space="preserve">
     <value>中断后从该步骤开始执行</value>
   </data>
+  <data name="Interrupt_Action_Stop" xml:space="preserve">
+    <value>结束本次运行</value>
+  </data>
+  <data name="Interrupt_Action_Goto" xml:space="preserve">
+    <value>跳到目标步骤</value>
+  </data>
+  <data name="Interrupt_Action" xml:space="preserve">
+    <value>动作</value>
+  </data>
   <data name="Interrupt_Hint" xml:space="preserve">
-    <value>只由子线程发出：打断主线程并强制其从指定步骤开始执行；主线程执行到本步骤会记失败</value>
+    <value>子线程或主线程自己都可以发出。跳到目标步骤：主线程从指定步骤继续执行（目标若在循环里，循环会继续跑）；结束本次运行：立即结束整个流程，这才是真正跳出主线程的循环。</value>
   </data>
   <data name="Msg_Signal_NameRequired" xml:space="preserve">
     <value>信号名不能为空</value>

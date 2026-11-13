@@ -30,9 +30,11 @@ namespace ShaoLu.Viewmodels
         private readonly List<SubThreadRunner> _subThreadRunners = new List<SubThreadRunner>();
         private readonly object _subThreadLock = new object();
 
-        /// <summary>待处理中断（子线程发出，主线程在每个步骤开始前消费）</summary>
+        /// <summary>待处理中断（子线程或主线程发出，主线程在每个步骤开始前消费）</summary>
         private readonly object _interruptLock = new object();
         private Guid? _pendingInterruptUid;
+        /// <summary>待处理的「结束本次运行」请求（中断步骤的「结束本次运行」动作）</summary>
+        private bool _pendingStopRun;
         private readonly StepSettingsModel _stepSettings = SingletonLocator.Settings.Step;
         private readonly StepExecutionContext _executionContext = StepExecutionContext.Instance;
 
@@ -1355,8 +1357,10 @@ namespace ShaoLu.Viewmodels
             lock (_interruptLock)
             {
                 _pendingInterruptUid = null;
+                _pendingStopRun = false;
             }
             MultiThreadInterruptBridge.RegisterHandler(RequestInterrupt);
+            MultiThreadInterruptBridge.RegisterStopHandler(RequestInterruptStop);
             // 多线程：清空上一次运行留下的子线程记录
             ClearSubThreadRunners();
             if (_stepSettings.MinimizeOnRun)
@@ -1618,7 +1622,15 @@ namespace ShaoLu.Viewmodels
                     if (StopSignal)
                         break;
 
-                    // 待处理中断：子线程打断主线程时，主线程从目标步骤开始执行
+                    // 待处理中断：子线程打断主线程时，主线程从目标步骤开始执行；
+                    // 「结束本次运行」的请求优先处理（真正跳出主线程的循环）
+                    if (TryConsumeStopRun())
+                    {
+                        logger.Info("Interrupt: stop run requested by interrupt step");
+                        StopSignal = true;
+                        break;
+                    }
+
                     if (TryConsumeInterrupt(out Guid interruptTargetUid))
                     {
                         int interruptIndex = FindIndexByUid(interruptTargetUid);
@@ -1906,6 +1918,7 @@ namespace ShaoLu.Viewmodels
                     logger.Warn(ex, "MultiThread: sub thread cleanup failed");
                 }
                 MultiThreadInterruptBridge.RegisterHandler(null);
+                MultiThreadInterruptBridge.RegisterStopHandler(null);
 
                 try
                 {
@@ -2277,6 +2290,26 @@ namespace ShaoLu.Viewmodels
             }
             targetUid = Guid.Empty;
             return false;
+        }
+
+        /// <summary>登记「结束本次运行」请求（中断步骤的「结束本次运行」动作）</summary>
+        private void RequestInterruptStop()
+        {
+            lock (_interruptLock)
+            {
+                _pendingStopRun = true;
+            }
+        }
+
+        /// <summary>取走「结束本次运行」请求（消费）</summary>
+        private bool TryConsumeStopRun()
+        {
+            lock (_interruptLock)
+            {
+                if (!_pendingStopRun) return false;
+                _pendingStopRun = false;
+                return true;
+            }
         }
 
         /// <summary>

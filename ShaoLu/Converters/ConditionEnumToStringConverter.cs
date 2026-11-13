@@ -1,4 +1,4 @@
-﻿using ShaoLu.Models;
+using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
@@ -42,6 +42,8 @@ namespace ShaoLu.Converters
                 return ConvertTextPointSource(pointSource);
             if (value is MultiThreadRangeMode rangeMode)
                 return ConvertMultiThreadRangeMode(rangeMode);
+            if (value is InterruptAction interruptAction)
+                return ConvertInterruptAction(interruptAction);
             if (value is SignalValueKind signalKind)
                 return ConvertSignalValueKind(signalKind);
             return value?.ToString() ?? string.Empty;
@@ -201,6 +203,12 @@ namespace ShaoLu.Converters
             MultiThreadRangeMode.ByLineNo => LanguageService.GetLocalizedString("MT_RangeMode_ByLineNo"),
             MultiThreadRangeMode.ByEndStep => LanguageService.GetLocalizedString("MT_RangeMode_ByEndStep"),
             _ => m.ToString(),
+        };
+
+        public static string ConvertInterruptAction(InterruptAction a) => a switch
+        {
+            InterruptAction.StopRun => LanguageService.GetLocalizedString("Interrupt_Action_Stop"),
+            _ => LanguageService.GetLocalizedString("Interrupt_Action_Goto"),
         };
 
         public static string ConvertSignalValueKind(SignalValueKind k) => k switch

@@ -1605,8 +1605,17 @@
   <data name="Interrupt_Target" xml:space="preserve">
     <value>中斷後從該步驟開始執行</value>
   </data>
+  <data name="Interrupt_Action_Stop" xml:space="preserve">
+    <value>結束本次執行</value>
+  </data>
+  <data name="Interrupt_Action_Goto" xml:space="preserve">
+    <value>跳到目標步驟</value>
+  </data>
+  <data name="Interrupt_Action" xml:space="preserve">
+    <value>動作</value>
+  </data>
   <data name="Interrupt_Hint" xml:space="preserve">
-    <value>只由子執行緒發出：打斷主執行緒並強制其從指定步驟開始執行；主執行緒執行到本步驟會記失敗</value>
+    <value>子執行緒或主執行緒自己都可以發出。跳到目標步驟：主執行緒從指定步驟繼續執行（目標若在迴圈裡，迴圈會繼續跑）；結束本次執行：立即結束整個流程，這才是真正跳出主執行緒的迴圈。</value>
   </data>
   <data name="Msg_Signal_NameRequired" xml:space="preserve">
     <value>訊號名不能為空</value>

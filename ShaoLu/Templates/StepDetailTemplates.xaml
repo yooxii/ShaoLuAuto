@@ -1451,7 +1451,7 @@
         </StackPanel>
     </DataTemplate>
 
-    <!-- 中断步骤（仅子线程可用） -->
+    <!-- 中断步骤（子线程或主线程都可发出） -->
     <DataTemplate x:Key="InterruptTemplate" DataType="{x:Type AutoVM:InterruptStep}">
         <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
@@ -1461,6 +1461,27 @@
                           Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Interrupt_Action}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding Actions}" SelectedItem="{Binding Action}" MinWidth="170" VerticalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <!-- 目标步骤只在「跳到目标步骤」动作下有意义 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding NeedsTarget}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <Label Content="{lex:Loc Interrupt_Target}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding AllSteps}"
                           SelectedValue="{Binding InterruptTargetUid, TargetNullValue={x:Static sys:Guid.Empty}}"

@@ -1605,8 +1605,17 @@
   <data name="Interrupt_Target" xml:space="preserve">
     <value>Run from this step after interrupting</value>
   </data>
+  <data name="Interrupt_Action_Stop" xml:space="preserve">
+    <value>Stop this run</value>
+  </data>
+  <data name="Interrupt_Action_Goto" xml:space="preserve">
+    <value>Jump to target step</value>
+  </data>
+  <data name="Interrupt_Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
   <data name="Interrupt_Hint" xml:space="preserve">
-    <value>Issued by child threads only: interrupts the main thread and forces it to continue from the specified step. The main thread records a failure when it reaches this step.</value>
+    <value>Issued by a child thread or the main thread itself. Jump to target step: the main thread continues from that step (if the target is inside the loop, the loop keeps running). Stop this run: ends the whole run right away, which is how you really break out of the main loop.</value>
   </data>
   <data name="Msg_Signal_NameRequired" xml:space="preserve">
     <value>Signal name cannot be empty</value>

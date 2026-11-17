@@ -132,6 +132,10 @@ foreach ($item in $stagingItems) {
     }
     if ($skip) { continue }
 
+    # OpenCvSharp 原生库只保留 dll\x64\ 那一份（WindowsLibraryLoader 的查找路径）：
+    # 构建产物若又把同样的 53 MB 复制到根目录，这里兜底跳过，避免发布包里同一文件出现两次。
+    if ($relative -eq 'OpenCvSharpExtern.dll') { continue }
+
     $destination = Join-Path $packageDir $relative
     $destinationDir = Split-Path -Parent $destination
     if (-not (Test-Path -LiteralPath $destinationDir)) {
@@ -161,6 +165,16 @@ foreach ($relative in $ocrLeftovers) {
     }
 }
 
+# ---------- OpenCvSharp 原生库只应有一份 ----------
+# 53 MB 的 OpenCvSharpExtern.dll 若同时出现在根目录与 dll\x64\，包体会白白多一份。
+$openCvCopies = @(Get-ChildItem -LiteralPath $packageDir -Recurse -File -Filter 'OpenCvSharpExtern.dll' -ErrorAction SilentlyContinue)
+if ($openCvCopies.Count -eq 0) {
+    throw "主体包缺少 OpenCvSharpExtern.dll（图像识别无法运行）"
+}
+if ($openCvCopies.Count -gt 1) {
+    throw "主体包里 OpenCvSharpExtern.dll 出现了 $($openCvCopies.Count) 份（应只有 dll\x64\ 一份）"
+}
+
 # ---------- 复制 AcbelBridge ----------
 # 只复制 exe 与原生 DLL（不带 pdb），放到包目录根：ResolveBridgeExe 第 3 条就是找 ShaoLu.exe 旁边。
 $bridgeOutputs = @('AcbelBridge.exe', 'Acbel_Chroma_Test.dll')
@@ -183,4 +197,6 @@ Write-Host ''
 Write-Host "==> Package folder: $packageDir"
 if ($Zip) { Write-Host "==> Package zip:    $zipPath" }
 Write-Host "==> File count:     $copied"
+$packageSizeMb = [math]::Round(((Get-ChildItem -LiteralPath $packageDir -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB), 1)
+Write-Host "==> Package size:   $packageSizeMb MB"
 Write-Host "==> 注意：OCR 功能需另装扩展包（tools\pack-ocr-extension.ps1 产出，装到 extensions\Ocr）"

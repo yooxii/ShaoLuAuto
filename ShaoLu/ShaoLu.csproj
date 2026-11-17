@@ -607,5 +607,19 @@
       <Name>OcrContract</Name>
     </ProjectReference>
   </ItemGroup>
+  <!--
+    去重：OpenCvSharp4.runtime.win.slim 的原生库 OpenCvSharpExtern.dll（约 53 MB）会进两处——
+    包自带 .props 把它放到 dll\x64\（WindowsLibraryLoader 在 net4x 下的查找路径），
+    NuGet 的运行时资产又按 runtimes\win-x64\native 复制一份到输出根目录。
+    包里的 .targets 只清理了 SDK 风格工程的 RuntimeCopyLocalItems，legacy 工程不生效，
+    所以这里把根目录那一份从复制列表里去掉：dll\x64\ 那份保留（实测两处任一份都能被加载）。
+  -->
+  <Target Name="RemoveDuplicateOpenCvExternRootCopy" AfterTargets="ResolveNuGetPackageAssets" BeforeTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)"
+                               Condition="'%(Filename)%(Extension)' == 'OpenCvSharpExtern.dll'" />
+    </ItemGroup>
+    <Message Importance="normal" Text="去重：不再把 OpenCvSharpExtern.dll 复制到输出根目录（保留 dll\x64\ 那一份）" />
+  </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

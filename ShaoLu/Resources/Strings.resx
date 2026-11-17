@@ -2214,4 +2214,114 @@ A scan step will be inserted before the upload step automatically.</value>
   <data name="Ocr_ExtensionTitle" xml:space="preserve">
     <value>OCR extension</value>
   </data>
+  <data name="ExtensionMenu" xml:space="preserve">
+    <value>Extensions</value>
+  </data>
+  <data name="Ext_StatusMissing" xml:space="preserve">
+    <value>OCR extension: not installed - OCR features are disabled</value>
+  </data>
+  <data name="Ext_StatusLoaded" xml:space="preserve">
+    <value>OCR extension: loaded ({0})</value>
+  </data>
+  <data name="Ext_InstallFromZip" xml:space="preserve">
+    <value>Install / update OCR extension package (.zip)…</value>
+  </data>
+  <data name="Ext_InstallFromFolder" xml:space="preserve">
+    <value>Install OCR extension from folder…</value>
+  </data>
+  <data name="Ext_OpenFolder" xml:space="preserve">
+    <value>Open extensions folder</value>
+  </data>
+  <data name="Ext_RemoveOcr" xml:space="preserve">
+    <value>Remove OCR extension</value>
+  </data>
+  <data name="Ext_InstallTitle" xml:space="preserve">
+    <value>Install OCR extension</value>
+  </data>
+  <data name="Ext_SelectZip" xml:space="preserve">
+    <value>Select the OCR extension package</value>
+  </data>
+  <data name="Ext_ZipFilter" xml:space="preserve">
+    <value>Extension package (*.zip)|*.zip|All files (*.*)|*.*</value>
+  </data>
+  <data name="Ext_SelectFolder" xml:space="preserve">
+    <value>Select the extension folder (the one containing Ocr, or the Ocr folder itself)</value>
+  </data>
+  <data name="Ext_ValidateFailed" xml:space="preserve">
+    <value>The extension package did not pass the checks:</value>
+  </data>
+  <data name="Ext_InstallSucceeded" xml:space="preserve">
+    <value>OCR extension installed: {0}
+Location: {1}
+The program will restart to load it.</value>
+  </data>
+  <data name="Ext_InstallFailed" xml:space="preserve">
+    <value>Installing the OCR extension failed: {0}</value>
+  </data>
+  <data name="Ext_RemoveTitle" xml:space="preserve">
+    <value>Remove OCR extension</value>
+  </data>
+  <data name="Ext_RemoveConfirm" xml:space="preserve">
+    <value>The OCR extension will be deleted from:
+{0}
+
+OCR features will be unavailable afterwards and the program will restart. Delete it?</value>
+  </data>
+  <data name="Ext_RemoveFailed" xml:space="preserve">
+    <value>Removing the OCR extension failed: {0}</value>
+  </data>
+  <data name="Ext_RestartTitle" xml:space="preserve">
+    <value>Restart program</value>
+  </data>
+  <data name="Ext_RestartFailed" xml:space="preserve">
+    <value>Could not restart automatically ({0}). Close and reopen the program manually.</value>
+  </data>
+  <data name="Ext_RestartExeMissing" xml:space="preserve">
+    <value>Could not locate the running program executable.</value>
+  </data>
+  <data name="Ext_NoPathSelected" xml:space="preserve">
+    <value>No extension package was selected.</value>
+  </data>
+  <data name="Ext_NotZip" xml:space="preserve">
+    <value>Only an extension package (.zip) or an extracted folder is supported: {0}</value>
+  </data>
+  <data name="Ext_FolderMissing" xml:space="preserve">
+    <value>Folder does not exist: {0}</value>
+  </data>
+  <data name="Ext_NoOcrFolder" xml:space="preserve">
+    <value>No OCR extension found in the package (it should contain Ocr\ShaoLu.OcrExtension.dll, tessdata and an x64 folder).</value>
+  </data>
+  <data name="Ext_ReadFailed" xml:space="preserve">
+    <value>Reading the extension package failed: {0}</value>
+  </data>
+  <data name="Ext_MissingFile" xml:space="preserve">
+    <value>The extension package is missing: {0}</value>
+  </data>
+  <data name="Ext_MissingFolder" xml:space="preserve">
+    <value>The extension package is missing folder: {0}</value>
+  </data>
+  <data name="Ext_NoLanguageData" xml:space="preserve">
+    <value>The tessdata folder contains no language data (*.traineddata).</value>
+  </data>
+  <data name="Ext_LooksX86" xml:space="preserve">
+    <value>This looks like an x86 build; the main program is x64 and cannot load it.</value>
+  </data>
+  <data name="Ext_NativeNotX64" xml:space="preserve">
+    <value>{0} is not an x64 native library (machine=0x{1:X4}); the main program cannot load it.</value>
+  </data>
+  <data name="Ext_NativeUnreadable" xml:space="preserve">
+    <value>Could not read the PE header of {0}; bitness check skipped.</value>
+  </data>
+  <data name="Ext_NoEntryType" xml:space="preserve">
+    <value>No usable OCR extension entry found (no IOcrExtensionFactory implementation; checked: {0}).</value>
+  </data>
+  <data name="Ext_Summary" xml:space="preserve">
+    <value>version {0}, {1} files, {2} MB</value>
+  </data>
+  <data name="Ext_NotValidated" xml:space="preserve">
+    <value>The extension package has not passed the checks yet.</value>
+  </data>
+  <data name="Ext_CopyIncomplete" xml:space="preserve">
+    <value>The installed extension files are incomplete.</value>
+  </data>
 </root>

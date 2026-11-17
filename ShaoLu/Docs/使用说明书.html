@@ -270,6 +270,8 @@ page-break-inside: avoid;
 <li><a href="#裁剪识别区域" id="toc-裁剪识别区域">裁剪识别区域</a></li>
 <li><a href="#设置点击点" id="toc-设置点击点">设置点击点</a></li>
 </ul></li>
+<li><a href="#六之二ocr-扩展文字识别组件" id="toc-六之二ocr-扩展文字识别组件">六之二、OCR
+扩展（文字识别组件）</a></li>
 <li><a href="#七运行暂停与停止" id="toc-七运行暂停与停止">七、运行、暂停与停止</a></li>
 <li><a href="#八保存与打开步骤文件" id="toc-八保存与打开步骤文件">八、保存与打开步骤文件</a>
 <ul>
@@ -319,7 +321,11 @@ steps.json 内容说明</a></li>
 <li><a href="#四、快速上手">快速上手：5
 分钟做出第一个自动化流程</a></li>
 <li><a href="#五、步骤编辑详解">步骤编辑详解</a></li>
-<li><a href="#六、图片编辑窗口">图片编辑窗口（裁剪与点击点）</a></li>
+<li><a href="#六、图片编辑窗口">图片编辑窗口（裁剪与点击点）</a>
+<ul>
+<li><a href="#六之二、ocr-扩展文字识别组件">OCR
+扩展（文字识别组件）</a></li>
+</ul></li>
 <li><a href="#七、运行暂停与停止">运行、暂停与停止</a></li>
 <li><a href="#八、保存与打开步骤文件">保存与打开步骤文件</a></li>
 <li><a href="#九、步骤脚本文件格式autostep">步骤脚本文件格式（.autostep）</a></li>
@@ -1141,7 +1147,7 @@ PASS”）。</p>
 </tr>
 <tr>
 <td>中断</td>
-<td>只由子线程发出：打断主线程，让主线程从指定步骤开始执行</td>
+<td>打断主线程（子线程或主线程自己都能发出）：可「跳到目标步骤」，也可「结束本次运行」真正跳出循环</td>
 </tr>
 </tbody>
 </table>
@@ -1157,7 +1163,11 @@ PASS”）。</p>
 <li>子线程有自己的一份执行结果，<strong>主线程看不到子线程内步骤的结果</strong>；跨线程只通过信号与中断通信；</li>
 <li>子线程内的步骤报错只记录错误与日志，不影响主流程；</li>
 <li>子线程里的跳转指向区域之外时，该子线程结束；</li>
-<li>「中断」在主线程的<strong>步骤边界</strong>生效：子线程发出中断后，主线程从指定步骤开始执行，发出中断的子线程继续跑自己的后续步骤；主线程执行到「中断」步骤会记失败；</li>
+<li>「中断」到达时会<strong>立刻中止当前正在执行的那一步</strong>（被打断的步骤不记为失败），子线程与主线程自己都可以发出：
+<ul>
+<li>动作选「跳到目标步骤」：主线程重定到目标步骤继续执行（目标在循环里就继续循环），发出中断的子线程继续跑自己的后续步骤；</li>
+<li>动作选「结束本次运行」：立即结束整个流程（相当于点「停止」，但可在流程里定点触发），这才是真正跳出主线程循环的办法；</li>
+</ul></li>
 <li>条件判断里新增「信号内容」（本步骤 /
 引用步骤收到的信号内容），比较时按文本处理；</li>
 <li>同一个信号被多次发送时，接收端取<strong>最新一次</strong>的值（接收一次即取走）；</li>
@@ -1535,6 +1545,95 @@ png/jpg/bmp）。已裁剪时保存裁剪结果，未裁剪时保存原图；“
 <p><strong>注意</strong>：复制一个识图步骤后，它的裁剪区域和点击点会一并复制；如需调整请打开副本的”编辑”窗口重新裁剪。</p>
 </blockquote>
 <hr />
+<h2 id="六之二ocr-扩展文字识别组件">六之二、OCR
+扩展（文字识别组件）</h2>
+<p>文字识别（OCR）的引擎与语言包体积较大（约 100
+MB），程序把它们拆成了<strong>单独的 OCR 扩展包</strong>，按需安装：</p>
+<p><strong>用菜单安装（推荐）</strong></p>
+<p>主界面顶部有「扩展」菜单，装/删/升级都不用手工拷目录：</p>
+<table>
+<colgroup>
+<col style="width: 60%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr>
+<th>菜单项</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安装/更新 OCR 扩展包（.zip）…</td>
+<td>选中扩展包 zip，程序自动检查后装进
+<code>extensions\Ocr</code>，<strong>装好直接重启程序</strong>生效</td>
+</tr>
+<tr>
+<td>从文件夹安装 OCR 扩展…</td>
+<td>同样流程，来源换成已解压的文件夹（选含 <code>Ocr</code> 的那一层，或
+<code>Ocr</code> 文件夹本身都可以）</td>
+</tr>
+<tr>
+<td>打开扩展目录</td>
+<td>打开 <code>extensions\Ocr</code>，还没装时打开
+<code>extensions</code> 并自动创建</td>
+</tr>
+<tr>
+<td>移除 OCR 扩展</td>
+<td>确认后删除扩展并重启程序</td>
+</tr>
+<tr>
+<td>最上面一行</td>
+<td>显示当前状态：<code>已加载（Tesseract OCR …）</code> 或
+<code>未安装，OCR 功能已禁用</code></td>
+</tr>
+</tbody>
+</table>
+<p>安装前的检查会核对：必备文件是否齐全、<code>x64</code> 原生库是不是
+64 位、入口程序集里确实有 OCR
+扩展入口。检查不通过会列出具体原因，<strong>不会覆盖当前能用的扩展</strong>；安装时先备份旧扩展，复制失败会自动回滚。正在运行步骤时不允许安装或移除（要先停止），有未保存的修改会先询问。</p>
+<p><strong>手工安装（备用）</strong></p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>项目</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安装位置</td>
+<td>把扩展包里的 <code>Ocr</code> 文件夹整个复制到程序目录的
+<code>extensions</code> 下，最终为
+<code>&lt;程序目录&gt;\extensions\Ocr\</code></td>
+</tr>
+<tr>
+<td>是否生效</td>
+<td>「扩展」菜单第一行显示已加载，或「帮助 → 日志 → 程序日志」里出现
+<code>OCR extension loaded: Tesseract OCR …</code></td>
+</tr>
+<tr>
+<td>未安装时</td>
+<td>「获取输入」的输入方式里没有「OCR
+识别」；图片编辑窗口的「设置OCR区域」为禁用状态并提示安装；已经设置过
+OCR
+区域的图片步骤照常找图，只是不做文字识别并提示原因；其它功能完全不受影响</td>
+</tr>
+<tr>
+<td>卸载</td>
+<td>用「扩展 → 移除 OCR 扩展」，或关闭程序后删除
+<code>extensions\Ocr</code> 文件夹</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>扩展包内附「安装说明.txt」，与主体包版本号一致，升级主程序时建议同步更新扩展。</p>
+</blockquote>
+<hr />
 <h2 id="七运行暂停与停止">七、运行、暂停与停止</h2>
 <table>
 <thead>
@@ -1750,8 +1849,10 @@ Uid（按结束步骤圈定区域时用）</td>
 </tr>
 <tr>
 <td><code>Interrupt</code>（中断）</td>
-<td><code>InterruptTargetUid</code> 让主线程从哪个步骤开始执行的
-Uid</td>
+<td><code>InterruptAction</code> 动作（<code>GotoTarget</code>
+跳到目标步骤 / <code>StopRun</code>
+结束本次运行）；<code>InterruptTargetUid</code>
+让主线程从哪个步骤开始执行的 Uid（仅「跳到目标步骤」用）</td>
 </tr>
 </tbody>
 </table>

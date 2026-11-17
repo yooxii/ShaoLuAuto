@@ -2214,4 +2214,114 @@
   <data name="Ocr_ExtensionTitle" xml:space="preserve">
     <value>OCR 扩展</value>
   </data>
+  <data name="ExtensionMenu" xml:space="preserve">
+    <value>扩展</value>
+  </data>
+  <data name="Ext_StatusMissing" xml:space="preserve">
+    <value>OCR 扩展：未安装，OCR 功能已禁用</value>
+  </data>
+  <data name="Ext_StatusLoaded" xml:space="preserve">
+    <value>OCR 扩展：已加载（{0}）</value>
+  </data>
+  <data name="Ext_InstallFromZip" xml:space="preserve">
+    <value>安装/更新 OCR 扩展包（.zip）…</value>
+  </data>
+  <data name="Ext_InstallFromFolder" xml:space="preserve">
+    <value>从文件夹安装 OCR 扩展…</value>
+  </data>
+  <data name="Ext_OpenFolder" xml:space="preserve">
+    <value>打开扩展目录</value>
+  </data>
+  <data name="Ext_RemoveOcr" xml:space="preserve">
+    <value>移除 OCR 扩展</value>
+  </data>
+  <data name="Ext_InstallTitle" xml:space="preserve">
+    <value>安装 OCR 扩展</value>
+  </data>
+  <data name="Ext_SelectZip" xml:space="preserve">
+    <value>选择 OCR 扩展包</value>
+  </data>
+  <data name="Ext_ZipFilter" xml:space="preserve">
+    <value>扩展包 (*.zip)|*.zip|所有文件 (*.*)|*.*</value>
+  </data>
+  <data name="Ext_SelectFolder" xml:space="preserve">
+    <value>选择扩展文件夹（含 Ocr 的那一层，或 Ocr 文件夹本身）</value>
+  </data>
+  <data name="Ext_ValidateFailed" xml:space="preserve">
+    <value>扩展包检查未通过：</value>
+  </data>
+  <data name="Ext_InstallSucceeded" xml:space="preserve">
+    <value>OCR 扩展已安装：{0}
+位置：{1}
+程序即将重启以加载扩展。</value>
+  </data>
+  <data name="Ext_InstallFailed" xml:space="preserve">
+    <value>安装 OCR 扩展失败：{0}</value>
+  </data>
+  <data name="Ext_RemoveTitle" xml:space="preserve">
+    <value>移除 OCR 扩展</value>
+  </data>
+  <data name="Ext_RemoveConfirm" xml:space="preserve">
+    <value>将从这里删除 OCR 扩展：
+{0}
+
+删除后 OCR 相关功能不可用，程序会重启。确定删除吗？</value>
+  </data>
+  <data name="Ext_RemoveFailed" xml:space="preserve">
+    <value>移除 OCR 扩展失败：{0}</value>
+  </data>
+  <data name="Ext_RestartTitle" xml:space="preserve">
+    <value>重启程序</value>
+  </data>
+  <data name="Ext_RestartFailed" xml:space="preserve">
+    <value>无法自动重启（{0}），请手动关闭并重新打开程序。</value>
+  </data>
+  <data name="Ext_RestartExeMissing" xml:space="preserve">
+    <value>找不到当前程序的可执行文件。</value>
+  </data>
+  <data name="Ext_NoPathSelected" xml:space="preserve">
+    <value>没有选择扩展包。</value>
+  </data>
+  <data name="Ext_NotZip" xml:space="preserve">
+    <value>只支持扩展包（.zip）或已解压的文件夹：{0}</value>
+  </data>
+  <data name="Ext_FolderMissing" xml:space="preserve">
+    <value>目录不存在：{0}</value>
+  </data>
+  <data name="Ext_NoOcrFolder" xml:space="preserve">
+    <value>扩展包里没有找到 OCR 扩展（应当包含 Ocr\ShaoLu.OcrExtension.dll、tessdata 与 x64 目录）。</value>
+  </data>
+  <data name="Ext_ReadFailed" xml:space="preserve">
+    <value>读取扩展包失败：{0}</value>
+  </data>
+  <data name="Ext_MissingFile" xml:space="preserve">
+    <value>扩展包缺少文件：{0}</value>
+  </data>
+  <data name="Ext_MissingFolder" xml:space="preserve">
+    <value>扩展包缺少目录：{0}</value>
+  </data>
+  <data name="Ext_NoLanguageData" xml:space="preserve">
+    <value>tessdata 目录里没有语言数据（*.traineddata）。</value>
+  </data>
+  <data name="Ext_LooksX86" xml:space="preserve">
+    <value>看起来是 x86 版本的扩展，主程序是 x64，将无法加载。</value>
+  </data>
+  <data name="Ext_NativeNotX64" xml:space="preserve">
+    <value>{0} 不是 x64 原生库（machine=0x{1:X4}），主程序无法加载。</value>
+  </data>
+  <data name="Ext_NativeUnreadable" xml:space="preserve">
+    <value>无法读取 {0} 的 PE 头，已跳过位数检查。</value>
+  </data>
+  <data name="Ext_NoEntryType" xml:space="preserve">
+    <value>扩展包里没有可用的 OCR 扩展入口（找不到 IOcrExtensionFactory 实现，已检查：{0}）。</value>
+  </data>
+  <data name="Ext_Summary" xml:space="preserve">
+    <value>版本 {0}，{1} 个文件，{2} MB</value>
+  </data>
+  <data name="Ext_NotValidated" xml:space="preserve">
+    <value>扩展包还没有通过检查。</value>
+  </data>
+  <data name="Ext_CopyIncomplete" xml:space="preserve">
+    <value>安装后的扩展文件不完整。</value>
+  </data>
 </root>

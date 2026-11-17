@@ -2214,4 +2214,114 @@
   <data name="Ocr_ExtensionTitle" xml:space="preserve">
     <value>OCR 擴充</value>
   </data>
+  <data name="ExtensionMenu" xml:space="preserve">
+    <value>擴充</value>
+  </data>
+  <data name="Ext_StatusMissing" xml:space="preserve">
+    <value>OCR 擴充：未安裝，OCR 功能已停用</value>
+  </data>
+  <data name="Ext_StatusLoaded" xml:space="preserve">
+    <value>OCR 擴充：已載入（{0}）</value>
+  </data>
+  <data name="Ext_InstallFromZip" xml:space="preserve">
+    <value>安裝/更新 OCR 擴充包（.zip）…</value>
+  </data>
+  <data name="Ext_InstallFromFolder" xml:space="preserve">
+    <value>從資料夾安裝 OCR 擴充…</value>
+  </data>
+  <data name="Ext_OpenFolder" xml:space="preserve">
+    <value>開啟擴充目錄</value>
+  </data>
+  <data name="Ext_RemoveOcr" xml:space="preserve">
+    <value>移除 OCR 擴充</value>
+  </data>
+  <data name="Ext_InstallTitle" xml:space="preserve">
+    <value>安裝 OCR 擴充</value>
+  </data>
+  <data name="Ext_SelectZip" xml:space="preserve">
+    <value>選擇 OCR 擴充包</value>
+  </data>
+  <data name="Ext_ZipFilter" xml:space="preserve">
+    <value>擴充包 (*.zip)|*.zip|所有檔案 (*.*)|*.*</value>
+  </data>
+  <data name="Ext_SelectFolder" xml:space="preserve">
+    <value>選擇擴充資料夾（含 Ocr 的那一層，或 Ocr 資料夾本身）</value>
+  </data>
+  <data name="Ext_ValidateFailed" xml:space="preserve">
+    <value>擴充包檢查未通過：</value>
+  </data>
+  <data name="Ext_InstallSucceeded" xml:space="preserve">
+    <value>OCR 擴充已安裝：{0}
+位置：{1}
+程式即將重新啟動以載入擴充。</value>
+  </data>
+  <data name="Ext_InstallFailed" xml:space="preserve">
+    <value>安裝 OCR 擴充失敗：{0}</value>
+  </data>
+  <data name="Ext_RemoveTitle" xml:space="preserve">
+    <value>移除 OCR 擴充</value>
+  </data>
+  <data name="Ext_RemoveConfirm" xml:space="preserve">
+    <value>將從這裡刪除 OCR 擴充：
+{0}
+
+刪除後 OCR 相關功能不可用，程式會重新啟動。確定刪除嗎？</value>
+  </data>
+  <data name="Ext_RemoveFailed" xml:space="preserve">
+    <value>移除 OCR 擴充失敗：{0}</value>
+  </data>
+  <data name="Ext_RestartTitle" xml:space="preserve">
+    <value>重新啟動程式</value>
+  </data>
+  <data name="Ext_RestartFailed" xml:space="preserve">
+    <value>無法自動重新啟動（{0}），請手動關閉並重新開啟程式。</value>
+  </data>
+  <data name="Ext_RestartExeMissing" xml:space="preserve">
+    <value>找不到目前程式的執行檔。</value>
+  </data>
+  <data name="Ext_NoPathSelected" xml:space="preserve">
+    <value>沒有選擇擴充包。</value>
+  </data>
+  <data name="Ext_NotZip" xml:space="preserve">
+    <value>只支援擴充包（.zip）或已解壓的資料夾：{0}</value>
+  </data>
+  <data name="Ext_FolderMissing" xml:space="preserve">
+    <value>目錄不存在：{0}</value>
+  </data>
+  <data name="Ext_NoOcrFolder" xml:space="preserve">
+    <value>擴充包裡沒有找到 OCR 擴充（應包含 Ocr\ShaoLu.OcrExtension.dll、tessdata 與 x64 目錄）。</value>
+  </data>
+  <data name="Ext_ReadFailed" xml:space="preserve">
+    <value>讀取擴充包失敗：{0}</value>
+  </data>
+  <data name="Ext_MissingFile" xml:space="preserve">
+    <value>擴充包缺少檔案：{0}</value>
+  </data>
+  <data name="Ext_MissingFolder" xml:space="preserve">
+    <value>擴充包缺少目錄：{0}</value>
+  </data>
+  <data name="Ext_NoLanguageData" xml:space="preserve">
+    <value>tessdata 目錄裡沒有語言資料（*.traineddata）。</value>
+  </data>
+  <data name="Ext_LooksX86" xml:space="preserve">
+    <value>看起來是 x86 版本的擴充，主程式是 x64，將無法載入。</value>
+  </data>
+  <data name="Ext_NativeNotX64" xml:space="preserve">
+    <value>{0} 不是 x64 原生函式庫（machine=0x{1:X4}），主程式無法載入。</value>
+  </data>
+  <data name="Ext_NativeUnreadable" xml:space="preserve">
+    <value>無法讀取 {0} 的 PE 標頭，已跳過位數檢查。</value>
+  </data>
+  <data name="Ext_NoEntryType" xml:space="preserve">
+    <value>擴充包裡沒有可用的 OCR 擴充入口（找不到 IOcrExtensionFactory 實作，已檢查：{0}）。</value>
+  </data>
+  <data name="Ext_Summary" xml:space="preserve">
+    <value>版本 {0}，{1} 個檔案，{2} MB</value>
+  </data>
+  <data name="Ext_NotValidated" xml:space="preserve">
+    <value>擴充包還沒有通過檢查。</value>
+  </data>
+  <data name="Ext_CopyIncomplete" xml:space="preserve">
+    <value>安裝後的擴充檔案不完整。</value>
+  </data>
 </root>

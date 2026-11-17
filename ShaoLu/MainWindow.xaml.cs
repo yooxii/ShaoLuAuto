@@ -1,5 +1,6 @@
-using ShaoLu.Models;
+﻿using ShaoLu.Models;
 using ShaoLu.Services;
+using ShaoLu.Services.Ocr;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels;
 using ShaoLu.Viewmodels.AutomationStep;
@@ -112,6 +113,9 @@ namespace ShaoLu
             Closing += MainWindow_Closing;
 
             Loaded += MainWindow_Loaded;
+
+            // 扩展菜单里的状态行（OCR 扩展是否已加载）
+            RefreshExtensionMenu();
 
         }
 
@@ -843,6 +847,199 @@ namespace ShaoLu
         {
             WindowBurnInStatistics.ShowSingleton();
         }
+
+        #region 扩展管理（OCR 扩展的安装 / 检查 / 重载）
+
+        /// <summary>刷新「扩展」菜单里的状态行：显示 OCR 扩展是否已加载</summary>
+        private void RefreshExtensionMenu()
+        {
+            if (ExtStatus == null) return;
+
+            if (OCRService.IsAvailable)
+            {
+                ExtStatus.Header = string.Format(
+                    LanguageService.GetLocalizedString("Ext_StatusLoaded", "OCR 扩展：已加载（{0}）"),
+                    OCRService.EngineDescription);
+            }
+            else
+            {
+                ExtStatus.Header = LanguageService.GetLocalizedString("Ext_StatusMissing", "OCR 扩展：未安装，OCR 功能已禁用");
+            }
+
+            // 没装扩展时「移除」没有意义
+            if (ExtRemoveOcr != null)
+                ExtRemoveOcr.IsEnabled = Directory.Exists(OcrExtensionInstaller.TargetDirectory);
+        }
+
+        /// <summary>安装/更新 OCR 扩展：选择扩展包 → 检查 → 安装 → 直接重载程序</summary>
+        private async void ExtInstall_Click(object sender, RoutedEventArgs e)
+        {
+            string mode = (sender as MenuItem)?.Tag as string;
+            bool pickFolder = string.Equals(mode, "folder", StringComparison.OrdinalIgnoreCase);
+
+            // 运行中不能重启，先让用户停下
+            if (!GuardRunningForFileOperation()) return;
+
+            // 重启会丢掉未保存的修改，先确认
+            if (!await ConfirmDiscardChangesAsync()) return;
+
+            string path;
+            if (pickFolder)
+            {
+                path = PickExtensionFolder();
+            }
+            else
+            {
+                path = PathServices.OpenPathDialog(
+                    LanguageService.GetLocalizedString("Ext_SelectZip", "选择 OCR 扩展包"),
+                    LanguageService.GetLocalizedString("Ext_ZipFilter", "扩展包 (*.zip)|*.zip|所有文件 (*.*)|*.*"));
+            }
+            if (string.IsNullOrWhiteSpace(path)) return;
+
+            OcrExtensionValidationResult validation = null;
+            try
+            {
+                var cursor = Mouse.OverrideCursor;
+                Mouse.OverrideCursor = Cursors.Wait;
+                try
+                {
+                    validation = await Task.Run(() => OcrExtensionInstaller.Validate(path));
+                    if (!validation.IsValid)
+                    {
+                        ShowExtensionError(
+                            LanguageService.GetLocalizedString("Ext_ValidateFailed", "扩展包检查未通过："),
+                            validation.Errors);
+                        return;
+                    }
+
+                    await Task.Run(() => OcrExtensionInstaller.Install(validation));
+                }
+                finally
+                {
+                    Mouse.OverrideCursor = cursor;
+                }
+
+                string target = OcrExtensionInstaller.TargetDirectory;
+                NLog.LogManager.GetCurrentClassLogger().Info("OCR extension installed to {0} ({1})", target, validation?.Summary);
+
+                // 先让用户看到结果，再重载（弹窗 1.5 秒后自动继续，用户点「确定」可立即继续）
+                var (_, popupTask) = WindowAsyncPopup.Show(
+                    string.Format(LanguageService.GetLocalizedString("Ext_InstallSucceeded",
+                        "OCR 扩展已安装：{0}\n位置：{1}\n程序即将重启以加载扩展。"), validation?.Summary, target),
+                    LanguageService.GetLocalizedString("Ext_InstallTitle", "安装 OCR 扩展"),
+                    PopupButtons.OK, MessageBoxImage.Information);
+                await Task.WhenAny(popupTask, Task.Delay(1500));
+
+                RestartApplication();
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "Install OCR extension failed: {0}", path);
+                WindowAsyncPopup.Show(
+                    string.Format(LanguageService.GetLocalizedString("Ext_InstallFailed", "安装 OCR 扩展失败：{0}"), ex.Message),
+                    LanguageService.GetLocalizedString("Ext_InstallTitle", "安装 OCR 扩展"),
+                    PopupButtons.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                OcrExtensionInstaller.Cleanup(validation);
+                RefreshExtensionMenu();
+            }
+        }
+
+        /// <summary>移除 OCR 扩展（装完同样重载程序）</summary>
+        private async void ExtRemoveOcr_Click(object sender, RoutedEventArgs e)
+        {
+            if (!GuardRunningForFileOperation()) return;
+            if (!await ConfirmDiscardChangesAsync()) return;
+
+            string target = OcrExtensionInstaller.TargetDirectory;
+            if (!Directory.Exists(target)) return;
+
+            var (_, confirmTask) = WindowAsyncPopup.Show(
+                string.Format(LanguageService.GetLocalizedString("Ext_RemoveConfirm",
+                    "将从这里删除 OCR 扩展：\n{0}\n\n删除后 OCR 相关功能不可用，程序会重启。确定删除吗？"), target),
+                LanguageService.GetLocalizedString("Ext_RemoveTitle", "移除 OCR 扩展"),
+                PopupButtons.YesNo, MessageBoxImage.Warning);
+            if (await confirmTask != PopupButton.YesValue) return;
+
+            try
+            {
+                await Task.Run(() => OcrExtensionInstaller.Remove());
+                RestartApplication();
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Error(ex, "Remove OCR extension failed: {0}", target);
+                WindowAsyncPopup.Show(
+                    string.Format(LanguageService.GetLocalizedString("Ext_RemoveFailed", "移除 OCR 扩展失败：{0}"), ex.Message),
+                    LanguageService.GetLocalizedString("Ext_RemoveTitle", "移除 OCR 扩展"),
+                    PopupButtons.OK, MessageBoxImage.Error);
+                RefreshExtensionMenu();
+            }
+        }
+
+        private void ExtOpenFolder_Click(object sender, RoutedEventArgs e)
+        {
+            string target = OcrExtensionInstaller.TargetDirectory;
+            try
+            {
+                if (Directory.Exists(target))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", $"\"{target}\"");
+                    return;
+                }
+
+                // 还没装扩展：打开 extensions 目录，没有就建一个，方便用户手动放
+                string parent = Path.GetDirectoryName(target);
+                if (!string.IsNullOrEmpty(parent) && !Directory.Exists(parent))
+                    Directory.CreateDirectory(parent);
+                if (!string.IsNullOrEmpty(parent))
+                    System.Diagnostics.Process.Start("explorer.exe", $"\"{parent}\"");
+            }
+            catch (Exception ex)
+            {
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "Open extension folder failed: {0}", target);
+            }
+        }
+
+        /// <summary>重载程序：启动新的自身进程后关闭当前窗口（关闭前不再弹未保存提示，调用方已确认）</summary>
+        private void RestartApplication()
+        {
+            _closeConfirmed = true;
+            if (AppRestarter.TryRestart(out string error))
+            {
+                NLog.LogManager.GetCurrentClassLogger().Info("Restart application to reload extensions");
+                return;
+            }
+
+            WindowAsyncPopup.Show(
+                string.Format(LanguageService.GetLocalizedString("Ext_RestartFailed",
+                    "无法自动重启（{0}），请手动关闭并重新打开程序。"), error),
+                LanguageService.GetLocalizedString("Ext_RestartTitle", "重启程序"),
+                PopupButtons.OK, MessageBoxImage.Warning);
+        }
+
+        private static string PickExtensionFolder()
+        {
+            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                dialog.Description = LanguageService.GetLocalizedString("Ext_SelectFolder",
+                    "选择扩展文件夹（含 Ocr 的那一层，或 Ocr 文件夹本身）");
+                dialog.ShowNewFolderButton = false;
+                return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.SelectedPath : null;
+            }
+        }
+
+        private static void ShowExtensionError(string title, System.Collections.Generic.IEnumerable<string> errors)
+        {
+            WindowAsyncPopup.Show(
+                title + "\n\n" + string.Join("\n", errors),
+                LanguageService.GetLocalizedString("Ext_InstallTitle", "安装 OCR 扩展"),
+                PopupButtons.OK, MessageBoxImage.Error);
+        }
+
+        #endregion
 
         private void UserManagement_Click(object sender, RoutedEventArgs e)
         {

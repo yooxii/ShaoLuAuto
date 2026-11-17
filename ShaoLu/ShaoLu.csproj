@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.7.2.2612</ApplicationVersion>
+    <ApplicationVersion>0.7.2.2613</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -191,9 +191,11 @@
     <Compile Include="Services\ExecutionLogService.cs" />
     <Compile Include="Services\BurnInService.cs" />
     <Compile Include="Services\RecentFilesService.cs" />
+    <Compile Include="Services\AppRestarter.cs" />
     <Compile Include="Services\OCRService.cs" />
     <!-- OCR 扩展宿主：契约在 OcrContract 工程里（扩展与之共用），主程序只依赖契约 -->
     <Compile Include="Services\Ocr\OcrExtensionHost.cs" />
+    <Compile Include="Services\Ocr\OcrExtensionInstaller.cs" />
     <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\IUserService.cs" />
     <Compile Include="Services\UserService.cs" />

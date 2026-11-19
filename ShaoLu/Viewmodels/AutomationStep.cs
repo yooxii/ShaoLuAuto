@@ -356,12 +356,273 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private string _textToType;
         private double _delayBetweenKeys = 0.05;
 
+        // ---- 引用其他步骤的结果（设置后本次键入用引用值，TextToType 保留原固定文本） ----
+        private Guid? _refStepUid;
+        private AcbelReferenceKind? _refKind;
+        private string _refFieldName = string.Empty;
+        private ICommand _clearReferenceCommand;
+
         /// <summary>
         /// 输入内容
         /// </summary>
         public string TextToType { get => _textToType; set => SetProperty(ref _textToType, value); }
 
         public double DelayBetweenKeys { get => _delayBetweenKeys; set => SetProperty(ref _delayBetweenKeys, value); }
+
+        /// <summary>被引用的步骤 Uid（空表示直接键入 TextToType）。</summary>
+        public Guid? RefStepUid
+        {
+            get => _refStepUid;
+            set { if (SetProperty(ref _refStepUid, value)) RaiseReferenceChanged(); }
+        }
+
+        /// <summary>引用种类（执行结果 / OCR 文本 / 直接获取文本 / 扫码结果 / 用户输入字段）。</summary>
+        public AcbelReferenceKind? RefKind
+        {
+            get => _refKind;
+            set { if (SetProperty(ref _refKind, value)) RaiseReferenceChanged(); }
+        }
+
+        /// <summary>引用的「用户输入」字段名（仅 RefKind = UserInput 时有意义）。</summary>
+        public string RefFieldName
+        {
+            get => _refFieldName;
+            set { if (SetProperty(ref _refFieldName, value ?? string.Empty)) RaiseReferenceChanged(); }
+        }
+
+        /// <summary>已经引用了其他步骤的结果。</summary>
+        [JsonIgnore]
+        public bool IsReferenced
+            => _refStepUid.HasValue && _refStepUid.Value != Guid.Empty
+               && _refKind.HasValue && _refKind.Value != AcbelReferenceKind.None;
+
+        /// <summary>引用标签，例如「3. ScanCode_1 · 扫码结果」或「用户输入 → 用户输入_1 / SN」。</summary>
+        [JsonIgnore]
+        public string ReferenceLabel
+        {
+            get
+            {
+                if (!IsReferenced) return string.Empty;
+
+                int lineNo = 0;
+                string stepName = null;
+                foreach (var pair in AcbelUploadStep.OtherSteps(Guid.Empty))
+                {
+                    if (pair.Value.Uid != _refStepUid.Value) continue;
+                    lineNo = pair.Key;
+                    stepName = pair.Value.Name;
+                    break;
+                }
+
+                if (_refKind.Value == AcbelReferenceKind.UserInput)
+                {
+                    string userInputKind = AcbelUploadStep.Loc("AcbelRefUserInput", "用户输入");
+                    string fieldName = _refFieldName ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(stepName))
+                        return string.IsNullOrWhiteSpace(fieldName)
+                            ? userInputKind + " → " + stepName
+                            : userInputKind + " → " + stepName + " / " + fieldName;
+                    if (!string.IsNullOrWhiteSpace(fieldName))
+                        return userInputKind + " → " + fieldName;
+                    return userInputKind;
+                }
+
+                string kind;
+                switch (_refKind.Value)
+                {
+                    case AcbelReferenceKind.ExecutionResult:
+                        kind = AcbelUploadStep.Loc("AcbelRefExecutionResult", "执行结果");
+                        break;
+                    case AcbelReferenceKind.OcrText:
+                        kind = AcbelUploadStep.Loc("AcbelRefOcrText", "OCR 文本");
+                        break;
+                    case AcbelReferenceKind.DirectText:
+                        kind = AcbelUploadStep.Loc("AcbelRefDirectText", "直接获取文本");
+                        break;
+                    case AcbelReferenceKind.ScanResult:
+                        kind = AcbelUploadStep.Loc("AcbelRefScanResult", "扫码结果");
+                        break;
+                    default:
+                        kind = string.Empty;
+                        break;
+                }
+
+                stepName = stepName ?? "?";
+                return lineNo > 0 ? lineNo + ". " + stepName + " · " + kind : stepName + " · " + kind;
+            }
+        }
+
+        /// <summary>引用菜单节点树（引用步骤 → 步骤 → 结果种类 / 用户输入字段，以及清除引用）。</summary>
+        [JsonIgnore]
+        public ObservableCollection<AcbelRefMenuNode> MenuNodes
+        {
+            get
+            {
+                var nodes = new ObservableCollection<AcbelRefMenuNode>();
+                var root = new AcbelRefMenuNode { Header = AcbelUploadStep.Loc("AcbelRefSteps", "引用步骤") };
+
+                foreach (var pair in AcbelUploadStep.OtherSteps(Uid))
+                {
+                    var step = pair.Value;
+                    var stepNode = new AcbelRefMenuNode { Header = pair.Key + ". " + step.Name };
+
+                    if (step is UserInputStep userInputStep)
+                    {
+                        foreach (string name in CollectUserInputFieldNames(userInputStep))
+                        {
+                            string fieldName = name;
+                            stepNode.Children.Add(new AcbelRefMenuNode
+                            {
+                                Header = fieldName,
+                                StepUid = step.Uid,
+                                Kind = AcbelReferenceKind.UserInput,
+                                FieldName = fieldName,
+                                Command = new RelayCommand(() => SetReference(step.Uid, AcbelReferenceKind.UserInput, fieldName))
+                            });
+                        }
+
+                        if (stepNode.Children.Count == 0)
+                        {
+                            stepNode.Children.Add(new AcbelRefMenuNode
+                            {
+                                Header = AcbelUploadStep.Loc("AcbelRefNoFields", "（未定义字段）")
+                            });
+                        }
+                    }
+                    else
+                    {
+                        stepNode.Children.Add(CreateKindNode("AcbelRefExecutionResult", "执行结果", step.Uid, AcbelReferenceKind.ExecutionResult));
+                        stepNode.Children.Add(CreateKindNode("AcbelRefOcrText", "OCR 文本", step.Uid, AcbelReferenceKind.OcrText));
+                        stepNode.Children.Add(CreateKindNode("AcbelRefDirectText", "直接获取文本", step.Uid, AcbelReferenceKind.DirectText));
+                        if (step is ScanCodeStep)
+                            stepNode.Children.Add(CreateKindNode("AcbelRefScanResult", "扫码结果", step.Uid, AcbelReferenceKind.ScanResult));
+                    }
+
+                    root.Children.Add(stepNode);
+                }
+
+                nodes.Add(root);
+                nodes.Add(new AcbelRefMenuNode
+                {
+                    Header = AcbelUploadStep.Loc("AcbelRefClear", "清除引用"),
+                    Command = ClearReferenceCommand
+                });
+                return nodes;
+            }
+        }
+
+        /// <summary>选中某步骤的某种结果作为本次键入内容。</summary>
+        public void SetReference(Guid stepUid, AcbelReferenceKind kind, string fieldName = null)
+        {
+            if (stepUid == Guid.Empty || kind == AcbelReferenceKind.None) return;
+            if (kind == AcbelReferenceKind.UserInput && string.IsNullOrWhiteSpace(fieldName)) return;
+
+            _refStepUid = stepUid;
+            _refKind = kind;
+            _refFieldName = kind == AcbelReferenceKind.UserInput ? fieldName.Trim() : string.Empty;
+            RaiseReferenceChanged();
+        }
+
+        /// <summary>清除引用，恢复键入固定文本。</summary>
+        public void ClearReference()
+        {
+            if (!IsReferenced) return;
+            _refStepUid = null;
+            _refKind = null;
+            _refFieldName = string.Empty;
+            RaiseReferenceChanged();
+        }
+
+        [JsonIgnore]
+        public ICommand ClearReferenceCommand => _clearReferenceCommand ??= new RelayCommand(ClearReference);
+
+        /// <summary>
+        /// 解析引用值；未引用返回 null（调用方用 TextToType）。
+        /// 引用的步骤本次还没执行过时返回空串（与上传步骤的引用口径一致）。
+        /// </summary>
+        public string ResolveReferencedText()
+        {
+            if (!IsReferenced) return null;
+
+            try
+            {
+                if (_refKind.Value == AcbelReferenceKind.UserInput)
+                {
+                    return StepExecutionContext.TryGetUserInput(_refStepUid.Value, _refFieldName, out string userInput)
+                        ? (userInput ?? string.Empty)
+                        : string.Empty;
+                }
+
+                StepExecutionResult result;
+                string threadName;
+                if (!StepExecutionContext.TryGetLatestResult(_refStepUid.Value, out result, out threadName) || result == null)
+                    return string.Empty;
+
+                switch (_refKind.Value)
+                {
+                    case AcbelReferenceKind.ExecutionResult:
+                        return result.IsTrue ? "PASS" : "FAIL";
+                    case AcbelReferenceKind.ScanResult:
+                        return result.OCRText ?? string.Empty;
+                    case AcbelReferenceKind.OcrText:
+                        return IsDirectTextSource(result.TextSource) ? string.Empty : (result.OCRText ?? string.Empty);
+                    case AcbelReferenceKind.DirectText:
+                        return IsDirectTextSource(result.TextSource) ? (result.OCRText ?? string.Empty) : string.Empty;
+                    default:
+                        return string.Empty;
+                }
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private static bool IsDirectTextSource(string textSource)
+            => string.Equals(textSource, "Direct", StringComparison.OrdinalIgnoreCase);
+
+        private static List<string> CollectUserInputFieldNames(UserInputStep step)
+        {
+            var names = new List<string>();
+            try
+            {
+                if (step.Fields != null)
+                {
+                    foreach (var field in step.Fields)
+                    {
+                        if (field == null || string.IsNullOrWhiteSpace(field.Name)) continue;
+                        string name = field.Name.Trim();
+                        if (!names.Contains(name)) names.Add(name);
+                    }
+                }
+
+                foreach (string name in StepExecutionContext.GetUserInputFieldNamesAll(step.Uid))
+                {
+                    if (string.IsNullOrWhiteSpace(name)) continue;
+                    string trimmed = name.Trim();
+                    if (!names.Contains(trimmed)) names.Add(trimmed);
+                }
+            }
+            catch { }
+            return names;
+        }
+
+        private AcbelRefMenuNode CreateKindNode(string key, string fallback, Guid stepUid, AcbelReferenceKind kind)
+        {
+            return new AcbelRefMenuNode
+            {
+                Header = AcbelUploadStep.Loc(key, fallback),
+                StepUid = stepUid,
+                Kind = kind,
+                Command = new RelayCommand(() => SetReference(stepUid, kind))
+            };
+        }
+
+        private void RaiseReferenceChanged()
+        {
+            OnPropertyChanged(nameof(IsReferenced));
+            OnPropertyChanged(nameof(ReferenceLabel));
+        }
 
         #region 构造
         public TypeTextStep() : base()
@@ -386,6 +647,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 TextToType = TextToType,
                 DelayBetweenKeys = DelayBetweenKeys,
+                RefStepUid = RefStepUid,
+                RefKind = RefKind,
+                RefFieldName = RefFieldName,
                 WaitTime = WaitTime,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
@@ -399,15 +663,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
             await Task.Delay((int)(WaitTime * 1000), cancellationToken);
+            // 引用了其他步骤时，本次键入用引用值（TextToType 保留原固定文本，清除引用后恢复）
+            string text = ResolveReferencedText() ?? TextToType;
             var res = await Task.Run(() =>
             {
                 if (DelayBetweenKeys < 0.01)
                 {
-                    return Autogui.TypeTextSafe(TextToType);
+                    return Autogui.TypeTextSafe(text);
                 }
                 else
                 {
-                    return Autogui.TypeText(TextToType, (int)(DelayBetweenKeys * 1000));
+                    return Autogui.TypeText(text, (int)(DelayBetweenKeys * 1000));
                 }
             });
             IsTrue = res;

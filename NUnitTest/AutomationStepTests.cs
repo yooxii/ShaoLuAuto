@@ -109,6 +109,75 @@ namespace NUnitTest
             }
 
             [Test]
+            public void TypeText_引用其他步骤结果_OCR与执行结果()
+            {
+                try
+                {
+                    var step = new TypeTextStep("t");
+                    var uid = Guid.NewGuid();
+                    step.SetReference(uid, AcbelReferenceKind.OcrText);
+                    Assert.That(step.IsReferenced, Is.True);
+                    Assert.That(step.ReferenceLabel, Does.Contain("OCR"));
+
+                    ShaoLu.Services.StepExecutionContext.Instance.SetResultByUid(uid, new StepExecutionResult
+                    {
+                        IsTrue = true,
+                        OCRText = "ABC123",
+                        TextSource = "OCR",
+                        ExecutedAt = DateTime.Now
+                    });
+                    Assert.That(step.ResolveReferencedText(), Is.EqualTo("ABC123"));
+
+                    step.SetReference(uid, AcbelReferenceKind.ExecutionResult);
+                    Assert.That(step.ResolveReferencedText(), Is.EqualTo("PASS"));
+
+                    step.SetReference(uid, AcbelReferenceKind.ScanResult);
+                    Assert.That(step.ResolveReferencedText(), Is.EqualTo("ABC123"));
+                }
+                finally
+                {
+                    ShaoLu.Services.StepExecutionContext.Instance.Clear();
+                }
+            }
+
+            [Test]
+            public void TypeText_未引用时用固定文本_未执行过取空串()
+            {
+                try
+                {
+                    var step = new TypeTextStep("t") { TextToType = "HELLO" };
+                    Assert.That(step.ResolveReferencedText(), Is.Null, "未引用时返回 null，RunAsync 会用 TextToType");
+
+                    step.SetReference(Guid.NewGuid(), AcbelReferenceKind.OcrText);
+                    Assert.That(step.ResolveReferencedText(), Is.EqualTo(string.Empty), "引用的步骤没执行过时取空串");
+
+                    step.ClearReference();
+                    Assert.That(step.IsReferenced, Is.False);
+                    Assert.That(step.ResolveReferencedText(), Is.Null);
+                    Assert.That(step.TextToType, Is.EqualTo("HELLO"), "清除引用后固定文本保留");
+                }
+                finally
+                {
+                    ShaoLu.Services.StepExecutionContext.Instance.Clear();
+                }
+            }
+
+            [Test]
+            public void TypeText_Clone保留引用()
+            {
+                var step = new TypeTextStep("t", "d") { TextToType = "X" };
+                var uid = Guid.NewGuid();
+                step.SetReference(uid, AcbelReferenceKind.ScanResult);
+
+                var clone = (TypeTextStep)step.Clone();
+
+                Assert.That(clone.RefStepUid, Is.EqualTo(uid));
+                Assert.That(clone.RefKind, Is.EqualTo(AcbelReferenceKind.ScanResult));
+                Assert.That(clone.TextToType, Is.EqualTo("X"));
+                Assert.That(clone.IsReferenced, Is.True);
+            }
+
+            [Test]
             public void Name_NullValue_ThrowsArgumentNullException()
             {
                 var step = new TypeTextStep();

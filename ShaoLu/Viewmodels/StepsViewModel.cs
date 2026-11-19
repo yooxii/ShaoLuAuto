@@ -325,6 +325,10 @@ namespace ShaoLu.Viewmodels
             clone.WaitTime = step.WaitTime;
             clone.EnableLog = step.EnableLog;
             clone.SelfReferenceLimit = step.SelfReferenceLimit;
+            clone.TrueGotoMaxCount = step.TrueGotoMaxCount;
+            clone.FalseGotoMaxCount = step.FalseGotoMaxCount;
+            clone.TrueGotoTimeoutSeconds = step.TrueGotoTimeoutSeconds;
+            clone.FalseGotoTimeoutSeconds = step.FalseGotoTimeoutSeconds;
             clone.TrueGotoUid = step.TrueGotoUid;
             clone.FalseGotoUid = step.FalseGotoUid;
             clone.ConditionMode = step.ConditionMode;
@@ -341,7 +345,7 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>深拷贝并生成新 Uid（复制/粘贴/插入用，保证多次粘贴互相独立）</summary>
-        private static AutomationStepBase CloneStepWithNewUid(AutomationStepBase step)
+        internal static AutomationStepBase CloneStepWithNewUid(AutomationStepBase step)
         {
             var clone = DeepCopyStep(step);
             if (clone != null) clone.Uid = Guid.NewGuid();
@@ -361,8 +365,12 @@ namespace ShaoLu.Viewmodels
         {
             ParentStepUid = c.ParentStepUid,
             LegacyStepLineNo = c.LegacyStepLineNo,
+            Source = c.Source,
+            Field = c.Field,
+            ConstantValue = c.ConstantValue,
             Variable = c.Variable,
             StepUid = c.StepUid,
+            FieldName = c.FieldName,
             Operator = c.Operator,
             Value = c.Value,
             Connector = c.Connector,
@@ -377,6 +385,12 @@ namespace ShaoLu.Viewmodels
 
         private List<AutomationStepBase> CaptureListSnapshot()
             => AutomationStepBases?.Select(CloneStepPreservingUid).ToList() ?? new List<AutomationStepBase>();
+
+        /// <summary>步骤列表撤销栈的深度（流程图用它判断增删/移动等结构改动是否发生在自己那一条之后）</summary>
+        internal int ListUndoCount => _listUndo.Count;
+
+        /// <summary>步骤列表恢复栈的深度</summary>
+        internal int ListRedoCount => _listRedo.Count;
 
         /// <summary>在列表发生增删/移动/粘贴/剪切前调用，记录快照</summary>
         private void PushListUndoSnapshot()
@@ -745,32 +759,7 @@ namespace ShaoLu.Viewmodels
                         PopupButtons.OK, MessageBoxImage.Warning);
                     return;
                 }
-                step = param switch
-                {
-                    "ClickImage" => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
-                    "FindImage" => new FindImageStep($"FindImage_{AutomationStepBases.Count(t => t.Type == StepType.FindImage) + 1}"),
-                    "ClickImages" => new ClickImagesStep($"ClickImages_{AutomationStepBases.Count(t => t.Type == StepType.ClickImages) + 1}"),
-                    "FindImages" => new FindImagesStep($"FindImages_{AutomationStepBases.Count(t => t.Type == StepType.FindImages) + 1}"),
-                    "TypeText" => new TypeTextStep($"TypeText_{AutomationStepBases.Count(t => t.Type == StepType.TypeText) + 1}"),
-                    "TypeTextMore" => new TypeTextMoreStep($"TypeTextMore_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextMore) + 1}"),
-                    "TypeTextFromFile" => new TypeTextFromFileStep($"TypeTextFromFile_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextFromFile) + 1}"),
-                    "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
-                    "AcbelUpload" => new AcbelUploadStep($"AcbelUpload_{AutomationStepBases.Count(t => t.Type == StepType.AcbelUpload) + 1}"),
-                    "UserInput" => new UserInputStep($"UserInput_{AutomationStepBases.Count(t => t.Type == StepType.UserInput) + 1}"),
-                    "ScanCode" => new ScanCodeStep($"ScanCode_{AutomationStepBases.Count(t => t.Type == StepType.ScanCode) + 1}"),
-                    "GetInput" => new GetInputStep($"GetInput_{AutomationStepBases.Count(t => t.Type == StepType.GetInput) + 1}"),
-                    "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
-                    "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
-                    "BurnInConfig" => new BurnInConfigStep(LanguageService.GetLocalizedString("BurnInConfig_StepName")),
-                    "FocusWindow" => new FocusWindowStep($"WindowControl_{AutomationStepBases.Count(t => t.Type == StepType.FocusWindow) + 1}"),
-                    "MultiThread" => new MultiThreadStartStep($"MultiThread_{AutomationStepBases.Count(t => t.Type == StepType.MultiThread) + 1}"),
-                    "MultiThreadEnd" => new MultiThreadEndStep($"MultiThreadEnd_{AutomationStepBases.Count(t => t.Type == StepType.MultiThreadEnd) + 1}"),
-                    "SendSignal" => new SendSignalStep($"SendSignal_{AutomationStepBases.Count(t => t.Type == StepType.SendSignal) + 1}"),
-                    "ReceiveSignal" => new ReceiveSignalStep($"ReceiveSignal_{AutomationStepBases.Count(t => t.Type == StepType.ReceiveSignal) + 1}"),
-                    "Interrupt" => new InterruptStep($"Interrupt_{AutomationStepBases.Count(t => t.Type == StepType.Interrupt) + 1}"),
-                    "Empty" => new EmptyStep($"Empty_{AutomationStepBases.Count(t => t.Type == StepType.Empty) + 1}"),
-                    _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
-                };
+                step = CreateStepByType(param);
                 ApplyDefaultSettings(step);
                 PushListUndoSnapshot();
                 if (SelectedStep is AutomationStepBase automationStepBase)
@@ -801,6 +790,108 @@ namespace ShaoLu.Viewmodels
             {
                 logger.Warn(ex, "上传链条自动补齐失败");
             }
+        }
+
+        /// <summary>按类型标识创建一个新步骤（已套用默认参数，未插入列表）；流程图替换步骤用</summary>
+        public AutomationStepBase CreateStep(string type)
+        {
+            AutomationStepBases ??= [];
+            var step = CreateStepByType(type);
+            ApplyDefaultSettings(step);
+            return step;
+        }
+
+        private AutomationStepBase CreateStepByType(string param) => param switch
+        {
+            "ClickImage" => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
+            "FindImage" => new FindImageStep($"FindImage_{AutomationStepBases.Count(t => t.Type == StepType.FindImage) + 1}"),
+            "ClickImages" => new ClickImagesStep($"ClickImages_{AutomationStepBases.Count(t => t.Type == StepType.ClickImages) + 1}"),
+            "FindImages" => new FindImagesStep($"FindImages_{AutomationStepBases.Count(t => t.Type == StepType.FindImages) + 1}"),
+            "TypeText" => new TypeTextStep($"TypeText_{AutomationStepBases.Count(t => t.Type == StepType.TypeText) + 1}"),
+            "TypeTextMore" => new TypeTextMoreStep($"TypeTextMore_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextMore) + 1}"),
+            "TypeTextFromFile" => new TypeTextFromFileStep($"TypeTextFromFile_{AutomationStepBases.Count(t => t.Type == StepType.TypeTextFromFile) + 1}"),
+            "Popup" => new PopupStep($"Popup_{AutomationStepBases.Count(t => t.Type == StepType.Popup) + 1}"),
+            "AcbelUpload" => new AcbelUploadStep($"AcbelUpload_{AutomationStepBases.Count(t => t.Type == StepType.AcbelUpload) + 1}"),
+            "UserInput" => new UserInputStep($"UserInput_{AutomationStepBases.Count(t => t.Type == StepType.UserInput) + 1}"),
+            "ScanCode" => new ScanCodeStep($"ScanCode_{AutomationStepBases.Count(t => t.Type == StepType.ScanCode) + 1}"),
+            "GetInput" => new GetInputStep($"GetInput_{AutomationStepBases.Count(t => t.Type == StepType.GetInput) + 1}"),
+            "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
+            "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
+            "BurnInConfig" => new BurnInConfigStep(LanguageService.GetLocalizedString("BurnInConfig_StepName")),
+            "FocusWindow" => new FocusWindowStep($"WindowControl_{AutomationStepBases.Count(t => t.Type == StepType.FocusWindow) + 1}"),
+            "MultiThread" => new MultiThreadStartStep($"MultiThread_{AutomationStepBases.Count(t => t.Type == StepType.MultiThread) + 1}"),
+            "MultiThreadEnd" => new MultiThreadEndStep($"MultiThreadEnd_{AutomationStepBases.Count(t => t.Type == StepType.MultiThreadEnd) + 1}"),
+            "SendSignal" => new SendSignalStep($"SendSignal_{AutomationStepBases.Count(t => t.Type == StepType.SendSignal) + 1}"),
+            "ReceiveSignal" => new ReceiveSignalStep($"ReceiveSignal_{AutomationStepBases.Count(t => t.Type == StepType.ReceiveSignal) + 1}"),
+            "Interrupt" => new InterruptStep($"Interrupt_{AutomationStepBases.Count(t => t.Type == StepType.Interrupt) + 1}"),
+            "Empty" => new EmptyStep($"Empty_{AutomationStepBases.Count(t => t.Type == StepType.Empty) + 1}"),
+            _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
+        };
+
+        /// <summary>
+        /// 就地替换步骤：新步骤沿用原步骤的 Uid、位置与跳转，
+        /// 其他步骤对它的引用（跳转/条件/弹窗/区域结束）因此不会失效。
+        /// </summary>
+        public bool ReplaceStep(AutomationStepBase target, AutomationStepBase replacement)
+        {
+            if (target == null || replacement == null || ReferenceEquals(target, replacement)) return false;
+            AutomationStepBases ??= [];
+
+            int index = AutomationStepBases.IndexOf(target);
+            if (index < 0) return false;
+
+            PushListUndoSnapshot();
+
+            replacement.Uid = target.Uid;
+            replacement.Name = target.Name;
+            replacement.Description = target.Description;
+            replacement.IsNeed = target.IsNeed;
+            replacement.EnableLog = target.EnableLog;
+            replacement.TrueGotoUid = target.TrueGotoUid;
+            replacement.FalseGotoUid = target.FalseGotoUid;
+
+            AutomationStepBases[index] = replacement;
+            return true;
+        }
+
+        /// <summary>
+        /// 用 source 顶替 target 的位置（流程图里拖动一个步骤盖到另一个上）：
+        /// source 接管 target 的 Uid、名称与跳转，target 被移除。
+        /// </summary>
+        public bool ReplaceStepAt(AutomationStepBase target, AutomationStepBase source)
+        {
+            if (target == null || source == null || ReferenceEquals(target, source)) return false;
+            AutomationStepBases ??= [];
+
+            int targetIndex = AutomationStepBases.IndexOf(target);
+            int sourceIndex = AutomationStepBases.IndexOf(source);
+            if (targetIndex < 0 || sourceIndex < 0) return false;
+
+            PushListUndoSnapshot();
+
+            var keepUid = target.Uid;
+            var keepTrue = target.TrueGotoUid;
+            var keepFalse = target.FalseGotoUid;
+            var keepName = target.Name;
+            var keepDescription = target.Description;
+            var keepIsNeed = target.IsNeed;
+            var keepEnableLog = target.EnableLog;
+
+            AutomationStepBases.Remove(source);
+            int targetAfterRemove = targetIndex > sourceIndex ? targetIndex - 1 : targetIndex;
+            AutomationStepBases.RemoveAt(targetAfterRemove);
+
+            source.Uid = keepUid;
+            source.TrueGotoUid = keepTrue;
+            source.FalseGotoUid = keepFalse;
+            source.Name = keepName;
+            source.Description = keepDescription;
+            source.IsNeed = keepIsNeed;
+            source.EnableLog = keepEnableLog;
+
+            if (targetAfterRemove > AutomationStepBases.Count) targetAfterRemove = AutomationStepBases.Count;
+            AutomationStepBases.Insert(targetAfterRemove, source);
+            return true;
         }
 
         /// <summary>
@@ -1040,7 +1131,7 @@ namespace ShaoLu.Viewmodels
             return referencingSteps;
         }
 
-        private async Task RemoveStepsAsync(bool confirm)
+        internal async Task RemoveStepsAsync(bool confirm)
         {
             try
             {
@@ -1256,6 +1347,23 @@ namespace ShaoLu.Viewmodels
             InsertSteps(PasteSteps, index, cloneSteps: true);
             PasteStepCommand.RaiseCanExecuteChanged();
         }
+
+        /// <summary>
+        /// 把一组已经克隆好（并重映射过块内跳转）的步骤插到锚点步骤之后，用于流程图粘贴。
+        /// 带撤销快照，和表格里的粘贴保持一致的撤销行为。
+        /// </summary>
+        public void InsertStepsAfter(AutomationStepBase anchor, IEnumerable<AutomationStepBase> steps)
+        {
+            var list = steps?.Where(s => s != null).ToList() ?? new List<AutomationStepBase>();
+            if (list.Count == 0) return;
+
+            AutomationStepBases ??= [];
+            int index = anchor == null ? AutomationStepBases.Count : FindIndexByUid(anchor.Uid) + 1;
+            if (index < 0) index = 0;
+
+            PushListUndoSnapshot();
+            InsertSteps(new ObservableCollection<AutomationStepBase>(list), index, cloneSteps: false);
+        }
         #endregion
 
         #region 步骤执行
@@ -1308,9 +1416,13 @@ namespace ShaoLu.Viewmodels
                 Application.Current.MainWindow.WindowState = WindowState.Minimized;
             foreach (var step in AutomationStepBases)
             {
-                // 重置自引用计数器
+                // 重置自引用计数器与循环跳转保护
                 step.SelfReferenceCount = 0;
+                step.ResetGotoGuards();
                 step.ErrorType = StepErrorType.None;
+                // 弹窗步骤：忘掉上次运行/测试留下的窗口记录
+                if (step is PopupStep popupStep)
+                    popupStep.ActivePopups.RemoveAll(w => w == null || !w.IsVisible);
                 step.LastResult = null;
                 // 多线程：重置已建线程数
                 if (step is MultiThreadStartStep multiThreadStart)
@@ -1652,6 +1764,8 @@ namespace ShaoLu.Viewmodels
                         // 构建执行结果
                         var result = step.LastResult ?? new StepExecutionResult();
                         result.ExecutionTimeMs = sw.Elapsed.TotalMilliseconds;
+                        result.EndElapsedMs = _executionContext.TotalElapsedMs;
+                        result.StartElapsedMs = Math.Max(0, result.EndElapsedMs - result.ExecutionTimeMs);
                         result.IsTrue = step.IsTrue;
                         result.ExecutedAt = DateTime.Now;
                         // 先标记"刚刚执行完成的步骤"：条件里 Step_Triggered 的语义与改动前保持一致
@@ -1832,15 +1946,24 @@ namespace ShaoLu.Viewmodels
                         StopSignal = true;
                         _executionContext.StopTimer();
 
-                        // Q5：流程结束时统一关闭"到达步骤关闭"的弹窗，避免残留窗口永久停留
-                        CloseAllStepReachedPopups();
+                        // 流程结束时按设置收尾：关闭脚本打开的窗口、把主窗口切回前台
+                        if (_stepSettings.CloseWindowsOnFinish)
+                        {
+                            // Q5：流程结束时统一关闭"到达步骤关闭"的弹窗，避免残留窗口永久停留
+                            CloseAllStepReachedPopups();
+                            Views.WindowStatistics.CloseAllOnStop();
+                        }
 
-                        Views.WindowStatistics.CloseAllOnStop();
                         var mainWindow = Application.Current?.MainWindow;
-                        if (mainWindow != null)
+                        if (mainWindow != null && _stepSettings.FocusWindowOnFinish)
                         {
                             mainWindow.WindowState = WindowState.Normal;
                             Application.Current.Dispatcher.Invoke(() => mainWindow.Activate());
+                        }
+                        else if (mainWindow != null && mainWindow.WindowState == WindowState.Minimized)
+                        {
+                            // 不聚焦时也要把最小化还原，否则用户看不到主界面
+                            mainWindow.WindowState = WindowState.Normal;
                         }
                         logger.Info("Auto Finished");
                     }
@@ -1998,6 +2121,8 @@ namespace ShaoLu.Viewmodels
             {
                 IsTrue = false,
                 ExecutionTimeMs = elapsedMs,
+                EndElapsedMs = context.TotalElapsedMs,
+                StartElapsedMs = Math.Max(0, context.TotalElapsedMs - elapsedMs),
                 ExecutedAt = DateTime.Now,
                 ErrorMessage = errorMessage,
             };
@@ -2178,8 +2303,8 @@ namespace ShaoLu.Viewmodels
             {
                 if (s is not PopupStep popupStep) continue;
                 if (!popupStep.CloseMode.HasFlag(PopupCloseMode.StepReached)) continue;
-                var popupWindow = popupStep.ActivePopupWindow;
-                if (popupWindow == null) continue;
+                popupStep.ActivePopups.RemoveAll(w => w == null || !w.IsVisible);
+                if (popupStep.ActivePopups.Count == 0) continue;
 
                 bool reached = popupStep.CloseOnStepUid == currentStepUid;
                 bool targetMissing = !popupStep.CloseOnStepUid.HasValue
@@ -2188,7 +2313,9 @@ namespace ShaoLu.Viewmodels
                 if (!reached && !targetMissing) continue;
 
                 var defaultResult = popupStep.PopupButtons?.DefaultButton?.Value ?? string.Empty;
-                popupWindow.CloseWithResult(defaultResult);
+                foreach (var popupWindow in popupStep.ActivePopups.ToList())
+                    popupWindow?.CloseWithResult(defaultResult);
+                popupStep.ActivePopups.Clear();
                 popupStep.ActivePopupWindow = null;
                 if (targetMissing && !reached)
                     logger.Warn("StepReached 弹窗的目标步骤不存在（可能已被删除），已关闭：{0}", popupStep.Name);
@@ -2206,11 +2333,13 @@ namespace ShaoLu.Viewmodels
             {
                 if (s is not PopupStep popupStep) continue;
                 if (!popupStep.CloseMode.HasFlag(PopupCloseMode.StepReached)) continue;
-                var popupWindow = popupStep.ActivePopupWindow;
-                if (popupWindow == null) continue;
+                popupStep.ActivePopups.RemoveAll(w => w == null || !w.IsVisible);
+                if (popupStep.ActivePopups.Count == 0) continue;
 
                 var defaultResult = popupStep.PopupButtons?.DefaultButton?.Value ?? string.Empty;
-                popupWindow.CloseWithResult(defaultResult);
+                foreach (var popupWindow in popupStep.ActivePopups.ToList())
+                    popupWindow?.CloseWithResult(defaultResult);
+                popupStep.ActivePopups.Clear();
                 popupStep.ActivePopupWindow = null;
             }
         }
@@ -2397,6 +2526,8 @@ namespace ShaoLu.Viewmodels
                         // 子线程不修改 SelectedStep / RunningStepUid，不更新统计计数，不判定烧录
                         var result = step.LastResult ?? new StepExecutionResult();
                         result.ExecutionTimeMs = sw.Elapsed.TotalMilliseconds;
+                        result.EndElapsedMs = context.TotalElapsedMs;
+                        result.StartElapsedMs = Math.Max(0, result.EndElapsedMs - result.ExecutionTimeMs);
                         result.IsTrue = step.IsTrue;
                         result.ExecutedAt = DateTime.Now;
                         // 先标记"刚刚执行完成的步骤"：条件里 Step_Triggered 的语义与主流程一致
@@ -2508,22 +2639,45 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
-        /// 按跳转配置解析下一个执行索引（含自引用上限处理）。
+        /// 按跳转配置解析下一个执行索引（含自引用上限、循环跳转次数/超时保护）。
         /// 返回 -1 表示不跳转（继续下一步）；否则返回目标步骤索引。
         /// </summary>
         private static int ResolveNextIndex(AutomationStepBase step, int currentIndex, IList<AutomationStepBase> steps)
         {
-            Guid? targetUid = step.IsTrue ? step.TrueGotoUid : step.FalseGotoUid;
-            if (!targetUid.HasValue || targetUid.Value == Guid.Empty)
-                return -1;
+            bool isTrue = step.IsTrue;
+            int nextIndex = FindGotoTarget(step, isTrue, steps);
 
-            int nextIndex = FindIndexByUidIn(steps, targetUid.Value);
+            // 本分支没有跳转：顺流走到下一步，视为已经跳出循环，计数与计时重新开始
             if (nextIndex < 0)
             {
-                // 目标步骤不存在（可能被删除），继续下一步
+                step.ResetGotoGuards();
                 step.SelfReferenceCount = 0;
                 return -1;
             }
+
+            // 循环保护：该分支的跳转次数或累计时长超限时不再跳转，改走另一分支，
+            // 另一分支也不跳转就顺序执行下一步（即「跳出该环执行下一步」）
+            if (GotoGuardExceeded(step, isTrue))
+            {
+                step.ResetGotoGuards();
+                step.SelfReferenceCount = 0;
+                bool other = !isTrue;
+                int altIndex = FindGotoTarget(step, other, steps);
+                step.IsTrue = other;
+                if (altIndex < 0 || altIndex == currentIndex)
+                {
+                    step.ErrorMessage = string.Format(
+                        LanguageService.GetLocalizedString("Msg_GotoGuardLimit"),
+                        step.Name,
+                        isTrue ? step.TrueGotoMaxCount : step.FalseGotoMaxCount);
+                    return -1;
+                }
+                CountGoto(step, other);
+                return altIndex;
+            }
+
+            CountGoto(step, isTrue);
+
             if (nextIndex != currentIndex)
             {
                 step.SelfReferenceCount = 0; // 非自引用时重置
@@ -2540,6 +2694,7 @@ namespace ShaoLu.Viewmodels
             step.IsTrue = false;
             step.ErrorMessage = string.Format(LanguageService.GetLocalizedString("Msg_SelfReferenceLimit"), step.Name, step.SelfReferenceLimit);
             step.SelfReferenceCount = 0;
+            step.ResetGotoGuards();
 
             // 按 false 结果重新解析跳转目标；FalseGoto 为空或仍指向自身时不跳转
             if (step.FalseGotoUid.HasValue && step.FalseGotoUid.Value != Guid.Empty)
@@ -2549,6 +2704,47 @@ namespace ShaoLu.Viewmodels
                     return falseIndex;
             }
             return -1;
+        }
+
+        /// <summary>按分支取跳转目标索引，没设置或找不到返回 -1</summary>
+        private static int FindGotoTarget(AutomationStepBase step, bool isTrue, IList<AutomationStepBase> steps)
+        {
+            Guid? targetUid = isTrue ? step.TrueGotoUid : step.FalseGotoUid;
+            if (!targetUid.HasValue || targetUid.Value == Guid.Empty)
+                return -1;
+            return FindIndexByUidIn(steps, targetUid.Value);
+        }
+
+        /// <summary>该分支的跳转次数 / 时长是否已超限</summary>
+        private static bool GotoGuardExceeded(AutomationStepBase step, bool isTrue)
+        {
+            int max = isTrue ? step.TrueGotoMaxCount : step.FalseGotoMaxCount;
+            double timeoutSeconds = isTrue ? step.TrueGotoTimeoutSeconds : step.FalseGotoTimeoutSeconds;
+
+            if (max < 0 && timeoutSeconds <= 0) return false;
+
+            int count = isTrue ? step.TrueGotoCount : step.FalseGotoCount;
+            DateTime startedAt = isTrue ? step.TrueGotoStartedAt : step.FalseGotoStartedAt;
+
+            if (max >= 0 && count >= max) return true;
+            if (timeoutSeconds > 0 && startedAt != default
+                && (DateTime.Now - startedAt).TotalSeconds >= timeoutSeconds) return true;
+            return false;
+        }
+
+        /// <summary>累加该分支的跳转次数（第一次跳转时开始计时）</summary>
+        private static void CountGoto(AutomationStepBase step, bool isTrue)
+        {
+            if (isTrue)
+            {
+                step.TrueGotoCount++;
+                if (step.TrueGotoStartedAt == default) step.TrueGotoStartedAt = DateTime.Now;
+            }
+            else
+            {
+                step.FalseGotoCount++;
+                if (step.FalseGotoStartedAt == default) step.FalseGotoStartedAt = DateTime.Now;
+            }
         }
 
         private static int FindIndexByUidIn(IList<AutomationStepBase> steps, Guid uid)

@@ -202,9 +202,70 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private int _selfReferenceLimit = 10;
         public int SelfReferenceLimit { get => _selfReferenceLimit; set => SetProperty(ref _selfReferenceLimit, value); }
 
+        /// <summary>
+        /// 流程图里是否被「锚定」（钉住）：自动整理时该节点保持原位，只能手动拖动。
+        /// 视图层状态，不进工程文件。
+        /// </summary>
+        [JsonIgnore]
+        public bool FlowPinned
+        {
+            get => Services.FlowLayoutStore.IsPinned(Uid);
+            set
+            {
+                if (Services.FlowLayoutStore.IsPinned(Uid) == value) return;
+                Services.FlowLayoutStore.SetPinned(Uid, value);
+                OnPropertyChanged();
+            }
+        }
+
         // 运行时自引用计数器（不序列化）
         [JsonIgnore]
         public int SelfReferenceCount { get; set; }
+
+        #region 循环跳转保护（跳出循环的次数 / 时间限制）
+
+        private int _trueGotoMaxCount = -1;
+        /// <summary>真分支跳转次数上限（-1 = 不限制，0 = 不跳转）</summary>
+        public int TrueGotoMaxCount { get => _trueGotoMaxCount; set => SetProperty(ref _trueGotoMaxCount, value); }
+
+        private int _falseGotoMaxCount = -1;
+        /// <summary>假分支跳转次数上限（-1 = 不限制，0 = 不跳转）</summary>
+        public int FalseGotoMaxCount { get => _falseGotoMaxCount; set => SetProperty(ref _falseGotoMaxCount, value); }
+
+        private double _trueGotoTimeoutSeconds;
+        /// <summary>真分支跳转超时（秒，0 = 不限制）：从该分支第一次跳转开始计时，超时后不再跳转</summary>
+        public double TrueGotoTimeoutSeconds { get => _trueGotoTimeoutSeconds; set => SetProperty(ref _trueGotoTimeoutSeconds, value); }
+
+        private double _falseGotoTimeoutSeconds;
+        /// <summary>假分支跳转超时（秒，0 = 不限制）</summary>
+        public double FalseGotoTimeoutSeconds { get => _falseGotoTimeoutSeconds; set => SetProperty(ref _falseGotoTimeoutSeconds, value); }
+
+        /// <summary>运行时：真分支已跳转次数（不序列化）</summary>
+        [JsonIgnore]
+        public int TrueGotoCount { get; set; }
+
+        /// <summary>运行时：假分支已跳转次数（不序列化）</summary>
+        [JsonIgnore]
+        public int FalseGotoCount { get; set; }
+
+        /// <summary>运行时：真分支第一次跳转的时间（用于超时计时，不序列化）</summary>
+        [JsonIgnore]
+        public DateTime TrueGotoStartedAt { get; set; }
+
+        /// <summary>运行时：假分支第一次跳转的时间（不序列化）</summary>
+        [JsonIgnore]
+        public DateTime FalseGotoStartedAt { get; set; }
+
+        /// <summary>清空真/假分支的跳转计数与计时（跳出循环后重新计数）</summary>
+        public void ResetGotoGuards()
+        {
+            TrueGotoCount = 0;
+            FalseGotoCount = 0;
+            TrueGotoStartedAt = default;
+            FalseGotoStartedAt = default;
+        }
+
+        #endregion
 
         #region 条件判断
 
@@ -655,7 +716,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
             };
         }
         #endregion
@@ -679,6 +740,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = res;
             IsError = false;
             ErrorType = StepErrorType.None;
+
+            // 记下这次实际键入的文本，供其他步骤/结果判断引用
+            LastResult ??= new StepExecutionResult();
+            LastResult.TypedText = text;
 
             return res;
         }
@@ -786,7 +851,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
             };
         }
         #endregion
@@ -831,6 +896,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IsTrue = res;
             IsError = false;
             ErrorType = StepErrorType.None;
+
+            // 记下这次实际键入的文本，供其他步骤/结果判断引用
+            LastResult ??= new StepExecutionResult();
+            LastResult.TypedText = TextToType;
+
             return res;
         }
     }
@@ -915,7 +985,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 IsNeed = IsNeed,
                 Index = Index,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
             };
         }
         #endregion
@@ -1018,6 +1088,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
             // 输入成功后才推进索引：输入失败不消耗一条内容
             if (res && Contents != null && Contents.Count > 0)
                 Index++;
+
+            // 记下这次实际键入的文本，供其他步骤/结果判断引用
+            LastResult ??= new StepExecutionResult();
+            LastResult.TypedText = TextToType;
 
             return res;
         }
@@ -1205,6 +1279,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
         [JsonIgnore]
         internal WindowAsyncPopup ActivePopupWindow { get; set; }
 
+        /// <summary>运行时引用：本步骤当前还开着的所有弹窗（同时存在个数大于 1 时会有多个）</summary>
+        [JsonIgnore]
+        internal List<WindowAsyncPopup> ActivePopups { get; } = new List<WindowAsyncPopup>();
+
+        private int _maxWindows = 1;
+        /// <summary>
+        /// 同时存在的窗口个数（默认 1）。已经开着的窗口达到该数量时，本次执行不再重复弹出。
+        /// </summary>
+        public int MaxWindows
+        {
+            get => _maxWindows;
+            set => SetProperty(ref _maxWindows, Math.Max(1, Math.Min(20, value)));
+        }
+
         #region 命令
 
         [JsonIgnore]
@@ -1237,6 +1325,12 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private RelayCommand richTextEditCommand;
         [JsonIgnore]
         public RelayCommand RichTextEditCommand => richTextEditCommand ??= new RelayCommand(RichTextEdit);
+
+        [JsonIgnore]
+        private RelayCommand testPopupCommand;
+        /// <summary>测试弹窗效果（按当前配置弹一次，不影响运行）</summary>
+        [JsonIgnore]
+        public RelayCommand TestPopupCommand => testPopupCommand ??= new RelayCommand(TestPopup);
 
         #endregion
 
@@ -1272,7 +1366,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 Title = Title,
                 PopupText = PopupText,
                 PopupFont = PopupFont?.Clone(),
@@ -1287,22 +1381,73 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 WindowY = WindowY,
                 WindowOpacity = WindowOpacity,
                 BackgroundColor = BackgroundColor,
+                MaxWindows = MaxWindows,
                 WaitTime = WaitTime,
                 IsNeed = IsNeed,
             };
         }
 
+        /// <summary>按当前弹窗类型取系统图标</summary>
+        private MessageBoxImage IconTypeOf() => PopupType switch
+        {
+            "None" => MessageBoxImage.None,
+            "Information" => MessageBoxImage.Information,
+            "Warning" => MessageBoxImage.Warning,
+            "Error" => MessageBoxImage.Error,
+            "Question" => MessageBoxImage.Question,
+            _ => MessageBoxImage.Information
+        };
+
+        /// <summary>按当前配置弹出一个窗口，并登记到活跃窗口列表</summary>
+        private (Window Window, Task<string> Task) ShowPopupWindow(MessageBoxImage iconType)
+        {
+            double popupX = ScreenCoordinates.ToPixelX(WindowX, WindowPositionRelative);
+            double popupY = ScreenCoordinates.ToPixelY(WindowY, WindowPositionRelative);
+            System.Windows.Point? position = (popupX >= 0 && popupY >= 0) ? new System.Windows.Point(popupX, popupY) : null;
+
+            var result = WindowAsyncPopup.Show(PopupText, Title, PopupFont, PopupButtons, iconType,
+                position, WindowOpacity / 100.0, BackgroundColor, PopupWindowStyle);
+
+            if (result.Window is WindowAsyncPopup created)
+            {
+                ActivePopups.Add(created);
+                created.Closed += (s, e) => ActivePopups.Remove(created);
+                ActivePopupWindow = created;
+            }
+
+            return result;
+        }
+
+        /// <summary>测试：按当前配置直接弹一次（不参与运行结果判定，可随便点按钮关掉）</summary>
+        private void TestPopup()
+        {
+            try
+            {
+                var (window, _) = ShowPopupWindow(IconTypeOf());
+                window?.Activate();
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn(ex, "Test popup failed: {0}", ex.Message);
+            }
+        }
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken)
         {
-            var iconType = PopupType switch
+            // 清掉已经关掉的窗口；已经开着的达到「同时存在个数」上限时不再重复弹出
+            ActivePopups.RemoveAll(w => w == null || !w.IsVisible);
+            if (ActivePopups.Count >= MaxWindows)
             {
-                "None" => MessageBoxImage.None,
-                "Information" => MessageBoxImage.Information,
-                "Warning" => MessageBoxImage.Warning,
-                "Error" => MessageBoxImage.Error,
-                "Question" => MessageBoxImage.Question,
-                _ => MessageBoxImage.Information
-            };
+                IsTrue = true;
+                LastResult = new StepExecutionResult
+                {
+                    IsTrue = true,
+                    ExecutedAt = DateTime.Now,
+                };
+                return true;
+            }
+
+            var iconType = IconTypeOf();
 
             // 关闭方式可组合：未勾选任何方式时按点击按钮处理，避免无限等待
             var closeMode = CloseMode;
@@ -1314,13 +1459,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             string defaultResult = PopupButtons.DefaultButton?.Value ?? string.Empty;
 
             // 1. 启动异步弹窗任务（应用自定义位置、背景颜色、背景不透明度与窗口样式）
-            double popupX = ScreenCoordinates.ToPixelX(WindowX, WindowPositionRelative);
-            double popupY = ScreenCoordinates.ToPixelY(WindowY, WindowPositionRelative);
-            System.Windows.Point? position = (popupX >= 0 && popupY >= 0) ? new System.Windows.Point(popupX, popupY) : null;
-            var (popupWindow, popupTask) = WindowAsyncPopup.Show(PopupText, Title, PopupFont, PopupButtons, iconType, position, WindowOpacity / 100.0, BackgroundColor, PopupWindowStyle);
-
-            // 保存活跃窗口引用（供 StepReached 模式使用）
-            ActivePopupWindow = popupWindow as WindowAsyncPopup;
+            var (popupWindow, popupTask) = ShowPopupWindow(iconType);
 
             // StepReached 模式：不等待窗口关闭，直接继续执行；到达目标步骤时由执行引擎关闭弹窗。
             // 若同时勾选了超时，则后台计时到点后自动关闭；停止运行时也关闭。
@@ -1552,7 +1691,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
             };
         }
 

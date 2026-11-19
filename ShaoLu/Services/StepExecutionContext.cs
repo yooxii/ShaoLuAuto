@@ -332,6 +332,10 @@ namespace ShaoLu.Services
                     return currentResult?.Similarity ?? -1;
                 case ConditionVariable.Self_ExecutionTimeMs:
                     return currentResult?.ExecutionTimeMs ?? 0;
+                case ConditionVariable.Self_StartTimeMs:
+                    return currentResult?.StartElapsedMs ?? 0;
+                case ConditionVariable.Self_EndTimeMs:
+                    return currentResult?.EndElapsedMs ?? 0;
                 case ConditionVariable.Self_ClickX:
                     return currentResult?.ClickPosition?.X ?? 0;
                 case ConditionVariable.Self_ClickY:
@@ -342,6 +346,8 @@ namespace ShaoLu.Services
                     return currentResult?.PopupResult ?? string.Empty;
                 case ConditionVariable.Self_SignalValue:
                     return currentResult?.SignalValue ?? string.Empty;
+                case ConditionVariable.Self_TypedText:
+                    return currentResult?.TypedText ?? string.Empty;
 
                 // 引用其他步骤（通过 Uid 查找）
                 case ConditionVariable.Step_IsTrue:
@@ -350,6 +356,10 @@ namespace ShaoLu.Services
                     return GetResultByUid(stepUid)?.Similarity ?? -1;
                 case ConditionVariable.Step_ExecutionTimeMs:
                     return GetResultByUid(stepUid)?.ExecutionTimeMs ?? 0;
+                case ConditionVariable.Step_StartTimeMs:
+                    return GetResultByUid(stepUid)?.StartElapsedMs ?? 0;
+                case ConditionVariable.Step_EndTimeMs:
+                    return GetResultByUid(stepUid)?.EndElapsedMs ?? 0;
                 case ConditionVariable.Step_ClickX:
                     return GetResultByUid(stepUid)?.ClickPosition?.X ?? 0;
                 case ConditionVariable.Step_ClickY:
@@ -360,6 +370,8 @@ namespace ShaoLu.Services
                     return GetResultByUid(stepUid)?.PopupResult ?? string.Empty;
                 case ConditionVariable.Step_SignalValue:
                     return GetResultByUid(stepUid)?.SignalValue ?? string.Empty;
+                case ConditionVariable.Step_TypedText:
+                    return GetResultByUid(stepUid)?.TypedText ?? string.Empty;
                 case ConditionVariable.Step_UserInputField:
                     return stepUid.HasValue
                         && TryGetUserInput(stepUid.Value, fieldName, out string fieldValue)

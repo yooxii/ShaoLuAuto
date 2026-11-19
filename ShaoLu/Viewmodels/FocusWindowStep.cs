@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
 using ShaoLu.Utils;
 using System;
@@ -100,7 +100,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };

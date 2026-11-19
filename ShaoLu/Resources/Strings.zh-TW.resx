@@ -2333,4 +2333,274 @@
   <data name="AcbelRefRunNow" xml:space="preserve">
     <value>執行時日期/時間</value>
   </data>
+  <data name="FlowChart" xml:space="preserve">
+    <value>流程圖</value>
+  </data>
+  <data name="FlowChart_ToolTip" xml:space="preserve">
+    <value>在標準表格與流程圖之間切換：流程圖中可拖動節點擺放位置，從節點右側的真/假圓點拖到目標步驟即可建立跳轉。</value>
+  </data>
+  <data name="FlowChart_AutoLayout" xml:space="preserve">
+    <value>自動整理</value>
+  </data>
+  <data name="FlowChart_FitToWindow" xml:space="preserve">
+    <value>適應視窗</value>
+  </data>
+  <data name="FlowChart_ClearGoto" xml:space="preserve">
+    <value>清除本步跳轉</value>
+  </data>
+  <data name="FlowChart_Hint" xml:space="preserve">
+    <value>拖動節點可自由擺放；從節點右側的「T / F」圓點拖到目標步驟可建立真/假跳轉，拖到空白處清除該跳轉，拖到源節點中心的「↺」可連回自身。雙擊名稱或備註可直接編輯，節點右上角的「記」切換是否記錄執行日誌。連線只表示執行順序與跳轉，不改變步驟在清單中的先後。</value>
+  </data>
+  <data name="FlowChart_Empty" xml:space="preserve">
+    <value>目前工程尚無步驟</value>
+  </data>
+  <data name="FlowChart_TruePort_ToolTip" xml:space="preserve">
+    <value>結果為「真」時跳轉：拖到目標步驟</value>
+  </data>
+  <data name="FlowChart_FalsePort_ToolTip" xml:space="preserve">
+    <value>結果為「假」時跳轉：拖到目標步驟</value>
+  </data>
+  <data name="FlowChart_SkipBadge" xml:space="preserve">
+    <value>已跳過</value>
+  </data>
+  <data name="FlowChart_Delete_ToolTip" xml:space="preserve">
+    <value>刪除選取的步驟</value>
+  </data>
+  <data name="FlowChart_EdgeTrue" xml:space="preserve">
+    <value>真</value>
+  </data>
+  <data name="FlowChart_EdgeFalse" xml:space="preserve">
+    <value>假</value>
+  </data>
+  <data name="FlowChart_EdgeBoth" xml:space="preserve">
+    <value>真/假</value>
+  </data>
+  <data name="FlowStart" xml:space="preserve">
+    <value>開始</value>
+  </data>
+  <data name="FlowEnd" xml:space="preserve">
+    <value>結束</value>
+  </data>
+  <data name="FlowChart_LogToggle_ToolTip" xml:space="preserve">
+    <value>記錄執行日誌（點擊切換）</value>
+  </data>
+  <data name="FlowChart_SelfAnchor_ToolTip" xml:space="preserve">
+    <value>拖到這裡連回本步驟（自引用）</value>
+  </data>
+  <data name="StepGroup_Image" xml:space="preserve">
+    <value>影像辨識</value>
+  </data>
+  <data name="StepGroup_Input" xml:space="preserve">
+    <value>輸入操作</value>
+  </data>
+  <data name="StepGroup_Collect" xml:space="preserve">
+    <value>採集統計</value>
+  </data>
+  <data name="StepGroup_Flow" xml:space="preserve">
+    <value>流程控制</value>
+  </data>
+  <data name="StepGroup_Interaction" xml:space="preserve">
+    <value>互動提示</value>
+  </data>
+  <data name="FlowChart_ReplaceWith" xml:space="preserve">
+    <value>替換為…</value>
+  </data>
+  <data name="Settings_FlowChart" xml:space="preserve">
+    <value>流程圖</value>
+  </data>
+  <data name="Settings_CurvedEdges" xml:space="preserve">
+    <value>連線使用曲線（取消勾選為折線）</value>
+  </data>
+  <data name="FocusWindowOnFinish" xml:space="preserve">
+    <value>執行結束後自動聚焦本程式視窗</value>
+  </data>
+  <data name="CloseWindowsOnFinish" xml:space="preserve">
+    <value>執行結束後關閉所有開啟的視窗</value>
+  </data>
+  <data name="Settings_EdgeStyle" xml:space="preserve">
+    <value>連線方式</value>
+  </data>
+  <data name="FlowEdgeStyle_Polyline" xml:space="preserve">
+    <value>折線</value>
+  </data>
+  <data name="FlowEdgeStyle_Curve" xml:space="preserve">
+    <value>曲線</value>
+  </data>
+  <data name="FlowSnapToGrid" xml:space="preserve">
+    <value>節點網格吸附</value>
+  </data>
+  <data name="FlowSpacing" xml:space="preserve">
+    <value>自動整理節點間隔</value>
+  </data>
+  <data name="FlowSpacingAuto" xml:space="preserve">
+    <value>自適應</value>
+  </data>
+  <data name="FlowSpacingCustom" xml:space="preserve">
+    <value>自定義</value>
+  </data>
+  <data name="FlowBackground" xml:space="preserve">
+    <value>背景網格</value>
+  </data>
+  <data name="FlowBgDots" xml:space="preserve">
+    <value>點陣</value>
+  </data>
+  <data name="FlowBgLines" xml:space="preserve">
+    <value>網格線</value>
+  </data>
+  <data name="FlowBgDashed" xml:space="preserve">
+    <value>虛線</value>
+  </data>
+  <data name="FlowGridSize" xml:space="preserve">
+    <value>網格大小</value>
+  </data>
+  <data name="FlowGridSmall" xml:space="preserve">
+    <value>小格</value>
+  </data>
+  <data name="FlowGridLarge" xml:space="preserve">
+    <value>大格</value>
+  </data>
+  <data name="ShortcutList" xml:space="preserve">
+    <value>快速鍵一覽</value>
+  </data>
+  <data name="S" xml:space="preserve">
+    <value>e</value>
+  </data>
+  <data name="全" xml:space="preserve">
+    <value>選</value>
+  </data>
+  <data name="GotoGuard_Count" xml:space="preserve">
+    <value>次數上限</value>
+  </data>
+  <data name="GotoGuard_Count_Hint" xml:space="preserve">
+    <value>-1=不限制，0=不跳轉；超過後改走另一分支</value>
+  </data>
+  <data name="GotoGuard_Timeout" xml:space="preserve">
+    <value>逾時(秒)</value>
+  </data>
+  <data name="GotoGuard_Timeout_Hint" xml:space="preserve">
+    <value>0=不限制；從該分支第一次跳轉開始計時</value>
+  </data>
+  <data name="Msg_GotoGuardLimit" xml:space="preserve">
+    <value>步驟「{0}」跳轉次數已達上限（{1}），跳出迴圈執行下一步</value>
+  </data>
+  <data name="Popup_Test" xml:space="preserve">
+    <value>測試</value>
+  </data>
+  <data name="Popup_Test_ToolTip" xml:space="preserve">
+    <value>按目前設定彈一次看看效果（不影響執行結果）</value>
+  </data>
+  <data name="Popup_MaxWindows" xml:space="preserve">
+    <value>同時存在個數</value>
+  </data>
+  <data name="Popup_MaxWindows_Hint" xml:space="preserve">
+    <value>已經開著這麼多個視窗時不再重複彈出</value>
+  </data>
+  <data name="Condition_Source_Tooltip" xml:space="preserve">
+    <value>先選取值來源：常數 / 本步驟 / 引用步驟</value>
+  </data>
+  <data name="Condition_Field_Tooltip" xml:space="preserve">
+    <value>所選來源裡可以取用的欄位</value>
+  </data>
+  <data name="Condition_Constant_Tooltip" xml:space="preserve">
+    <value>常數的取值</value>
+  </data>
+  <data name="Condition_ConstantTrue" xml:space="preserve">
+    <value>真</value>
+  </data>
+  <data name="Condition_ConstantFalse" xml:space="preserve">
+    <value>假</value>
+  </data>
+  <data name="CondEnum_Src_Constant" xml:space="preserve">
+    <value>常數</value>
+  </data>
+  <data name="CondEnum_Src_Self" xml:space="preserve">
+    <value>本步驟</value>
+  </data>
+  <data name="CondEnum_Src_Step" xml:space="preserve">
+    <value>引用步驟</value>
+  </data>
+  <data name="CondEnum_Field_Result" xml:space="preserve">
+    <value>執行結果</value>
+  </data>
+  <data name="CondEnum_Field_ExecutionTimeMs" xml:space="preserve">
+    <value>執行耗時(ms)</value>
+  </data>
+  <data name="CondEnum_Field_StartTimeMs" xml:space="preserve">
+    <value>開始時間</value>
+  </data>
+  <data name="CondEnum_Field_EndTimeMs" xml:space="preserve">
+    <value>結束時間</value>
+  </data>
+  <data name="CondEnum_Field_Similarity" xml:space="preserve">
+    <value>相似度</value>
+  </data>
+  <data name="CondEnum_Field_ClickX" xml:space="preserve">
+    <value>點擊X座標</value>
+  </data>
+  <data name="CondEnum_Field_ClickY" xml:space="preserve">
+    <value>點擊Y座標</value>
+  </data>
+  <data name="CondEnum_Field_Text" xml:space="preserve">
+    <value>辨識文字</value>
+  </data>
+  <data name="CondEnum_Field_PopupResult" xml:space="preserve">
+    <value>彈窗選擇結果</value>
+  </data>
+  <data name="CondEnum_Field_SignalValue" xml:space="preserve">
+    <value>訊號內容</value>
+  </data>
+  <data name="CondEnum_Field_Triggered" xml:space="preserve">
+    <value>剛執行過</value>
+  </data>
+  <data name="CondEnum_Field_UserInputField" xml:space="preserve">
+    <value>使用者輸入欄位</value>
+  </data>
+  <data name="CondEnum_Field_TypedText" xml:space="preserve">
+    <value>鍵入的文字</value>
+  </data>
+  <data name="CondEnum_Var_Self_TypedText" xml:space="preserve">
+    <value>本步驟 → 鍵入的文字</value>
+  </data>
+  <data name="CondEnum_Var_Step_TypedText" xml:space="preserve">
+    <value>引用步驟 → 鍵入的文字</value>
+  </data>
+  <data name="FlowChart_DragEnd_ToolTip" xml:space="preserve">
+    <value>按住拖曳可改接到其他步驟；拖到空白處取消這條跳轉</value>
+  </data>
+  <data name="ViewMenu" xml:space="preserve">
+    <value>檢視</value>
+  </data>
+  <data name="ViewTable" xml:space="preserve">
+    <value>表格</value>
+  </data>
+  <data name="FlowReference" xml:space="preserve">
+    <value>引用</value>
+  </data>
+  <data name="Flow_EdgeFilter" xml:space="preserve">
+    <value>連線顯示</value>
+  </data>
+  <data name="Flow_EdgeFilter_ToolTip" xml:space="preserve">
+    <value>勾選=該類型連線全部顯示；不勾=只顯示與選中步驟相連的（順序連線始終顯示）</value>
+  </data>
+  <data name="FlowReference_Port_ToolTip" xml:space="preserve">
+    <value>拖到另一個步驟上表示本步驟引用它（放開後彈窗設定引用方式）</value>
+  </data>
+  <data name="FlowReference_DragEnd_ToolTip" xml:space="preserve">
+    <value>按住箭頭拖曳可改引用其他步驟</value>
+  </data>
+  <data name="FlowPortSpacing" xml:space="preserve">
+    <value>連線端點間隔</value>
+  </data>
+  <data name="FlowChart_Pin_ToolTip" xml:space="preserve">
+    <value>錨定：自動整理時這個節點不動，只能手動拖曳</value>
+  </data>
+  <data name="Flow_Anchor_ToolTip" xml:space="preserve">
+    <value>錨點：拖曳可改變連線走向，右鍵刪除</value>
+  </data>
+  <data name="FlowChart_DragStart_ToolTip" xml:space="preserve">
+    <value>按住可沿本節點邊框移動起點</value>
+  </data>
+  <data name="FlowSnapAnchors" xml:space="preserve">
+    <value>錨點吸附</value>
+  </data>
 </root>

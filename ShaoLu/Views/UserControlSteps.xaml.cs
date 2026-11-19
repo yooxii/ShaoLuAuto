@@ -150,25 +150,56 @@ namespace ShaoLu.Views
             UpdateLayout();
         }
 
+        /// <summary>
+        /// 视图切换：标准表格 ↔ 流程图。两者共用 StepsViewModel 里的同一份步骤数据，
+        /// 流程图里拖动节点 / 拖 T、F 圆点连线都直接改这份数据。
+        /// </summary>
+        private void FlowViewToggle_Checked(object sender, RoutedEventArgs e) => ApplyFlowView(true);
+
+        private void FlowViewToggle_Unchecked(object sender, RoutedEventArgs e) => ApplyFlowView(false);
+
+        /// <summary>工具栏「表格」按钮：切回常规表格编辑</summary>
+        private void TableViewToggle_Checked(object sender, RoutedEventArgs e) => ApplyFlowView(false);
+
+        /// <summary>当前是否处于流程图视图</summary>
+        public bool IsFlowViewVisible => FlowView != null && FlowView.Visibility == Visibility.Visible;
+
+        /// <summary>保存工程前把流程图的节点位置落到布局表里（没进过流程图就跳过）</summary>
+        public void CommitFlowLayout() => FlowView?.CommitLayoutToStore();
+
+        /// <summary>外部切换表格 / 流程图（两个工具栏按钮互斥）</summary>
+        public void ShowFlowView(bool showFlow) => ApplyFlowView(showFlow);
+
+        private bool _syncingViewToggle;
+
+        private void ApplyFlowView(bool showFlow)
+        {
+            if (StepsBox != null)
+                StepsBox.Visibility = showFlow ? Visibility.Collapsed : Visibility.Visible;
+            if (FlowView != null)
+                FlowView.Visibility = showFlow ? Visibility.Visible : Visibility.Collapsed;
+
+            // 两个按钮互斥：同步勾选状态（同步过程里不再递归处理）
+            if (_syncingViewToggle) return;
+            _syncingViewToggle = true;
+            try
+            {
+                if (FlowViewToggle != null) FlowViewToggle.IsChecked = showFlow;
+                if (TableViewToggle != null) TableViewToggle.IsChecked = !showFlow;
+            }
+            finally
+            {
+                _syncingViewToggle = false;
+            }
+
+            if (showFlow)
+                FlowView?.RefreshView();
+        }
+
         private void SplitButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             var btn = (SplitButton)sender;
             if (btn.CommandParameter is string type)
-            {
-                stepsViewModel.AddStepCommand.Execute(type);
-            }
-        }
-
-        private void MenuItemAddOtherStep_Click(object sender, RoutedEventArgs e)
-        {
-            var menuItem = (MenuItem)sender;
-            // 更新「发出这条菜单的 SplitButton」的 CommandParameter，
-            // 这样菜单选择后主按钮显示什么、点下去就添加什么（此前固定写死 AddOCRStep，
-            // 导致「多线程」这类其他 SplitButton 选完仍是第一个菜单项）
-            var owner = ResolveOwnerSplitButton(menuItem);
-            if (owner != null)
-                owner.CommandParameter = menuItem.CommandParameter;
-            if (menuItem.CommandParameter is string type)
             {
                 stepsViewModel.AddStepCommand.Execute(type);
             }
@@ -207,8 +238,14 @@ namespace ShaoLu.Views
             return _lastFocusInStepDetails;
         }
 
+        /// <summary>
+        /// 撤销路由：流程图视图下有流程图自己的细粒度历史（连线/标题/位置，且与步骤增删共用一条时间线），
+        /// 走它；否则按焦点区分「步骤列表撤销」和「步骤内撤销」。
+        /// </summary>
         public bool CanRouteUndo()
         {
+            if (IsFlowViewVisible)
+                return FlowView.CanUndoFromRouter();
             return IsFocusInStepDetails()
                 ? stepsViewModel.UndoStepCommand.CanExecute(null)
                 : stepsViewModel.UndoCommand.CanExecute(null);
@@ -216,23 +253,35 @@ namespace ShaoLu.Views
 
         public bool CanRouteRedo()
         {
+            if (IsFlowViewVisible)
+                return FlowView.CanRedoFromRouter();
             return IsFocusInStepDetails()
                 ? stepsViewModel.RedoStepCommand.CanExecute(null)
                 : stepsViewModel.RedoCommand.CanExecute(null);
         }
 
-        /// <summary>按当前焦点区域执行撤销：步骤列表→列表撤销；步骤详情→步骤内撤销</summary>
+        /// <summary>按当前视图/焦点区域执行撤销</summary>
         public void RouteUndo()
         {
+            if (IsFlowViewVisible)
+            {
+                FlowView.UndoFromRouter();
+                return;
+            }
             if (IsFocusInStepDetails())
                 stepsViewModel.UndoStepCommand.Execute(null);
             else
                 stepsViewModel.UndoCommand.Execute(null);
         }
 
-        /// <summary>按当前焦点区域执行恢复：步骤列表→列表恢复；步骤详情→步骤内恢复</summary>
+        /// <summary>按当前视图/焦点区域执行恢复</summary>
         public void RouteRedo()
         {
+            if (IsFlowViewVisible)
+            {
+                FlowView.RedoFromRouter();
+                return;
+            }
             if (IsFocusInStepDetails())
                 stepsViewModel.RedoStepCommand.Execute(null);
             else

@@ -16,6 +16,10 @@ namespace ShaoLu.Converters
         {
             if (value is ConditionMode mode)
                 return ConvertConditionMode(mode);
+            if (value is ConditionSource source)
+                return ConvertConditionSource(source);
+            if (value is ConditionField field)
+                return ConvertConditionField(field);
             if (value is ConditionVariable variable)
                 return ConvertConditionVariable(variable);
             if (value is ConditionOperator op)
@@ -63,6 +67,32 @@ namespace ShaoLu.Converters
             _ => mode.ToString(),
         };
 
+        public static string ConvertConditionSource(ConditionSource s) => s switch
+        {
+            ConditionSource.Constant => LanguageService.GetLocalizedString("CondEnum_Src_Constant", "常量"),
+            ConditionSource.Self => LanguageService.GetLocalizedString("CondEnum_Src_Self", "本步骤"),
+            ConditionSource.Step => LanguageService.GetLocalizedString("CondEnum_Src_Step", "引用步骤"),
+            _ => s.ToString(),
+        };
+
+        public static string ConvertConditionField(ConditionField f) => f switch
+        {
+            ConditionField.Result => LanguageService.GetLocalizedString("CondEnum_Field_Result", "执行结果"),
+            ConditionField.ExecutionTimeMs => LanguageService.GetLocalizedString("CondEnum_Field_ExecutionTimeMs", "执行耗时(ms)"),
+            ConditionField.StartTimeMs => LanguageService.GetLocalizedString("CondEnum_Field_StartTimeMs", "开始时间"),
+            ConditionField.EndTimeMs => LanguageService.GetLocalizedString("CondEnum_Field_EndTimeMs", "结束时间"),
+            ConditionField.Similarity => LanguageService.GetLocalizedString("CondEnum_Field_Similarity", "相似度"),
+            ConditionField.ClickX => LanguageService.GetLocalizedString("CondEnum_Field_ClickX", "点击X坐标"),
+            ConditionField.ClickY => LanguageService.GetLocalizedString("CondEnum_Field_ClickY", "点击Y坐标"),
+            ConditionField.Text => LanguageService.GetLocalizedString("CondEnum_Field_Text", "识别文本"),
+            ConditionField.TypedText => LanguageService.GetLocalizedString("CondEnum_Field_TypedText", "键入的文本"),
+            ConditionField.PopupResult => LanguageService.GetLocalizedString("CondEnum_Field_PopupResult", "弹窗选择结果"),
+            ConditionField.SignalValue => LanguageService.GetLocalizedString("CondEnum_Field_SignalValue", "信号内容"),
+            ConditionField.Triggered => LanguageService.GetLocalizedString("CondEnum_Field_Triggered", "刚执行过"),
+            ConditionField.UserInputField => LanguageService.GetLocalizedString("CondEnum_Field_UserInputField", "用户输入字段"),
+            _ => f.ToString(),
+        };
+
         public static string ConvertConditionVariable(ConditionVariable v) => v switch
         {
             ConditionVariable.ConstantTrue => LanguageService.GetLocalizedString("CondEnum_Var_ConstantTrue", "常量：真"),
@@ -70,11 +100,17 @@ namespace ShaoLu.Converters
             ConditionVariable.Self_IsTrue => LanguageService.GetLocalizedString("CondEnum_Var_Self_IsTrue", "本步骤 → 执行结果"),
             ConditionVariable.Self_Similarity => LanguageService.GetLocalizedString("CondEnum_Var_Self_Similarity", "本步骤 → 相似度"),
             ConditionVariable.Self_ExecutionTimeMs => LanguageService.GetLocalizedString("CondEnum_Var_Self_ExecutionTimeMs", "本步骤 → 执行耗时(ms)"),
+            ConditionVariable.Self_StartTimeMs => LanguageService.GetLocalizedString("CondEnum_Var_Self_StartTimeMs", "本步骤 → 开始时间"),
+            ConditionVariable.Self_EndTimeMs => LanguageService.GetLocalizedString("CondEnum_Var_Self_EndTimeMs", "本步骤 → 结束时间"),
+            ConditionVariable.Step_StartTimeMs => LanguageService.GetLocalizedString("CondEnum_Var_Step_StartTimeMs", "引用步骤 → 开始时间"),
+            ConditionVariable.Step_EndTimeMs => LanguageService.GetLocalizedString("CondEnum_Var_Step_EndTimeMs", "引用步骤 → 结束时间"),
             ConditionVariable.Self_ClickX => LanguageService.GetLocalizedString("CondEnum_Var_Self_ClickX", "本步骤 → 点击X坐标"),
             ConditionVariable.Self_ClickY => LanguageService.GetLocalizedString("CondEnum_Var_Self_ClickY", "本步骤 → 点击Y坐标"),
             ConditionVariable.Self_OCRText => LanguageService.GetLocalizedString("ConditionVariable_Self_Text"),
             ConditionVariable.Self_PopupResult => LanguageService.GetLocalizedString("CondEnum_Var_Self_PopupResult", "本步骤 → 弹窗选择结果"),
             ConditionVariable.Self_SignalValue => LanguageService.GetLocalizedString("CondEnum_Var_Self_SignalValue", "本步骤 → 信号内容"),
+            ConditionVariable.Self_TypedText => LanguageService.GetLocalizedString("CondEnum_Var_Self_TypedText", "本步骤 → 键入的文本"),
+            ConditionVariable.Step_TypedText => LanguageService.GetLocalizedString("CondEnum_Var_Step_TypedText", "引用步骤 → 键入的文本"),
             ConditionVariable.Step_IsTrue => LanguageService.GetLocalizedString("CondEnum_Var_Step_IsTrue", "引用步骤 → 执行结果"),
             ConditionVariable.Step_Similarity => LanguageService.GetLocalizedString("CondEnum_Var_Step_Similarity", "引用步骤 → 相似度"),
             ConditionVariable.Step_ExecutionTimeMs => LanguageService.GetLocalizedString("CondEnum_Var_Step_ExecutionTimeMs", "引用步骤 → 执行耗时(ms)"),
@@ -237,6 +273,10 @@ namespace ShaoLu.Converters
             ConditionVariable.Self_IsTrue => LanguageService.GetLocalizedString("CondEnum_Tip_Self_IsTrue", "当前步骤执行后是否成功（true/false）"),
             ConditionVariable.Self_Similarity => LanguageService.GetLocalizedString("CondEnum_Tip_Self_Similarity", "当前步骤图像匹配的实际相似度（0~1）"),
             ConditionVariable.Self_ExecutionTimeMs => LanguageService.GetLocalizedString("CondEnum_Tip_Self_ExecutionTimeMs", "当前步骤执行所花费的时间（毫秒）"),
+            ConditionVariable.Self_StartTimeMs => LanguageService.GetLocalizedString("CondEnum_Tip_Self_StartTimeMs", "当前步骤开始执行的时刻（以本次运行开始为 0 的毫秒数）"),
+            ConditionVariable.Self_EndTimeMs => LanguageService.GetLocalizedString("CondEnum_Tip_Self_EndTimeMs", "当前步骤执行结束的时刻（以本次运行开始为 0 的毫秒数）"),
+            ConditionVariable.Step_StartTimeMs => LanguageService.GetLocalizedString("CondEnum_Tip_Step_StartTimeMs", "被引用步骤开始执行的时刻（以本次运行开始为 0 的毫秒数）"),
+            ConditionVariable.Step_EndTimeMs => LanguageService.GetLocalizedString("CondEnum_Tip_Step_EndTimeMs", "被引用步骤执行结束的时刻（以本次运行开始为 0 的毫秒数）"),
             ConditionVariable.Self_ClickX => LanguageService.GetLocalizedString("CondEnum_Tip_Self_ClickX", "当前步骤实际点击的屏幕X坐标"),
             ConditionVariable.Self_ClickY => LanguageService.GetLocalizedString("CondEnum_Tip_Self_ClickY", "当前步骤实际点击的屏幕Y坐标"),
             ConditionVariable.Self_OCRText => Services.LanguageService.GetLocalizedString("ConditionVariable_Self_Text_Tooltip"),

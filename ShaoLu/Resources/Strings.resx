@@ -2333,4 +2333,274 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="AcbelRefRunNow" xml:space="preserve">
     <value>Run date/time</value>
   </data>
+  <data name="FlowChart" xml:space="preserve">
+    <value>Flow chart</value>
+  </data>
+  <data name="FlowChart_ToolTip" xml:space="preserve">
+    <value>Switch between the standard table and the flow chart: drag nodes to arrange them, drag from the T / F dots to a target step to set that jump.</value>
+  </data>
+  <data name="FlowChart_AutoLayout" xml:space="preserve">
+    <value>Auto layout</value>
+  </data>
+  <data name="FlowChart_FitToWindow" xml:space="preserve">
+    <value>Fit to window</value>
+  </data>
+  <data name="FlowChart_ClearGoto" xml:space="preserve">
+    <value>Clear jumps</value>
+  </data>
+  <data name="FlowChart_Hint" xml:space="preserve">
+    <value>Drag nodes to arrange them. Drag from the T / F dot to a target step to set that jump, drop on empty canvas to clear it: drop on the ↺ inside the source node to link back to itself. Double-click the name or note to edit, and click the log badge at the node's top-right to toggle execution logging. Edges only show run order and jumps; they do not change the step order in the list.</value>
+  </data>
+  <data name="FlowChart_Empty" xml:space="preserve">
+    <value>No steps in this project yet</value>
+  </data>
+  <data name="FlowChart_TruePort_ToolTip" xml:space="preserve">
+    <value>Jump when the result is true: drag to the target step</value>
+  </data>
+  <data name="FlowChart_FalsePort_ToolTip" xml:space="preserve">
+    <value>Jump when the result is false: drag to the target step</value>
+  </data>
+  <data name="FlowChart_SkipBadge" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="FlowChart_Delete_ToolTip" xml:space="preserve">
+    <value>Delete the selected step</value>
+  </data>
+  <data name="FlowChart_EdgeTrue" xml:space="preserve">
+    <value>T</value>
+  </data>
+  <data name="FlowChart_EdgeFalse" xml:space="preserve">
+    <value>F</value>
+  </data>
+  <data name="FlowChart_EdgeBoth" xml:space="preserve">
+    <value>T/F</value>
+  </data>
+  <data name="FlowStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="FlowEnd" xml:space="preserve">
+    <value>End</value>
+  </data>
+  <data name="FlowChart_LogToggle_ToolTip" xml:space="preserve">
+    <value>Record execution log (click to toggle)</value>
+  </data>
+  <data name="FlowChart_SelfAnchor_ToolTip" xml:space="preserve">
+    <value>Drop here to link back to this step (self reference)</value>
+  </data>
+  <data name="StepGroup_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="StepGroup_Input" xml:space="preserve">
+    <value>Input</value>
+  </data>
+  <data name="StepGroup_Collect" xml:space="preserve">
+    <value>Collect</value>
+  </data>
+  <data name="StepGroup_Flow" xml:space="preserve">
+    <value>Flow control</value>
+  </data>
+  <data name="StepGroup_Interaction" xml:space="preserve">
+    <value>Interaction</value>
+  </data>
+  <data name="FlowChart_ReplaceWith" xml:space="preserve">
+    <value>Replace with...</value>
+  </data>
+  <data name="Settings_FlowChart" xml:space="preserve">
+    <value>Flow chart</value>
+  </data>
+  <data name="Settings_CurvedEdges" xml:space="preserve">
+    <value>Curved edges (uncheck for right-angle)</value>
+  </data>
+  <data name="FocusWindowOnFinish" xml:space="preserve">
+    <value>Focus this window when the run finishes</value>
+  </data>
+  <data name="CloseWindowsOnFinish" xml:space="preserve">
+    <value>Close all opened windows when the run finishes</value>
+  </data>
+  <data name="Settings_EdgeStyle" xml:space="preserve">
+    <value>Connector style</value>
+  </data>
+  <data name="FlowEdgeStyle_Polyline" xml:space="preserve">
+    <value>Right-angle</value>
+  </data>
+  <data name="FlowEdgeStyle_Curve" xml:space="preserve">
+    <value>Curved</value>
+  </data>
+  <data name="FlowSnapToGrid" xml:space="preserve">
+    <value>Snap nodes to grid</value>
+  </data>
+  <data name="FlowSpacing" xml:space="preserve">
+    <value>Node spacing</value>
+  </data>
+  <data name="FlowSpacingAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="FlowSpacingCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="FlowBackground" xml:space="preserve">
+    <value>Background grid</value>
+  </data>
+  <data name="FlowBgDots" xml:space="preserve">
+    <value>Dots</value>
+  </data>
+  <data name="FlowBgLines" xml:space="preserve">
+    <value>Lines</value>
+  </data>
+  <data name="FlowBgDashed" xml:space="preserve">
+    <value>Dashed</value>
+  </data>
+  <data name="FlowGridSize" xml:space="preserve">
+    <value>Grid size</value>
+  </data>
+  <data name="FlowGridSmall" xml:space="preserve">
+    <value>Small</value>
+  </data>
+  <data name="FlowGridLarge" xml:space="preserve">
+    <value>Large</value>
+  </data>
+  <data name="ShortcutList" xml:space="preserve">
+    <value>Shortcuts</value>
+  </data>
+  <data name="S" xml:space="preserve">
+    <value>e</value>
+  </data>
+  <data name="S" xml:space="preserve">
+    <value>e</value>
+  </data>
+  <data name="GotoGuard_Count" xml:space="preserve">
+    <value>Max jumps</value>
+  </data>
+  <data name="GotoGuard_Count_Hint" xml:space="preserve">
+    <value>-1 = unlimited, 0 = never jump. When exceeded the other branch is taken.</value>
+  </data>
+  <data name="GotoGuard_Timeout" xml:space="preserve">
+    <value>Timeout(s)</value>
+  </data>
+  <data name="GotoGuard_Timeout_Hint" xml:space="preserve">
+    <value>0 = unlimited; counted from the first jump of this branch.</value>
+  </data>
+  <data name="Msg_GotoGuardLimit" xml:space="preserve">
+    <value>Step '{0}' reached the jump limit ({1}); leaving the loop and continuing with the next step.</value>
+  </data>
+  <data name="Popup_Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Popup_Test_ToolTip" xml:space="preserve">
+    <value>Show this popup once to preview the effect (does not affect the run)</value>
+  </data>
+  <data name="Popup_MaxWindows" xml:space="preserve">
+    <value>Simultaneous windows</value>
+  </data>
+  <data name="Popup_MaxWindows_Hint" xml:space="preserve">
+    <value>When this many windows are already open the step does not open another one.</value>
+  </data>
+  <data name="Condition_Source_Tooltip" xml:space="preserve">
+    <value>Pick the value source first: constant, this step, or another step</value>
+  </data>
+  <data name="Condition_Field_Tooltip" xml:space="preserve">
+    <value>Fields that can be read from the selected source</value>
+  </data>
+  <data name="Condition_Constant_Tooltip" xml:space="preserve">
+    <value>Value of the constant</value>
+  </data>
+  <data name="Condition_ConstantTrue" xml:space="preserve">
+    <value>True</value>
+  </data>
+  <data name="Condition_ConstantFalse" xml:space="preserve">
+    <value>False</value>
+  </data>
+  <data name="CondEnum_Src_Constant" xml:space="preserve">
+    <value>Constant</value>
+  </data>
+  <data name="CondEnum_Src_Self" xml:space="preserve">
+    <value>This step</value>
+  </data>
+  <data name="CondEnum_Src_Step" xml:space="preserve">
+    <value>Referenced step</value>
+  </data>
+  <data name="CondEnum_Field_Result" xml:space="preserve">
+    <value>Execution result</value>
+  </data>
+  <data name="CondEnum_Field_ExecutionTimeMs" xml:space="preserve">
+    <value>Duration (ms)</value>
+  </data>
+  <data name="CondEnum_Field_StartTimeMs" xml:space="preserve">
+    <value>Start time</value>
+  </data>
+  <data name="CondEnum_Field_EndTimeMs" xml:space="preserve">
+    <value>End time</value>
+  </data>
+  <data name="CondEnum_Field_Similarity" xml:space="preserve">
+    <value>Similarity</value>
+  </data>
+  <data name="CondEnum_Field_ClickX" xml:space="preserve">
+    <value>Click X</value>
+  </data>
+  <data name="CondEnum_Field_ClickY" xml:space="preserve">
+    <value>Click Y</value>
+  </data>
+  <data name="CondEnum_Field_Text" xml:space="preserve">
+    <value>Recognized text</value>
+  </data>
+  <data name="CondEnum_Field_PopupResult" xml:space="preserve">
+    <value>Popup result</value>
+  </data>
+  <data name="CondEnum_Field_SignalValue" xml:space="preserve">
+    <value>Signal value</value>
+  </data>
+  <data name="CondEnum_Field_Triggered" xml:space="preserve">
+    <value>Just executed</value>
+  </data>
+  <data name="CondEnum_Field_UserInputField" xml:space="preserve">
+    <value>User input field</value>
+  </data>
+  <data name="CondEnum_Field_TypedText" xml:space="preserve">
+    <value>Typed text</value>
+  </data>
+  <data name="CondEnum_Var_Self_TypedText" xml:space="preserve">
+    <value>This step -&gt; typed text</value>
+  </data>
+  <data name="CondEnum_Var_Step_TypedText" xml:space="preserve">
+    <value>Referenced step -&gt; typed text</value>
+  </data>
+  <data name="FlowChart_DragEnd_ToolTip" xml:space="preserve">
+    <value>Drag this end to reconnect the jump to another step; drop on empty space to remove it</value>
+  </data>
+  <data name="ViewMenu" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="ViewTable" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="FlowReference" xml:space="preserve">
+    <value>Reference</value>
+  </data>
+  <data name="Flow_EdgeFilter" xml:space="preserve">
+    <value>Edges:</value>
+  </data>
+  <data name="Flow_EdgeFilter_ToolTip" xml:space="preserve">
+    <value>Checked: show all edges of this type. Unchecked: only edges of the selected step (sequential edges always show).</value>
+  </data>
+  <data name="FlowReference_Port_ToolTip" xml:space="preserve">
+    <value>Drag onto another step to reference it (a dialog opens to configure the reference)</value>
+  </data>
+  <data name="FlowReference_DragEnd_ToolTip" xml:space="preserve">
+    <value>Drag the arrow to reference another step</value>
+  </data>
+  <data name="FlowPortSpacing" xml:space="preserve">
+    <value>Edge port spacing</value>
+  </data>
+  <data name="FlowChart_Pin_ToolTip" xml:space="preserve">
+    <value>Pin this node: auto layout leaves it in place (only manual dragging moves it)</value>
+  </data>
+  <data name="Flow_Anchor_ToolTip" xml:space="preserve">
+    <value>Anchor: drag to reroute the connection, right-click to remove</value>
+  </data>
+  <data name="FlowChart_DragStart_ToolTip" xml:space="preserve">
+    <value>Hold to slide this end along the node border</value>
+  </data>
+  <data name="FlowSnapAnchors" xml:space="preserve">
+    <value>Snap anchors</value>
+  </data>
 </root>

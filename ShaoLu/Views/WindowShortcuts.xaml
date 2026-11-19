@@ -1,0 +1,66 @@
+<Window x:Class="ShaoLu.Views.WindowShortcuts"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:lex="http://wpflocalizeextension.codeplex.com"
+        lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
+        lex:ResxLocalizationProvider.DefaultDictionary="Strings"
+        Title="{lex:Loc ShortcutList}"
+        Height="580" Width="600"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Resources>
+        <Style x:Key="GroupTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        <Style x:Key="Item" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="22"/>
+            <Setter Property="FontSize" Value="12.5"/>
+        </Style>
+    </Window.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18,14">
+        <StackPanel>
+            <TextBlock Text="通用" Style="{StaticResource GroupTitle}"/>
+            <TextBlock Style="{StaticResource Item}">
+                Ctrl+N  新建工程&#x0a;
+                Ctrl+O  打开工程&#x0a;
+                Ctrl+S  保存&#x0a;
+                Ctrl+Shift+S  另存为&#x0a;
+                Ctrl+Z  撤销&#x0a;
+                Ctrl+Y  恢复
+            </TextBlock>
+
+            <TextBlock Text="步骤表格" Style="{StaticResource GroupTitle}" Margin="0,16,0,6"/>
+            <TextBlock Style="{StaticResource Item}">
+                Ctrl+C / Ctrl+X / Ctrl+V  复制 / 剪切 / 粘贴&#x0a;
+                Delete  删除选中步骤&#x0a;
+                右键  添加、复制、剪切、粘贴、上移、下移、删除、撤销、恢复
+            </TextBlock>
+
+            <TextBlock Text="流程图" Style="{StaticResource GroupTitle}" Margin="0,16,0,6"/>
+            <TextBlock Style="{StaticResource Item}">
+                空白处按住左键拖动  框选节点&#x0a;
+                Ctrl+左键点击  逐个增删选中&#x0a;
+                Ctrl+A  全选&#x0a;
+                Ctrl+C / Ctrl+X / Ctrl+V  复制 / 剪切 / 粘贴&#x0a;
+                Ctrl+Z / Ctrl+Y  撤销 / 恢复（连线、标题备注、日志开关、节点位置）&#x0a;
+                Delete  删除选中步骤&#x0a;
+                双击节点名称 / 备注  就地编辑&#x0a;
+                拖动节点右侧 T / F 圆点  建立真 / 假跳转，拖到空白清除，拖到节点中心 ↺ 连回自身&#x0a;
+                把一个节点拖到另一个上悬停 0.3 秒后松开左键  替换目标节点&#x0a;
+                右键节点  添加 / 替换为 / 删除 / 复制 / 清除跳转等&#x0a;
+                右键空白  环状菜单（添加 / 编辑）&#x0a;
+                Ctrl+滚轮  缩放画布&#x0a;
+                点击节点右上角「记」  切换是否记录执行日志
+            </TextBlock>
+
+            <TextBlock Text="运行" Style="{StaticResource GroupTitle}" Margin="0,16,0,6"/>
+            <TextBlock Style="{StaticResource Item}">
+                启动 / 停止热键可在「设置 → Step 设置 → 运行行为」里查看和修改（全局热键）。
+            </TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

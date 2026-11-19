@@ -145,7 +145,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };

@@ -1,4 +1,4 @@
-using ShaoLu.Converters;
+﻿using ShaoLu.Converters;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Point = System.Windows.Point;
 
 namespace ShaoLu.Utils
 {
@@ -61,6 +62,9 @@ namespace ShaoLu.Utils
         };
 
         private const string StepsJsonEntryName = "steps.json";
+
+        /// <summary>流程图版面（节点位置 / 锚定 / 连线锚点）在工程包里的条目名</summary>
+        private const string FlowLayoutEntryName = "flow.json";
 
         /// <summary>
         /// 当前工作目录解析器（默认取主 ViewModel 的 StepImageWorkDir）。
@@ -114,6 +118,9 @@ namespace ShaoLu.Utils
             string jsonString = JsonSerializer.Serialize(steps, _writeOptions);
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
+            // 1.1 流程图版面：节点位置、锚定、连线锚点（下次打开时原样恢复）
+            byte[] flowBytes = SerializeFlowLayout(steps);
+
             // 2. 写临时文件（与目标同目录，保证 File.Replace 同卷原子性）
             string tempPath = targetPath + ".tmp-" + Guid.NewGuid().ToString("N");
             var imagesToLand = new List<(string SourcePath, string EntryName)>();
@@ -129,6 +136,15 @@ namespace ShaoLu.Utils
                     using (var entryStream = jsonEntry.Open())
                     {
                         entryStream.Write(jsonBytes, 0, jsonBytes.Length);
+                    }
+
+                    if (flowBytes != null && flowBytes.Length > 0)
+                    {
+                        var flowEntry = archive.CreateEntry(FlowLayoutEntryName, CompressionLevel.Optimal);
+                        using (var entryStream = flowEntry.Open())
+                        {
+                            entryStream.Write(flowBytes, 0, flowBytes.Length);
+                        }
                     }
 
                     // 收集并写入图片（可选含原图）
@@ -166,6 +182,137 @@ namespace ShaoLu.Utils
                 RelinkSourceImages(steps, result.WorkDir);
 
             return result;
+        }
+
+        /// <summary>
+        /// 把流程图版面（节点位置、锚定、连线锚点）序列化成 flow.json 的内容。
+        /// 只保留仍存在于步骤列表里的节点，避免存下一堆已经删掉的 Uid。
+        /// </summary>
+        private static byte[] SerializeFlowLayout(ObservableCollection<AutomationStepBase> steps)
+        {
+            try
+            {
+                var alive = new HashSet<Guid>();
+                if (steps != null)
+                {
+                    foreach (var step in steps)
+                    {
+                        if (step != null) alive.Add(step.Uid);
+                    }
+                }
+
+                var file = new FlowLayoutFile();
+                foreach (var (uid, position, pinned) in FlowLayoutStore.Snapshot())
+                {
+                    if (!alive.Contains(uid)) continue;
+                    file.Nodes.Add(new FlowNodeLayout { Uid = uid, X = position.X, Y = position.Y, Pinned = pinned });
+                }
+
+                var portSnapshot = FlowPortStore.Snapshot();
+                foreach (var pair in FlowEdgeAnchorStore.Snapshot())
+                {
+                    var entry = new FlowEdgeLayout { Key = pair.Key };
+                    foreach (var point in pair.Value)
+                        entry.Points.Add(new FlowPoint { X = point.X, Y = point.Y });
+                    if (portSnapshot.TryGetValue(pair.Key + "|A", out var startPort))
+                    {
+                        entry.StartSide = startPort.Side;
+                        entry.StartFraction = startPort.Fraction;
+                    }
+                    if (portSnapshot.TryGetValue(pair.Key + "|B", out var endPort))
+                    {
+                        entry.EndSide = endPort.Side;
+                        entry.EndFraction = endPort.Fraction;
+                    }
+                    file.Edges.Add(entry);
+                }
+
+                if (file.Nodes.Count == 0 && file.Edges.Count == 0)
+                    return null;
+
+                string json = JsonSerializer.Serialize(file, new JsonSerializerOptions
+                {
+                    WriteIndented = false,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                });
+                return Encoding.UTF8.GetBytes(json);
+            }
+            catch (Exception ex)
+            {
+                // 版面信息保存失败不影响步骤数据保存
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "SerializeFlowLayout failed");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 读取工程包里的 flow.json 并恢复流程图版面；没有该条目（旧工程）时清空，按自动布局重排。
+        /// </summary>
+        private static void ApplyFlowLayout(string jsonPath)
+        {
+            FlowLayoutStore.Clear();
+            FlowEdgeAnchorStore.Clear();
+            FlowPortStore.Clear();
+
+            if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
+                return;
+
+            try
+            {
+                using var stream = new FileStream(jsonPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var file = JsonSerializer.Deserialize<FlowLayoutFile>(stream, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                });
+                if (file == null) return;
+
+                var layout = new List<(Guid Uid, Point Position, bool Pinned)>();
+                if (file.Nodes != null)
+                {
+                    foreach (var node in file.Nodes)
+                    {
+                        if (node == null || node.Uid == Guid.Empty) continue;
+                        layout.Add((node.Uid, new Point(node.X, node.Y), node.Pinned));
+                    }
+                }
+                FlowLayoutStore.ReplaceAll(layout);
+
+                var anchors = new Dictionary<string, List<Point>>();
+                if (file.Edges != null)
+                {
+                    foreach (var edge in file.Edges)
+                    {
+                        if (edge == null || string.IsNullOrEmpty(edge.Key) || edge.Points == null) continue;
+                        var points = new List<Point>();
+                        foreach (var point in edge.Points)
+                        {
+                            if (point == null) continue;
+                            points.Add(new Point(point.X, point.Y));
+                        }
+                        if (points.Count > 0) anchors[edge.Key] = points;
+                    }
+                }
+                FlowEdgeAnchorStore.ReplaceAll(anchors);
+
+                var ports = new Dictionary<string, (string Side, double Fraction)>();
+                if (file.Edges != null)
+                {
+                    foreach (var edge in file.Edges)
+                    {
+                        if (edge == null || string.IsNullOrEmpty(edge.Key)) continue;
+                        if (!string.IsNullOrEmpty(edge.StartSide))
+                            ports[edge.Key + "|A"] = (edge.StartSide, edge.StartFraction);
+                        if (!string.IsNullOrEmpty(edge.EndSide))
+                            ports[edge.Key + "|B"] = (edge.EndSide, edge.EndFraction);
+                    }
+                }
+                FlowPortStore.ReplaceAll(ports);
+            }
+            catch (Exception ex)
+            {
+                // 版面信息损坏不影响工程打开，退回自动布局
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "ApplyFlowLayout failed");
+            }
         }
 
         /// <summary>
@@ -573,6 +720,9 @@ namespace ShaoLu.Utils
                 // 后处理：解析旧格式 int 行号的 TrueGoto/FalseGoto 为 Uid
                 ResolveLegacyGotoLineNumbers(steps);
 
+                // 流程图版面（节点位置 / 锚定 / 连线锚点）：有 flow.json 就恢复，没有则按自动布局重排
+                ApplyFlowLayout(Path.Combine(tempDir, FlowLayoutEntryName));
+
                 // 校验通过后才把临时目录改名成工作目录（同一卷改名为原子操作）
                 if (Directory.Exists(workDir))
                     workDir = CreateTempWorkDir(packageFullPath);
@@ -976,6 +1126,9 @@ namespace ShaoLu.Utils
 
                 // 后处理：解析旧格式 int 行号的 TrueGoto/FalseGoto 为 Uid
                 ResolveLegacyGotoLineNumbers(steps);
+
+                // 旧版 JSON 没有流程图版面：清掉上一个工程留下的位置/锚点，按自动布局重排
+                ApplyFlowLayout(null);
 
                 return steps;
             }

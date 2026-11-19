@@ -426,6 +426,10 @@ namespace ShaoLu
 
             stepsViewModel.AutomationStepBases.Clear();
             stepsViewModel.ClearUndoRedo();
+            // 新建工程：流程图版式（节点位置/锚定/连线锚点）一并重置
+            Services.FlowLayoutStore.Clear();
+            Services.FlowEdgeAnchorStore.Clear();
+            Services.FlowPortStore.Clear();
             // 清空文件路径
             mainViewModel.StepFilePath = null;
             mainViewModel.StepImageWorkDir = null;
@@ -785,6 +789,9 @@ namespace ShaoLu
                     step.IsSave = true;
                 }
 
+                // 先记下流程图当前版面（节点位置），保存时才会写进 flow.json
+                Steps?.CommitFlowLayout();
+
                 // 原子保存：包写成功后才会替换旧文件（并保留 .bak）；图片会落地到包对应的工作目录
                 var result = StepsFile.SaveAsAutoStepPackage(stepsViewModel.AutomationStepBases, filePath, includeSourceImages);
 
@@ -835,6 +842,12 @@ namespace ShaoLu
         {
             WindowSettings windowSettings = new();
             windowSettings.ShowDialog();
+        }
+
+        private void Shortcuts_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new WindowShortcuts { Owner = this };
+            window.Show();
         }
 
         private void About_Click(object sender, RoutedEventArgs e)

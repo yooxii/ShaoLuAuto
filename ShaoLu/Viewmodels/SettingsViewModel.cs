@@ -86,6 +86,16 @@ namespace ShaoLu.Viewmodels
         private bool _showErrorPopup;
         private bool _minimizeOnRun;
         private bool _confirmBeforeRun;
+        private int _flowEdgeStyle;
+        private bool _flowSnapToGrid;
+        private int _flowSpacingMode;
+        private double _flowCustomSpacing;
+        private int _flowBackgroundStyle;
+        private int _flowGridSize;
+        private int _flowPortSpacing = 10;
+        private bool _flowSnapAnchorsToGrid = true;
+        private bool _focusWindowOnFinish;
+        private bool _closeWindowsOnFinish;
         private bool _showOCRRegionOnRun;
         private bool _showFoundImageRegionOnRun;
         private bool _showClickPositionOnRun;
@@ -100,6 +110,16 @@ namespace ShaoLu.Viewmodels
         public bool ShowErrorPopup { get => _showErrorPopup; set => SetProperty(ref _showErrorPopup, value); }
         public bool MinimizeOnRun { get => _minimizeOnRun; set => SetProperty(ref _minimizeOnRun, value); }
         public bool ConfirmBeforeRun { get => _confirmBeforeRun; set => SetProperty(ref _confirmBeforeRun, value); }
+        public int FlowEdgeStyle { get => _flowEdgeStyle; set => SetProperty(ref _flowEdgeStyle, value); }
+        public bool FlowSnapToGrid { get => _flowSnapToGrid; set => SetProperty(ref _flowSnapToGrid, value); }
+        public int FlowSpacingMode { get => _flowSpacingMode; set => SetProperty(ref _flowSpacingMode, value); }
+        public double FlowCustomSpacing { get => _flowCustomSpacing; set => SetProperty(ref _flowCustomSpacing, value); }
+        public int FlowBackgroundStyle { get => _flowBackgroundStyle; set => SetProperty(ref _flowBackgroundStyle, value); }
+        public int FlowGridSize { get => _flowGridSize; set => SetProperty(ref _flowGridSize, value); }
+        public int FlowPortSpacing { get => _flowPortSpacing; set => SetProperty(ref _flowPortSpacing, value); }
+        public bool FlowSnapAnchorsToGrid { get => _flowSnapAnchorsToGrid; set => SetProperty(ref _flowSnapAnchorsToGrid, value); }
+        public bool FocusWindowOnFinish { get => _focusWindowOnFinish; set => SetProperty(ref _focusWindowOnFinish, value); }
+        public bool CloseWindowsOnFinish { get => _closeWindowsOnFinish; set => SetProperty(ref _closeWindowsOnFinish, value); }
         public bool ShowOCRRegionOnRun { get => _showOCRRegionOnRun; set => SetProperty(ref _showOCRRegionOnRun, value); }
         public bool ShowFoundImageRegionOnRun { get => _showFoundImageRegionOnRun; set => SetProperty(ref _showFoundImageRegionOnRun, value); }
         public bool ShowClickPositionOnRun { get => _showClickPositionOnRun; set => SetProperty(ref _showClickPositionOnRun, value); }
@@ -120,6 +140,16 @@ namespace ShaoLu.Viewmodels
             ShowErrorPopup = model.ShowErrorPopup;
             MinimizeOnRun = model.MinimizeOnRun;
             ConfirmBeforeRun = model.ConfirmBeforeRun;
+            FlowEdgeStyle = model.FlowEdgeStyle;
+            FlowSnapToGrid = model.FlowSnapToGrid;
+            FlowSpacingMode = model.FlowSpacingMode;
+            FlowCustomSpacing = model.FlowCustomSpacing;
+            FlowBackgroundStyle = model.FlowBackgroundStyle;
+            FlowGridSize = model.FlowGridSize;
+            FlowPortSpacing = model.FlowPortSpacing;
+            FlowSnapAnchorsToGrid = model.FlowSnapAnchorsToGrid;
+            FocusWindowOnFinish = model.FocusWindowOnFinish;
+            CloseWindowsOnFinish = model.CloseWindowsOnFinish;
             ShowOCRRegionOnRun = model.ShowOCRRegionOnRun;
             ShowFoundImageRegionOnRun = model.ShowFoundImageRegionOnRun;
             ShowClickPositionOnRun = model.ShowClickPositionOnRun;
@@ -141,6 +171,16 @@ namespace ShaoLu.Viewmodels
             model.ShowErrorPopup = ShowErrorPopup;
             model.MinimizeOnRun = MinimizeOnRun;
             model.ConfirmBeforeRun = ConfirmBeforeRun;
+            model.FlowEdgeStyle = FlowEdgeStyle;
+            model.FlowSnapToGrid = FlowSnapToGrid;
+            model.FlowSpacingMode = FlowSpacingMode;
+            model.FlowCustomSpacing = FlowCustomSpacing;
+            model.FlowBackgroundStyle = FlowBackgroundStyle;
+            model.FlowGridSize = FlowGridSize;
+            model.FlowPortSpacing = FlowPortSpacing;
+            model.FlowSnapAnchorsToGrid = FlowSnapAnchorsToGrid;
+            model.FocusWindowOnFinish = FocusWindowOnFinish;
+            model.CloseWindowsOnFinish = CloseWindowsOnFinish;
             model.ShowOCRRegionOnRun = ShowOCRRegionOnRun;
             model.ShowFoundImageRegionOnRun = ShowFoundImageRegionOnRun;
             model.ShowClickPositionOnRun = ShowClickPositionOnRun;
@@ -200,6 +240,7 @@ namespace ShaoLu.Viewmodels
             };
             stepNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Settings_RunBehavior"), SectionKey = "Step_Run" });
             stepNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("DefaultStepParams"), SectionKey = "Step_Params" });
+            stepNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Settings_FlowChart"), SectionKey = "Step_Flow" });
             stepNode.Children.Add(new SettingsCategory { Title = LanguageService.GetLocalizedString("Settings_DebugSettings"), SectionKey = "Step_Debug" });
 
             Categories.Add(appNode);

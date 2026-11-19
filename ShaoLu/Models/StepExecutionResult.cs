@@ -18,6 +18,16 @@ namespace ShaoLu.Models
         public double ExecutionTimeMs { get; set; }
 
         /// <summary>
+        /// 开始执行时刻（以本次运行开始为 0 的毫秒数）
+        /// </summary>
+        public double StartElapsedMs { get; set; }
+
+        /// <summary>
+        /// 执行结束时刻（以本次运行开始为 0 的毫秒数）
+        /// </summary>
+        public double EndElapsedMs { get; set; }
+
+        /// <summary>
         /// 图像识别相似度（-1 表示不适用）
         /// </summary>
         public double Similarity { get; set; } = -1;
@@ -26,6 +36,11 @@ namespace ShaoLu.Models
         /// 点击位置
         /// </summary>
         public Point ClickPosition { get; set; }
+
+        /// <summary>
+        /// 键入文本步骤本次实际输入的文本（其他步骤为空）
+        /// </summary>
+        public string TypedText { get; set; }
 
         /// <summary>
         /// OCR 识别文本

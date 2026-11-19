@@ -1,4 +1,4 @@
-using NLog;
+﻿using NLog;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Viewmodels.AutomationStep;
@@ -98,6 +98,10 @@ namespace ShaoLu.Viewmodels
             clone.IsNeed = IsNeed;
             clone.EnableLog = EnableLog;
             clone.SelfReferenceLimit = SelfReferenceLimit;
+            clone.TrueGotoMaxCount = TrueGotoMaxCount;
+            clone.FalseGotoMaxCount = FalseGotoMaxCount;
+            clone.TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds;
+            clone.FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds;
             clone.ConditionMode = ConditionMode;
             clone.Conditions = new(Conditions);
             clone.IsSave = IsSave;

@@ -8,6 +8,7 @@
             lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
             lex:ResxLocalizationProvider.DefaultDictionary="Strings"
             xmlns:local="clr-namespace:ShaoLu"
+            xmlns:views="clr-namespace:ShaoLu.Views"
             xmlns:utils="clr-namespace:ShaoLu.Utils"
             xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
             xmlns:autovm="clr-namespace:ShaoLu.Viewmodels.AutomationStep"
@@ -180,6 +181,17 @@
                         </Button>
                         <Button Content="{lex:Loc BtnStop_Content}" Margin="3" Command="{Binding StopCommand}"/>
                         <Separator/>
+                        <!-- 视图切换：表格 ↔ 流程图（同一份步骤数据，不另开窗口） -->
+                        <ToggleButton x:Name="TableViewToggle" Margin="2" Padding="8,2" IsChecked="True"
+                                      Checked="TableViewToggle_Checked">
+                            <TextBlock Text="{lex:Loc ViewTable}"/>
+                        </ToggleButton>
+                        <ToggleButton x:Name="FlowViewToggle" Margin="2" Padding="8,2"
+                                      ToolTip="{lex:Loc FlowChart_ToolTip}"
+                                      Checked="FlowViewToggle_Checked" Unchecked="FlowViewToggle_Unchecked">
+                            <TextBlock Text="{lex:Loc FlowChart}"/>
+                        </ToggleButton>
+                        <Separator/>
                         <!-- 组别开关：除「运行」外的组默认折叠；编辑与步骤互斥（见代码后置） -->
                         <ToggleButton x:Name="EditGroupToggle" Margin="2" Padding="8,2" Checked="EditGroupToggle_Checked">
                             <StackPanel Orientation="Horizontal">
@@ -218,47 +230,57 @@
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Edit}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}"
                              Visibility="{Binding IsChecked, ElementName=EditGroupToggle, Converter={StaticResource BoolToVis}}">
-                        <Button Content="{lex:Loc Refresh}" Margin="3" Click="Refresh_Click"/>
                         <Button Content="{lex:Loc Undo}" Margin="3" Command="{Binding UndoCommand}"/>
                         <Button Content="{lex:Loc Redo}" Margin="3" Command="{Binding RedoCommand}"/>
-                        <Button Content="{lex:Loc Up}" Margin="3" Command="{Binding UpStepCommand}"/>
-                        <Button Content="{lex:Loc Down}" Margin="3" Command="{Binding DownStepCommand}"/>
+                        <Separator/>
                         <Button Content="{lex:Loc Copy}" Margin="3" Command="{Binding CopyStepCommand}"/>
                         <Button Content="{lex:Loc Cut}" Margin="3" Command="{Binding CutStepCommand}"/>
                         <Button Content="{lex:Loc Paste}" Margin="3" Command="{Binding PasteStepCommand}"/>
                         <Button Content="{lex:Loc Delete}" Margin="3" Command="{Binding DelStepCommand}"/>
+                        <Separator/>
+                        <Button Content="{lex:Loc Up}" Margin="3" Command="{Binding UpStepCommand}"/>
+                        <Button Content="{lex:Loc Down}" Margin="3" Command="{Binding DownStepCommand}"/>
+                        <Separator/>
+                        <Button Content="{lex:Loc Refresh}" Margin="3" Click="Refresh_Click"/>
                     </ToolBar>
+                    <!-- 添加步骤：按用途分组，每组的首项即主按钮点下去要加的步骤 -->
                     <ToolBar Header="{lex:Loc Step}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}"
                              Visibility="{Binding IsChecked, ElementName=StepGroupToggle, Converter={StaticResource BoolToVis}}">
-                        <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc AddImageStep}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click"
-                                       >
+                        <!-- 图像识别 -->
+                        <wd:SplitButton x:Name="AddImageStep" Content="{lex:Loc StepGroup_Image}" CommandParameter="ClickImage" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
                             <MenuItem Header="{lex:Loc AddImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ClickImage"/>
                             <MenuItem Header="{lex:Loc AddFindImageStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FindImage"/>
+                        </wd:SplitButton>
+                        <!-- 输入操作：文字输入与鼠标动作 -->
+                        <wd:SplitButton x:Name="AddInputStep" Content="{lex:Loc StepGroup_Input}" CommandParameter="TypeText" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
                             <MenuItem Header="{lex:Loc AddTextStep}" Click="MenuItemAddImageStep_Click" CommandParameter="TypeText"/>
                             <MenuItem Header="{lex:Loc AddTextMoreStep}" Click="MenuItemAddImageStep_Click" CommandParameter="TypeTextMore"/>
                             <MenuItem Header="{lex:Loc AddTextFromFileStep}" Click="MenuItemAddImageStep_Click" CommandParameter="TypeTextFromFile"/>
                             <MenuItem Header="{lex:Loc AddMouseActionStep}" Click="MenuItemAddImageStep_Click" CommandParameter="MouseAction"/>
                         </wd:SplitButton>
-                        <wd:SplitButton x:Name="AddOCRStep" Content="{lex:Loc AddGetInputStep}" CommandParameter="GetInput" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
-                            <MenuItem Header="{lex:Loc AddGetInputStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="GetInput"/>
-                            <MenuItem Header="{lex:Loc AddStatisticsStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Statistics"/>
-                            <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="BurnInConfig"/>
-                            <MenuItem Header="{lex:Loc AddFocusWindowStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="FocusWindow"/>
-                            <MenuItem Header="{lex:Loc AddEmptyStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Empty"/>
-                        </wd:SplitButton>
-                        <wd:SplitButton x:Name="AddMultiThreadStep" Content="{lex:Loc MultiThreadGroup}" CommandParameter="MultiThread" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
-                            <MenuItem Header="{lex:Loc AddMultiThreadStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="MultiThread"/>
-                            <MenuItem Header="{lex:Loc AddMultiThreadEndStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="MultiThreadEnd"/>
-                            <MenuItem Header="{lex:Loc AddSendSignalStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="SendSignal"/>
-                            <MenuItem Header="{lex:Loc AddReceiveSignalStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="ReceiveSignal"/>
-                            <MenuItem Header="{lex:Loc AddInterruptStep}" Click="MenuItemAddOtherStep_Click" CommandParameter="Interrupt"/>
-                        </wd:SplitButton>
-                        <Button Content="{lex:Loc AddPopupStep}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="Popup"/>
-                        <wd:SplitButton x:Name="AddAcbelStep" Content="{lex:Loc AddScanCodeStep}" CommandParameter="ScanCode" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                        <!-- 采集与统计：取数、扫码、上传、用户输入、统计 -->
+                        <wd:SplitButton x:Name="AddCollectStep" Content="{lex:Loc StepGroup_Collect}" CommandParameter="GetInput" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                            <MenuItem Header="{lex:Loc AddGetInputStep}" Click="MenuItemAddImageStep_Click" CommandParameter="GetInput"/>
                             <MenuItem Header="{lex:Loc AddScanCodeStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ScanCode"/>
                             <MenuItem Header="{lex:Loc AddAcbelUploadStep}" Click="MenuItemAddImageStep_Click" CommandParameter="AcbelUpload"/>
+                            <MenuItem Header="{lex:Loc UserInput_StepName}" Click="MenuItemAddImageStep_Click" CommandParameter="UserInput"/>
+                            <MenuItem Header="{lex:Loc AddStatisticsStep}" Click="MenuItemAddImageStep_Click" CommandParameter="Statistics"/>
+                            <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Click="MenuItemAddImageStep_Click" CommandParameter="BurnInConfig"/>
                         </wd:SplitButton>
-                        <Button Content="{lex:Loc UserInput_StepName}" Margin="3" Command="{Binding AddStepCommand}" CommandParameter="UserInput"/>
+                        <!-- 流程控制：多线程、信号、中断、空步骤 -->
+                        <wd:SplitButton x:Name="AddMultiThreadStep" Content="{lex:Loc StepGroup_Flow}" CommandParameter="MultiThread" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                            <MenuItem Header="{lex:Loc AddMultiThreadStep}" Click="MenuItemAddImageStep_Click" CommandParameter="MultiThread"/>
+                            <MenuItem Header="{lex:Loc AddMultiThreadEndStep}" Click="MenuItemAddImageStep_Click" CommandParameter="MultiThreadEnd"/>
+                            <MenuItem Header="{lex:Loc AddSendSignalStep}" Click="MenuItemAddImageStep_Click" CommandParameter="SendSignal"/>
+                            <MenuItem Header="{lex:Loc AddReceiveSignalStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ReceiveSignal"/>
+                            <MenuItem Header="{lex:Loc AddInterruptStep}" Click="MenuItemAddImageStep_Click" CommandParameter="Interrupt"/>
+                            <MenuItem Header="{lex:Loc AddEmptyStep}" Click="MenuItemAddImageStep_Click" CommandParameter="Empty"/>
+                        </wd:SplitButton>
+                        <!-- 交互与配置：弹窗、聚焦窗口、烧录配置 -->
+                        <wd:SplitButton x:Name="AddInteractionStep" Content="{lex:Loc StepGroup_Interaction}" CommandParameter="Popup" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">
+                            <MenuItem Header="{lex:Loc AddPopupStep}" Click="MenuItemAddImageStep_Click" CommandParameter="Popup"/>
+                            <MenuItem Header="{lex:Loc AddFocusWindowStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FocusWindow"/>
+                        </wd:SplitButton>
                     </ToolBar>
                 </ToolBarTray>
             </ToolBarPanel>
@@ -270,6 +292,7 @@
                     <ColumnDefinition Width="400"/>
                 </Grid.ColumnDefinitions>
                 <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
+                    <Grid>
                     <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}"
                               ContextMenu="{StaticResource DataGridMenu}"
                               SelectionMode="Extended" SelectedItem="{Binding SelectedStep}"
@@ -332,6 +355,9 @@
                             <DataGridTextColumn Header="{lex:Loc StepFalseGoto}" Binding="{Binding FalseGotoLineNo, Mode=OneWay}" Width="*" IsReadOnly="True" CanUserSort="False"/>
                         </DataGrid.Columns>
                     </DataGrid>
+                    <!-- 流程图视图：与表格互斥显示，共用同一份步骤数据 -->
+                    <views:UserControlFlow x:Name="FlowView" Visibility="Collapsed"/>
+                    </Grid>
                 </GroupBox>
                 <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
                 <GroupBox x:Name="StepDetailsPanel" Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2"

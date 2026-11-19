@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -852,7 +852,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 ImagePath = ImagePath,
                 SourceImageName = SourceImageName,
                 // 复用原步骤在包内的裁剪图，保证克隆体保存后仍能解析到同一张图
@@ -1054,7 +1054,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 // OCRRect 用 IsEmpty 判断后再重建：Rect.Empty 的 ±∞ 直接 new Rect(...) 会抛 ArgumentException
                 OCRRect = OCRRect.IsEmpty ? default : new(OCRRect.X, OCRRect.Y, OCRRect.Width, OCRRect.Height),
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit,
+                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 ConditionMode = ConditionMode,
                 Conditions = new(Conditions),
             };

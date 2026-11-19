@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.7.2.2617</ApplicationVersion>
+    <ApplicationVersion>0.8.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -137,6 +137,7 @@
     <Compile Include="Converters\AutomationStepJsonConverter.cs" />
     <Compile Include="Converters\ConditionModeToVisibilityConverter.cs" />
     <Compile Include="Converters\ConditionEnumToStringConverter.cs" />
+    <Compile Include="Converters\StepTypeToBrushConverter.cs" />
     <Compile Include="Converters\PopupCloseModeJsonConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
     <Compile Include="Converters\BoolToInverseBoolConverter.cs" />
@@ -165,6 +166,7 @@
     <Compile Include="Viewmodels\ImagesRecognition.cs" />
     <Compile Include="Viewmodels\ImageRecognition.cs" />
     <Compile Include="Viewmodels\PopupButton.cs" />
+    <Compile Include="Models\FlowLayoutFile.cs" />
     <Compile Include="Models\Settings.cs" />
     <Compile Include="Resources\Strings.en-US.Designer.cs">
       <DependentUpon>Strings.en-US.resx</DependentUpon>
@@ -210,6 +212,7 @@
     <Compile Include="Services\SubThreadRunner.cs" />
     <Compile Include="Services\StepsOrderMove.cs" />
     <Compile Include="Services\ExecutionLogDisplay.cs" />
+    <Compile Include="Services\FlowLayoutStore.cs" />
     <Compile Include="Services\ProgramLogService.cs" />
     <!-- 与 AcbelBridge 共享同一份字段规范/校验源码（链接编译，规范只写一遍） -->
     <Compile Include="..\Shared\AcbelInsertDataSpec.cs">
@@ -328,6 +331,12 @@
     </Compile>
     <Compile Include="Views\WindowEditConditions.xaml.cs">
       <DependentUpon>WindowEditConditions.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\UserControlFlow.xaml.cs">
+      <DependentUpon>UserControlFlow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WindowShortcuts.xaml.cs">
+      <DependentUpon>WindowShortcuts.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -470,6 +479,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\WindowEditConditions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\UserControlFlow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\WindowShortcuts.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

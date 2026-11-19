@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,19 +35,31 @@ namespace ShaoLu.Models
         Self_IsTrue,
         Self_Similarity,
         Self_ExecutionTimeMs,
+        /// <summary>本步骤开始时间（以本次运行开始为 0 的毫秒数）</summary>
+        Self_StartTimeMs,
+        /// <summary>本步骤结束时间（以本次运行开始为 0 的毫秒数）</summary>
+        Self_EndTimeMs,
         Self_ClickX,
         Self_ClickY,
         Self_OCRText,
         Self_PopupResult,
+        /// <summary>本步骤实际键入的文本（键入文字类步骤）</summary>
+        Self_TypedText,
 
         // 引用其他步骤（通过 StepLineNo 指定）
         Step_IsTrue,
         Step_Similarity,
         Step_ExecutionTimeMs,
+        /// <summary>引用步骤开始时间（以本次运行开始为 0 的毫秒数）</summary>
+        Step_StartTimeMs,
+        /// <summary>引用步骤结束时间（以本次运行开始为 0 的毫秒数）</summary>
+        Step_EndTimeMs,
         Step_ClickX,
         Step_ClickY,
         Step_OCRText,
         Step_PopupResult,
+        /// <summary>引用步骤实际键入的文本</summary>
+        Step_TypedText,
         /// <summary>引用步骤是否在本次评估前刚刚被执行（用于统计执行次数）</summary>
         Step_Triggered,
 
@@ -59,6 +71,52 @@ namespace ShaoLu.Models
 
         /// <summary>「用户输入」步骤里指定字段的值（按 FieldName 取）</summary>
         Step_UserInputField,
+    }
+
+    /// <summary>
+    /// 条件取值来源：常量 / 本步骤 / 引用其他步骤
+    /// </summary>
+    public enum ConditionSource
+    {
+        /// <summary>常量：直接选真或假</summary>
+        Constant,
+        /// <summary>本步骤自身的执行结果等字段</summary>
+        Self,
+        /// <summary>引用其他步骤的字段</summary>
+        Step,
+    }
+
+    /// <summary>
+    /// 条件取值的具体字段（选定来源之后再选）
+    /// </summary>
+    public enum ConditionField
+    {
+        /// <summary>执行结果（成功/失败）</summary>
+        Result,
+        /// <summary>执行耗时(ms)</summary>
+        ExecutionTimeMs,
+        /// <summary>开始时间（以运行开始为 0 的毫秒）</summary>
+        StartTimeMs,
+        /// <summary>结束时间（以运行开始为 0 的毫秒）</summary>
+        EndTimeMs,
+        /// <summary>图像匹配相似度</summary>
+        Similarity,
+        /// <summary>点击 X 坐标</summary>
+        ClickX,
+        /// <summary>点击 Y 坐标</summary>
+        ClickY,
+        /// <summary>识别文本</summary>
+        Text,
+        /// <summary>实际键入的文本（键入文字类步骤）</summary>
+        TypedText,
+        /// <summary>弹窗选择结果</summary>
+        PopupResult,
+        /// <summary>接收到的信号内容</summary>
+        SignalValue,
+        /// <summary>是否刚执行过（仅引用步骤）</summary>
+        Triggered,
+        /// <summary>用户输入步骤的字段值（仅引用步骤）</summary>
+        UserInputField,
     }
 
     /// <summary>
@@ -122,7 +180,6 @@ namespace ShaoLu.Models
     /// </summary>
     public class StepCondition : ObservableObject
     {
-        private ConditionVariable _variable = ConditionVariable.Self_IsTrue;
         private Guid? _stepUid;
         private ConditionOperator _operator = ConditionOperator.Equal;
         private string _value = string.Empty;
@@ -133,20 +190,270 @@ namespace ShaoLu.Models
         private int _extractLength = 0;
         private ExtractUnit _extractUnit = ExtractUnit.Character;
 
+        private ConditionSource _source = ConditionSource.Self;
+        private ConditionField _field = ConditionField.Result;
+        private bool _constantValue = true;
+
         /// <summary>
-        /// 条件变量
+        /// 取值来源（常量 / 本步骤 / 引用步骤）。界面第一项就是它，选定后再选具体字段。
+        /// </summary>
+        public ConditionSource Source
+        {
+            get => _source;
+            set
+            {
+                if (!SetProperty(ref _source, value)) return;
+                // 引用步骤才用得上字段名/引用步骤，切回来时补回默认字段
+                if (value == ConditionSource.Step && _field == ConditionField.UserInputField)
+                    OnPropertyChanged(nameof(ShowFieldName));
+                if (value != ConditionSource.Step && (_field == ConditionField.UserInputField || _field == ConditionField.Triggered))
+                    Field = ConditionField.Result;
+                // 常量不需要运算符和右值：直接按真/假取值
+                if (value == ConditionSource.Constant)
+                {
+                    Value = _constantValue ? "true" : "false";
+                    Operator = ConditionOperator.Equal;
+                }
+                RefreshAvailability();
+            }
+        }
+
+        /// <summary>
+        /// 取值字段（执行结果 / 执行耗时 / 开始时间 / 结束时间 / 以及按步骤类型可用的字段）
+        /// </summary>
+        public ConditionField Field
+        {
+            get => _field;
+            set
+            {
+                if (!SetProperty(ref _field, value)) return;
+                RefreshAvailability();
+            }
+        }
+
+        /// <summary>来源为常量时的取值（真 / 假）</summary>
+        public bool ConstantValue
+        {
+            get => _constantValue;
+            set
+            {
+                if (!SetProperty(ref _constantValue, value)) return;
+                if (_source == ConditionSource.Constant)
+                {
+                    Value = value ? "true" : "false";
+                    Operator = ConditionOperator.Equal;
+                }
+                OnPropertyChanged(nameof(Variable));
+            }
+        }
+
+        /// <summary>
+        /// 条件变量（由来源 + 字段推导；setter 仅用于兼容旧文件的 "Variable" 字段与外部赋值）
         /// </summary>
         public ConditionVariable Variable
         {
-            get => _variable;
+            get => ComputeVariable();
             set
             {
-                if (SetProperty(ref _variable, value))
+                ApplyVariable(value);
+                OnPropertyChanged(nameof(Variable));
+                OnPropertyChanged(nameof(ShowFieldName));
+                OnPropertyChanged(nameof(ShowTextExtractSettings));
+                OnPropertyChanged(nameof(ShowConstantValue));
+                OnPropertyChanged(nameof(ShowFieldSelector));
+                OnPropertyChanged(nameof(ShowStepSelector));
+                OnPropertyChanged(nameof(ShowOperator));
+                RefreshExtractVisibility();
+            }
+        }
+
+        private ConditionVariable ComputeVariable()
+        {
+            if (_source == ConditionSource.Constant)
+                return _constantValue ? ConditionVariable.ConstantTrue : ConditionVariable.ConstantFalse;
+
+            bool self = _source == ConditionSource.Self;
+            return _field switch
+            {
+                ConditionField.Result => self ? ConditionVariable.Self_IsTrue : ConditionVariable.Step_IsTrue,
+                ConditionField.ExecutionTimeMs => self ? ConditionVariable.Self_ExecutionTimeMs : ConditionVariable.Step_ExecutionTimeMs,
+                ConditionField.StartTimeMs => self ? ConditionVariable.Self_StartTimeMs : ConditionVariable.Step_StartTimeMs,
+                ConditionField.EndTimeMs => self ? ConditionVariable.Self_EndTimeMs : ConditionVariable.Step_EndTimeMs,
+                ConditionField.Similarity => self ? ConditionVariable.Self_Similarity : ConditionVariable.Step_Similarity,
+                ConditionField.ClickX => self ? ConditionVariable.Self_ClickX : ConditionVariable.Step_ClickX,
+                ConditionField.ClickY => self ? ConditionVariable.Self_ClickY : ConditionVariable.Step_ClickY,
+                ConditionField.Text => self ? ConditionVariable.Self_OCRText : ConditionVariable.Step_OCRText,
+                ConditionField.TypedText => self ? ConditionVariable.Self_TypedText : ConditionVariable.Step_TypedText,
+                ConditionField.PopupResult => self ? ConditionVariable.Self_PopupResult : ConditionVariable.Step_PopupResult,
+                ConditionField.SignalValue => self ? ConditionVariable.Self_SignalValue : ConditionVariable.Step_SignalValue,
+                ConditionField.Triggered => ConditionVariable.Step_Triggered,
+                ConditionField.UserInputField => ConditionVariable.Step_UserInputField,
+                _ => ConditionVariable.Self_IsTrue,
+            };
+        }
+
+        private void ApplyVariable(ConditionVariable variable)
+        {
+            switch (variable)
+            {
+                case ConditionVariable.ConstantTrue:
+                    _source = ConditionSource.Constant;
+                    _constantValue = true;
+                    OnPropertyChanged(nameof(Source));
+                    OnPropertyChanged(nameof(ConstantValue));
+                    break;
+                case ConditionVariable.ConstantFalse:
+                    _source = ConditionSource.Constant;
+                    _constantValue = false;
+                    OnPropertyChanged(nameof(Source));
+                    OnPropertyChanged(nameof(ConstantValue));
+                    break;
+                case ConditionVariable.Self_IsTrue:
+                case ConditionVariable.Self_Similarity:
+                case ConditionVariable.Self_ExecutionTimeMs:
+                case ConditionVariable.Self_StartTimeMs:
+                case ConditionVariable.Self_EndTimeMs:
+                case ConditionVariable.Self_ClickX:
+                case ConditionVariable.Self_ClickY:
+                case ConditionVariable.Self_OCRText:
+                case ConditionVariable.Self_PopupResult:
+                case ConditionVariable.Self_SignalValue:
+                case ConditionVariable.Self_TypedText:
+                    _source = ConditionSource.Self;
+                    _field = FieldOf(variable);
+                    OnPropertyChanged(nameof(Source));
+                    OnPropertyChanged(nameof(Field));
+                    break;
+                case ConditionVariable.Step_IsTrue:
+                case ConditionVariable.Step_Similarity:
+                case ConditionVariable.Step_ExecutionTimeMs:
+                case ConditionVariable.Step_StartTimeMs:
+                case ConditionVariable.Step_EndTimeMs:
+                case ConditionVariable.Step_ClickX:
+                case ConditionVariable.Step_ClickY:
+                case ConditionVariable.Step_OCRText:
+                case ConditionVariable.Step_PopupResult:
+                case ConditionVariable.Step_SignalValue:
+                case ConditionVariable.Step_TypedText:
+                case ConditionVariable.Step_Triggered:
+                case ConditionVariable.Step_UserInputField:
+                    _source = ConditionSource.Step;
+                    _field = FieldOf(variable);
+                    OnPropertyChanged(nameof(Source));
+                    OnPropertyChanged(nameof(Field));
+                    break;
+            }
+        }
+
+        private static ConditionField FieldOf(ConditionVariable variable) => variable switch
+        {
+            ConditionVariable.Self_IsTrue or ConditionVariable.Step_IsTrue => ConditionField.Result,
+            ConditionVariable.Self_ExecutionTimeMs or ConditionVariable.Step_ExecutionTimeMs => ConditionField.ExecutionTimeMs,
+            ConditionVariable.Self_StartTimeMs or ConditionVariable.Step_StartTimeMs => ConditionField.StartTimeMs,
+            ConditionVariable.Self_EndTimeMs or ConditionVariable.Step_EndTimeMs => ConditionField.EndTimeMs,
+            ConditionVariable.Self_Similarity or ConditionVariable.Step_Similarity => ConditionField.Similarity,
+            ConditionVariable.Self_ClickX or ConditionVariable.Step_ClickX => ConditionField.ClickX,
+            ConditionVariable.Self_ClickY or ConditionVariable.Step_ClickY => ConditionField.ClickY,
+            ConditionVariable.Self_OCRText or ConditionVariable.Step_OCRText => ConditionField.Text,
+            ConditionVariable.Self_TypedText or ConditionVariable.Step_TypedText => ConditionField.TypedText,
+            ConditionVariable.Self_PopupResult or ConditionVariable.Step_PopupResult => ConditionField.PopupResult,
+            ConditionVariable.Self_SignalValue or ConditionVariable.Step_SignalValue => ConditionField.SignalValue,
+            ConditionVariable.Step_Triggered => ConditionField.Triggered,
+            ConditionVariable.Step_UserInputField => ConditionField.UserInputField,
+            _ => ConditionField.Result,
+        };
+
+        /// <summary>来源类型选项（界面第一项）</summary>
+        [JsonIgnore]
+        public List<ConditionSource> AvailableSources { get; } = new()
+        {
+            ConditionSource.Constant,
+            ConditionSource.Self,
+            ConditionSource.Step,
+        };
+
+        /// <summary>是否显示常量取值（真/假）</summary>
+        [JsonIgnore]
+        public bool ShowConstantValue => _source == ConditionSource.Constant;
+
+        /// <summary>是否显示字段选择（非常量才有）</summary>
+        [JsonIgnore]
+        public bool ShowFieldSelector => _source != ConditionSource.Constant;
+
+        /// <summary>是否显示引用步骤选择</summary>
+        [JsonIgnore]
+        public bool ShowStepSelector => _source == ConditionSource.Step;
+
+        /// <summary>是否显示运算符与右值（常量不需要）</summary>
+        [JsonIgnore]
+        public bool ShowOperator => _source != ConditionSource.Constant;
+
+        private void RefreshAvailability()
+        {
+            OnPropertyChanged(nameof(Variable));
+            OnPropertyChanged(nameof(AvailableFields));
+            OnPropertyChanged(nameof(ShowConstantValue));
+            OnPropertyChanged(nameof(ShowFieldSelector));
+            OnPropertyChanged(nameof(ShowStepSelector));
+            OnPropertyChanged(nameof(ShowOperator));
+            OnPropertyChanged(nameof(ShowFieldName));
+            OnPropertyChanged(nameof(ShowTextExtractSettings));
+            RefreshExtractVisibility();
+        }
+
+        /// <summary>
+        /// 当前来源下可选的字段：执行结果 / 执行耗时 / 开始时间 / 结束时间，
+        /// 再按步骤类型只补充该类型真正有的字段（键入文字就是键入的文本，识图才有相似度等）。
+        /// </summary>
+        [JsonIgnore]
+        public List<ConditionField> AvailableFields
+        {
+            get
+            {
+                var fields = new List<ConditionField>
                 {
-                    OnPropertyChanged(nameof(ShowTextExtractSettings));
-                    OnPropertyChanged(nameof(ShowFieldName));
-                    RefreshExtractVisibility();
+                    ConditionField.Result,
+                    ConditionField.ExecutionTimeMs,
+                    ConditionField.StartTimeMs,
+                    ConditionField.EndTimeMs,
+                };
+
+                var stepType = ResolveStepType();
+                switch (stepType)
+                {
+                    case StepType.ClickImage:
+                    case StepType.FindImage:
+                    case StepType.ClickImages:
+                    case StepType.FindImages:
+                        fields.AddRange(new[]
+                        {
+                            ConditionField.Similarity,
+                            ConditionField.ClickX,
+                            ConditionField.ClickY,
+                            ConditionField.Text,
+                        });
+                        break;
+                    case StepType.TypeText:
+                    case StepType.TypeTextMore:
+                    case StepType.TypeTextFromFile:
+                        fields.Add(ConditionField.TypedText);
+                        break;
+                    case StepType.GetInput:
+                        fields.Add(ConditionField.Text);
+                        break;
+                    case StepType.Popup:
+                        fields.Add(ConditionField.PopupResult);
+                        break;
+                    case StepType.ReceiveSignal:
+                        fields.Add(ConditionField.SignalValue);
+                        break;
                 }
+
+                // 「用户输入」字段只对用户输入步骤有意义
+                if (_source == ConditionSource.Step && stepType == StepType.UserInput)
+                    fields.Add(ConditionField.UserInputField);
+
+                return fields;
             }
         }
 
@@ -160,7 +467,7 @@ namespace ShaoLu.Models
             set
             {
                 if (SetProperty(ref _stepUid, value))
-                    OnPropertyChanged(nameof(AvailableVariables));
+                    OnPropertyChanged(nameof(AvailableFields));
             }
         }
 
@@ -181,7 +488,7 @@ namespace ShaoLu.Models
 
         /// <summary>是否显示字段名输入框（仅用户输入字段变量）</summary>
         [JsonIgnore]
-        public bool ShowFieldName => Variable == ConditionVariable.Step_UserInputField;
+        public bool ShowFieldName => _source == ConditionSource.Step && _field == ConditionField.UserInputField;
 
         /// <summary>
         /// 拥有此条件的步骤 Uid（不序列化，运行时设置）
@@ -208,104 +515,6 @@ namespace ShaoLu.Models
             }
         }
 
-        /// <summary>
-        /// 根据选中步骤类型返回可用的条件变量列表
-        /// </summary>
-        [JsonIgnore]
-        public List<ConditionVariable> AvailableVariables
-        {
-            get
-            {
-                var stepType = ResolveStepType();
-                var vars = new List<ConditionVariable>
-                {
-                    ConditionVariable.ConstantTrue,
-                    ConditionVariable.ConstantFalse,
-                };
-
-                switch (stepType)
-                {
-                    case StepType.ClickImage:
-                    case StepType.FindImage:
-                    case StepType.ClickImages:
-                    case StepType.FindImages:
-                        vars.AddRange(new[]
-                        {
-                            ConditionVariable.Self_IsTrue,
-                            ConditionVariable.Self_Similarity,
-                            ConditionVariable.Self_ExecutionTimeMs,
-                            ConditionVariable.Self_ClickX,
-                            ConditionVariable.Self_ClickY,
-                            ConditionVariable.Self_OCRText,
-                            ConditionVariable.Self_PopupResult,
-                            ConditionVariable.Step_IsTrue,
-                            ConditionVariable.Step_Similarity,
-                            ConditionVariable.Step_ExecutionTimeMs,
-                            ConditionVariable.Step_ClickX,
-                            ConditionVariable.Step_ClickY,
-                            ConditionVariable.Step_OCRText,
-                            ConditionVariable.Step_PopupResult,
-                            ConditionVariable.Step_Triggered,
-                        });
-                        break;
-                    case StepType.Popup:
-                        vars.AddRange(new[]
-                        {
-                            ConditionVariable.Self_IsTrue,
-                            ConditionVariable.Self_PopupResult,
-                            ConditionVariable.Self_ExecutionTimeMs,
-                            ConditionVariable.Step_IsTrue,
-                            ConditionVariable.Step_PopupResult,
-                            ConditionVariable.Step_ExecutionTimeMs,
-                            ConditionVariable.Step_Triggered,
-                        });
-                        break;
-                    case StepType.GetInput:
-                        vars.AddRange(new[]
-                        {
-                            ConditionVariable.Self_IsTrue,
-                            ConditionVariable.Self_OCRText,
-                            ConditionVariable.Self_ExecutionTimeMs,
-                            ConditionVariable.Step_IsTrue,
-                            ConditionVariable.Step_OCRText,
-                            ConditionVariable.Step_ExecutionTimeMs,
-                            ConditionVariable.Step_Triggered,
-                        });
-                        break;
-                    case StepType.ReceiveSignal:
-                        vars.AddRange(new[]
-                        {
-                            ConditionVariable.Self_IsTrue,
-                            ConditionVariable.Self_SignalValue,
-                            ConditionVariable.Self_ExecutionTimeMs,
-                            ConditionVariable.Step_IsTrue,
-                            ConditionVariable.Step_SignalValue,
-                            ConditionVariable.Step_ExecutionTimeMs,
-                            ConditionVariable.Step_Triggered,
-                        });
-                        break;
-                    default:
-                        // 文本步骤及其他
-                        vars.AddRange(new[]
-                        {
-                            ConditionVariable.Self_IsTrue,
-                            ConditionVariable.Self_ExecutionTimeMs,
-                            ConditionVariable.Self_OCRText,
-                            ConditionVariable.Self_PopupResult,
-                            ConditionVariable.Step_IsTrue,
-                            ConditionVariable.Step_ExecutionTimeMs,
-                            ConditionVariable.Step_OCRText,
-                            ConditionVariable.Step_PopupResult,
-                            ConditionVariable.Step_Triggered,
-                        });
-                        break;
-                }
-
-                // 任何步骤都可以引用「用户输入」步骤的字段
-                vars.Add(ConditionVariable.Step_UserInputField);
-                return vars;
-            }
-        }
 
         /// <summary>
         /// 解析当前选中步骤的类型（无选中时返回父步骤类型）
@@ -421,7 +630,8 @@ namespace ShaoLu.Models
         /// 当前变量是否为识别文本类型（决定是否显示提取设置）
         /// </summary>
         [JsonIgnore]
-        public bool IsTextVariable => Variable == ConditionVariable.Self_OCRText || Variable == ConditionVariable.Step_OCRText;
+        public bool IsTextVariable => Variable is ConditionVariable.Self_OCRText or ConditionVariable.Step_OCRText
+            or ConditionVariable.Self_TypedText or ConditionVariable.Step_TypedText;
 
         /// <summary>
         /// 是否显示文本提取设置
@@ -463,7 +673,9 @@ namespace ShaoLu.Models
         {
             return new StepCondition
             {
-                Variable = Variable,
+                Source = Source,
+                Field = Field,
+                ConstantValue = ConstantValue,
                 StepUid = StepUid,
                 FieldName = FieldName,
                 ParentStepUid = ParentStepUid,

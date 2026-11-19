@@ -14,6 +14,7 @@
     <conv:ConditionModeToVisibilityConverter x:Key="ConditionModeToVisibility"/>
     <conv:ConditionEnumToStringConverter x:Key="ConditionEnumToString"/>
     <conv:BoolToInverseBoolConverter x:Key="BoolToInverse"/>
+    <conv:BoolToIndexConverter x:Key="BoolToIndex"/>
     <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
     <!-- 细横向滚动条：每个设置段内部使用，高度 6px、无箭头、圆角滑块 -->
@@ -61,7 +62,9 @@
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="5"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="5"/>
                     <RowDefinition Height="Auto"/>
@@ -83,8 +86,17 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Label Grid.Row="2" Content="{lex:Loc StepFalseGoto}" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <ComboBox Grid.Row="2" Grid.Column="1" 
+                <!-- 真分支的循环保护：跳转次数上限 / 跳转超时（超过后改走假分支，另一分支也不跳就执行下一步） -->
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,0">
+                    <Label Content="{lex:Loc GotoGuard_Count}" Padding="0,0,3,0" VerticalAlignment="Center" FontSize="11"/>
+                    <wd:NumericBox Value="{Binding TrueGotoMaxCount, Mode=TwoWay}" Minimum="-1" Maximum="99999" Precision="0" Interval="1" Width="60"
+                                   ToolTip="{lex:Loc GotoGuard_Count_Hint}"/>
+                    <Label Content="{lex:Loc GotoGuard_Timeout}" Padding="10,0,3,0" VerticalAlignment="Center" FontSize="11"/>
+                    <wd:NumericBox Value="{Binding TrueGotoTimeoutSeconds, Mode=TwoWay}" Minimum="0" Maximum="86400" Precision="1" Interval="1" Width="60"
+                                   ToolTip="{lex:Loc GotoGuard_Timeout_Hint}"/>
+                </StackPanel>
+                <Label Grid.Row="3" Content="{lex:Loc StepFalseGoto}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ComboBox Grid.Row="3" Grid.Column="1" 
                           ItemsSource="{Binding AllSteps}"
                           SelectedValue="{Binding FalseGotoUid, TargetNullValue={x:Static sys:Guid.Empty}}"
                           SelectedValuePath="Uid"
@@ -100,8 +112,17 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Label Grid.Row="4" Content="{lex:Loc SelfReferenceLimit}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <!-- 假分支的循环保护 -->
                 <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                    <Label Content="{lex:Loc GotoGuard_Count}" Padding="0,0,3,0" VerticalAlignment="Center" FontSize="11"/>
+                    <wd:NumericBox Value="{Binding FalseGotoMaxCount, Mode=TwoWay}" Minimum="-1" Maximum="99999" Precision="0" Interval="1" Width="60"
+                                   ToolTip="{lex:Loc GotoGuard_Count_Hint}"/>
+                    <Label Content="{lex:Loc GotoGuard_Timeout}" Padding="10,0,3,0" VerticalAlignment="Center" FontSize="11"/>
+                    <wd:NumericBox Value="{Binding FalseGotoTimeoutSeconds, Mode=TwoWay}" Minimum="0" Maximum="86400" Precision="1" Interval="1" Width="60"
+                                   ToolTip="{lex:Loc GotoGuard_Timeout_Hint}"/>
+                </StackPanel>
+                <Label Grid.Row="6" Content="{lex:Loc SelfReferenceLimit}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
                     <wd:NumericBox Value="{Binding SelfReferenceLimit, Mode=TwoWay}" Minimum="-1" Maximum="9999" Width="80"
                                    ToolTip="{lex:Loc SelfReferenceLimitHint}"/>
                     <TextBlock Text="{lex:Loc SelfReferenceLimitHint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray" FontSize="11"/>
@@ -121,16 +142,30 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <!-- 第一行：引用步骤 + 变量 -->
-                <ComboBox ItemsSource="{Binding AllSteps}"
+                <!-- 第一行：先选取值来源（常量 / 本步骤 / 引用步骤） -->
+                <ComboBox ItemsSource="{Binding AvailableSources}"
+                          SelectedItem="{Binding Source}"
+                          MinWidth="90" Margin="0,0,3,3"
+                          ToolTip="{lex:Loc Condition_Source_Tooltip}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <!-- 引用步骤时：选被引用的步骤 -->
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding AllSteps}"
                           SelectedValue="{Binding StepUid}"
                           SelectedValuePath="Uid"
-                          MinWidth="80" Margin="0,0,3,3"
+                          MinWidth="80" Margin="0,0,0,3"
+                          Visibility="{Binding ShowStepSelector, Converter={StaticResource BoolToVis}}"
                           ToolTip="{lex:Loc Condition_StepRef_Tooltip}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
@@ -142,24 +177,35 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <ComboBox Grid.Column="1" 
-                          ItemsSource="{Binding AvailableVariables}"
-                          SelectedItem="{Binding Variable}" Margin="0,0,0,3">
+                <!-- 第二行：非常量时选字段；常量时只选真/假 -->
+                <ComboBox Grid.Row="1" Grid.ColumnSpan="2"
+                          ItemsSource="{Binding AvailableFields}"
+                          SelectedItem="{Binding Field}" Margin="0,0,0,3"
+                          Visibility="{Binding ShowFieldSelector, Converter={StaticResource BoolToVis}}"
+                          ToolTip="{lex:Loc Condition_Field_Tooltip}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Converter={StaticResource ConditionEnumToString}}"/>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <!-- 第二行：用户输入字段名（仅变量为「引用步骤 → 用户输入字段」时显示） -->
-                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,3"
+                <ComboBox Grid.Row="1" Grid.ColumnSpan="2"
+                          SelectedIndex="{Binding ConstantValue, Converter={StaticResource BoolToIndex}}"
+                          Margin="0,0,0,3" Visibility="{Binding ShowConstantValue, Converter={StaticResource BoolToVis}}"
+                          ToolTip="{lex:Loc Condition_Constant_Tooltip}">
+                    <ComboBoxItem Content="{lex:Loc Condition_ConstantTrue}"/>
+                    <ComboBoxItem Content="{lex:Loc Condition_ConstantFalse}"/>
+                </ComboBox>
+                <!-- 第三行：用户输入字段名（仅「引用步骤 → 用户输入字段」时显示） -->
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,3"
                             Visibility="{Binding ShowFieldName, Converter={StaticResource BoolToVis}}">
                     <Label Content="{lex:Loc UserInput_FieldName}" Padding="0,0,3,0" VerticalAlignment="Center"/>
                     <TextBox Text="{Binding FieldName, UpdateSourceTrigger=LostFocus}" MinWidth="90"
                              ToolTip="{lex:Loc UserInput_FieldNameHint}"/>
                 </StackPanel>
-                <!-- 第三行：运算符 + 值 -->
-                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal">
+                <!-- 第四行：运算符 + 值（常量不需要） -->
+                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal"
+                            Visibility="{Binding ShowOperator, Converter={StaticResource BoolToVis}}">
                     <ComboBox SelectedItem="{Binding Operator}" MinWidth="70" Margin="0,0,3,0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -181,8 +227,8 @@
                     <TextBox Text="{Binding Value, UpdateSourceTrigger=LostFocus}" MinWidth="50" Margin="0,0,3,0"
                              ToolTip="{lex:Loc Condition_Value_Tooltip}"/>
                 </StackPanel>
-                <!-- 第四行：识别文本提取设置（仅识别文本变量显示） -->
-                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0"
+                <!-- 第五行：识别文本提取设置（仅识别文本字段显示） -->
+                <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0"
                             Visibility="{Binding ShowTextExtractSettings, Converter={StaticResource BoolToVis}}">
                     <Label Content="{lex:Loc TextExtract_Mode}" Padding="0,0,3,0" VerticalAlignment="Center"/>
                     <ComboBox ItemsSource="{Binding AllTextExtractModes}" SelectedItem="{Binding TextExtractMode}" MinWidth="90" Margin="0,0,3,0">
@@ -214,8 +260,8 @@
                         </ComboBox>
                     </StackPanel>
                 </StackPanel>
-                <!-- 第五行：条件合并符（保持在最后） -->
-                <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0">
+                <!-- 第六行：条件合并符（保持在最后） -->
+                <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,3,0,0">
                     <ComboBox SelectedItem="{Binding Connector}" MinWidth="55" Margin="0,0,3,0">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -630,8 +676,16 @@
                 <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                     <Button Content="{lex:Loc Font}" Command="{Binding FontSelectCommand}" Margin="0,0,5,0" Padding="10,3"/>
                     <Button Content="{lex:Loc Color}" Command="{Binding ColorSelectCommand}" Margin="0,0,5,0" Padding="10,3"/>
-                    <Button Content="{lex:Loc RichTextEdit}" Command="{Binding RichTextEditCommand}" Padding="10,3"/>
+                    <Button Content="{lex:Loc RichTextEdit}" Command="{Binding RichTextEditCommand}" Margin="0,0,5,0" Padding="10,3"/>
+                    <Button Content="{lex:Loc Popup_Test}" Command="{Binding TestPopupCommand}" Padding="10,3"
+                            ToolTip="{lex:Loc Popup_Test_ToolTip}"/>
                 </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc Popup_MaxWindows}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding MaxWindows, Mode=TwoWay}" Minimum="1" Maximum="20" Precision="0" Interval="1" Width="60"
+                               ToolTip="{lex:Loc Popup_MaxWindows_Hint}"/>
+                <TextBlock Text="{lex:Loc Popup_MaxWindows_Hint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray" FontSize="11"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc PopupType}" Padding="0,0,5,0" VerticalAlignment="Center"/>

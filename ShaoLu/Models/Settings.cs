@@ -1,4 +1,4 @@
-using ShaoLu.Services;
+﻿using ShaoLu.Services;
 using System.Text.Json.Serialization;
 using System.Windows.Input;
 
@@ -43,6 +43,42 @@ namespace ShaoLu.Models
         /// 运行前是否弹出确认对话框
         /// </summary>
         public bool ConfirmBeforeRun { get; set; } = false;
+
+        /// <summary>
+        /// 流程图连线样式：0=折线，1=曲线
+        /// </summary>
+        public int FlowEdgeStyle { get; set; } = 0;
+
+        /// <summary>流程图：拖动节点是否吸附到网格</summary>
+        public bool FlowSnapToGrid { get; set; } = true;
+
+        /// <summary>流程图自动整理的节点间隔模式：0=自适应，1=自定义</summary>
+        public int FlowSpacingMode { get; set; } = 0;
+
+        /// <summary>流程图自定义节点间隔（像素）</summary>
+        public double FlowCustomSpacing { get; set; } = 40;
+
+        /// <summary>流程图背景网格：0=点，1=线，2=虚线</summary>
+        public int FlowBackgroundStyle { get; set; } = 0;
+
+        /// <summary>流程图背景网格大小：0=小格，1=大格</summary>
+        public int FlowGridSize { get; set; } = 0;
+
+        /// <summary>流程图：锚点是否吸附到网格</summary>
+        public bool FlowSnapAnchorsToGrid { get; set; } = true;
+
+        /// <summary>流程图：同一节点边框上相邻两个连线端点的最小间隔（像素）</summary>
+        public int FlowPortSpacing { get; set; } = 10;
+
+        /// <summary>
+        /// 运行结束后是否把主窗口切回前台
+        /// </summary>
+        public bool FocusWindowOnFinish { get; set; } = true;
+
+        /// <summary>
+        /// 运行结束后是否关闭脚本打开的窗口（弹窗、统计窗口）
+        /// </summary>
+        public bool CloseWindowsOnFinish { get; set; } = true;
 
         /// <summary>
         /// 执行 OCR 时是否在屏幕上标示识别区域

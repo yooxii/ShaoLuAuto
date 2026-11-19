@@ -792,77 +792,14 @@ namespace ShaoLu.Viewmodels
             }
             SelectedStep = step;
 
-            // 扫码 / 上传链条：缺用户输入步骤或扫码步骤时提示并自动补齐
+            // 上传链条：缺用户输入步骤或扫码步骤时提示并自动补齐（扫码步骤本身只管扫码，不依赖用户输入）
             try
             {
-                if (step is ScanCodeStep scanStep) EnsureChainForScanCode(scanStep);
-                else if (step is AcbelUploadStep uploadStep) EnsureChainForUpload(uploadStep);
+                if (step is AcbelUploadStep uploadStep) EnsureChainForUpload(uploadStep);
             }
             catch (Exception ex)
             {
-                logger.Warn(ex, "扫码链条自动补齐失败");
-            }
-        }
-
-        /// <summary>
-        /// 扫码步骤依赖「用户输入」步骤提供工单号/站别/工号/线别：
-        /// 若没有用户输入步骤、或它在扫码步骤下方、或缺字段，提示后自动创建（放首行）并补齐四个字段。
-        /// </summary>
-        private void EnsureChainForScanCode(ScanCodeStep scanStep)
-        {
-            int scanIndex = AutomationStepBases.IndexOf(scanStep);
-            var userInput = AutomationStepBases.OfType<UserInputStep>().FirstOrDefault();
-            int uiIndex = userInput == null ? -1 : AutomationStepBases.IndexOf(userInput);
-
-            var requiredFields = new[] { "工单号", "站别", "工号", "线别" };
-            var missingFields = userInput == null
-                ? new List<string>(requiredFields)
-                : requiredFields.Where(n => !userInput.Fields.Any(f =>
-                    string.Equals((f?.Name ?? string.Empty).Trim(), n, StringComparison.OrdinalIgnoreCase))).ToList();
-
-            bool createNew = userInput == null || uiIndex > scanIndex;
-            if (!createNew && missingFields.Count == 0) return;
-
-            string title = LanguageService.GetLocalizedString("ScanCode_ChainTitle", "扫码步骤需要用户输入");
-            string message = LanguageService.GetLocalizedString("ScanCode_AutoAddUserInput",
-                "扫码步骤需要用户输入步骤提供工单号/站别/工号/线别。\n\n将自动创建用户输入步骤并放到首行（缺少的字段会补齐）。");
-            try
-            {
-                WPFDevelopers.Controls.MessageBox.Show(message, title,
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
-            }
-            catch { }
-
-            PushListUndoSnapshot();
-            if (createNew)
-            {
-                var ui = new UserInputStep($"UserInput_{AutomationStepBases.Count(t => t.Type == StepType.UserInput) + 1}")
-                {
-                    PromptTitle = LanguageService.GetLocalizedString("ScanCode_UserInputTitle", "扫码信息")
-                };
-                foreach (var name in requiredFields)
-                {
-                    ui.Fields.Add(new UserInputField
-                    {
-                        Name = name,
-                        FieldType = UserInputFieldType.Text,
-                        IsRequired = true
-                    });
-                }
-                ApplyDefaultSettings(ui);
-                AutomationStepBases.Insert(0, ui);
-            }
-            else
-            {
-                foreach (var name in missingFields)
-                {
-                    userInput.Fields.Add(new UserInputField
-                    {
-                        Name = name,
-                        FieldType = UserInputFieldType.Text,
-                        IsRequired = true
-                    });
-                }
+                logger.Warn(ex, "上传链条自动补齐失败");
             }
         }
 

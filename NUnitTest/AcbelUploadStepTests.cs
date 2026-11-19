@@ -1,4 +1,4 @@
-﻿using AcbelMes;
+using AcbelMes;
 using NUnit.Framework;
 using ShaoLu.Models;
 using ShaoLu.Services;
@@ -45,10 +45,12 @@ namespace NUnitTest
         {
             private readonly Queue<AcbelCallResult> _insertResults = new Queue<AcbelCallResult>();
             private readonly Queue<AcbelCallResult> _basicResults = new Queue<AcbelCallResult>();
+            private readonly Queue<AcbelCallResult> _checkResults = new Queue<AcbelCallResult>();
 
             public readonly List<string> Payloads = new List<string>();
             public readonly List<string> ProgramFiles = new List<string>();
             public readonly List<BasicInfoCall> BasicInfos = new List<BasicInfoCall>();
+            public readonly List<BarcodeCall> BarcodeCalls = new List<BarcodeCall>();
             public AcbelCallResult OpenResult = Ok("database");
             public int OpenCount;
             public int DisposeCount;
@@ -59,6 +61,14 @@ namespace NUnitTest
             {
                 OpenCount++;
                 return OpenResult;
+            }
+
+            public AcbelCallResult CheckBarcode(string barcode, string stationEmp)
+            {
+                BarcodeCalls.Add(new BarcodeCall { Barcode = barcode, StationEmp = stationEmp });
+                if (_checkResults.Count > 0)
+                    return _checkResults.Dequeue();
+                return Ok("1");
             }
 
             public AcbelCallResult SetBasicInfo(string workOrder, string stationEmp, string line)
@@ -90,6 +100,12 @@ namespace NUnitTest
                     _basicResults.Enqueue(r);
             }
 
+            public void EnqueueCheck(params AcbelCallResult[] results)
+            {
+                foreach (var r in results)
+                    _checkResults.Enqueue(r);
+            }
+
             public void Dispose()
             {
                 DisposeCount++;
@@ -102,6 +118,13 @@ namespace NUnitTest
             public string WorkOrder { get; set; }
             public string StationEmp { get; set; }
             public string Line { get; set; }
+        }
+
+        /// <summary>记录一次 CHKBAR_CODE 的实参。</summary>
+        private sealed class BarcodeCall
+        {
+            public string Barcode { get; set; }
+            public string StationEmp { get; set; }
         }
 
         private static AcbelCallResult Ok(string value)
@@ -336,6 +359,100 @@ namespace NUnitTest
             Assert.That(_fake.BasicInfos.Count, Is.EqualTo(2));
             Assert.That(_fake.InsertCount, Is.EqualTo(1));
         }
+
+        #region 条码校验（CHKBAR_CODE：原来在扫码步骤里做，现在跟上传一起做）
+
+        [Test]
+        public void 条码校验_默认取第4段条码并带站别工号()
+        {
+            var step = CreateValidStep();
+
+            Assert.That(step.RunAsync().GetAwaiter().GetResult(), Is.True);
+
+            BarcodeCall check = _fake.BarcodeCalls.Single();
+            Assert.That(check.Barcode, Is.EqualTo("O4769455"), "默认取第 4 段 INTERNAL_SR（单体条码）");
+            Assert.That(check.StationEmp, Is.EqualTo("16521807605"), "校验值同样是站别+工号");
+            Assert.That(_fake.BasicInfos.Count, Is.EqualTo(1), "条码通过后照常写基础信息");
+            Assert.That(_fake.InsertCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void 条码校验_业务卡控时判失败且不写基础信息不insert()
+        {
+            var step = CreateValidStep();
+            _fake.EnqueueCheck(Ok("0}C038-MOI未掃掃完,不可以測試."));
+
+            bool ok = step.RunAsync().GetAwaiter().GetResult();
+
+            Assert.That(ok, Is.False);
+            Assert.That(step.IsTrue, Is.False);
+            Assert.That(step.ErrorMessage, Does.Contain("C038"));
+            Assert.That(step.LastResult.ErrorMessage, Does.Contain("C038"));
+            Assert.That(_fake.BasicInfos.Count, Is.EqualTo(0), "条码没过就不该写基础信息");
+            Assert.That(_fake.InsertCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void 条码校验_内部异常重试一次后继续()
+        {
+            var step = CreateValidStep();
+            _fake.EnqueueCheck(Ok("2}調用函數CHKBAR_CODE錯誤 請重新調用此函數"), Ok("1"));
+
+            bool ok = step.RunAsync().GetAwaiter().GetResult();
+
+            Assert.That(ok, Is.True);
+            Assert.That(_fake.BarcodeCalls.Count, Is.EqualTo(2));
+            Assert.That(_fake.InsertCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void 条码校验_可以关闭()
+        {
+            var step = CreateValidStep();
+            step.CheckBarcode = false;
+
+            Assert.That(step.RunAsync().GetAwaiter().GetResult(), Is.True);
+            Assert.That(_fake.BarcodeCalls.Count, Is.EqualTo(0));
+            Assert.That(_fake.InsertCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void 条码校验_条码来源段可以改()
+        {
+            var step = CreateValidStep();
+            step.BarcodeRowIndex = AcbelInsertDataSpec.ByName("OUT_BARCODE").Index;
+
+            Assert.That(step.RunAsync().GetAwaiter().GetResult(), Is.True);
+            Assert.That(_fake.BarcodeCalls.Single().Barcode, Is.EqualTo("FSC007A047H1GB2116000136"),
+                "改成外控条码段后就取那一段的值");
+        }
+
+        [Test]
+        public void 条码校验_条码为空时判失败且不送校验()
+        {
+            var step = CreateValidStep();
+            step.BarcodeRowIndex = AcbelInsertDataSpec.ByName("OUT_BARCODE").Index;
+            step.OptionalRows.First(r => r.Index == step.BarcodeRowIndex).Text = string.Empty;
+
+            bool ok = step.RunAsync().GetAwaiter().GetResult();
+
+            Assert.That(ok, Is.False);
+            Assert.That(step.ErrorMessage, Does.Contain("OUT_BARCODE"), "错误信息要指出是哪一段没填");
+            Assert.That(_fake.BarcodeCalls.Count, Is.EqualTo(0), "空条码不送去校验");
+            Assert.That(_fake.InsertCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void 条码校验_默认开启且默认取第4段()
+        {
+            var step = new AcbelUploadStep("AcbelUpload_1");
+
+            Assert.That(step.CheckBarcode, Is.True);
+            Assert.That(step.BarcodeRowIndex, Is.EqualTo(AcbelUploadStep.DefaultBarcodeRowIndex));
+            Assert.That(AcbelInsertDataSpec.ByIndex(step.BarcodeRowIndex).Name, Is.EqualTo("INTERNAL_SR"));
+        }
+
+        #endregion
 
         [Test]
         public void 业务卡控_0开头判失败并带错误说明()
@@ -577,6 +694,8 @@ namespace NUnitTest
                 Assert.That(back.Name, Is.EqualTo(step.Name));
                 Assert.That(back.Description, Is.EqualTo("上传测试"));
                 Assert.That(back.DryRun, Is.True);
+                Assert.That(back.CheckBarcode, Is.EqualTo(step.CheckBarcode));
+                Assert.That(back.BarcodeRowIndex, Is.EqualTo(step.BarcodeRowIndex));
                 Assert.That(back.RequiredRows.Count, Is.EqualTo(9));
                 Assert.That(back.OptionalRows.Count, Is.EqualTo(18));
                 Assert.That(back.ProgramFileRow, Is.Not.Null);

@@ -22,9 +22,9 @@ namespace ShaoLu.Models
         BurnInConfig = 203,
         FocusWindow = 204,
         Popup = 1000,
-        AcbelUpload = 1001,     // 上传Acbel（ACBEL_INSERT_DATA）
+        AcbelUpload = 1001,     // 上传Acbel（条码校验 → 基础资料 → ACBEL_INSERT_DATA）
         UserInput = 1002,       // 用户输入（打开工程/运行前弹窗填写，供其他步骤引用）
-        ScanCode = 1003,        // 扫码（验证网络 → 扫码 → 验证条码，供上传步骤引用条码）
+        ScanCode = 1003,        // 扫码（只弹窗扫码，条码作为步骤文本供上传步骤引用）
 
         // 多线程步骤
         MultiThread = 300,      // 多线程开始

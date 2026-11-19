@@ -51,6 +51,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
     {
         AcbelCallResult OpenDatabase();
 
+        AcbelCallResult CheckBarcode(string barcode, string stationEmp);
+
         AcbelCallResult SetBasicInfo(string workOrder, string stationEmp, string line);
 
         AcbelCallResult InsertData(string uploadData, string programFile);
@@ -69,6 +71,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         public AcbelCallResult OpenDatabase() => _client.OpenDatabase();
+
+        /// <summary>校验条码（条码 + 站别/工号合并值）。</summary>
+        public AcbelCallResult CheckBarcode(string barcode, string stationEmp)
+            => _client.CheckBarcode(barcode, stationEmp);
 
         /// <summary>写入基础信息（工单号=工令、站别+工号、线别）。</summary>
         public AcbelCallResult SetBasicInfo(string workOrder, string stationEmp, string line)
@@ -453,7 +459,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
     /// <summary>
     /// 「上传Acbel」步骤：按字段规范组装 27 段上传资料，
-    /// 先调用 ACBEL_SET_BASIC_INFO 写入基础资料（工单/站别工号/线别），
+    /// 先调用 CHKBAR_CODE 校验条码、ACBEL_SET_BASIC_INFO 写入基础资料（工单/站别工号/线别），
     /// 再调用 ACBEL_INSERT_DATA 写入 Acbel MES。失败不抛异常，返回 false 并带上错误信息。
     /// </summary>
     public sealed class AcbelUploadStep : AutomationStepBase
@@ -495,6 +501,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private ObservableCollection<AcbelUploadRow> _optionalRows = new ObservableCollection<AcbelUploadRow>();
         private AcbelUploadRow _programFileRow;
         private bool _dryRun;
+        private bool _checkBarcode = true;
+        private int _barcodeRowIndex = DefaultBarcodeRowIndex;
         private bool _rowsReady;
 
         public AcbelUploadStep() : base()
@@ -562,6 +570,37 @@ namespace ShaoLu.Viewmodels.AutomationStep
             get => _dryRun;
             set => SetProperty(ref _dryRun, value);
         }
+
+        /// <summary>条码来源的默认段号：4 = INTERNAL_SR（单体条码）。</summary>
+        public const int DefaultBarcodeRowIndex = 4;
+
+        /// <summary>
+        /// 上传前先用条码校验（CHKBAR_CODE）。关掉后写完基础信息直接上传。
+        /// 原来在扫码步骤里做，现在跟上传一起做：扫码步骤只管扫码。
+        /// </summary>
+        public bool CheckBarcode
+        {
+            get => _checkBarcode;
+            set => SetProperty(ref _checkBarcode, value);
+        }
+
+        /// <summary>
+        /// 条码来源段号：CHKBAR_CODE 的条码取这一段的当前值（含引用解析）。
+        /// 默认取第 4 段 INTERNAL_SR（单体条码）；这一段引用「扫码」步骤的「扫码结果」即可自动跟着扫码走。
+        /// </summary>
+        public int BarcodeRowIndex
+        {
+            get => _barcodeRowIndex;
+            set
+            {
+                int index = value >= 1 && value <= AcbelInsertDataSpec.FieldCount ? value : DefaultBarcodeRowIndex;
+                SetProperty(ref _barcodeRowIndex, index);
+            }
+        }
+
+        /// <summary>条码来源段的可选列表（界面下拉框用）。</summary>
+        [JsonIgnore]
+        public IReadOnlyList<AcbelInsertDataField> BarcodeSourceOptions => AcbelInsertDataSpec.Fields;
 
         /// <summary>全部字段行（不含镭雕程式文件名行）。</summary>
         public IEnumerable<AcbelUploadRow> FieldRows()
@@ -641,6 +680,48 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
 
         /// <summary>
+        /// 校验条码（CHKBAR_CODE）：条码取「条码来源段」的当前值（含引用解析），站别+工号作为校验值。
+        /// 未勾选「上传前校验条码」时直接通过；勾了但条码为空按失败处理（不拿空条码去校验）。
+        /// 返回 false 时不再写基础信息、也不上传。
+        /// </summary>
+        private bool EnsureBarcodeChecked(IAcbelBridgeChannel channel, out string error)
+        {
+            error = null;
+            if (!CheckBarcode) return true;
+
+            int index = BarcodeRowIndex;
+            string barcode = (RowValue(index) ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(barcode))
+            {
+                AcbelInsertDataField spec = AcbelInsertDataSpec.ByIndex(index);
+                error = string.Format(
+                    Loc("AcbelFailBarcodeEmpty", "条码来源（{0}）为空，请先引用扫码结果或填写固定条码"),
+                    spec == null ? "#" + index : index + ". " + spec.Name);
+                return false;
+            }
+
+            string stationEmp = ResolveStationEmployee();
+            var call = channel.CheckBarcode(barcode, stationEmp);
+
+            // 内部异常（2}…）：厂商要求重调一次
+            if (IsRetryNeededCall(call))
+            {
+                Logger.Warn("AcbelUpload: 条码校验需要重试一次，返回值 {0}", call == null ? "null" : call.Value);
+                call = channel.CheckBarcode(barcode, stationEmp);
+            }
+
+            if (call != null && call.TransportOk && !call.TimedOut && AcbelBridgeClient.IsOk(call.Value)) return true;
+
+            string text = call == null ? null : (!string.IsNullOrEmpty(call.Value) ? call.Value : call.Error);
+            if (call != null && call.TransportOk && !call.TimedOut && AcbelBridgeClient.IsBusinessFail(text))
+                ShowBusinessFailDialog(AcbelBridgeClient.ExtractErrorCode(text), text,
+                    Loc("AcbelBarcodeFailTitle", "Acbel 条码校验业务卡控"));
+
+            error = Describe(call);
+            return false;
+        }
+
+        /// <summary>
         /// 写入基础资料（ACBEL_SET_BASIC_INFO）。DLL 要求先写这项，ACBEL_INSERT_DATA 才能通过基础资料校验。
         /// 取值与上传资料保持一致：工单号 = MO_NO（工令）、站别+工号 = STATION + UPD_USER、线别 = LINE_NAME。
         /// 返回 false 时不再执行 insert（避免写库被拒后误报成上传失败）。
@@ -650,16 +731,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
             error = null;
 
             AcbelInsertDataField moField = AcbelInsertDataSpec.ByName("MO_NO");
-            AcbelInsertDataField stationField = AcbelInsertDataSpec.ByName("STATION");
-            AcbelInsertDataField userField = AcbelInsertDataSpec.ByName("UPD_USER");
             AcbelInsertDataField lineField = AcbelInsertDataSpec.ByName("LINE_NAME");
 
             string workOrder = moField == null ? string.Empty : RowValue(moField.Index);
-            string station = stationField == null ? string.Empty : RowValue(stationField.Index);
-            string employee = userField == null ? string.Empty : RowValue(userField.Index);
             string lineName = lineField == null ? string.Empty : RowValue(lineField.Index);
-            // 厂商口径：站别与工号直接拼接成一个值（站别 165 + 工号 21807605 → 16521807605）
-            string stationEmp = (station ?? string.Empty) + (employee ?? string.Empty);
+            string stationEmp = ResolveStationEmployee();
 
             var call = channel.SetBasicInfo(workOrder, stationEmp, lineName);
 
@@ -704,13 +780,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 string openError;
                 if (!EnsureDatabaseOpen(out channel, out openError)) return Fail(prefix + Loc("AcbelFailDbConnect", "连不上数据库") + "：" + openError);
 
+                // 校验条码（CHKBAR_CODE）：原来在扫码步骤里做，现在跟上传一起做；条码不通过就不写基础信息、不上传
+                string barcodeError;
+                if (!EnsureBarcodeChecked(channel, out barcodeError))
+                    return Fail(prefix + Loc("AcbelFailBarcode", "校验条码失败") + "：" + barcodeError);
+
                 // ACBEL_INSERT_DATA 依赖 ACBEL_SET_BASIC_INFO 写入的基础资料（工单/站别工号/线别），先写再上传
                 string basicError;
                 if (!EnsureBasicInfo(channel, out basicError))
                     return Fail(prefix + Loc("AcbelFailBasicInfo", "写入基础信息失败") + "：" + basicError);
 
                 var call = channel.InsertData(uploadData, programFile);
-
                 // 内部异常（2}…）：重试一次
                 if (IsRetryNeededCall(call))
                 {
@@ -749,7 +829,20 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// 未在 UI 线程时通过 Dispatcher 回到 UI 线程显示（与扫码步骤共用同一套弹窗）。
         /// </summary>
         private void ShowBusinessFailDialog(string code, string detail)
-            => AcbelDialogs.ShowBusinessFail(code, detail, Loc("AcbelBusinessFailTitle", "Acbel 上传业务卡控"));
+            => ShowBusinessFailDialog(code, detail, Loc("AcbelBusinessFailTitle", "Acbel 上传业务卡控"));
+
+        private static void ShowBusinessFailDialog(string code, string detail, string title)
+            => AcbelDialogs.ShowBusinessFail(code, detail, title);
+
+        /// <summary>站别 + 工号（厂商口径：直接拼接，例如站别 165 + 工号 21807605 → 16521807605）。</summary>
+        private string ResolveStationEmployee()
+        {
+            AcbelInsertDataField stationField = AcbelInsertDataSpec.ByName("STATION");
+            AcbelInsertDataField userField = AcbelInsertDataSpec.ByName("UPD_USER");
+            string station = stationField == null ? string.Empty : RowValue(stationField.Index);
+            string employee = userField == null ? string.Empty : RowValue(userField.Index);
+            return (station ?? string.Empty) + (employee ?? string.Empty);
+        }
 
         public override AutomationStepBase Clone()
         {
@@ -766,6 +859,8 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
                 DryRun = DryRun,
+                CheckBarcode = CheckBarcode,
+                BarcodeRowIndex = BarcodeRowIndex,
                 _programFileRow = _programFileRow == null ? null : _programFileRow.Clone(),
                 _requiredRows = new ObservableCollection<AcbelUploadRow>(_requiredRows.Select(r => r.Clone())),
                 _optionalRows = new ObservableCollection<AcbelUploadRow>(_optionalRows.Select(r => r.Clone())),

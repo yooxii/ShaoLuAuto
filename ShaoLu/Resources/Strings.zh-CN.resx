@@ -2147,48 +2147,27 @@
   <data name="ScanCode_Failed" xml:space="preserve">
     <value>扫码失败：</value>
   </data>
-  <data name="ScanCode_MissingInput" xml:space="preserve">
-    <value>缺少工单号/站别/工号/线别，请先在用户输入步骤中填写</value>
-  </data>
-  <data name="ScanCode_NetworkFailed" xml:space="preserve">
-    <value>验证网络失败</value>
-  </data>
   <data name="ScanCode_Canceled" xml:space="preserve">
     <value>未扫码或已取消</value>
   </data>
-  <data name="ScanCode_CheckFailed" xml:space="preserve">
-    <value>验证条码失败</value>
+  <data name="AcbelChain_Title" xml:space="preserve">
+    <value>上传 Acbel 需要用户输入</value>
   </data>
-  <data name="ScanCode_BasicFailed" xml:space="preserve">
-    <value>写入基础信息失败</value>
-  </data>
-  <data name="ScanCode_NoResponse" xml:space="preserve">
-    <value>桥接无响应</value>
-  </data>
-  <data name="ScanCode_Timeout" xml:space="preserve">
-    <value>调用超时</value>
-  </data>
-  <data name="ScanCode_ChainTitle" xml:space="preserve">
-    <value>扫码步骤需要用户输入</value>
-  </data>
-  <data name="ScanCode_AutoAddUserInput" xml:space="preserve">
-    <value>扫码步骤需要用户输入步骤提供工单号/站别/工号/线别。
+  <data name="AcbelChain_AddUserInput" xml:space="preserve">
+    <value>上传 Acbel 需要用户输入步骤提供工单号/站别/工号/线别（工单号、站别+工号、线别都会写进 MES）。
 
 将自动创建用户输入步骤并放到首行（缺少的字段会补齐）。</value>
   </data>
-  <data name="ScanCode_AutoAddScan" xml:space="preserve">
-    <value>上传步骤需要扫码步骤（验证网络 → 扫码 → 验证条码）。
+  <data name="AcbelChain_AddScan" xml:space="preserve">
+    <value>上传 Acbel 需要扫码步骤（弹窗扫码取得条码）。
 
 将在上传步骤前自动插入一个扫码步骤。</value>
   </data>
-  <data name="ScanCode_UserInputTitle" xml:space="preserve">
+  <data name="AcbelChain_UserInputTitle" xml:space="preserve">
     <value>扫码信息</value>
   </data>
   <data name="ScanCode_Description" xml:space="preserve">
-    <value>验证网络 → 扫码 → 验证条码，扫码结果作为本步骤文本供上传步骤引用。</value>
-  </data>
-  <data name="ScanCode_FieldMapping" xml:space="preserve">
-    <value>用户输入字段名</value>
+    <value>弹窗扫码，扫到的条码作为本步骤的文本，供「上传 Acbel」步骤引用。</value>
   </data>
   <data name="AcbelRefScanResult" xml:space="preserve">
     <value>扫码结果</value>
@@ -2323,5 +2302,20 @@
   </data>
   <data name="Ext_CopyIncomplete" xml:space="preserve">
     <value>安装后的扩展文件不完整。</value>
+  </data>
+  <data name="AcbelCheckBarcode" xml:space="preserve">
+    <value>上传前校验条码（CHKBAR_CODE）</value>
+  </data>
+  <data name="AcbelBarcodeSourceHint" xml:space="preserve">
+    <value>条码取这一段的当前值。把这一段引用「扫码」步骤的「扫码结果」，就会自动跟着扫码走。</value>
+  </data>
+  <data name="AcbelFailBarcode" xml:space="preserve">
+    <value>校验条码失败</value>
+  </data>
+  <data name="AcbelFailBarcodeEmpty" xml:space="preserve">
+    <value>条码来源（{0}）为空，请先引用扫码结果或填写固定条码</value>
+  </data>
+  <data name="AcbelBarcodeFailTitle" xml:space="preserve">
+    <value>Acbel 条码校验业务卡控</value>
   </data>
 </root>

@@ -1597,6 +1597,24 @@
                           Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
             <CheckBox IsChecked="{Binding DryRun}" Content="{lex:Loc AcbelDryRun}" Margin="0,0,0,5"/>
+            <!-- 条码校验（CHKBAR_CODE）：原来在扫码步骤里做，现在跟上传一起做 -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <CheckBox IsChecked="{Binding CheckBarcode}" Content="{lex:Loc AcbelCheckBarcode}" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding BarcodeSourceOptions}" SelectedValuePath="Index"
+                          SelectedValue="{Binding BarcodeRowIndex, Mode=TwoWay}"
+                          IsEnabled="{Binding CheckBarcode}" MinWidth="190" Margin="10,0,0,0" VerticalContentAlignment="Center"
+                          ToolTip="{lex:Loc AcbelBarcodeSourceHint}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Index, StringFormat={}{0}.}"/>
+                                <TextBlock Text="{Binding Name}" Margin="3,0,0,0"/>
+                                <TextBlock Text="{Binding Description}" Margin="6,0,0,0" Foreground="Gray"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
             <TextBlock Text="{lex:Loc AcbelProgramFile}" FontWeight="Bold" Margin="0,0,0,2"/>
             <ContentControl Content="{Binding ProgramFileRow}" ContentTemplate="{StaticResource AcbelUploadRowTemplate}"/>
             <Separator Margin="0,5"/>

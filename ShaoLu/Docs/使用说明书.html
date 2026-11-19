@@ -346,11 +346,10 @@ steps.json 内容说明</a></li>
 文字识别或读取界面文本，获取屏幕上显示的内容；</li>
 <li><strong>流程控制</strong>：支持条件跳转、循环、弹窗人工确认、多线程等，能组合出复杂的自动化流程；</li>
 <li><strong>用户输入</strong>：打开工程或开始运行前弹窗，让现场填写工单号、线别等字段，填好的值可以被扫码、上传、条件判断直接引用；</li>
-<li><strong>扫码与上传</strong>：扫码步骤先验证网络、弹窗扫码，把条码与工单
-/ 站别 / 工号 / 线别写入 Acbel MES
-的<strong>基础资料</strong>；随后「上传 Acbel」步骤把本次运行的结果按
-MES 的字段规范上传（见 <a href="#54-各步骤类型说明">5.4
-各步骤类型说明</a>）。</li>
+<li><strong>扫码与上传</strong>：扫码步骤只弹窗扫码、拿到条码；与 Acbel
+MES 的全部交互都在「上传 Acbel」步骤里——先校验条码、再写入工单 /
+站别+工号 / 线别的基础资料，最后按 MES 的字段规范上传本次运行的结果（见
+<a href="#54-各步骤类型说明">5.4 各步骤类型说明</a>）。</li>
 </ul>
 <p>典型使用场景：软件烧录、批量录入、重复性测试、跨系统搬运数据等。</p>
 <hr />
@@ -582,9 +581,10 @@ Win+Shift+S），把你要识别的目标（例如”确定”按钮）截图保
 <blockquote>
 <p>要把结果写回 Acbel MES
 的话，在流程里再串上三个步骤就行：<strong>用户输入</strong>（填工单号 /
-站别 / 工号 / 线别）→
-<strong>扫码</strong>（验证网络、扫码、写基础资料）→ <strong>上传
-Acbel</strong>（传 27 段数据）。三者的详细说明见 <a href="#54-各步骤类型说明">5.4 ⑮ 用户输入</a>、<a href="#54-各步骤类型说明">5.4 ⑭ 扫码</a> 与 <a href="#54-各步骤类型说明">5.4 ⑯ 上传 Acbel</a>。</p>
+站别 / 工号 / 线别）→ <strong>扫码</strong>（弹窗扫码拿条码）→
+<strong>上传 Acbel</strong>（校验条码、写基础资料、传 27
+段数据）。三者的详细说明见 <a href="#54-各步骤类型说明">5.4 ⑮
+用户输入</a>、<a href="#54-各步骤类型说明">5.4 ⑭ 扫码</a> 与 <a href="#54-各步骤类型说明">5.4 ⑯ 上传 Acbel</a>。</p>
 </blockquote>
 <hr />
 <h2 id="五步骤编辑详解">五、步骤编辑详解</h2>
@@ -1176,29 +1176,23 @@ PASS”）。</p>
 ▶）可以把该区域在列表中收起，方便阅读（只影响显示，不影响运行）。</li>
 </ul>
 <h4 id="扫码scancode">⑭ 扫码（ScanCode）</h4>
-<p>Acbel 上传链条的第一环：运行时依次做四件事——<strong>验证网络 →
-弹窗扫码 → 验证条码 →
-写入基础资料</strong>。扫码得到的条码就是这个步骤的文本，后面的「上传
-Acbel」可以直接引用（单体条码）。</p>
+<p><strong>只做扫码</strong>：弹出一个扫码窗口等你扫码，扫到的条码就是这个步骤的文本，后面的「上传
+Acbel」可以直接引用（单体条码）。这个步骤<strong>不连 Acbel
+数据库、不调用任何 Acbel
+函数</strong>——验证网络、验证条码、写入基础资料、上传都在「上传
+Acbel」步骤里完成，所以单独放一个扫码步骤也不会有 MES 依赖。</p>
 <p><strong>运行过程：</strong></p>
 <ol type="1">
-<li><strong>验证网络</strong>：先打开 Acbel
-数据库连接，连不上就判失败；</li>
 <li><strong>弹窗扫码</strong>：弹出扫码窗口，窗口会<strong>自动置前</strong>、输入框<strong>自动拿到键盘焦点</strong>，扫码枪直接扫即可——扫完停顿一下窗口会<strong>自动确认关闭</strong>，条码末尾带回车、换行或制表符也会被当作结束符并自动去掉；手工输入则按回车或点「确定」；取消或没输入内容按失败处理；</li>
 </ol>
-<p><img role="img" aria-label="图20-扫码窗口.png" src="data:image/png;base64,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" alt="图20-扫码窗口.png" /> 3.
-<strong>验证条码</strong>：把条码连同「站别+工号」一起送去校验，被业务卡控或调用失败按失败处理；
-4. <strong>写入基础资料</strong>：把工单号（工令）、站别+工号、线别写入
-MES 的基础资料（详见 <a href="#54-各步骤类型说明">⑯ 上传
-Acbel</a>）。这一步被业务卡控（0
-类别）或调用失败时，本步骤直接判失败，并弹窗显示厂商返回的代码与完整详情。</p>
-<blockquote>
-<p>工单号 / 站别 / 工号 /
-线别都是从「用户输入」步骤填写的字段里按字段名取的（默认字段名就是这四个），字段对不上或没填会直接判失败。添加扫码步骤时，程序会先提示、再自动补齐「用户输入」步骤与这四个字段，见本章末尾的「上传链条自动补齐」。</p>
-</blockquote>
+<p><img role="img" aria-label="图20-扫码窗口.png" src="data:image/png;base64,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" alt="图20-扫码窗口.png" /> 2.
+<strong>记下条码</strong>：条码（去掉首尾空白）作为本步骤的文本结果，供「上传
+Acbel」的「扫码结果」引用。</p>
 <blockquote>
 <p>本步骤没有专属参数，只有公共属性（等待时间、如果真 /
-如果假、自定义条件等），见 <a href="#52-所有步骤共有的属性">5.2</a>。</p>
+如果假、自定义条件等），见 <a href="#52-所有步骤共有的属性">5.2</a>。旧版本工程里存过「工单号 / 站别 /
+工号 / 线别
+字段名」四个参数，现在不再使用，打开旧工程会自动忽略，不影响运行。</p>
 </blockquote>
 <h4 id="用户输入userinput">⑮ 用户输入（UserInput）</h4>
 <p>在<strong>打开工程后</strong>或<strong>开始运行前</strong>弹窗，让现场使用者填写若干字段（例如工单号、线别、操作员工号）。填好的值随工程保存、下次打开自动预填，还可以被扫码、上传
@@ -1331,8 +1325,18 @@ MES，常用于烧录/测试完成后把结果写回产线系统。</p>
 <td>收在「选填字段」折叠区里（标题后显示条数），展开即可填写</td>
 </tr>
 <tr>
+<td>上传前校验条码</td>
+<td>勾选后上传前先用 <code>CHKBAR_CODE</code>
+校验条码（默认勾选）；勾掉则跳过条码校验，直接写基础资料并上传</td>
+</tr>
+<tr>
+<td>条码来源</td>
+<td>校验用的条码取哪一段的值，右侧下拉里选（默认 4. INTERNAL_SR
+单体条码）</td>
+</tr>
+<tr>
 <td>仅校验、不写库</td>
-<td>勾选后只按字段规范检查数据是否合格，<strong>不连数据库、不写库</strong>，适合先调试数据；默认不勾选</td>
+<td>勾选后只按字段规范检查数据是否合格，<strong>不连数据库、不校验条码、不写库</strong>，适合先调试数据；默认不勾选</td>
 </tr>
 <tr>
 <td>记录执行日志</td>
@@ -1460,11 +1464,15 @@ MES，常用于烧录/测试完成后把结果写回产线系统。</p>
 段：段数不符、必填段为空、时间（HHMMSS）或日期（YYYYMMDD）格式不对等都会判<strong>失败</strong>并给出原因，此时<strong>不会</strong>调用
 MES；</li>
 <li>校验通过后，如果本次运行还没连过数据库，会先自动打开数据库连接并在后续上传中复用，不必每次都连；</li>
-<li>连上之后<strong>先写基础资料</strong>，再执行上传：工单号取「工令」（MO_NO），站别与工号把
+<li>连上之后<strong>先校验条码</strong>：取「条码来源」段的值（默认第 4
+段单体条码，这一段通常引用着「扫码」步骤的结果），连同「站别+工号」（STATION
++ UPD_USER）一起送 <code>CHKBAR_CODE</code> 校验。被业务卡控（0
+类别）、调用失败或条码为空时，本步骤<strong>直接判失败并弹窗给出返回代码</strong>，不会继续写基础资料、也不上传；</li>
+<li>条码通过后<strong>再写基础资料</strong>，最后执行上传：工单号取「工令」（MO_NO），站别与工号把
 STATION 与 UPD_USER 直接拼成一个值，线别取
 LINE_NAME。基础资料被业务卡控拒绝（0
 类别，例如线别错误）或调用失败时，本步骤<strong>直接判失败并弹窗给出返回代码</strong>，不再继续写库；</li>
-<li>上传失败（业务卡控、数据库连不上、超时等）按<strong>步骤失败</strong>处理，失败原因可在步骤行上悬停查看（设置中开启“展示错误弹窗”时会弹窗提示）；属于内部异常的情况会自动重试一次；</li>
+<li>上传失败（业务卡控、数据库连不上、超时等）按<strong>步骤失败</strong>处理，失败原因可在步骤行上悬停查看（设置中开启“展示错误弹窗”时会弹窗提示）；属于内部异常的情况会自动重试一次（条码校验、基础资料、上传各自重试一次）；</li>
 <li>是否跳转仍由该步骤的「如果真 / 如果假」决定，与普通步骤一致。</li>
 </ul>
 <blockquote>
@@ -1472,15 +1480,16 @@ LINE_NAME。基础资料被业务卡控拒绝（0
 及其依赖的原生
 DLL），整个发布目录复制过去就能用上传功能，不需要额外安装或单独拷贝文件。</p>
 </blockquote>
-<p><strong>上传链条自动补齐（扫码 / 上传 Acbel 共用）：</strong></p>
+<p><strong>上传链条自动补齐（上传 Acbel 用）：</strong></p>
 <ul>
-<li>添加「扫码」步骤时，如果脚本里没有「用户输入」步骤、或它排在扫码步骤下面、或缺少工单号
+<li>添加「扫码」步骤时<strong>不需要任何配套步骤</strong>：扫码步骤只管扫码，不连
+MES，单独放也能正常跑；</li>
+<li>添加「上传
+Acbel」步骤时，会检查扫码步骤与「用户输入」步骤：缺扫码步骤会在上传步骤前自动插入一个；没有「用户输入」步骤、或它排在上传步骤下面、或缺少工单号
 / 站别 / 工号 /
 线别字段，程序会<strong>先提示再自动处理</strong>：创建「用户输入」步骤（放到首行）并补齐缺的字段；</li>
-<li>添加「上传
-Acbel」步骤时，同样会检查扫码步骤与「用户输入」步骤：缺扫码步骤会在上传步骤前自动插入一个，并补齐用户输入字段；单体条码（第
-4
-段）还没配引用时，会自动指向扫码步骤的条码，已经配好的引用不会被覆盖；</li>
+<li>单体条码（第 4
+段）还没配引用时，会自动指向扫码步骤的条码——这一段同时也是默认的「条码来源」，所以条码校验会自动跟着扫码走；已经配好的引用不会被覆盖；</li>
 <li>补齐只在你添加步骤时发生，已经保存的脚本不会被悄悄改动。</li>
 </ul>
 <hr />
@@ -1818,14 +1827,13 @@ Acbel）、<code>ScanCode</code>（扫码）、<code>UserInput</code>（用户�
 </tr>
 <tr>
 <td><code>ScanCode</code>（扫码）</td>
-<td><code>WorkOrderField</code> / <code>StationField</code> /
-<code>EmployeeField</code> /
-<code>LineField</code>：分别去「用户输入」里取工单号 / 站别 / 工号 /
-线别的字段名</td>
+<td>无专属字段（只有公共属性）；弹窗扫到的条码记在本步骤的执行结果里，供上传步骤按「扫码结果」引用</td>
 </tr>
 <tr>
 <td><code>AcbelUpload</code>（上传 Acbel）</td>
-<td><code>DryRun</code>：仅校验、不写库；<code>ProgramFileRow</code>
+<td><code>DryRun</code>：仅校验、不写库；<code>CheckBarcode</code>
+上传前校验条码；<code>BarcodeRowIndex</code> 条码来源段号（默认 4 =
+INTERNAL_SR）；<code>ProgramFileRow</code>
 镭雕程式文件名；<code>RequiredRows</code> / <code>OptionalRows</code>
 必填段与选填段</td>
 </tr>
@@ -2207,14 +2215,13 @@ IT / MES 维护人员确认；内部异常程序会自动重试一次； -
 确认发布目录完整（随包带有 <code>AcbelBridge.exe</code> 及其依赖的原生
 DLL），缺失时重新解压发布包。</p>
 <p><strong>Q9：扫码步骤一运行就失败怎么办？</strong> -
-先看提示是哪一环失败：<strong>验证网络</strong>失败说明这台机器连不上
-Acbel 数据库，联系 IT / MES 确认网络与库状态； -
-<strong>扫码</strong>环节取消或没扫进内容会直接判失败，重新扫码即可（窗口出现时会自动置前、输入框已获得焦点，扫码枪直接扫就行，不用先点窗口）；
--
-<strong>验证条码</strong>或<strong>写入基础资料</strong>失败：弹窗里会给出厂商返回代码，按提示核对条码、工单号、站别、工号、线别；0
-类别业务卡控最常见的原因是线别或工号填错，改「用户输入」里对应字段后再跑一遍；
-- 如果提示缺少工单号 / 站别 / 工号 /
-线别，说明脚本里没有「用户输入」步骤或字段名对不上：删掉扫码步骤重新添加，程序会自动补齐，见
+扫码步骤只做扫码：失败基本都是<strong>窗口里取消</strong>或<strong>没扫进内容</strong>，重新扫码即可（窗口出现时会自动置前、输入框已获得焦点，扫码枪直接扫就行，不用先点窗口）；
+- 扫码步骤不连 MES，所以它报错不会是因为数据库；<strong>验证网络 /
+验证条码 / 写入基础资料</strong>的失败都发生在「上传
+Acbel」步骤，那里会给出厂商返回代码，按提示核对条码、工单号、站别、工号、线别（0
+类别业务卡控最常见的原因是线别或工号填错，改「用户输入」里对应字段后再跑一遍）；
+- 如果是「上传 Acbel」提示缺少工单号 / 站别 / 工号 /
+线别，说明脚本里没有「用户输入」步骤或字段名对不上：删掉上传步骤重新添加，程序会自动补齐，见
 <a href="#54-各步骤类型说明">5.4 ⑯ 上传
 Acbel</a>末尾的「上传链条自动补齐」。</p>
 <p><strong>Q10：用户输入字段改不动、提示登录？</strong> -

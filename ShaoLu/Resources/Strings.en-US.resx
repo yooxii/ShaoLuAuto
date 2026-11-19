@@ -2147,48 +2147,27 @@ Reason: {0}</value>
   <data name="ScanCode_Failed" xml:space="preserve">
     <value>Scan failed: </value>
   </data>
-  <data name="ScanCode_MissingInput" xml:space="preserve">
-    <value>Work order / station / employee / line are missing. Fill them in the User Input step first.</value>
-  </data>
-  <data name="ScanCode_NetworkFailed" xml:space="preserve">
-    <value>Network verification failed</value>
-  </data>
   <data name="ScanCode_Canceled" xml:space="preserve">
     <value>No code scanned or cancelled</value>
   </data>
-  <data name="ScanCode_CheckFailed" xml:space="preserve">
-    <value>Barcode verification failed</value>
+  <data name="AcbelChain_Title" xml:space="preserve">
+    <value>Upload Acbel needs user input</value>
   </data>
-  <data name="ScanCode_BasicFailed" xml:space="preserve">
-    <value>Failed to write basic info</value>
-  </data>
-  <data name="ScanCode_NoResponse" xml:space="preserve">
-    <value>No response from bridge</value>
-  </data>
-  <data name="ScanCode_Timeout" xml:space="preserve">
-    <value>Call timed out</value>
-  </data>
-  <data name="ScanCode_ChainTitle" xml:space="preserve">
-    <value>Scan step needs user input</value>
-  </data>
-  <data name="ScanCode_AutoAddUserInput" xml:space="preserve">
-    <value>The scan step needs a User Input step with work order / station / employee / line.
+  <data name="AcbelChain_AddUserInput" xml:space="preserve">
+    <value>The Upload Acbel step needs a User Input step with work order / station / employee / line (they are written to MES as MO, station+employee and line).
 
 A User Input step will be created at the top automatically (missing fields are added).</value>
   </data>
-  <data name="ScanCode_AutoAddScan" xml:space="preserve">
-    <value>The upload step needs a scan step (verify network → scan → verify barcode).
+  <data name="AcbelChain_AddScan" xml:space="preserve">
+    <value>The Upload Acbel step needs a scan step (scan dialog for the barcode).
 
 A scan step will be inserted before the upload step automatically.</value>
   </data>
-  <data name="ScanCode_UserInputTitle" xml:space="preserve">
+  <data name="AcbelChain_UserInputTitle" xml:space="preserve">
     <value>Scan info</value>
   </data>
   <data name="ScanCode_Description" xml:space="preserve">
-    <value>Verify network → scan → verify barcode. The scanned code is exposed as this step text for referencing.</value>
-  </data>
-  <data name="ScanCode_FieldMapping" xml:space="preserve">
-    <value>User input field names</value>
+    <value>Show the scan window; the scanned code becomes this step's text for the Upload Acbel step to reference.</value>
   </data>
   <data name="AcbelRefScanResult" xml:space="preserve">
     <value>Scan result</value>
@@ -2323,5 +2302,20 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   </data>
   <data name="Ext_CopyIncomplete" xml:space="preserve">
     <value>The installed extension files are incomplete.</value>
+  </data>
+  <data name="AcbelCheckBarcode" xml:space="preserve">
+    <value>Verify barcode before upload (CHKBAR_CODE)</value>
+  </data>
+  <data name="AcbelBarcodeSourceHint" xml:space="preserve">
+    <value>The barcode is this field's current value. Reference the Scan step's "Scan result" here so it follows the scanner.</value>
+  </data>
+  <data name="AcbelFailBarcode" xml:space="preserve">
+    <value>Barcode verification failed</value>
+  </data>
+  <data name="AcbelFailBarcodeEmpty" xml:space="preserve">
+    <value>Barcode source ({0}) is empty. Reference the scan result or enter a fixed barcode.</value>
+  </data>
+  <data name="AcbelBarcodeFailTitle" xml:space="preserve">
+    <value>Acbel barcode check blocked</value>
   </data>
 </root>

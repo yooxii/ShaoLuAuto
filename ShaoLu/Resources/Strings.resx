@@ -334,7 +334,16 @@
     <value>Cancel</value>
   </data>
   <data name="AddFocusWindowStep" xml:space="preserve">
-    <value>Window Focus</value>
+    <value>Window Control</value>
+  </data>
+  <data name="Window_Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="Window_Action_Activate" xml:space="preserve">
+    <value>Bring to front</value>
+  </data>
+  <data name="Window_Action_Minimize" xml:space="preserve">
+    <value>Minimize</value>
   </data>
   <data name="Focus_SelectedWindow" xml:space="preserve">
     <value>Target Window</value>
@@ -346,7 +355,7 @@
     <value>Title Keyword</value>
   </data>
   <data name="Focus_Hint" xml:space="preserve">
-    <value>The window is searched first by exact match of the selected window title, then by title keyword containment (case-insensitive). Once found, it is brought to the front and activated (restored first if minimized). If not found, the execution is marked as failed.</value>
+    <value>The window is searched first by exact match of the selected window title, then by title keyword containment (case-insensitive). When found, the chosen action runs: bring to front puts the window in front and activates it (restored first if minimized), minimize sends it to the taskbar. When enumerating windows, the windows of this program are listed first. If not found, the execution is marked as failed.</value>
   </data>
   <data name="Capture" xml:space="preserve">
     <value>Capture</value>

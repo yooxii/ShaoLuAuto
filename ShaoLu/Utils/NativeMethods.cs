@@ -45,6 +45,9 @@ namespace ShaoLu.Utils
         [DllImport("user32.dll")]
         public static extern bool IsIconic(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
@@ -55,6 +58,7 @@ namespace ShaoLu.Utils
         }
 
         public const int SW_RESTORE = 9;
+        public const int SW_MINIMIZE = 6;
 
         #endregion
 

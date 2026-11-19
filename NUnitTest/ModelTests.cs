@@ -147,7 +147,7 @@ namespace NUnitTest
 
                 Assert.That(app.WindowWidth, Is.EqualTo(1000));
                 Assert.That(app.WindowHeight, Is.EqualTo(600));
-                Assert.That(app.LogRetentionDays, Is.EqualTo(0));
+                Assert.That(app.LogRetentionDays, Is.EqualTo(30));
                 Assert.That(app.WindowFont, Is.Not.Null);
             }
 

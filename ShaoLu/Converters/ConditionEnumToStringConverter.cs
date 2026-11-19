@@ -42,6 +42,8 @@ namespace ShaoLu.Converters
                 return ConvertTextPointSource(pointSource);
             if (value is MultiThreadRangeMode rangeMode)
                 return ConvertMultiThreadRangeMode(rangeMode);
+            if (value is WindowOperation windowOperation)
+                return ConvertWindowOperation(windowOperation);
             if (value is InterruptAction interruptAction)
                 return ConvertInterruptAction(interruptAction);
             if (value is SignalValueKind signalKind)
@@ -203,6 +205,12 @@ namespace ShaoLu.Converters
             MultiThreadRangeMode.ByLineNo => LanguageService.GetLocalizedString("MT_RangeMode_ByLineNo"),
             MultiThreadRangeMode.ByEndStep => LanguageService.GetLocalizedString("MT_RangeMode_ByEndStep"),
             _ => m.ToString(),
+        };
+
+        public static string ConvertWindowOperation(WindowOperation op) => op switch
+        {
+            WindowOperation.Minimize => LanguageService.GetLocalizedString("Window_Action_Minimize", "最小化"),
+            _ => LanguageService.GetLocalizedString("Window_Action_Activate", "置前激活"),
         };
 
         public static string ConvertInterruptAction(InterruptAction a) => a switch

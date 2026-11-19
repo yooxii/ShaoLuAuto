@@ -334,7 +334,16 @@
     <value>取消</value>
   </data>
   <data name="AddFocusWindowStep" xml:space="preserve">
-    <value>視窗聚焦</value>
+    <value>視窗操作</value>
+  </data>
+  <data name="Window_Action" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="Window_Action_Activate" xml:space="preserve">
+    <value>聚焦（置前啟用）</value>
+  </data>
+  <data name="Window_Action_Minimize" xml:space="preserve">
+    <value>最小化</value>
   </data>
   <data name="Focus_SelectedWindow" xml:space="preserve">
     <value>指定視窗</value>
@@ -346,7 +355,7 @@
     <value>標題關鍵字</value>
   </data>
   <data name="Focus_Hint" xml:space="preserve">
-    <value>按“指定視窗”精確匹配優先尋找視窗，其次按“標題關鍵字”包含匹配（不區分大小寫）；找到後將視窗置於最前並啟用（最小化時先恢復）。未找到視窗時該次執行記為失敗。</value>
+    <value>按“指定視窗”精確匹配優先尋找視窗，其次按“標題關鍵字”包含匹配（不區分大小寫）；找到後按“操作”執行：聚焦會把視窗放到最前並啟用（最小化時先還原），最小化會把視窗收進工作列。列舉視窗時本程式自己的視窗排在最前面。未找到視窗時該次執行記為失敗。</value>
   </data>
   <data name="Capture" xml:space="preserve">
     <value>截圖</value>

@@ -334,7 +334,16 @@
     <value>取消</value>
   </data>
   <data name="AddFocusWindowStep" xml:space="preserve">
-    <value>窗口聚焦</value>
+    <value>窗口操作</value>
+  </data>
+  <data name="Window_Action" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="Window_Action_Activate" xml:space="preserve">
+    <value>聚焦（置前激活）</value>
+  </data>
+  <data name="Window_Action_Minimize" xml:space="preserve">
+    <value>最小化</value>
   </data>
   <data name="Focus_SelectedWindow" xml:space="preserve">
     <value>指定窗口</value>
@@ -346,7 +355,7 @@
     <value>标题关键字</value>
   </data>
   <data name="Focus_Hint" xml:space="preserve">
-    <value>按“指定窗口”精确匹配优先查找窗口，其次按“标题关键字”包含匹配（不区分大小写）；找到后将窗口置于最前并激活（最小化时先恢复）。未找到窗口时该次执行记为失败。</value>
+    <value>按“指定窗口”精确匹配优先查找窗口，其次按“标题关键字”包含匹配（不区分大小写）；找到后按“操作”执行：聚焦会把窗口放到最前并激活（最小化时先恢复），最小化会把窗口收进任务栏。枚举窗口时本程序自己的窗口排在最前面。未找到窗口时该次执行记为失败。</value>
   </data>
   <data name="Capture" xml:space="preserve">
     <value>截图</value>

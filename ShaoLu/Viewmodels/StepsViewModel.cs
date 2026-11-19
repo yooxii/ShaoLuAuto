@@ -762,7 +762,7 @@ namespace ShaoLu.Viewmodels
                     "MouseAction" => new MouseActionStep($"MouseAction_{AutomationStepBases.Count(t => t.Type == StepType.MouseAction) + 1}"),
                     "Statistics" => new StatisticsStep($"Statistics_{AutomationStepBases.Count(t => t.Type == StepType.Statistics) + 1}"),
                     "BurnInConfig" => new BurnInConfigStep(LanguageService.GetLocalizedString("BurnInConfig_StepName")),
-                    "FocusWindow" => new FocusWindowStep($"FocusWindow_{AutomationStepBases.Count(t => t.Type == StepType.FocusWindow) + 1}"),
+                    "FocusWindow" => new FocusWindowStep($"WindowControl_{AutomationStepBases.Count(t => t.Type == StepType.FocusWindow) + 1}"),
                     "MultiThread" => new MultiThreadStartStep($"MultiThread_{AutomationStepBases.Count(t => t.Type == StepType.MultiThread) + 1}"),
                     "MultiThreadEnd" => new MultiThreadEndStep($"MultiThreadEnd_{AutomationStepBases.Count(t => t.Type == StepType.MultiThreadEnd) + 1}"),
                     "SendSignal" => new SendSignalStep($"SendSignal_{AutomationStepBases.Count(t => t.Type == StepType.SendSignal) + 1}"),

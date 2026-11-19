@@ -123,5 +123,33 @@ namespace NUnitTest
 
             Assert.That(upload.ResolveRowValue(internalSr), Is.EqualTo("SN123456"), "单体条码应引用扫码步骤的扫码结果");
         }
+
+        [Test]
+        public void FocusWindowStep_JsonRoundTrip_PreservesOperation()
+        {
+            var step = new FocusWindowStep("WindowControl_1")
+            {
+                SelectedWindowTitle = "Notepad",
+                Operation = WindowOperation.Minimize,
+            };
+
+            string json = JsonSerializer.Serialize<AutomationStepBase>(step, CreateOptions());
+            var restored = JsonSerializer.Deserialize<AutomationStepBase>(json, CreateOptions());
+
+            Assert.That(restored, Is.InstanceOf<FocusWindowStep>(), "重新打开工程后必须还是窗口操作步骤");
+            Assert.That(((FocusWindowStep)restored).Operation, Is.EqualTo(WindowOperation.Minimize));
+        }
+
+        [Test]
+        public void FocusWindowStep_旧工程没有操作字段时按聚焦处理()
+        {
+            // 旧版本只有“聚焦窗口”一种行为，存量工程里没有 Operation 字段（Type 按枚举数字存）
+            string legacy = "{ \"Type\": 204, \"Name\": \"FocusWindow_1\", \"SelectedWindowTitle\": \"Notepad\" }";
+
+            var restored = JsonSerializer.Deserialize<AutomationStepBase>(legacy, CreateOptions());
+
+            Assert.That(restored, Is.InstanceOf<FocusWindowStep>());
+            Assert.That(((FocusWindowStep)restored).Operation, Is.EqualTo(WindowOperation.Activate));
+        }
     }
 }

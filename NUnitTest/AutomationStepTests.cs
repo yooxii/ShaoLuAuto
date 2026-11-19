@@ -535,6 +535,9 @@ namespace NUnitTest
                 Assert.That(step.WindowTitleKeyword, Is.EqualTo(string.Empty));
                 Assert.That(step.SelectedWindowTitle, Is.EqualTo(string.Empty));
                 Assert.That(step.WindowTitles, Is.Not.Null);
+                // 未设置操作时保持原有行为：置前激活
+                Assert.That(step.Operation, Is.EqualTo(WindowOperation.Activate));
+                Assert.That(FocusWindowStep.Operations, Is.EqualTo(new[] { WindowOperation.Activate, WindowOperation.Minimize }));
             }
 
             [Test]
@@ -544,12 +547,14 @@ namespace NUnitTest
                 {
                     WindowTitleKeyword = "notepad",
                     SelectedWindowTitle = "Untitled - Notepad",
+                    Operation = WindowOperation.Minimize,
                 };
                 var clone = (FocusWindowStep)step.Clone();
 
                 Assert.That(clone.Name, Is.EqualTo("Test"));
                 Assert.That(clone.WindowTitleKeyword, Is.EqualTo("notepad"));
                 Assert.That(clone.SelectedWindowTitle, Is.EqualTo("Untitled - Notepad"));
+                Assert.That(clone.Operation, Is.EqualTo(WindowOperation.Minimize));
                 Assert.That(clone.Type, Is.EqualTo(StepType.FocusWindow));
             }
         }

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
 using ShaoLu.Utils;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -11,7 +12,19 @@ using System.Windows.Input;
 namespace ShaoLu.Viewmodels.AutomationStep
 {
     /// <summary>
-    /// 窗口聚焦步骤：把指定窗口放在最前方并激活（最小化时先恢复）
+    /// 窗口操作方式
+    /// </summary>
+    public enum WindowOperation
+    {
+        /// <summary>置前并激活（最小化时先恢复）</summary>
+        Activate = 0,
+
+        /// <summary>最小化</summary>
+        Minimize = 1,
+    }
+
+    /// <summary>
+    /// 窗口操作步骤：把指定窗口置前激活，或把指定窗口最小化
     /// 目标窗口按“选定标题精确匹配 → 关键字包含匹配”的顺序查找
     /// </summary>
     public class FocusWindowStep : AutomationStepBase
@@ -20,6 +33,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         private string _windowTitleKeyword = string.Empty;
         private string _selectedWindowTitle = string.Empty;
+        private WindowOperation _operation = WindowOperation.Activate;
 
         /// <summary>窗口标题关键字（包含匹配，不区分大小写）</summary>
         public string WindowTitleKeyword { get => _windowTitleKeyword; set => SetProperty(ref _windowTitleKeyword, value); }
@@ -27,15 +41,26 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>枚举选定的窗口标题（精确匹配，优先于关键字）</summary>
         public string SelectedWindowTitle { get => _selectedWindowTitle; set => SetProperty(ref _selectedWindowTitle, value); }
 
+        /// <summary>操作方式：置前激活 / 最小化</summary>
+        public WindowOperation Operation { get => _operation; set => SetProperty(ref _operation, value); }
+
         /// <summary>枚举到的窗口标题列表（供 ComboBox 绑定，不参与序列化）</summary>
         [JsonIgnore]
         public ObservableCollection<string> WindowTitles { get; } = new();
+
+        /// <summary>操作方式下拉候选（仅界面绑定使用）</summary>
+        [JsonIgnore]
+        public static readonly IReadOnlyList<WindowOperation> Operations = new[]
+        {
+            WindowOperation.Activate,
+            WindowOperation.Minimize,
+        };
 
         #region 命令
 
         [JsonIgnore]
         private ICommand refreshWindowsCommand;
-        /// <summary>枚举当前可见窗口，填充下拉列表</summary>
+        /// <summary>枚举当前可见窗口，填充下拉列表（本程序自己的窗口排在最前）</summary>
         [JsonIgnore]
         public ICommand RefreshWindowsCommand => refreshWindowsCommand ??= new RelayCommand(RefreshWindows);
 
@@ -69,6 +94,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             {
                 WindowTitleKeyword = WindowTitleKeyword,
                 SelectedWindowTitle = SelectedWindowTitle,
+                Operation = Operation,
                 WaitTime = WaitTime,
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
@@ -87,7 +113,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             IntPtr? hwnd = WindowServices.FindWindow(SelectedWindowTitle, WindowTitleKeyword);
             if (!hwnd.HasValue)
             {
-                logger.Warn("FocusWindow: window not found. ExactTitle={0}, Keyword={1}", SelectedWindowTitle, WindowTitleKeyword);
+                logger.Warn("WindowControl: window not found. ExactTitle={0}, Keyword={1}", SelectedWindowTitle, WindowTitleKeyword);
                 IsTrue = false;
                 IsError = true;
                 ErrorType = StepErrorType.Unknown;
@@ -99,7 +125,9 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 return false;
             }
 
-            bool ok = WindowServices.FocusWindow(hwnd.Value);
+            bool ok = Operation == WindowOperation.Minimize
+                ? WindowServices.MinimizeWindow(hwnd.Value)
+                : WindowServices.FocusWindow(hwnd.Value);
 
             IsTrue = ok;
             IsError = !ok;

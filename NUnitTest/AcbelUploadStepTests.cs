@@ -626,6 +626,149 @@ namespace NUnitTest
             Assert.That(step.ResolveRowValue(row), Is.EqualTo(string.Empty));
         }
 
+        #endregion
+
+        #region 引用值按段要求格式归一 / 运行时日期
+
+        [Test]
+        public void 引用OCR文本_按日期段格式归一()
+        {
+            var step = CreateValidStep();
+            var uid = Guid.NewGuid();
+            StepExecutionContext.Instance.SetResultByUid(uid, new StepExecutionResult
+            {
+                IsTrue = true,
+                OCRText = "2026-11-19",
+                ExecutedAt = DateTime.Now
+            });
+
+            var dateRow = step.RequiredRows.First(r => r.Index == AcbelInsertDataSpec.ByName("TEST_DATE").Index);
+            dateRow.SetReference(uid, AcbelReferenceKind.OcrText);
+
+            Assert.That(step.ResolveRowValue(dateRow), Is.EqualTo("20261119"));
+            Assert.That(step.ValidateUploadData().IsValid, Is.True, "归一后的日期应通过字段规范校验");
+        }
+
+        [Test]
+        public void 引用OCR文本_按时间段格式归一()
+        {
+            var step = CreateValidStep();
+            var uid = Guid.NewGuid();
+            StepExecutionContext.Instance.SetResultByUid(uid, new StepExecutionResult
+            {
+                IsTrue = true,
+                OCRText = "14:07:35",
+                ExecutedAt = DateTime.Now
+            });
+
+            var startRow = step.RequiredRows.First(r => r.Index == AcbelInsertDataSpec.ByName("START_TIME").Index);
+            startRow.SetReference(uid, AcbelReferenceKind.OcrText);
+
+            Assert.That(step.ResolveRowValue(startRow), Is.EqualTo("140735"));
+        }
+
+        [Test]
+        public void 固定文本也按段格式归一()
+        {
+            var step = CreateValidStep();
+            var startRow = step.RequiredRows.First(r => r.Index == AcbelInsertDataSpec.ByName("START_TIME").Index);
+            var dateRow = step.RequiredRows.First(r => r.Index == AcbelInsertDataSpec.ByName("TEST_DATE").Index);
+
+            startRow.Text = "9:05:03";
+            dateRow.Text = "2026/11/19";
+
+            Assert.That(step.ResolveRowValue(startRow), Is.EqualTo("090503"));
+            Assert.That(step.ResolveRowValue(dateRow), Is.EqualTo("20261119"));
+            Assert.That(step.ValidateUploadData().IsValid, Is.True);
+        }
+
+        [Test]
+        public void 结果段归一为PASS或FAIL()
+        {
+            var step = CreateValidStep();
+            var resultRow = step.RequiredRows.First(r => r.Index == 1);
+
+            resultRow.Text = "true";
+            Assert.That(step.ResolveRowValue(resultRow), Is.EqualTo("PASS"));
+
+            resultRow.Text = "NG";
+            Assert.That(step.ResolveRowValue(resultRow), Is.EqualTo("FAIL"));
+
+            resultRow.Text = "PASS";
+            Assert.That(step.ResolveRowValue(resultRow), Is.EqualTo("PASS"));
+        }
+
+        [Test]
+        public void 引用运行时日期_按日期段填当天日期()
+        {
+            var step = CreateValidStep();
+            var dateRow = step.RequiredRows.First(r => r.Index == AcbelInsertDataSpec.ByName("TEST_DATE").Index);
+
+            string before = DateTime.Now.ToString("yyyyMMdd");
+            dateRow.SetReference(Guid.Empty, AcbelReferenceKind.RunNow);
+            string actual = step.ResolveRowValue(dateRow);
+            string after = DateTime.Now.ToString("yyyyMMdd");
+
+            Assert.That(dateRow.IsReferenced, Is.True, "运行时日期不需要来源步骤");
+            Assert.That(actual, Is.AnyOf(before, after), "应填程序运行当天的日期 yyyyMMdd");
+            Assert.That(actual.Length, Is.EqualTo(8));
+        }
+
+        [Test]
+        public void 引用运行时日期_按时间段填HHmmss()
+        {
+            var step = CreateValidStep();
+            var startRow = step.RequiredRows.First(r => r.Index == AcbelInsertDataSpec.ByName("START_TIME").Index);
+
+            startRow.SetReference(Guid.Empty, AcbelReferenceKind.RunNow);
+            string actual = step.ResolveRowValue(startRow);
+
+            Assert.That(actual.Length, Is.EqualTo(6));
+            Assert.That(int.Parse(actual.Substring(0, 2)), Is.InRange(0, 23));
+        }
+
+        [Test]
+        public void 引用运行时日期_可以清除()
+        {
+            var step = CreateValidStep();
+            var dateRow = step.RequiredRows.First(r => r.Index == AcbelInsertDataSpec.ByName("TEST_DATE").Index);
+
+            dateRow.SetReference(Guid.Empty, AcbelReferenceKind.RunNow);
+            dateRow.ClearReference();
+
+            Assert.That(dateRow.IsReferenced, Is.False);
+            Assert.That(step.ResolveRowValue(dateRow), Is.EqualTo(dateRow.Text));
+        }
+
+        [Test]
+        public void 引用菜单_含程序运行时选项()
+        {
+            var row = new AcbelUploadRow { Index = AcbelInsertDataSpec.ByName("TEST_DATE").Index };
+
+            var runNode = row.MenuNodes.FirstOrDefault(n => n.Children.Any(c => c.Kind == AcbelReferenceKind.RunNow));
+            Assert.That(runNode, Is.Not.Null, "「▾」菜单里要有「程序运行时」分组");
+
+            var leaf = runNode.Children.First(c => c.Kind == AcbelReferenceKind.RunNow);
+            leaf.Command.Execute(null);
+
+            Assert.That(row.RefKind, Is.EqualTo(AcbelReferenceKind.RunNow));
+            Assert.That(row.RefStepUid, Is.Null, "运行时日期不需要来源步骤");
+            Assert.That(row.IsReferenced, Is.True);
+            Assert.That(row.ReferenceLabel, Is.Not.Empty);
+            Assert.That(row.MenuNodes.Last().Header, Is.Not.Empty, "最后一项仍是清除引用");
+        }
+
+        [Test]
+        public void 有来源步骤的引用_缺少步骤时不算引用()
+        {
+            var row = new AcbelUploadRow { Index = 4, Text = "SN1" };
+
+            row.SetReference(Guid.Empty, AcbelReferenceKind.OcrText);
+
+            Assert.That(row.IsReferenced, Is.False, "有来源步骤的种类必须给出步骤");
+            Assert.That(row.Text, Is.EqualTo("SN1"));
+        }
+
         [Test]
         public void 字段行按规范生成_9必填_18选填()
         {

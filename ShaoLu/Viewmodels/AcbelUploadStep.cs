@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -41,7 +42,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         StepStartTime = 6,
 
         /// <summary>步骤执行结束的时间（HHmmss）。</summary>
-        StepEndTime = 7
+        StepEndTime = 7,
+
+        /// <summary>程序运行时的日期 / 时间：按目标段的格式填（日期段 yyyyMMdd、时间段 HHmmss），不依赖任何步骤。</summary>
+        RunNow = 8
     }
 
     /// <summary>
@@ -187,8 +191,19 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>已经引用了其他步骤的运行结果或「用户输入」字段。</summary>
         [JsonIgnore]
         public bool IsReferenced
-            => _refStepUid.HasValue && _refStepUid.Value != Guid.Empty
-               && _refKind.HasValue && _refKind.Value != AcbelReferenceKind.None;
+        {
+            get
+            {
+                if (!_refKind.HasValue || _refKind.Value == AcbelReferenceKind.None) return false;
+                // 「程序运行时」只跟时间有关，不依赖任何步骤
+                if (!NeedsStep(_refKind.Value)) return true;
+                return _refStepUid.HasValue && _refStepUid.Value != Guid.Empty;
+            }
+        }
+
+        /// <summary>这类引用是否需要指定来源步骤。</summary>
+        internal static bool NeedsStep(AcbelReferenceKind kind)
+            => kind != AcbelReferenceKind.None && kind != AcbelReferenceKind.RunNow;
 
         /// <summary>引用标签，例如「12. GetInput_1 · OCR 文本」或「用户输入 → 用户输入_1 / SN」。</summary>
         [JsonIgnore]
@@ -197,6 +212,11 @@ namespace ShaoLu.Viewmodels.AutomationStep
             get
             {
                 if (!IsReferenced) return string.Empty;
+
+                // 「程序运行时」没有来源步骤，直接显示种类
+                if (!NeedsStep(_refKind.Value))
+                    return AcbelUploadStep.Loc("AcbelRefRunNow", "运行时日期/时间");
+
                 int lineNo = 0;
                 string stepName = null;
                 foreach (var pair in AcbelUploadStep.OtherSteps(Guid.Empty))
@@ -308,6 +328,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 }
 
                 nodes.Add(root);
+
+                // 「程序运行时」：不依赖任何步骤，例如 TEST_DATE 直接用运行当天的日期
+                var runRoot = new AcbelRefMenuNode { Header = AcbelUploadStep.Loc("AcbelRefRunNowGroup", "程序运行时") };
+                runRoot.Children.Add(new AcbelRefMenuNode
+                {
+                    Header = AcbelUploadStep.Loc("AcbelRefRunNow", "运行时日期/时间"),
+                    Kind = AcbelReferenceKind.RunNow,
+                    Command = new RelayCommand(() => SetReference(Guid.Empty, AcbelReferenceKind.RunNow))
+                });
+                nodes.Add(runRoot);
+
                 nodes.Add(new AcbelRefMenuNode
                 {
                     Header = AcbelUploadStep.Loc("AcbelRefClear", "清除引用"),
@@ -357,14 +388,17 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
         /// <summary>
         /// 引用其他步骤本次运行的结果。
-        /// kind = UserInput 时必须给出 fieldName（用户输入字段名）。
+        /// kind = UserInput 时必须给出 fieldName（用户输入字段名）；
+        /// kind = RunNow（程序运行时）不需要步骤，传 Guid.Empty 即可。
         /// </summary>
         public void SetReference(Guid stepUid, AcbelReferenceKind kind, string fieldName = null)
         {
-            if (stepUid == Guid.Empty || kind == AcbelReferenceKind.None) return;
+            if (kind == AcbelReferenceKind.None) return;
+            bool needsStep = NeedsStep(kind);
+            if (needsStep && stepUid == Guid.Empty) return;
             if (kind == AcbelReferenceKind.UserInput && string.IsNullOrWhiteSpace(fieldName)) return;
 
-            _refStepUid = stepUid;
+            _refStepUid = needsStep ? stepUid : (Guid?)null;
             _refKind = kind;
             // 只有用户输入引用需要字段名，其余引用清空，避免残留旧字段名
             _refFieldName = kind == AcbelReferenceKind.UserInput ? fieldName.Trim() : string.Empty;
@@ -625,21 +659,30 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// <summary>
         /// 解析某个字段行的取值：未引用取固定文本；引用取其他步骤「本次运行」的结果，
         /// 取不到（未执行过/未初始化）时按空串处理，不报错。
-        /// 「用户输入」引用按字段名从执行上下文取值，不依赖步骤的执行结果。
+        /// 「用户输入」引用按字段名从执行上下文取值，不依赖步骤的执行结果；
+        /// 「程序运行时」引用不依赖任何步骤。
+        /// 取到的值最后按目标段的字段类型归一（时间段 HHmmss、日期段 yyyyMMdd、PASS/FAIL、数值），
+        /// 所以引用「执行结果」「OCR 文本」「步骤开始时间」这类结果也能直接放进要求格式的段。
         /// </summary>
         public string ResolveRowValue(AcbelUploadRow row)
         {
             if (row == null) return string.Empty;
-            if (!row.IsReferenced) return row.Text ?? string.Empty;
+            if (!row.IsReferenced) return FormatForField(row.Index, row.Text);
 
+            AcbelReferenceKind kind = row.RefKind.Value;
             try
             {
+                // 程序运行时：不依赖任何步骤（TEST_DATE 直接用运行当天的日期）
+                if (kind == AcbelReferenceKind.RunNow)
+                    return FormatRunNow(row.Index);
+
                 // 用户输入字段：走执行上下文的字段值（未填写/未运行均按空串）
-                if (row.RefKind.Value == AcbelReferenceKind.UserInput)
+                if (kind == AcbelReferenceKind.UserInput)
                 {
-                    return StepExecutionContext.TryGetUserInput(row.RefStepUid.Value, row.RefFieldName, out string userInput)
-                        ? (userInput ?? string.Empty)
+                    string userInput = StepExecutionContext.TryGetUserInput(row.RefStepUid.Value, row.RefFieldName, out string inputValue)
+                        ? (inputValue ?? string.Empty)
                         : string.Empty;
+                    return FormatForField(row.Index, userInput);
                 }
 
                 StepExecutionResult result;
@@ -647,29 +690,150 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 if (!StepExecutionContext.TryGetLatestResult(row.RefStepUid.Value, out result, out threadName) || result == null)
                     return string.Empty;
 
-                switch (row.RefKind.Value)
+                string raw;
+                switch (kind)
                 {
                     case AcbelReferenceKind.ExecutionResult:
-                        return result.IsTrue ? "PASS" : "FAIL";
+                        raw = result.IsTrue ? "PASS" : "FAIL";
+                        break;
                     case AcbelReferenceKind.ScanResult:
-                        return result.OCRText ?? string.Empty;
+                        raw = result.OCRText ?? string.Empty;
+                        break;
                     case AcbelReferenceKind.OcrText:
-                        return IsDirectTextSource(result.TextSource) ? string.Empty : (result.OCRText ?? string.Empty);
+                        raw = IsDirectTextSource(result.TextSource) ? string.Empty : (result.OCRText ?? string.Empty);
+                        break;
                     case AcbelReferenceKind.DirectText:
-                        return IsDirectTextSource(result.TextSource) ? (result.OCRText ?? string.Empty) : string.Empty;
+                        raw = IsDirectTextSource(result.TextSource) ? (result.OCRText ?? string.Empty) : string.Empty;
+                        break;
                     case AcbelReferenceKind.StepStartTime:
-                        return FormatStepTime(GetStepStartTime(result));
+                        raw = FormatStepTime(GetStepStartTime(result));
+                        break;
                     case AcbelReferenceKind.StepEndTime:
-                        return FormatStepTime(result.ExecutedAt);
+                        raw = FormatStepTime(result.ExecutedAt);
+                        break;
                     default:
-                        return string.Empty;
+                        raw = string.Empty;
+                        break;
                 }
+
+                return FormatForField(row.Index, raw);
             }
             catch (Exception ex)
             {
                 Logger.Warn(ex, "AcbelUpload: 解析引用值失败");
                 return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// 按目标段的字段类型把值转成厂商要求的格式：
+        /// PASS/FAIL 段归一为 PASS / FAIL，时间段归一为 HHmmss，日期段归一为 yyyyMMdd，数值段去掉多余空白。
+        /// 已经是目标格式的值原样返回，所以固定文本与引用结果走同一条路。
+        /// </summary>
+        public string FormatForField(int index, string value)
+        {
+            AcbelInsertDataField spec = AcbelInsertDataSpec.ByIndex(index);
+            string text = (value ?? string.Empty).Trim();
+            if (spec == null || text.Length == 0) return text;
+
+            switch (spec.Kind)
+            {
+                case AcbelFieldKind.PassFail: return ToPassFail(text);
+                case AcbelFieldKind.Time: return ToHhmmss(text);
+                case AcbelFieldKind.Date: return ToYyyymmdd(text);
+                case AcbelFieldKind.Decimal: return ToDecimal(text);
+                default: return text;
+            }
+        }
+
+        /// <summary>程序运行时的当前时刻，按目标段的格式填（日期段 yyyyMMdd、时间段 HHmmss、其他段给完整时间戳）。</summary>
+        private static string FormatRunNow(int index)
+        {
+            AcbelInsertDataField spec = AcbelInsertDataSpec.ByIndex(index);
+            DateTime now = DateTime.Now;
+            if (spec != null && spec.Kind == AcbelFieldKind.Time)
+                return now.ToString("HHmmss", System.Globalization.CultureInfo.InvariantCulture);
+            if (spec != null && spec.Kind == AcbelFieldKind.Date)
+                return now.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
+            return now.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>PASS / FAIL 归一：真 / 1 / OK / NG 等常见写法都收。</summary>
+        private static string ToPassFail(string value)
+        {
+            string text = value.Trim();
+            string upper = text.ToUpperInvariant();
+            if (upper == "1" || upper == "PASS" || upper == "OK" || upper == "TRUE" || upper == "T" || upper == "P"
+                || text == "真" || text == "是") return "PASS";
+            if (upper == "0" || upper == "FAIL" || upper == "NG" || upper == "FALSE" || upper == "F" || upper == "N"
+                || text == "假" || text == "否") return "FAIL";
+            if (upper.Contains("PASS")) return "PASS";
+            if (upper.Contains("FAIL") || upper.Contains("NG")) return "FAIL";
+            return text;
+        }
+
+        /// <summary>时间归一成 HHmmss：支持 140735 / 14:07:35 / 14:07 / 2026-11-19 14:07:35 等写法。</summary>
+        private static string ToHhmmss(string value)
+        {
+            string text = value.Trim();
+            if (Regex.IsMatch(text, "^[0-9]{6}$")) return text;
+            if (Regex.IsMatch(text, "^[0-9]{5}$")) return "0" + text;
+            if (Regex.IsMatch(text, "^[0-9]{4}$")) return text + "00";
+
+            string[] formats =
+            {
+                "H:mm:ss", "HH:mm:ss", "H:mm", "HH:mm",
+                "H-m-s", "HH-mm-ss", "H.mm.ss", "HH.mm.ss",
+                "yyyy-MM-dd HH:mm:ss", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-ddTHH:mm:ss", "yyyyMMddHHmmss"
+            };
+            if (DateTime.TryParseExact(text, formats, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime parsed))
+                return parsed.ToString("HHmmss", System.Globalization.CultureInfo.InvariantCulture);
+
+            string digits = DigitsOnly(text);
+            if (digits.Length == 6) return digits;
+            if (digits.Length == 14) return digits.Substring(8, 6);
+            return text;
+        }
+
+        /// <summary>日期归一成 yyyyMMdd：支持 20261119 / 2026-11-19 / 2026/11/19 / 2026-11-19 14:07:35 等写法。</summary>
+        private static string ToYyyymmdd(string value)
+        {
+            string text = value.Trim();
+            if (Regex.IsMatch(text, "^[0-9]{8}$")) return text;
+
+            string[] formats =
+            {
+                "yyyy-MM-dd", "yyyy/MM/dd", "yyyy.MM.dd", "yyyy-M-d", "yyyy/M/d", "yyyy年M月d日",
+                "yyyy-MM-dd HH:mm:ss", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-ddTHH:mm:ss", "yyyyMMddHHmmss"
+            };
+            if (DateTime.TryParseExact(text, formats, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime parsed))
+                return parsed.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
+
+            string digits = DigitsOnly(text);
+            if (digits.Length == 8) return digits;
+            if (digits.Length == 14) return digits.Substring(0, 8);
+            return text;
+        }
+
+        /// <summary>数值归一：去掉空白与千分位，逗号小数点换成点。</summary>
+        private static string ToDecimal(string value)
+        {
+            string text = value.Trim();
+            text = text.Replace(",", string.Empty).Replace("，", string.Empty);
+            return text;
+        }
+
+        private static string DigitsOnly(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            var builder = new System.Text.StringBuilder(value.Length);
+            foreach (char c in value)
+            {
+                if (c >= '0' && c <= '9') builder.Append(c);
+            }
+            return builder.ToString();
         }
 
         /// <summary>取指定段号字段的当前值（含引用解析）。</summary>

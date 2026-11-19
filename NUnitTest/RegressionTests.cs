@@ -167,9 +167,9 @@ namespace NUnitTest
         #region S3 保存后图片落地
 
         [Test]
-        public void SaveAsAutoStepPackage_LandsImagesIntoTargetWorkDir()
+        public void SaveAsAutoStepPackage_LandsImagesIntoCurrentWorkDir()
         {
-            string workDir = Path.Combine(_testDir, "old_work");
+            string workDir = Path.Combine(_testDir, "work");
             Directory.CreateDirectory(Path.Combine(workDir, "images"));
             File.WriteAllBytes(Path.Combine(workDir, "images", "burnin_good.png"), TinyPng);
             StepsFile.WorkDirResolver = () => workDir;
@@ -178,17 +178,67 @@ namespace NUnitTest
             var steps = new ObservableCollection<AutomationStepBase> { burnStep };
 
             string packagePath = Path.Combine(_testDir, "saveas.autostep");
-            StepsFile.SaveAsAutoStepPackage(steps, packagePath);
+            var result = StepsFile.SaveAsAutoStepPackage(steps, packagePath);
 
-            string targetWorkDir = StepsFile.GetWorkDirPath(packagePath);
-            Assert.That(Directory.Exists(targetWorkDir), Is.True);
-            Assert.That(File.Exists(Path.Combine(targetWorkDir, "images", "burnin_good.png")), Is.True,
-                "另存为后图片必须落到新工作目录，否则第二次保存会剔除图片");
+            Assert.That(result.WorkDir, Is.EqualTo(workDir), "保存沿用当前工作目录");
+            Assert.That(File.Exists(Path.Combine(workDir, "images", "burnin_good.png")), Is.True,
+                "图片必须留在当前工作目录，否则第二次保存会剔除图片");
+            Assert.That(Directory.Exists(Path.Combine(_testDir, "saveas_images")), Is.False,
+                "不应再在工程文件旁边生成 {包名}_images 目录");
 
             // 第二次保存（模拟用户再按 Ctrl+S）：包里图片数量不减少
             var second = StepsFile.SaveAsAutoStepPackage(steps, packagePath);
             Assert.That(second.MissingImages, Is.Empty);
             Assert.That(second.ImageCount, Is.GreaterThanOrEqualTo(1));
+        }
+
+        [Test]
+        public void SaveAsAutoStepPackage_NoWorkDir_FallsBackToTempWorkDir()
+        {
+            StepsFile.WorkDirResolver = () => null;
+
+            var burnStep = new BurnInConfigStep("烧录判定") { GoodTemplateName = "images/burnin_good.png" };
+            var steps = new ObservableCollection<AutomationStepBase> { burnStep };
+            string packagePath = Path.Combine(_testDir, "nofallback.autostep");
+
+            var result = StepsFile.SaveAsAutoStepPackage(steps, packagePath);
+
+            Assert.That(result.WorkDir, Does.StartWith(StepsFile.TempWorkRoot), "没有工作目录时应落到临时目录");
+            Assert.That(Directory.Exists(Path.Combine(_testDir, "nofallback_images")), Is.False);
+
+            StepsFile.TryReleaseTempWorkDir(result.WorkDir);
+            Assert.That(Directory.Exists(result.WorkDir), Is.False, "退出时应能删掉本次会话的临时工作目录");
+        }
+
+        #endregion
+
+        #region 打开工程解压到临时目录
+
+        [Test]
+        public void LoadFromAutoStepPackage_ExtractsIntoTempDir_NotNextToPackage()
+        {
+            string workDir = Path.Combine(_testDir, "work");
+            Directory.CreateDirectory(Path.Combine(workDir, "images"));
+            File.WriteAllBytes(Path.Combine(workDir, "images", "burnin_good.png"), TinyPng);
+            StepsFile.WorkDirResolver = () => workDir;
+
+            var burnStep = new BurnInConfigStep("烧录判定") { GoodTemplateName = "images/burnin_good.png" };
+            string packagePath = Path.Combine(_testDir, "tempdir.autostep");
+            StepsFile.SaveAsAutoStepPackage(new ObservableCollection<AutomationStepBase> { burnStep }, packagePath);
+
+            var loaded = StepsFile.LoadFromAutoStepPackage(packagePath);
+
+            Assert.That(loaded.Count, Is.EqualTo(1));
+            Assert.That(Directory.Exists(Path.Combine(_testDir, "tempdir_images")), Is.False,
+                "打开工程不应在工程文件旁边建 {包名}_images 目录");
+
+            string[] staged = Directory.GetDirectories(StepsFile.TempWorkRoot, "tempdir-*");
+            Assert.That(staged, Is.Not.Empty, "解压出来的图片应在临时工作目录里");
+            string newest = staged.OrderByDescending(Directory.GetLastWriteTime).First();
+            Assert.That(File.Exists(Path.Combine(newest, "images", "burnin_good.png")), Is.True);
+
+            foreach (string dir in staged)
+                StepsFile.TryReleaseTempWorkDir(dir);
         }
 
         #endregion
@@ -198,26 +248,27 @@ namespace NUnitTest
         [Test]
         public void LoadFromAutoStepPackage_CorruptPackage_KeepsExistingWorkDir()
         {
-            var steps = new ObservableCollection<AutomationStepBase> { new TypeTextStep("步骤A") };
-            StepsFile.WorkDirResolver = () => _testDir;
-            string packagePath = Path.Combine(_testDir, "corrupt.autostep");
-
-            StepsFile.SaveAsAutoStepPackage(steps, packagePath);
-            string workDir = StepsFile.GetWorkDirPath(packagePath);
-            // 无图片的工程不会创建 _images 目录，这里显式建立并放一个标记文件来验证“打开损坏包不会先删目录”
+            string workDir = Path.Combine(_testDir, "work");
             Directory.CreateDirectory(workDir);
-            Assert.That(Directory.Exists(workDir), Is.True);
+            StepsFile.WorkDirResolver = () => workDir;
 
             string marker = Path.Combine(workDir, "keep.txt");
             File.WriteAllText(marker, "keep");
 
             // 破坏包内容
+            string packagePath = Path.Combine(_testDir, "corrupt.autostep");
             File.WriteAllText(packagePath, "not a zip");
 
             Assert.That(new NUnit.Framework.TestDelegate(() => StepsFile.LoadFromAutoStepPackage(packagePath)), Throws.Exception);
 
-            Assert.That(File.Exists(marker), Is.True, "打开损坏包时不能先删掉当前工作目录");
+            Assert.That(File.Exists(marker), Is.True, "打开损坏包时不能动当前工作目录");
             Assert.That(File.ReadAllText(marker), Is.EqualTo("keep"));
+
+            if (Directory.Exists(StepsFile.TempWorkRoot))
+            {
+                Assert.That(Directory.GetDirectories(StepsFile.TempWorkRoot, ".staging-*"), Is.Empty,
+                    "解压失败要把临时目录清掉");
+            }
         }
 
         #endregion

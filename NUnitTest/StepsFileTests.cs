@@ -424,15 +424,25 @@ namespace NUnitTest
 
         #endregion
 
-        #region GetWorkDirPath
+        #region 临时工作目录
 
         [Test]
-        public void GetWorkDirPath_ReturnsCorrectPath()
+        public void CreateTempWorkDirPath_UsesPackageNameUnderTempRoot()
         {
-            string packagePath = @"C:\TestDir\MySteps.autostep";
-            string expected = Path.Combine(@"C:\TestDir", "MySteps_images");
-            string actual = StepsFile.GetWorkDirPath(packagePath);
-            Assert.That(actual, Is.EqualTo(expected));
+            string path = StepsFile.CreateTempWorkDirPath(@"C:\TestDir\MySteps.autostep");
+
+            Assert.That(path, Does.StartWith(StepsFile.TempWorkRoot), "解压目录必须在 %TEMP%\\AutoShaoLu\\steps 下");
+            Assert.That(Path.GetFileName(path), Does.StartWith("MySteps-"), "目录名带包名，便于排查");
+            Assert.That(Directory.Exists(path), Is.False, "只规划路径，不创建目录");
+        }
+
+        [Test]
+        public void CreateTempWorkDirPath_SameNameDifferentPath_AreUnique()
+        {
+            string first = StepsFile.CreateTempWorkDirPath(@"C:\A\same.autostep");
+            string second = StepsFile.CreateTempWorkDirPath(@"C:\B\same.autostep");
+
+            Assert.That(first, Is.Not.EqualTo(second), "同名工程不能互相覆盖工作目录");
         }
 
         #endregion
@@ -581,10 +591,13 @@ namespace NUnitTest
 
                 // 模拟换机：原图绝对路径不存在，必须回退到工程目录里的原图
                 loadedStep.ImagePath = Path.Combine(_testDir, "not_exists.png");
-                string expectedLanding = Path.Combine(StepsFile.GetWorkDirPath(packagePath),
-                    expectedName.Replace('/', Path.DirectorySeparatorChar));
+                string workDir = ShaoLu.Utils.SingletonLocator.Main.StepImageWorkDir;
+                Assert.That(workDir, Does.StartWith(StepsFile.TempWorkRoot),
+                    "打开工程应解压到临时工作目录，不在工程文件旁边建目录");
+                string expectedLanding = Path.Combine(workDir, expectedName.Replace('/', Path.DirectorySeparatorChar));
                 Assert.That(loadedStep.SourceImageFullPath, Is.EqualTo(expectedLanding),
-                    "原图路径失效时应回退到工程目录里的原图");
+                    "原图路径失效时应回退到工作目录里的原图");
+                StepsFile.TryReleaseTempWorkDir(workDir);
             }
             finally
             {

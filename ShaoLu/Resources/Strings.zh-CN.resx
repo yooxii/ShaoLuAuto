@@ -2318,4 +2318,10 @@
   <data name="AcbelBarcodeFailTitle" xml:space="preserve">
     <value>Acbel 条码校验业务卡控</value>
   </data>
+  <data name="AcbelRefRunNowGroup" xml:space="preserve">
+    <value>程序运行时</value>
+  </data>
+  <data name="AcbelRefRunNow" xml:space="preserve">
+    <value>运行时日期/时间</value>
+  </data>
 </root>

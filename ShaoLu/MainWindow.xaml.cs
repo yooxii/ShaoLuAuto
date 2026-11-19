@@ -1,4 +1,4 @@
-﻿using ShaoLu.Models;
+using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Services.Ocr;
 using ShaoLu.Utils;
@@ -210,6 +210,9 @@ namespace ShaoLu
             foreach (var step in stepsViewModel.AutomationStepBases)
                 step.PropertyChanged -= Step_PropertyChanged;
 
+            // 本次会话解压出来的临时工作目录随进程一起清掉（图片本来就在工程包里）
+            StepsFile.TryReleaseTempWorkDir(mainViewModel.StepImageWorkDir);
+
             // 关闭所有子窗口
             foreach (var window in Application.Current.Windows.Cast<Window>().Where(w => w != this).ToList())
             {
@@ -227,6 +230,9 @@ namespace ShaoLu
             FontSize = appSettings.App.WindowFont.FontSize;
 
             UpdateLoginStateUI();
+
+            // 工程解压在临时目录里进行：启动时清理上一次运行留下的临时工作目录
+            StepsFile.CleanupTempWorkDirs();
 
             BuildExamplesMenu();
             BuildRecentFilesMenu();
@@ -482,9 +488,9 @@ namespace ShaoLu
 
                 if (ext == ".autostep")
                 {
+                    // 解压到临时目录，StepImageWorkDir 由加载器设置（不再在工程文件旁边建 {包名}_images）
                     loadedSteps = StepsFile.LoadFromAutoStepPackage(filePath);
                     mainViewModel.StepFilePath = filePath;
-                    mainViewModel.StepImageWorkDir = StepsFile.GetWorkDirPath(filePath);
                 }
                 else
                 {

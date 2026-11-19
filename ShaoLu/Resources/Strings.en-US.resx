@@ -2318,4 +2318,10 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="AcbelBarcodeFailTitle" xml:space="preserve">
     <value>Acbel barcode check blocked</value>
   </data>
+  <data name="AcbelRefRunNowGroup" xml:space="preserve">
+    <value>Run moment</value>
+  </data>
+  <data name="AcbelRefRunNow" xml:space="preserve">
+    <value>Run date/time</value>
+  </data>
 </root>

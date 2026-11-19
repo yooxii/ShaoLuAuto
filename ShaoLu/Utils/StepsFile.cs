@@ -19,7 +19,7 @@ namespace ShaoLu.Utils
     /// </summary>
     public sealed class SavePackageResult
     {
-        /// <summary>包对应的工作目录（{包名}_images）</summary>
+        /// <summary>本次会话的工作目录（临时目录，保存后图片落地到这里）</summary>
         public string WorkDir { get; internal set; }
 
         /// <summary>已写入包的图片数量</summary>
@@ -100,7 +100,7 @@ namespace ShaoLu.Utils
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            var result = new SavePackageResult { WorkDir = GetWorkDirPath(targetPath) };
+            var result = new SavePackageResult { WorkDir = ResolveSaveWorkDir(targetPath) };
 
             // 0. 原图先定好包内名称（时间字符串 + 编号）：必须在序列化之前，名字才会写进 steps.json
             if (includeSourceImages)
@@ -456,8 +456,87 @@ namespace ShaoLu.Utils
         }
 
         /// <summary>
+        /// 工程解压出来的临时工作目录根：%TEMP%\AutoShaoLu\steps。
+        /// 打开工程不再在工程文件旁边建 {包名}_images 目录，解压出来的图片只在临时目录里用。
+        /// </summary>
+        public static string TempWorkRoot => Path.Combine(Path.GetTempPath(), "AutoShaoLu", "steps");
+
+        /// <summary>
+        /// 为某个工程包规划一个临时工作目录路径（不创建目录）：
+        /// %TEMP%\AutoShaoLu\steps\{包名}-{8 位随机}，避免同名工程互相覆盖。
+        /// </summary>
+        public static string CreateTempWorkDirPath(string packagePath)
+        {
+            string name = string.IsNullOrWhiteSpace(packagePath)
+                ? "steps"
+                : Path.GetFileNameWithoutExtension(packagePath);
+
+            foreach (char invalid in Path.GetInvalidFileNameChars())
+                name = name.Replace(invalid, '_');
+            if (string.IsNullOrWhiteSpace(name)) name = "steps";
+
+            return Path.Combine(TempWorkRoot, name + "-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+        }
+
+        /// <summary>创建并返回一个临时工作目录。</summary>
+        private static string CreateTempWorkDir(string packagePath)
+        {
+            string dir = CreateTempWorkDirPath(packagePath);
+            Directory.CreateDirectory(dir);
+            return dir;
+        }
+
+        /// <summary>
+        /// 清理上一次运行遗留的临时工作目录（程序启动时调用）。
+        /// 默认只删超过 1 天的，避免误删同时开着的另一个实例正在用的目录。
+        /// </summary>
+        public static void CleanupTempWorkDirs(TimeSpan? olderThan = null)
+        {
+            TimeSpan threshold = olderThan ?? TimeSpan.FromDays(1);
+            try
+            {
+                if (!Directory.Exists(TempWorkRoot)) return;
+                DateTime limit = DateTime.Now - threshold;
+                foreach (string dir in Directory.GetDirectories(TempWorkRoot))
+                {
+                    try
+                    {
+                        if (Directory.GetLastWriteTime(dir) > limit) continue;
+                        Directory.Delete(dir, recursive: true);
+                    }
+                    catch
+                    {
+                        // 删不掉（被占用等）就留着，下次启动再试
+                    }
+                }
+            }
+            catch
+            {
+                // 清理失败不影响打开工程
+            }
+        }
+
+        /// <summary>程序退出时删掉本次会话的临时工作目录（不在临时根下面的目录不动）。</summary>
+        public static void TryReleaseTempWorkDir(string workDir)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(workDir)) return;
+                string root = Path.GetFullPath(TempWorkRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                string full = Path.GetFullPath(workDir).TrimEnd(Path.DirectorySeparatorChar);
+                if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return;
+                if (Directory.Exists(full)) Directory.Delete(full, recursive: true);
+            }
+            catch
+            {
+                // 删不掉就留着，下次启动由 CleanupTempWorkDirs 处理
+            }
+        }
+
+        /// <summary>
         /// 从 .autostep 压缩包加载步骤
-        /// 先解压到临时目录并完成 JSON 校验，成功后替换工作目录；打开损坏包不会破坏当前图片。
+        /// 先解压到临时目录并完成 JSON 校验，校验通过后才把它换成本次会话的工作目录；
+        /// 打开损坏包不会破坏当前工程（图片仍在当前工作目录里）。
         /// </summary>
         public static ObservableCollection<AutomationStepBase> LoadFromAutoStepPackage(string packagePath)
         {
@@ -468,11 +547,9 @@ namespace ShaoLu.Utils
             if (!File.Exists(packageFullPath))
                 throw new FileNotFoundException(LanguageService.GetLocalizedString("Msg_FileNotFound", $"文件未找到: {packagePath}", packagePath), packagePath);
 
-            // 解压到工作目录: {packagePath所在目录}/{文件名WithoutExt}_images/
-            string dir = Path.GetDirectoryName(packageFullPath);
-            string nameWithoutExt = Path.GetFileNameWithoutExtension(packageFullPath);
-            string workDir = Path.Combine(dir, $"{nameWithoutExt}_images");
-            string tempDir = Path.Combine(dir, $".{nameWithoutExt}_images_tmp_{Guid.NewGuid():N}");
+            // 解压到临时目录：{TEMP}\AutoShaoLu\steps\{包名}-{随机}，不在工程文件旁边留目录
+            string workDir = CreateTempWorkDirPath(packageFullPath);
+            string tempDir = Path.Combine(TempWorkRoot, ".staging-" + Guid.NewGuid().ToString("N"));
 
             ObservableCollection<AutomationStepBase> steps;
             try
@@ -496,28 +573,10 @@ namespace ShaoLu.Utils
                 // 后处理：解析旧格式 int 行号的 TrueGoto/FalseGoto 为 Uid
                 ResolveLegacyGotoLineNumbers(steps);
 
-                // 校验通过后再替换工作目录：先改名旧目录（同卷原子操作）再换入新目录
+                // 校验通过后才把临时目录改名成工作目录（同一卷改名为原子操作）
                 if (Directory.Exists(workDir))
-                {
-                    string oldDir = workDir + ".old-" + Guid.NewGuid().ToString("N");
-                    Directory.Move(workDir, oldDir);
-                    try
-                    {
-                        Directory.Move(tempDir, workDir);
-                    }
-                    catch
-                    {
-                        // 换入失败：回滚旧目录，保证当前工程图片不丢
-                        if (!Directory.Exists(workDir) && Directory.Exists(oldDir))
-                            Directory.Move(oldDir, workDir);
-                        throw;
-                    }
-                    TryDeleteDirectory(oldDir);
-                }
-                else
-                {
-                    Directory.Move(tempDir, workDir);
-                }
+                    workDir = CreateTempWorkDir(packageFullPath);
+                Directory.Move(tempDir, workDir);
             }
             catch
             {
@@ -526,25 +585,48 @@ namespace ShaoLu.Utils
             }
 
             // 设置工作目录
-            var mainVM = SingletonLocator.Main;
-            if (mainVM != null)
+            try
             {
-                mainVM.StepImageWorkDir = workDir;
-                mainVM.StepFilePath = packageFullPath;
+                var mainVM = SingletonLocator.Main;
+                if (mainVM != null)
+                {
+                    mainVM.StepImageWorkDir = workDir;
+                    mainVM.StepFilePath = packageFullPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 没有 DI 容器时（单元测试等）只记日志，不影响加载
+                NLog.LogManager.GetCurrentClassLogger().Warn(ex, "StepsFile: 设置工作目录失败");
             }
 
             return steps;
         }
 
         /// <summary>
-        /// 获取 .autostep 包的解压工作目录路径
+        /// 保存时用哪个工作目录：优先沿用本次会话已经在用的目录（打开工程解压出来的临时目录，
+        /// 或新工程首次落图时建的临时目录），这样保存不会在工程文件旁边额外建 {包名}_images；
+        /// 没有任何工作目录时新建一个临时目录。
         /// </summary>
-        public static string GetWorkDirPath(string packagePath)
+        private static string ResolveSaveWorkDir(string targetPath)
         {
-            string fullPath = Path.GetFullPath(packagePath);
-            string dir = Path.GetDirectoryName(fullPath);
-            string nameWithoutExt = Path.GetFileNameWithoutExtension(fullPath);
-            return Path.Combine(dir, $"{nameWithoutExt}_images");
+            string current = null;
+            try { current = WorkDirResolver?.Invoke(); } catch { }
+
+            if (!string.IsNullOrWhiteSpace(current))
+            {
+                try
+                {
+                    Directory.CreateDirectory(current);
+                    return current;
+                }
+                catch
+                {
+                    // 当前目录不可写就退回到新的临时目录
+                }
+            }
+
+            return CreateTempWorkDir(targetPath);
         }
 
         /// <summary>

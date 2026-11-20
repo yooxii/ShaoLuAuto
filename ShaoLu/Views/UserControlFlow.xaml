@@ -303,6 +303,44 @@
                 <!-- 环状一级菜单层：不在缩放变换里，坐标与鼠标位置一一对应 -->
                 <Canvas x:Name="RingLayer" Background="Transparent" Visibility="Collapsed"
                         MouseLeftButtonDown="RingLayer_MouseLeftButtonDown"/>
+                <!-- 全屏（窗口内铺满编辑区）：固定在画布左下角，图标在展开/收拢之间切换 -->
+                <ToggleButton x:Name="FullscreenToggle" Panel.ZIndex="30"
+                              HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                              Margin="10,0,0,10" Width="34" Height="34" Padding="0" Cursor="Hand"
+                              ToolTip="{lex:Loc FlowChart_Fullscreen_ToolTip}"
+                              Click="FullscreenToggle_Click">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border x:Name="Bd" Background="#F2FFFFFF" BorderBrush="#FFC3CBD4"
+                                    BorderThickness="1" CornerRadius="6" SnapsToDevicePixels="True">
+                                <Grid>
+                                    <Path x:Name="ExpandIcon" Width="16" Height="16"
+                                          Data="M3,9 L3,3 L9,3 M15,3 L21,3 L21,9 M21,15 L21,21 L15,21 M9,21 L3,21 L3,15"
+                                          Stretch="Uniform" Stroke="#FF243444" StrokeThickness="2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Path x:Name="CollapseIcon" Width="16" Height="16" Visibility="Collapsed"
+                                          Data="M9,3 L9,9 L3,9 M21,9 L15,9 L15,3 M15,21 L15,15 L21,15 M3,15 L9,15 L9,21"
+                                          Stretch="Uniform" Stroke="#FF243444" StrokeThickness="2"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#FFFFFFFF"/>
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#FF8AA0B8"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="ExpandIcon" Property="Visibility" Value="Collapsed"/>
+                                    <Setter TargetName="CollapseIcon" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="Bd" Property="Background" Value="#FFEAF3FF"/>
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#FF7BA7E2"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
             </Grid>
         </Border>
 

@@ -291,7 +291,7 @@
                     <ColumnDefinition Width="3"/>
                     <ColumnDefinition Width="400"/>
                 </Grid.ColumnDefinitions>
-                <GroupBox Header="{lex:Loc StepsBox}" Margin="3">
+                <GroupBox x:Name="StepsGroup" Header="{lex:Loc StepsBox}" Margin="3">
                     <Grid>
                     <DataGrid x:Name="StepsBox" ItemsSource="{Binding AutomationStepBases}"
                               ContextMenu="{StaticResource DataGridMenu}"
@@ -359,7 +359,7 @@
                     <views:UserControlFlow x:Name="FlowView" Visibility="Collapsed"/>
                     </Grid>
                 </GroupBox>
-                <GridSplitter Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
+                <GridSplitter x:Name="StepsSplitter" Grid.Column="1" Width="3" Margin="0,3,0,3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#FFDDDDDD" />
                 <GroupBox x:Name="StepDetailsPanel" Header="{lex:Loc StepDetails}" Margin="3" Grid.Column="2"
                           IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}">
                 <DockPanel>

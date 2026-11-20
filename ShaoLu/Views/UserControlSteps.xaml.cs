@@ -3,10 +3,12 @@ using ShaoLu.Services;
 using ShaoLu.Utils;
 using ShaoLu.Viewmodels;
 using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using WPFDevelopers.Controls;
 
 namespace ShaoLu.Views
@@ -33,6 +35,9 @@ namespace ShaoLu.Views
             // 宽度变化时自动决定组别是全部展开还是折叠
             Loaded += (_, __) => RefreshToolbarGroupLayout();
             SizeChanged += (_, __) => RefreshToolbarGroupLayout();
+            // 流程图窗口内全屏：让出编辑区，详情面板改成悬浮；选中变化决定它显不显示
+            FlowView.FullscreenChanged += FlowView_FullscreenChanged;
+            stepsViewModel.PropertyChanged += StepsViewModel_PropertyChanged;
         }
 
         #region 工具栏分组折叠（编辑 / 步骤 互斥）
@@ -192,9 +197,86 @@ namespace ShaoLu.Views
                 _syncingViewToggle = false;
             }
 
+            // 切回表格视图时自动退出全屏，避免表格被撑宽、详情面板被收起
+            if (!showFlow) FlowView?.ExitFullscreen();
+
             if (showFlow)
                 FlowView?.RefreshView();
         }
+
+        #region 流程图窗口内全屏
+
+        private bool _flowFullscreen;
+        private DropShadowEffect _detailPanelShadow;
+
+        private void FlowView_FullscreenChanged(object sender, EventArgs e)
+            => ApplyFlowFullscreen(FlowView.IsFullscreen);
+
+        private void StepsViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(StepsViewModel.SelectedStep))
+                UpdateDetailsPanelVisibility();
+        }
+
+        /// <summary>
+        /// 流程图全屏：步骤区（表格/画布）横向铺满整个编辑区，分隔条让位，
+        /// 详情面板改成浮在右侧的一层（不再占列宽），没选中节点时收起。
+        /// </summary>
+        private void ApplyFlowFullscreen(bool fullscreen)
+        {
+            _flowFullscreen = fullscreen;
+
+            if (StepsGroup != null)
+                Grid.SetColumnSpan(StepsGroup, fullscreen ? 3 : 1);
+            if (StepsSplitter != null)
+                StepsSplitter.Visibility = fullscreen ? Visibility.Collapsed : Visibility.Visible;
+
+            if (StepDetailsPanel != null)
+            {
+                if (fullscreen)
+                {
+                    Panel.SetZIndex(StepDetailsPanel, 20);
+                    StepDetailsPanel.HorizontalAlignment = HorizontalAlignment.Right;
+                    StepDetailsPanel.VerticalAlignment = VerticalAlignment.Stretch;
+                    StepDetailsPanel.Width = 380;
+                    StepDetailsPanel.Margin = new Thickness(0, 8, 8, 8);
+                    if (_detailPanelShadow == null)
+                    {
+                        _detailPanelShadow = new DropShadowEffect
+                        {
+                            BlurRadius = 14,
+                            ShadowDepth = 2,
+                            Direction = 270,
+                            Opacity = 0.22,
+                            Color = Colors.Black,
+                        };
+                    }
+                    StepDetailsPanel.Effect = _detailPanelShadow;
+                }
+                else
+                {
+                    Panel.SetZIndex(StepDetailsPanel, 0);
+                    StepDetailsPanel.HorizontalAlignment = HorizontalAlignment.Stretch;
+                    StepDetailsPanel.VerticalAlignment = VerticalAlignment.Stretch;
+                    StepDetailsPanel.ClearValue(WidthProperty);
+                    StepDetailsPanel.Margin = new Thickness(3);
+                    StepDetailsPanel.Effect = null;
+                }
+            }
+
+            UpdateDetailsPanelVisibility();
+        }
+
+        /// <summary>全屏时详情面板只跟着选中走：没点节点就收起；普通视图始终显示</summary>
+        private void UpdateDetailsPanelVisibility()
+        {
+            if (StepDetailsPanel == null) return;
+            StepDetailsPanel.Visibility = _flowFullscreen && stepsViewModel.SelectedStep == null
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        #endregion
 
         private void SplitButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {

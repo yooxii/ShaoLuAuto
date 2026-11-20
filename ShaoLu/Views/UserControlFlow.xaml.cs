@@ -739,6 +739,49 @@ namespace ShaoLu.Views
             SetZoom(Math.Min(viewWidth / CanvasHost.Width, viewHeight / CanvasHost.Height));
         }
 
+        #region 窗口内全屏
+
+        /// <summary>全屏状态变化：宿主（UserControlSteps）据此让出编辑区、把详情面板改成悬浮</summary>
+        public event EventHandler FullscreenChanged;
+
+        /// <summary>当前是否处于窗口内全屏</summary>
+        public bool IsFullscreen => FullscreenToggle != null && FullscreenToggle.IsChecked == true;
+
+        /// <summary>设置全屏状态（只改界面与画布尺寸，不动步骤数据）</summary>
+        public void SetFullscreen(bool fullscreen)
+        {
+            if (FullscreenToggle == null) return;
+            if (FullscreenToggle.IsChecked == fullscreen) return;
+
+            FullscreenToggle.IsChecked = fullscreen;
+            UpdateFullscreenToolTip();
+            FullscreenChanged?.Invoke(this, EventArgs.Empty);
+
+            // 可见区域变了：等布局跑完再重算画布下限并重画连线
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                UpdateCanvasSize();
+                CanvasHost.UpdateLayout();
+                RebuildEdges();
+            }), DispatcherPriority.Background);
+        }
+
+        /// <summary>退出全屏（外部切回表格视图时调用）</summary>
+        public void ExitFullscreen() => SetFullscreen(false);
+
+        private void FullscreenToggle_Click(object sender, RoutedEventArgs e)
+            => SetFullscreen(FullscreenToggle.IsChecked == true);
+
+        private void UpdateFullscreenToolTip()
+        {
+            bool fullscreen = IsFullscreen;
+            FullscreenToggle.ToolTip = LanguageService.GetLocalizedString(
+                fullscreen ? "FlowChart_ExitFullscreen_ToolTip" : "FlowChart_Fullscreen_ToolTip",
+                fullscreen ? "退出全屏" : "全屏");
+        }
+
+        #endregion
+
         /// <summary>按设置重建画布背景：点 / 线 / 虚线，小格 / 大格</summary>
         private void UpdateBackdrop()
         {

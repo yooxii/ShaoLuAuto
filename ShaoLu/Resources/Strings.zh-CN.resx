@@ -2339,6 +2339,12 @@
   <data name="FlowChart_ToolTip" xml:space="preserve">
     <value>在标准表格和流程图之间切换：流程图中可拖动节点摆放位置，从节点右侧的真/假圆点拖到目标步骤即可建立跳转。</value>
   </data>
+  <data name="FlowChart_Fullscreen_ToolTip" xml:space="preserve">
+    <value>全屏（铺满窗口内的编辑区）</value>
+  </data>
+  <data name="FlowChart_ExitFullscreen_ToolTip" xml:space="preserve">
+    <value>退出全屏</value>
+  </data>
   <data name="FlowChart_AutoLayout" xml:space="preserve">
     <value>自动整理</value>
   </data>

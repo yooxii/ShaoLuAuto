@@ -2339,6 +2339,12 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="FlowChart_ToolTip" xml:space="preserve">
     <value>Switch between the standard table and the flow chart: drag nodes to arrange them, drag from the T / F dots to a target step to set that jump.</value>
   </data>
+  <data name="FlowChart_Fullscreen_ToolTip" xml:space="preserve">
+    <value>Fullscreen (fill the editing area)</value>
+  </data>
+  <data name="FlowChart_ExitFullscreen_ToolTip" xml:space="preserve">
+    <value>Exit fullscreen</value>
+  </data>
   <data name="FlowChart_AutoLayout" xml:space="preserve">
     <value>Auto layout</value>
   </data>

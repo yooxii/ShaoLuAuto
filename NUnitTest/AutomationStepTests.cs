@@ -514,6 +514,40 @@ namespace NUnitTest
             }
         }
 
+        #region 网络标签
+
+        [TestFixture]
+        public class FlowEdgeLabelStoreTests
+        {
+            [TearDown]
+            public void TearDown() => ShaoLu.Services.FlowEdgeLabelStore.Clear();
+
+            [Test]
+            public void Set_TryGet_Remove_RoundTrip()
+            {
+                ShaoLu.Services.FlowEdgeLabelStore.Set("e1", "  N1  ");
+                Assert.That(ShaoLu.Services.FlowEdgeLabelStore.TryGet("e1", out var label), Is.True);
+                Assert.That(label, Is.EqualTo("N1"), "名字去首尾空白");
+
+                ShaoLu.Services.FlowEdgeLabelStore.Remove("e1");
+                Assert.That(ShaoLu.Services.FlowEdgeLabelStore.TryGet("e1", out _), Is.False);
+            }
+
+            [Test]
+            public void Snapshot_ReplaceAll_Copies()
+            {
+                ShaoLu.Services.FlowEdgeLabelStore.Set("e1", "N1");
+                var snapshot = ShaoLu.Services.FlowEdgeLabelStore.Snapshot();
+
+                ShaoLu.Services.FlowEdgeLabelStore.Clear();
+                ShaoLu.Services.FlowEdgeLabelStore.ReplaceAll(snapshot);
+
+                Assert.That(ShaoLu.Services.FlowEdgeLabelStore.TryGet("e1", out var label), Is.True);
+                Assert.That(label, Is.EqualTo("N1"));
+            }
+        }
+
+        #endregion
         #region EndStep / PopupStep 暂停
 
         [TestFixture]

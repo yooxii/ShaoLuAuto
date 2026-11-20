@@ -209,9 +209,12 @@ namespace ShaoLu.Utils
                 }
 
                 var portSnapshot = FlowPortStore.Snapshot();
+                var labelSnapshot = FlowEdgeLabelStore.Snapshot();
                 foreach (var pair in FlowEdgeAnchorStore.Snapshot())
                 {
                     var entry = new FlowEdgeLayout { Key = pair.Key };
+                    if (labelSnapshot.TryGetValue(pair.Key, out var netLabel))
+                        entry.Label = netLabel;
                     foreach (var point in pair.Value)
                         entry.Points.Add(new FlowPoint { X = point.X, Y = point.Y });
                     if (portSnapshot.TryGetValue(pair.Key + "|A", out var startPort))
@@ -225,6 +228,13 @@ namespace ShaoLu.Utils
                         entry.EndFraction = endPort.Fraction;
                     }
                     file.Edges.Add(entry);
+                }
+
+                // 只有网络标签、没有锚点/端点落点的连线也要存一条，否则打开工程标签就丢了
+                foreach (var pair in labelSnapshot)
+                {
+                    if (file.Edges.Exists(e => string.Equals(e.Key, pair.Key, StringComparison.Ordinal))) continue;
+                    file.Edges.Add(new FlowEdgeLayout { Key = pair.Key, Label = pair.Value });
                 }
 
                 if (file.Nodes.Count == 0 && file.Edges.Count == 0)
@@ -307,6 +317,17 @@ namespace ShaoLu.Utils
                     }
                 }
                 FlowPortStore.ReplaceAll(ports);
+
+                var labels = new Dictionary<string, string>();
+                if (file.Edges != null)
+                {
+                    foreach (var edge in file.Edges)
+                    {
+                        if (edge == null || string.IsNullOrEmpty(edge.Key) || string.IsNullOrWhiteSpace(edge.Label)) continue;
+                        labels[edge.Key] = edge.Label;
+                    }
+                }
+                FlowEdgeLabelStore.ReplaceAll(labels);
             }
             catch (Exception ex)
             {

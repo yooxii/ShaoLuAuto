@@ -430,6 +430,7 @@ namespace ShaoLu
             Services.FlowLayoutStore.Clear();
             Services.FlowEdgeAnchorStore.Clear();
             Services.FlowPortStore.Clear();
+            Services.FlowEdgeLabelStore.Clear();
             // 清空文件路径
             mainViewModel.StepFilePath = null;
             mainViewModel.StepImageWorkDir = null;

@@ -3245,6 +3245,13 @@ namespace ShaoLu.Views
             // 起点记下来：折线 / 曲线两种画法都能在起点挂上可拖动的端点把手
             _drawingEdgeStart = best[0];
 
+            // 网络标签：不画中间的长线，只在两端各画一小段引线 + 「出 / 入」标签（同名即同一网络）
+            if (Services.FlowEdgeLabelStore.TryGet(edgeKey, out var netLabel) && !string.IsNullOrWhiteSpace(netLabel))
+            {
+                DrawNetLabelEdge(best, netLabel, brush, edgeKey);
+                return best;
+            }
+
             // 设置里选了「曲线」：有锚点时画成穿过多段曲线的平滑线（锚点就是转折处），否则画一条 S 形弧线
             if (SingletonLocator.Settings.Step.FlowEdgeStyle == 1)
             {
@@ -3444,6 +3451,7 @@ namespace ShaoLu.Views
             hit.MouseMove += EdgePath_MouseMove;
             hit.MouseLeave += EdgePath_MouseLeave;
             hit.MouseLeftButtonDown += EdgePath_MouseLeftButtonDown;
+            hit.MouseRightButtonDown += EdgePath_MouseRightButtonDown;
             HandleLayer.Children.Add(hit);
         }
 
@@ -3607,6 +3615,175 @@ namespace ShaoLu.Views
             }
         }
 
+        #region 网络标签
+
+        /// <summary>
+        /// 网络标签线：中间不画长线，起点画「出」标签、终点画「入」标签（电路图那种做法）。
+        /// 单向连线一出一入，标签名按名字着色，同名的两端颜色一致。
+        /// </summary>
+        private void DrawNetLabelEdge(IReadOnlyList<Point> route, string label, Brush brush, string edgeKey)
+        {
+            if (route == null || route.Count < 2) return;
+
+            const double stub = 26;
+
+            var start = route[0];
+            var startDir = Unit(route[1] - start);
+            var outEnd = start + startDir * Math.Min(stub, (route[1] - start).Length);
+            AddNetStub(start, outEnd, brush);
+            AddNetLabelTag(outEnd, startDir, LanguageService.GetLocalizedString("Flow_NetLabel_Out", "出"), label, brush, edgeKey);
+
+            var end = route[route.Count - 1];
+            var prev = route[route.Count - 2];
+            var endDir = Unit(end - prev);
+            var inStart = end - endDir * Math.Min(stub, (end - prev).Length);
+            AddNetStub(inStart, end, brush);
+            AddArrowHead(end, end - prev, brush, 10);
+            AddNetLabelTag(inStart, -endDir, LanguageService.GetLocalizedString("Flow_NetLabel_In", "入"), label, brush, edgeKey);
+        }
+
+        private void AddNetStub(Point a, Point b, Brush brush)
+        {
+            var figure = new PathFigure { StartPoint = a, IsClosed = false };
+            figure.Segments.Add(new LineSegment(b, true));
+            var geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+            EdgeTarget.Children.Add(new Path
+            {
+                Data = geometry,
+                Stroke = brush,
+                StrokeThickness = 2.2,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+            });
+        }
+
+        private void AddNetLabelTag(Point at, Vector outward, string kind, string text, Brush brush, string edgeKey)
+        {
+            var border = new Border
+            {
+                Background = Brushes.White,
+                BorderBrush = brush,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(4, 1, 4, 1),
+                SnapsToDevicePixels = true,
+                Child = new TextBlock
+                {
+                    Text = kind + " " + text,
+                    FontSize = 10.5,
+                    Foreground = brush,
+                },
+                ToolTip = LanguageService.GetLocalizedString("Flow_NetLabel", "网络标签") + "：" + text,
+            };
+
+            border.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            var size = border.DesiredSize;
+            double ox, oy;
+            if (Math.Abs(outward.X) >= Math.Abs(outward.Y))
+            {
+                ox = outward.X >= 0 ? 4 : -size.Width - 4;
+                oy = -size.Height / 2;
+            }
+            else
+            {
+                ox = -size.Width / 2;
+                oy = outward.Y >= 0 ? 4 : -size.Height - 4;
+            }
+
+            Canvas.SetLeft(border, at.X + ox);
+            Canvas.SetTop(border, at.Y + oy);
+            border.MouseRightButtonDown += (s, e) =>
+            {
+                ShowEdgeLabelMenu(border, edgeKey);
+                e.Handled = true;
+            };
+            EdgeTarget.Children.Add(border);
+        }
+
+        private static Vector Unit(Vector v)
+        {
+            if (v.Length < 0.01) return new Vector(1, 0);
+            v.Normalize();
+            return v;
+        }
+
+        private void EdgePath_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not FrameworkElement element || element.Tag is not string key) return;
+            ShowEdgeLabelMenu(element, key);
+            e.Handled = true;
+        }
+
+        private void ShowEdgeLabelMenu(FrameworkElement target, string edgeKey)
+        {
+            var menu = new ContextMenu { PlacementTarget = target, Placement = PlacementMode.MousePoint };
+
+            var setItem = new MenuItem { Header = LanguageService.GetLocalizedString("Flow_NetLabel", "网络标签") + "…" };
+            setItem.Click += (s, ev) => EditNetLabel(edgeKey);
+            menu.Items.Add(setItem);
+
+            if (Services.FlowEdgeLabelStore.TryGet(edgeKey, out var existing) && !string.IsNullOrWhiteSpace(existing))
+            {
+                var clear = new MenuItem { Header = LanguageService.GetLocalizedString("Flow_NetLabel_Clear", "清除网络标签") };
+                clear.Click += (s, ev) =>
+                {
+                    Services.FlowEdgeLabelStore.Remove(edgeKey);
+                    PushFlowUndo(
+                        () => { Services.FlowEdgeLabelStore.Set(edgeKey, existing); RebuildEdges(); },
+                        () => { Services.FlowEdgeLabelStore.Remove(edgeKey); RebuildEdges(); });
+                    RebuildEdges();
+                };
+                menu.Items.Add(clear);
+            }
+
+            menu.IsOpen = true;
+        }
+
+        /// <summary>设置网络标签：一个名字只能一出一入，不能和别的连线重名</summary>
+        private void EditNetLabel(string edgeKey)
+        {
+            if (!SingletonLocator.Main.IsLoggedIn) return;
+
+            Services.FlowEdgeLabelStore.TryGet(edgeKey, out var current);
+            var text = Views.WindowTextInput.ShowAndWait(
+                LanguageService.GetLocalizedString("Flow_NetLabel", "网络标签"),
+                LanguageService.GetLocalizedString("Flow_NetLabel_Hint", "同名标签表示同一条网络；单向连线只能一出一入。"),
+                current);
+            if (text == null) return;
+
+            text = text.Trim();
+            string before = current;
+
+            if (text.Length == 0)
+            {
+                Services.FlowEdgeLabelStore.Remove(edgeKey);
+                PushFlowUndo(
+                    () => { if (!string.IsNullOrEmpty(before)) Services.FlowEdgeLabelStore.Set(edgeKey, before); RebuildEdges(); },
+                    () => { Services.FlowEdgeLabelStore.Remove(edgeKey); RebuildEdges(); });
+                RebuildEdges();
+                return;
+            }
+
+            foreach (var pair in Services.FlowEdgeLabelStore.Snapshot())
+            {
+                if (string.Equals(pair.Key, edgeKey, StringComparison.Ordinal)) continue;
+                if (string.Equals(pair.Value, text, StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show(LanguageService.GetLocalizedString("Flow_NetLabel_Used"), LanguageService.GetLocalizedString("Warning"),
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
+            Services.FlowEdgeLabelStore.Set(edgeKey, text);
+            PushFlowUndo(
+                () => { if (string.IsNullOrEmpty(before)) Services.FlowEdgeLabelStore.Remove(edgeKey); else Services.FlowEdgeLabelStore.Set(edgeKey, before); RebuildEdges(); },
+                () => { Services.FlowEdgeLabelStore.Set(edgeKey, text); RebuildEdges(); });
+            RebuildEdges();
+        }
+
+        #endregion
         #region 折线段拖动
 
         /// <summary>按住在线上的一段：整段沿垂直方向平移，松手后记一条撤销</summary>

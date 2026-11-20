@@ -44,6 +44,9 @@ namespace ShaoLu.Models
         public string EndSide { get; set; }
 
         public double EndFraction { get; set; }
+
+        /// <summary>网络标签名（空表示这条线照常画；有名字说明线被两端标签代替，同名标签视为同一网络）</summary>
+        public string Label { get; set; }
     }
 
     public sealed class FlowPoint

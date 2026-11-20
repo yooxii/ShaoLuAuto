@@ -230,4 +230,71 @@ namespace ShaoLu.Services
             }
         }
     }
+
+    /// <summary>
+    /// 连线的网络标签（按连线 Key 记录名字）：电路图那种做法——线不画长线，
+    /// 两端各显示一个同名标签，名字相同的标签表示同一个网络。随工程写进 flow.json。
+    /// </summary>
+    public static class FlowEdgeLabelStore
+    {
+        private static readonly object Gate = new object();
+        private static readonly Dictionary<string, string> Labels = new Dictionary<string, string>();
+
+        public static bool TryGet(string key, out string label)
+        {
+            lock (Gate)
+            {
+                return Labels.TryGetValue(key, out label);
+            }
+        }
+
+        public static void Set(string key, string label)
+        {
+            lock (Gate)
+            {
+                if (string.IsNullOrWhiteSpace(label)) Labels.Remove(key);
+                else Labels[key] = label.Trim();
+            }
+        }
+
+        public static void Remove(string key)
+        {
+            lock (Gate)
+            {
+                Labels.Remove(key);
+            }
+        }
+
+        /// <summary>快照：全部连线的网络标签</summary>
+        public static Dictionary<string, string> Snapshot()
+        {
+            lock (Gate)
+            {
+                return new Dictionary<string, string>(Labels);
+            }
+        }
+
+        /// <summary>整体替换（打开工程时按文件内容恢复）</summary>
+        public static void ReplaceAll(IDictionary<string, string> labels)
+        {
+            lock (Gate)
+            {
+                Labels.Clear();
+                if (labels == null) return;
+                foreach (var pair in labels)
+                {
+                    if (string.IsNullOrEmpty(pair.Key) || string.IsNullOrWhiteSpace(pair.Value)) continue;
+                    Labels[pair.Key] = pair.Value;
+                }
+            }
+        }
+
+        public static void Clear()
+        {
+            lock (Gate)
+            {
+                Labels.Clear();
+            }
+        }
+    }
 }

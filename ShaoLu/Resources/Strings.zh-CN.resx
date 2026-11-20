@@ -2614,6 +2614,20 @@
   </data>
   <data name="Flow_NetLabel" xml:space="preserve">
     <value>网络标签</value>
+  </data>  <data name="Flow_NetLabel_Out" xml:space="preserve">
+    <value>出</value>
+  </data>
+  <data name="Flow_NetLabel_In" xml:space="preserve">
+    <value>入</value>
+  </data>
+  <data name="Flow_NetLabel_Hint" xml:space="preserve">
+    <value>网络标签名：同名的「出」和「入」表示同一条网络；单向连线只能一出一入，名字不能和别的连线重复。</value>
+  </data>
+  <data name="Flow_NetLabel_Clear" xml:space="preserve">
+    <value>清除网络标签</value>
+  </data>
+  <data name="Flow_NetLabel_Used" xml:space="preserve">
+    <value>这个网络标签名已被另一条连线使用（单向连线只能一出一入）。</value>
   </data>  <data name="Flow_Anchor" xml:space="preserve">
     <value>锚点</value>
   </data>

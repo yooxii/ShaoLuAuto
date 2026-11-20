@@ -2614,6 +2614,20 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   </data>
   <data name="Flow_NetLabel" xml:space="preserve">
     <value>Net label</value>
+  </data>  <data name="Flow_NetLabel_Out" xml:space="preserve">
+    <value>OUT</value>
+  </data>
+  <data name="Flow_NetLabel_In" xml:space="preserve">
+    <value>IN</value>
+  </data>
+  <data name="Flow_NetLabel_Hint" xml:space="preserve">
+    <value>Net label name. Same name connects the OUT end to the IN end; a one-way link can only have one OUT and one IN, so a name cannot be reused by another link.</value>
+  </data>
+  <data name="Flow_NetLabel_Clear" xml:space="preserve">
+    <value>Clear net label</value>
+  </data>
+  <data name="Flow_NetLabel_Used" xml:space="preserve">
+    <value>This net label name is already used by another link (a one-way link allows only one OUT and one IN).</value>
   </data>  <data name="Flow_Anchor" xml:space="preserve">
     <value>Anchors</value>
   </data>

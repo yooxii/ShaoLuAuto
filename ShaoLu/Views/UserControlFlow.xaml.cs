@@ -3631,7 +3631,7 @@ namespace ShaoLu.Views
             var startDir = Unit(route[1] - start);
             var outEnd = start + startDir * Math.Min(stub, (route[1] - start).Length);
             AddNetStub(start, outEnd, brush);
-            AddNetLabelTag(outEnd, startDir, LanguageService.GetLocalizedString("Flow_NetLabel_Out", "出"), label, brush, edgeKey);
+            AddNetLabelTag(outEnd, startDir, LanguageService.GetLocalizedString("Flow_NetLabel_Out", "起"), label, brush, edgeKey);
 
             var end = route[route.Count - 1];
             var prev = route[route.Count - 2];
@@ -3639,7 +3639,7 @@ namespace ShaoLu.Views
             var inStart = end - endDir * Math.Min(stub, (end - prev).Length);
             AddNetStub(inStart, end, brush);
             AddArrowHead(end, end - prev, brush, 10);
-            AddNetLabelTag(inStart, -endDir, LanguageService.GetLocalizedString("Flow_NetLabel_In", "入"), label, brush, edgeKey);
+            AddNetLabelTag(inStart, -endDir, LanguageService.GetLocalizedString("Flow_NetLabel_In", "终"), label, brush, edgeKey);
         }
 
         private void AddNetStub(Point a, Point b, Brush brush)

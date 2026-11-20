@@ -2614,21 +2614,23 @@
   </data>
   <data name="Flow_NetLabel" xml:space="preserve">
     <value>網路標籤</value>
-  </data>  <data name="Flow_NetLabel_Out" xml:space="preserve">
-    <value>出</value>
+  </data>
+  <data name="Flow_NetLabel_Out" xml:space="preserve">
+    <value>起</value>
   </data>
   <data name="Flow_NetLabel_In" xml:space="preserve">
-    <value>入</value>
+    <value>終</value>
   </data>
   <data name="Flow_NetLabel_Hint" xml:space="preserve">
-    <value>網路標籤名：同名的「出」和「入」表示同一條網路；單向連線只能一出一入，名字不能和別的連線重複。</value>
+    <value>網路標籤名：同名的「起」和「終」表示同一條網路；單向連線只能一起一終，名字不能和別的連線重複。</value>
   </data>
   <data name="Flow_NetLabel_Clear" xml:space="preserve">
     <value>清除網路標籤</value>
   </data>
   <data name="Flow_NetLabel_Used" xml:space="preserve">
-    <value>這個網路標籤名已被另一條連線使用（單向連線只能一出一入）。</value>
-  </data>  <data name="Flow_Anchor" xml:space="preserve">
+    <value>這個網路標籤名已被另一條連線使用（單向連線只能一起一終）。</value>
+  </data>
+  <data name="Flow_Anchor" xml:space="preserve">
     <value>錨點</value>
   </data>
   <data name="Flow_Anchor_Filter_ToolTip" xml:space="preserve">

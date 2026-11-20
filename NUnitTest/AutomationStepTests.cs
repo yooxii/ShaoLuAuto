@@ -514,6 +514,49 @@ namespace NUnitTest
             }
         }
 
+        #region EndStep / PopupStep 暂停
+
+        [TestFixture]
+        public class EndStepTests
+        {
+            [Test]
+            public void Defaults_AreCorrect()
+            {
+                var step = new EndStep();
+                Assert.That(step.Type, Is.EqualTo(StepType.End));
+                Assert.That(step.IsTrue, Is.True);
+            }
+
+            [Test]
+            public void Clone_CopiesNameAndWaitTime()
+            {
+                var step = new EndStep("End_1") { WaitTime = 0.5, IsNeed = false, EnableLog = true };
+                var clone = (EndStep)step.Clone();
+
+                Assert.That(clone.Name, Is.EqualTo("End_1"));
+                Assert.That(clone.WaitTime, Is.EqualTo(0.5));
+                Assert.That(clone.IsNeed, Is.False);
+                Assert.That(clone.EnableLog, Is.True);
+                Assert.That(clone.Type, Is.EqualTo(StepType.End));
+            }
+        }
+
+        [TestFixture]
+        public class PopupPauseOptionTests
+        {
+            [Test]
+            public void PauseRunOnShow_DefaultsFalse_AndClones()
+            {
+                var step = new PopupStep("Popup_1");
+                Assert.That(step.PauseRunOnShow, Is.False, "默认不暂停，旧工程行为不变");
+
+                step.PauseRunOnShow = true;
+                var clone = (PopupStep)step.Clone();
+                Assert.That(clone.PauseRunOnShow, Is.True);
+            }
+        }
+
+        #endregion
         #endregion
 
         #region FocusWindowStep

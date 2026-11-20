@@ -102,6 +102,7 @@ namespace ShaoLu.Views
             ("BurnInConfig", "AddBurnInConfigStep"),
             ("FocusWindow", "AddFocusWindowStep"),
             ("Empty", "AddEmptyStep"),
+            ("End", "AddEndStep"),
             ("Popup", "AddPopupStep"),
             ("ScanCode", "AddScanCodeStep"),
             ("AcbelUpload", "AddAcbelUploadStep"),
@@ -2716,6 +2717,7 @@ namespace ShaoLu.Views
             HideSegmentHint();
             UpdateLayoutMetrics();
             EdgeLayer.Children.Clear();
+            EdgeDimLayer.Children.Clear();
             HandleLayer.Children.Clear();
             if (_rebuilding || _nodes.Count == 0) return;
 
@@ -2831,6 +2833,14 @@ namespace ShaoLu.Views
         /// <summary>是否显示连线锚点（工具栏开关，默认显示）</summary>
         private bool ShowAnchors => ShowAnchorsToggle == null || ShowAnchorsToggle.IsChecked == true;
 
+        /// <summary>焦点预览：只让与选中步骤相连的连线保持原色，其余变淡</summary>
+        private bool FocusMode => FocusModeToggle == null || FocusModeToggle.IsChecked == true;
+
+        private void FocusMode_Click(object sender, RoutedEventArgs e)
+        {
+            RebuildEdges();
+        }
+
         /// <summary>
         /// 锚点按排列方式分开存：横向排列沿用原来的 Key（旧工程打开后锚点照旧），
         /// 竖直排列加 V| 前缀，两种排列的锚点位置互不干扰。
@@ -2866,7 +2876,11 @@ namespace ShaoLu.Views
         {
             _drawingEdgeEnd = null;
             _drawingEdgeStart = null;
-            DrawEdgeCore(spec);
+            // 焦点预览：没选中任何步骤时全部正常；选中了就只让与它相连的线保持原色
+            _drawingDim = FocusMode && _selectedUids.Count > 0
+                && !IsSelected(spec.From) && !IsSelected(spec.To);
+            try { DrawEdgeCore(spec); }
+            finally { _drawingDim = false; }
 
             // 只有「真」或「假」某一个分支的连线才需要改接；两个分支连到同一步时不区分真假，不给把手
             if ((!spec.IsTrue && !spec.IsFalse) || (spec.IsTrue && spec.IsFalse)) return;
@@ -3319,7 +3333,7 @@ namespace ShaoLu.Views
             };
             if (dashed)
                 path.StrokeDashArray = new DoubleCollection { 5, 3 };
-            EdgeLayer.Children.Add(path);
+            EdgeTarget.Children.Add(path);
 
             var last = points[points.Count - 1];
             var before = points[points.Count - 2];
@@ -3791,6 +3805,10 @@ namespace ShaoLu.Views
         }
 
         /// <summary>已画好的连线分段，用来判断新线会不会和它们重叠</summary>
+        /// <summary>当前这条线画到哪一层：焦点预览时无关的线画到变淡层</summary>
+        private bool _drawingDim;
+        private Canvas EdgeTarget => _drawingDim ? EdgeDimLayer : EdgeLayer;
+
         private readonly List<(Point A, Point B)> _drawnSegments = new List<(Point, Point)>();
 
         private void RegisterSegments(IReadOnlyList<Point> route)
@@ -4364,12 +4382,18 @@ namespace ShaoLu.Views
             _drawingEdgeEnd = null;
             _edgeLane++;
 
+            // 焦点预览：与选中步骤无关的引用线也变淡
+            _drawingDim = FocusMode && _selectedUids.Count > 0
+                && !IsSelected(from) && !IsSelected(to);
+            try {
             // 引用出口在右侧，引用线按最短路径自动选边（不再强制从左边进出）
             var points = DrawRoutedEdge(fromRect, toRect, from.Uid, to.Uid, EdgeBothBrush, 1.5,
                 LanguageService.GetLocalizedString("FlowReference", "引用"), true, edgeKey, null);
             if (points == null) return;
 
             AddReferenceHitArea(points, from, to, condition);
+            }
+            finally { _drawingDim = false; }
         }
 
         private void AddBezierEdge(Point start, Point control1, Point control2, Point end,
@@ -4385,7 +4409,7 @@ namespace ShaoLu.Views
             };
             if (dashed)
                 path.StrokeDashArray = new DoubleCollection { 5, 3 };
-            EdgeLayer.Children.Add(path);
+            EdgeTarget.Children.Add(path);
 
             AddArrowHead(end, end - control2, brush, Math.Max(9, thickness * 5));
             if (!string.IsNullOrEmpty(label))
@@ -4413,7 +4437,7 @@ namespace ShaoLu.Views
             };
             if (dashed)
                 path.StrokeDashArray = new DoubleCollection { 5, 3 };
-            EdgeLayer.Children.Add(path);
+            EdgeTarget.Children.Add(path);
 
             _drawingEdgeStart = points[0];
 
@@ -4438,7 +4462,7 @@ namespace ShaoLu.Views
                 Fill = brush,
                 Points = new PointCollection { tip, back + perpendicular, back - perpendicular },
             };
-            EdgeLayer.Children.Add(arrow);
+            EdgeTarget.Children.Add(arrow);
 
             // 记下末端位置，跳转连线的拖动把手就挂在箭头三角形上
             _drawingEdgeEnd = tip;
@@ -4595,7 +4619,7 @@ namespace ShaoLu.Views
             label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Canvas.SetLeft(label, at.X - label.DesiredSize.Width / 2);
             Canvas.SetTop(label, at.Y - label.DesiredSize.Height / 2);
-            EdgeLayer.Children.Add(label);
+            EdgeTarget.Children.Add(label);
         }
 
         private static PathGeometry CreateBezierGeometry(Point start, Point control1, Point control2, Point end)

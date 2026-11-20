@@ -2588,7 +2588,24 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="Flow_EdgeFilter_ToolTip" xml:space="preserve">
     <value>Checked: show all edges of this type. Unchecked: only edges of the selected step (sequential edges always show).</value>
   </data>
-  <data name="Flow_Anchor" xml:space="preserve">
+  <data name="AddEndStep" xml:space="preserve">
+    <value>End Step</value>
+  </data>
+  <data name="EndStep_Hint" xml:space="preserve">
+    <value>Stops the whole run as soon as this step is reached (same as Interrupt with "End current run").</value>
+  </data>
+  <data name="Popup_PauseRunOnShow" xml:space="preserve">
+    <value>Pause the run when the popup shows</value>
+  </data>
+  <data name="FlowChart_FocusMode" xml:space="preserve">
+    <value>Focus</value>
+  </data>
+  <data name="FlowChart_FocusMode_ToolTip" xml:space="preserve">
+    <value>Only highlight the links connected to the selected step; everything else is dimmed (all normal when nothing is selected).</value>
+  </data>
+  <data name="Flow_NetLabel" xml:space="preserve">
+    <value>Net label</value>
+  </data>  <data name="Flow_Anchor" xml:space="preserve">
     <value>Anchors</value>
   </data>
   <data name="Flow_Anchor_Filter_ToolTip" xml:space="preserve">

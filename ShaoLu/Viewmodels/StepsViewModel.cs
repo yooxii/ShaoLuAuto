@@ -825,6 +825,7 @@ namespace ShaoLu.Viewmodels
             "ReceiveSignal" => new ReceiveSignalStep($"ReceiveSignal_{AutomationStepBases.Count(t => t.Type == StepType.ReceiveSignal) + 1}"),
             "Interrupt" => new InterruptStep($"Interrupt_{AutomationStepBases.Count(t => t.Type == StepType.Interrupt) + 1}"),
             "Empty" => new EmptyStep($"Empty_{AutomationStepBases.Count(t => t.Type == StepType.Empty) + 1}"),
+            "End" => new EndStep($"End_{AutomationStepBases.Count(t => t.Type == StepType.End) + 1}"),
             _ => new ClickImageStep($"ClickImage_{AutomationStepBases.Count(t => t.Type == StepType.ClickImage) + 1}"),
         };
 
@@ -2428,6 +2429,9 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>登记「结束本次运行」请求（中断步骤的「结束本次运行」动作）</summary>
+        /// <summary>结束步骤用：请求结束本次运行（与中断步骤的「结束本次运行」同一条路）</summary>
+        public void RequestEndRun() => RequestInterruptStop();
+
         private void RequestInterruptStop()
         {
             lock (_interruptLock)

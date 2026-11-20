@@ -135,6 +135,7 @@
                     <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Command="{Binding AddStepCommand}" CommandParameter="BurnInConfig"/>
                     <MenuItem Header="{lex:Loc AddFocusWindowStep}" Command="{Binding AddStepCommand}" CommandParameter="FocusWindow"/>
                     <MenuItem Header="{lex:Loc AddEmptyStep}" Command="{Binding AddStepCommand}" CommandParameter="Empty"/>
+                    <MenuItem Header="{lex:Loc AddEndStep}" Command="{Binding AddStepCommand}" CommandParameter="End"/>
                 </MenuItem>
                 <MenuItem Header="{lex:Loc Delete}" Command="{Binding DelStepCommand}"/>
                 <Separator/>
@@ -275,6 +276,7 @@
                             <MenuItem Header="{lex:Loc AddReceiveSignalStep}" Click="MenuItemAddImageStep_Click" CommandParameter="ReceiveSignal"/>
                             <MenuItem Header="{lex:Loc AddInterruptStep}" Click="MenuItemAddImageStep_Click" CommandParameter="Interrupt"/>
                             <MenuItem Header="{lex:Loc AddEmptyStep}" Click="MenuItemAddImageStep_Click" CommandParameter="Empty"/>
+                            <MenuItem Header="{lex:Loc AddEndStep}" Click="MenuItemAddImageStep_Click" CommandParameter="End"/>
                         </wd:SplitButton>
                         <!-- 交互与配置：弹窗、聚焦窗口、烧录配置 -->
                         <wd:SplitButton x:Name="AddInteractionStep" Content="{lex:Loc StepGroup_Interaction}" CommandParameter="Popup" Margin="3" Background="Transparent" Foreground="Black" BorderBrush="Transparent" BorderThickness="0" Click="SplitButton_Click">

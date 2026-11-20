@@ -276,6 +276,11 @@
                 <ToggleButton x:Name="ShowAnchorsToggle" Margin="2" Padding="8,2" IsChecked="True"
                               Content="{lex:Loc Flow_Anchor}" Click="AnchorFilter_Click"
                               ToolTip="{lex:Loc Flow_Anchor_Filter_ToolTip}"/>
+                <!-- 焦点预览：只高亮与选中步骤相连的连线，其余半透明 -->
+                <ToggleButton x:Name="FocusModeToggle" Margin="2" Padding="8,2"
+                              Content="{lex:Loc FlowChart_FocusMode}" Click="FocusMode_Click"
+                              ToolTip="{lex:Loc FlowChart_FocusMode_ToolTip}"/>
+
             </WrapPanel>
         </Border>
 
@@ -289,6 +294,8 @@
                         </Grid.LayoutTransform>
                         <Grid x:Name="CanvasHost" Width="900" Height="600" ClipToBounds="True">
                             <Rectangle x:Name="BackdropRect" Fill="{StaticResource FlowCanvasBackdrop}"/>
+                            <!-- 焦点预览模式下，与选中步骤无关的连线画在这一层并整体变淡 -->
+                            <Canvas x:Name="EdgeDimLayer" IsHitTestVisible="False" Opacity="0.18"/>
                             <Canvas x:Name="EdgeLayer" IsHitTestVisible="False"/>
                             <Canvas x:Name="NodeLayer" Background="Transparent"
                                     MouseLeftButtonDown="NodeLayer_MouseLeftButtonDown"

@@ -1129,6 +1129,10 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private PopupButtons _popupButtons = PopupButtons.OK;
         public PopupButtons PopupButtons { get => _popupButtons; set => SetProperty(ref _popupButtons, value); }
 
+        private bool _pauseRunOnShow;
+        /// <summary>弹出弹窗的同时暂停运行：弹窗出来后流程停在下一步之前，等用户点「继续」再往下走</summary>
+        public bool PauseRunOnShow { get => _pauseRunOnShow; set => SetProperty(ref _pauseRunOnShow, value); }
+
         #region 关闭模式
 
         private PopupCloseMode _closeMode = PopupCloseMode.ButtonClick;
@@ -1374,6 +1378,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 PopupWindowStyle = PopupWindowStyle,
                 PopupButtons = new PopupButtons(PopupButtons),
                 CloseMode = CloseMode,
+                PauseRunOnShow = PauseRunOnShow,
                 AutoCloseSeconds = AutoCloseSeconds,
                 CloseOnStepUid = CloseOnStepUid,
                 WindowPositionRelative = WindowPositionRelative,
@@ -1460,6 +1465,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
 
             // 1. 启动异步弹窗任务（应用自定义位置、背景颜色、背景不透明度与窗口样式）
             var (popupWindow, popupTask) = ShowPopupWindow(iconType);
+
+            // 弹出时暂停运行：弹窗一出来就置暂停，关掉弹窗后流程仍停在下一步之前，等用户点「继续」
+            if (PauseRunOnShow)
+            {
+                try { SingletonLocator.Steps.IsPaused = true; }
+                catch (Exception ex) { NLog.LogManager.GetCurrentClassLogger().Warn(ex, "Popup: pause run failed"); }
+            }
 
             // StepReached 模式：不等待窗口关闭，直接继续执行；到达目标步骤时由执行引擎关闭弹窗。
             // 若同时勾选了超时，则后台计时到点后自动关闭；停止运行时也关闭。
@@ -1653,6 +1665,54 @@ namespace ShaoLu.Viewmodels.AutomationStep
         }
     }
 
+    /// <summary>结束步骤：执行到这里立即结束本次运行（等同中断步骤的「结束本次运行」）</summary>
+    public class EndStep : AutomationStepBase
+    {
+        public EndStep() : base()
+        {
+            IsTrue = true;
+            Type = StepType.End;
+        }
+
+        public EndStep(string name) : base()
+        {
+            IsTrue = true;
+            Type = StepType.End;
+            Name = name;
+        }
+
+        public EndStep(string name, string description) : base()
+        {
+            IsTrue = true;
+            Type = StepType.End;
+            Name = name;
+            Description = description;
+        }
+
+        public override AutomationStepBase Clone()
+        {
+            return new EndStep(Name, Description)
+            {
+                WaitTime = WaitTime,
+                IsTrue = IsTrue,
+                IsNeed = IsNeed,
+                EnableLog = EnableLog,
+            };
+        }
+
+        public override async Task<bool> RunAsync(CancellationToken cancellationToken)
+        {
+            await Task.Delay((int)(WaitTime * 1000), cancellationToken);
+
+            // 记一个「结束本次运行」请求：主循环处理下一步之前会看到它并跳出
+            try { SingletonLocator.Steps.RequestEndRun(); }
+            catch (Exception ex) { NLog.LogManager.GetCurrentClassLogger().Warn(ex, "End step: request end run failed"); }
+
+            IsTrue = true;
+            LastResult = new StepExecutionResult { IsTrue = true, ExecutedAt = DateTime.Now };
+            return true;
+        }
+    }
     public class EmptyStep : AutomationStepBase
     {
         /// <summary>

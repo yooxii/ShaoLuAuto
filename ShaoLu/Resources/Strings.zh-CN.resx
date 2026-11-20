@@ -2597,7 +2597,24 @@
   <data name="Flow_EdgeFilter_ToolTip" xml:space="preserve">
     <value>勾选=该类型连线全部显示；不勾=只显示与选中步骤相连的（顺序连线始终显示）</value>
   </data>
-  <data name="Flow_Anchor" xml:space="preserve">
+  <data name="AddEndStep" xml:space="preserve">
+    <value>结束步骤</value>
+  </data>
+  <data name="EndStep_Hint" xml:space="preserve">
+    <value>执行到这里立即结束本次运行（相当于中断步骤的「结束本次运行」）。</value>
+  </data>
+  <data name="Popup_PauseRunOnShow" xml:space="preserve">
+    <value>弹出时暂停运行</value>
+  </data>
+  <data name="FlowChart_FocusMode" xml:space="preserve">
+    <value>焦点预览</value>
+  </data>
+  <data name="FlowChart_FocusMode_ToolTip" xml:space="preserve">
+    <value>只高亮与选中步骤相连的连线，其余连线半透明（没选中步骤时全部正常显示）。</value>
+  </data>
+  <data name="Flow_NetLabel" xml:space="preserve">
+    <value>网络标签</value>
+  </data>  <data name="Flow_Anchor" xml:space="preserve">
     <value>锚点</value>
   </data>
   <data name="Flow_Anchor_Filter_ToolTip" xml:space="preserve">

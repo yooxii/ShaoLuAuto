@@ -44,7 +44,7 @@ namespace ShaoLu.Converters
             StepType.ScanCode or StepType.AcbelUpload or StepType.Statistics or StepType.UserInput or StepType.BurnInConfig
                 => CollectColor,
             StepType.MultiThread or StepType.MultiThreadEnd or StepType.SendSignal
-                or StepType.ReceiveSignal or StepType.Interrupt or StepType.Empty
+                or StepType.ReceiveSignal or StepType.Interrupt or StepType.Empty or StepType.End
                 => FlowColor,
             StepType.Popup or StepType.FocusWindow
                 => InteractColor,

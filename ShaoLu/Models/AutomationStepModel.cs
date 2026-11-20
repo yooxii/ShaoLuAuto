@@ -21,6 +21,7 @@ namespace ShaoLu.Models
         Statistics = 202,
         BurnInConfig = 203,
         FocusWindow = 204,
+        End = 205,              // 结束步骤（执行到这里结束本次运行）
         Popup = 1000,
         AcbelUpload = 1001,     // 上传Acbel（条码校验 → 基础资料 → ACBEL_INSERT_DATA）
         UserInput = 1002,       // 用户输入（打开工程/运行前弹窗填写，供其他步骤引用）

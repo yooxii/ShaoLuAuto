@@ -105,6 +105,7 @@ namespace ShaoLu.Converters
                 StepType.UserInput => typeof(UserInputStep),
                 StepType.ScanCode => typeof(ScanCodeStep),
                 StepType.Empty => typeof(EmptyStep),
+                StepType.End => typeof(EndStep),
                 StepType.GetInput => typeof(GetInputStep),
                 StepType.MouseAction => typeof(MouseActionStep),
                 StepType.Statistics => typeof(StatisticsStep),

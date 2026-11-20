@@ -319,6 +319,21 @@
         </GroupBox>
     </DataTemplate>
     <!-- 空步骤（分割符/占位符/注释） -->
+    <!-- 结束步骤：执行到这里就结束本次运行 -->
+    <DataTemplate x:Key="EndStepTemplate" DataType="{x:Type AutoVM:EndStep}">
+        <StackPanel>
+            <TextBlock Text="{lex:Loc EndStep_Hint}" Foreground="Gray" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc EmptyStep_Comment}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding Description, UpdateSourceTrigger=LostFocus}" MinWidth="240" MinHeight="54"
+                         TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,2">
+                <Label Content="{lex:Loc WaitTime}" Padding="0,0,5,0" VerticalAlignment="Center"/>
+                <wd:NumericBox Value="{Binding WaitTime}" Width="70" Minimum="0" Precision="3" Interval="0.01"/>
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
     <DataTemplate x:Key="EmptyStepTemplate" DataType="{x:Type AutoVM:EmptyStep}">
         <StackPanel>
             <TextBlock Text="{lex:Loc EmptyStep_Hint}" Foreground="Gray" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"/>
@@ -666,6 +681,8 @@
                 <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
                           Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
+            <!-- 弹出时暂停运行：弹窗出来就暂停，关掉后停在下一步之前等用户继续 -->
+            <CheckBox IsChecked="{Binding PauseRunOnShow}" Content="{lex:Loc Popup_PauseRunOnShow}" Margin="0,0,0,4"/>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Title}" Padding="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" MinWidth="150"/>
@@ -1944,6 +1961,7 @@
 
     <conv:StepTemplateSelector x:Key="StepDetailSelector"
                      EmptyStepTemplate="{StaticResource EmptyStepTemplate}"
+                     EndStepTemplate="{StaticResource EndStepTemplate}"
                      ClickImageTemplate="{StaticResource ClickImageStepTemplate}"
                      FindImageTemplate="{StaticResource FindImageStepTemplate}"
                      TypeTextTemplate="{StaticResource TextStepTemplate}"

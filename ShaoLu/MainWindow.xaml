@@ -82,6 +82,7 @@
                     <MenuItem Header="{lex:Loc AddBurnInConfigStep}" Command="{Binding Steps.AddStepCommand, Source={StaticResource VMLocator}}" CommandParameter="BurnInConfig"/>
                     <MenuItem Header="{lex:Loc AddFocusWindowStep}" Command="{Binding Steps.AddStepCommand, Source={StaticResource VMLocator}}" CommandParameter="FocusWindow"/>
                     <MenuItem Header="{lex:Loc AddEmptyStep}" Command="{Binding Steps.AddStepCommand, Source={StaticResource VMLocator}}" CommandParameter="Empty"/>
+                    <MenuItem Header="{lex:Loc AddEndStep}" Command="{Binding Steps.AddStepCommand, Source={StaticResource VMLocator}}" CommandParameter="End"/>
                     <Separator/>
                     <MenuItem Header="{lex:Loc MultiThreadGroup}">
                         <MenuItem Header="{lex:Loc AddMultiThreadStep}" Command="{Binding Steps.AddStepCommand, Source={StaticResource VMLocator}}" CommandParameter="MultiThread"/>

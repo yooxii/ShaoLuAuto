@@ -609,8 +609,6 @@ namespace ShaoLu.Views
                     }
                 }
 
-                // 引用出口固定放左边，与排列方式无关
-                ApplyPortSides();
             }
             finally
             {
@@ -641,7 +639,6 @@ namespace ShaoLu.Views
                 var alive = new HashSet<Guid>(_nodes.Keys);
                 _selectedUids.RemoveWhere(uid => !alive.Contains(uid));
                 RefreshAllPreviews();
-                ApplyPortSides();
                 HighlightSelection();
             }), DispatcherPriority.Loaded);
         }
@@ -671,18 +668,6 @@ namespace ShaoLu.Views
             EmptyHint.Visibility = _nodes.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        /// <summary>引用出口固定放节点左侧（真假出口仍在右侧）：引用线一律从左边进出，任何排列方式都一样</summary>
-        private void ApplyPortSides()
-        {
-            foreach (var node in _nodes.Values)
-            {
-                var refPort = FindChild<Grid>(node, "RefPort");
-                if (refPort == null) continue;
-
-                refPort.HorizontalAlignment = HorizontalAlignment.Left;
-                refPort.Margin = new Thickness(-7, 0, 0, 0);
-            }
-        }
 
         #endregion
 
@@ -2336,7 +2321,7 @@ namespace ShaoLu.Views
             };
             OverlayLayer.Children.Add(_linkPath);
 
-            var origin = LinkOrigin(step);
+            var origin = PortPoint(step, isTrue);
             UpdateLinkPath(origin, origin);
             RootGrid.CaptureMouse();
         }
@@ -2390,7 +2375,7 @@ namespace ShaoLu.Views
             if ((point - _linkStartPoint).Length > 6)
                 _linkMoved = true;
 
-            UpdateLinkPath(LinkOrigin(_linkSource), point);
+            UpdateLinkPath(PortPoint(_linkSource, _linkIsTrue), point);
 
             bool overAnchor = _selfAnchorRect != Rect.Empty && _selfAnchorRect.Contains(point);
             if (_selfAnchorEllipse != null)
@@ -2668,13 +2653,6 @@ namespace ShaoLu.Views
             return new Point(rect.Left + NodeSlotWidth - 10, rect.Top + rect.Height / 2 + (isTrue ? -10 : 10));
         }
 
-        /// <summary>正在拖的连线的起点：引用线从节点左侧出（引用出口固定在左边），真假线仍按出口位置</summary>
-        private Point LinkOrigin(AutomationStepBase step)
-        {
-            if (_linkIsReference && _nodes.TryGetValue(step.Uid, out var node) && TryGetNodeRect(node, out var rect))
-                return new Point(rect.Left, rect.Top + rect.Height / 2 + 6);
-            return PortPoint(step, _linkIsTrue);
-        }
 
         private AutomationStepBase HitTestStep(Point point)
         {
@@ -4194,10 +4172,9 @@ namespace ShaoLu.Views
             _drawingEdgeEnd = null;
             _edgeLane++;
 
-            // 引用连线一律从节点左侧进出（引用出口也在左边），真假线走右侧
-            string forcedSide = "L";
+            // 引用出口在右侧，引用线按最短路径自动选边（不再强制从左边进出）
             var points = DrawRoutedEdge(fromRect, toRect, from.Uid, to.Uid, EdgeBothBrush, 1.5,
-                LanguageService.GetLocalizedString("FlowReference", "引用"), true, edgeKey, forcedSide);
+                LanguageService.GetLocalizedString("FlowReference", "引用"), true, edgeKey, null);
             if (points == null) return;
 
             AddReferenceHitArea(points, from, to, condition);

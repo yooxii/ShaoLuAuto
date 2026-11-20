@@ -2597,6 +2597,12 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="Flow_EdgeFilter_ToolTip" xml:space="preserve">
     <value>Checked: show all edges of this type. Unchecked: only edges of the selected step (sequential edges always show).</value>
   </data>
+  <data name="Flow_Anchor" xml:space="preserve">
+    <value>Anchors</value>
+  </data>
+  <data name="Flow_Anchor_Filter_ToolTip" xml:space="preserve">
+    <value>Show or hide link anchors. When hidden, anchors are not previewed or added on links; they still shape the routing.</value>
+  </data>
   <data name="FlowReference_Port_ToolTip" xml:space="preserve">
     <value>Drag onto another step to reference it (a dialog opens to configure the reference)</value>
   </data>

@@ -608,6 +608,9 @@ namespace ShaoLu.Views
                         _hookedSteps.Add(step);
                     }
                 }
+
+                // 引用出口固定放左边，与排列方式无关
+                ApplyPortSides();
             }
             finally
             {
@@ -668,25 +671,16 @@ namespace ShaoLu.Views
             EmptyHint.Visibility = _nodes.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        /// <summary>竖直排列时把引用出口挪到节点左侧（真假出口始终在右侧，与连线走向一致）</summary>
+        /// <summary>引用出口固定放节点左侧（真假出口仍在右侧）：引用线一律从左边进出，任何排列方式都一样</summary>
         private void ApplyPortSides()
         {
-            bool vertical = IsVerticalArrange;
             foreach (var node in _nodes.Values)
             {
                 var refPort = FindChild<Grid>(node, "RefPort");
                 if (refPort == null) continue;
 
-                if (vertical)
-                {
-                    refPort.HorizontalAlignment = HorizontalAlignment.Left;
-                    refPort.Margin = new Thickness(-7, 0, 0, 0);
-                }
-                else
-                {
-                    refPort.HorizontalAlignment = HorizontalAlignment.Right;
-                    refPort.Margin = new Thickness(0, 0, 3, 0);
-                }
+                refPort.HorizontalAlignment = HorizontalAlignment.Left;
+                refPort.Margin = new Thickness(-7, 0, 0, 0);
             }
         }
 
@@ -2342,7 +2336,7 @@ namespace ShaoLu.Views
             };
             OverlayLayer.Children.Add(_linkPath);
 
-            var origin = PortPoint(step, isTrue);
+            var origin = LinkOrigin(step);
             UpdateLinkPath(origin, origin);
             RootGrid.CaptureMouse();
         }
@@ -2396,7 +2390,7 @@ namespace ShaoLu.Views
             if ((point - _linkStartPoint).Length > 6)
                 _linkMoved = true;
 
-            UpdateLinkPath(PortPoint(_linkSource, _linkIsTrue), point);
+            UpdateLinkPath(LinkOrigin(_linkSource), point);
 
             bool overAnchor = _selfAnchorRect != Rect.Empty && _selfAnchorRect.Contains(point);
             if (_selfAnchorEllipse != null)
@@ -2674,6 +2668,14 @@ namespace ShaoLu.Views
             return new Point(rect.Left + NodeSlotWidth - 10, rect.Top + rect.Height / 2 + (isTrue ? -10 : 10));
         }
 
+        /// <summary>正在拖的连线的起点：引用线从节点左侧出（引用出口固定在左边），真假线仍按出口位置</summary>
+        private Point LinkOrigin(AutomationStepBase step)
+        {
+            if (_linkIsReference && _nodes.TryGetValue(step.Uid, out var node) && TryGetNodeRect(node, out var rect))
+                return new Point(rect.Left, rect.Top + rect.Height / 2 + 6);
+            return PortPoint(step, _linkIsTrue);
+        }
+
         private AutomationStepBase HitTestStep(Point point)
         {
             foreach (var pair in _nodes)
@@ -2792,11 +2794,27 @@ namespace ShaoLu.Views
             RebuildEdges();
         }
 
+        /// <summary>锚点开关：关掉时隐藏已放的锚点，也不会在连线上预览 / 新增锚点（锚点本身仍参与走线）</summary>
+        private void AnchorFilter_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ShowAnchors) HideAnchorPreview();
+            RebuildEdges();
+        }
+
         private bool ShowAllTrue => ShowTrueToggle == null || ShowTrueToggle.IsChecked == true;
 
         private bool ShowAllFalse => ShowFalseToggle == null || ShowFalseToggle.IsChecked == true;
 
         private bool ShowAllReference => ShowRefToggle == null || ShowRefToggle.IsChecked == true;
+
+        /// <summary>是否显示连线锚点（工具栏开关，默认显示）</summary>
+        private bool ShowAnchors => ShowAnchorsToggle == null || ShowAnchorsToggle.IsChecked == true;
+
+        /// <summary>
+        /// 锚点按排列方式分开存：横向排列沿用原来的 Key（旧工程打开后锚点照旧），
+        /// 竖直排列加 V| 前缀，两种排列的锚点位置互不干扰。
+        /// </summary>
+        private string AnchorKey(string edgeKey) => IsVerticalArrange ? "V|" + edgeKey : edgeKey;
 
         private bool AnyEdgeFilterActive => !ShowAllTrue || !ShowAllFalse || !ShowAllReference;
 
@@ -2826,6 +2844,7 @@ namespace ShaoLu.Views
         private void DrawEdge(EdgeSpec spec)
         {
             _drawingEdgeEnd = null;
+            _drawingEdgeStart = null;
             DrawEdgeCore(spec);
 
             // 只有「真」或「假」某一个分支的连线才需要改接；两个分支连到同一步时不区分真假，不给把手
@@ -3161,7 +3180,7 @@ namespace ShaoLu.Views
             int beforeTo = PeekPortSlot(toUid, bestToSide);
             if (beforeTo == bestSlotTo) CommitPortSlot(toUid, bestToSide);
 
-            var anchors = Services.FlowEdgeAnchorStore.Get(edgeKey);
+            var anchors = Services.FlowEdgeAnchorStore.Get(AnchorKey(edgeKey));
             bool hasAnchors = anchors.Count > 0;
 
             // 有锚点：连线必须经过这些手动放下的锚点（正交连接起来）
@@ -3173,6 +3192,8 @@ namespace ShaoLu.Views
 
             RegisterSegments(best);
             _edgeRoutes[edgeKey] = best;
+            // 起点记下来：折线 / 曲线两种画法都能在起点挂上可拖动的端点把手
+            _drawingEdgeStart = best[0];
 
             // 设置里选了「曲线」：有锚点时画成穿过多段曲线的平滑线（锚点就是转折处），否则画一条 S 形弧线
             if (SingletonLocator.Settings.Step.FlowEdgeStyle == 1)
@@ -3378,6 +3399,7 @@ namespace ShaoLu.Views
 
         private void EdgePath_MouseMove(object sender, MouseEventArgs e)
         {
+            if (!ShowAnchors) return;
             if (sender is not FrameworkElement element || element.Tag is not string key) return;
             if (!_edgeRoutes.TryGetValue(key, out var route)) return;
 
@@ -3398,14 +3420,16 @@ namespace ShaoLu.Views
         /// <summary>连线上左键点击：把这个位置加进锚点列表（之后连线就固定在这一点）</summary>
         private void EdgePath_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (!ShowAnchors) return;
             if (sender is not FrameworkElement element || element.Tag is not string key) return;
             if (!_edgeRoutes.TryGetValue(key, out var route)) return;
 
+            string anchorKey = AnchorKey(key);
             var point = e.GetPosition(CanvasHost);
             var projected = ProjectOnPath(route, point, out double distance);
             if (projected == null || distance > 30) return;
 
-            var before = new List<Point>(Services.FlowEdgeAnchorStore.Get(key));
+            var before = new List<Point>(Services.FlowEdgeAnchorStore.Get(anchorKey));
             var at = SnapAnchor(projected.Value);
 
             // 按点击位置在曲线上的先后插进锚点序列，避免新锚点总被排到最后导致绕线
@@ -3413,11 +3437,11 @@ namespace ShaoLu.Views
             int insert = AnchorInsertIndex(route, at, before);
             if (insert < 0 || insert > after.Count) insert = after.Count;
             after.Insert(insert, at);
-            Services.FlowEdgeAnchorStore.Set(key, after);
+            Services.FlowEdgeAnchorStore.Set(anchorKey, after);
 
             PushFlowUndo(
-                () => { Services.FlowEdgeAnchorStore.Set(key, before); RebuildEdges(); },
-                () => { Services.FlowEdgeAnchorStore.Set(key, after); RebuildEdges(); });
+                () => { Services.FlowEdgeAnchorStore.Set(anchorKey, before); RebuildEdges(); },
+                () => { Services.FlowEdgeAnchorStore.Set(anchorKey, after); RebuildEdges(); });
 
             HideAnchorPreview();
             RebuildEdges();
@@ -3458,6 +3482,9 @@ namespace ShaoLu.Views
         /// <summary>已放下的锚点：小方块，按住拖动可改变连线走向，右键删除</summary>
         private void AddAnchorDots(string edgeKey, IReadOnlyList<Point> anchors)
         {
+            if (!ShowAnchors) return;
+
+            string anchorKey = AnchorKey(edgeKey);
             for (int i = 0; i < anchors.Count; i++)
             {
                 int index = i;
@@ -3476,21 +3503,21 @@ namespace ShaoLu.Views
 
                 dot.MouseLeftButtonDown += (s, e) =>
                 {
-                    _dragAnchorKey = edgeKey;
+                    _dragAnchorKey = anchorKey;
                     _dragAnchorIndex = index;
-                    _dragAnchorBefore = new List<Point>(Services.FlowEdgeAnchorStore.Get(edgeKey));
+                    _dragAnchorBefore = new List<Point>(Services.FlowEdgeAnchorStore.Get(anchorKey));
                     RootGrid.CaptureMouse();
                     e.Handled = true;
                 };
                 dot.MouseRightButtonDown += (s, e) =>
                 {
-                    var before = new List<Point>(Services.FlowEdgeAnchorStore.Get(edgeKey));
+                    var before = new List<Point>(Services.FlowEdgeAnchorStore.Get(anchorKey));
                     var after = new List<Point>(before);
                     if (index >= 0 && index < after.Count) after.RemoveAt(index);
-                    Services.FlowEdgeAnchorStore.Set(edgeKey, after);
+                    Services.FlowEdgeAnchorStore.Set(anchorKey, after);
                     PushFlowUndo(
-                        () => { Services.FlowEdgeAnchorStore.Set(edgeKey, before); RebuildEdges(); },
-                        () => { Services.FlowEdgeAnchorStore.Set(edgeKey, after); RebuildEdges(); });
+                        () => { Services.FlowEdgeAnchorStore.Set(anchorKey, before); RebuildEdges(); },
+                        () => { Services.FlowEdgeAnchorStore.Set(anchorKey, after); RebuildEdges(); });
                     RebuildEdges();
                     e.Handled = true;
                 };
@@ -4167,9 +4194,8 @@ namespace ShaoLu.Views
             _drawingEdgeEnd = null;
             _edgeLane++;
 
-            // 引用连线也按最短路径走，只是画成紫色虚线；端口与真假线共用同一套占位，互不重叠
-            // 竖直排列时引用线固定走节点左侧，与右侧的真/假线分开
-            string forcedSide = IsVerticalArrange ? "L" : null;
+            // 引用连线一律从节点左侧进出（引用出口也在左边），真假线走右侧
+            string forcedSide = "L";
             var points = DrawRoutedEdge(fromRect, toRect, from.Uid, to.Uid, EdgeBothBrush, 1.5,
                 LanguageService.GetLocalizedString("FlowReference", "引用"), true, edgeKey, forcedSide);
             if (points == null) return;
@@ -4256,6 +4282,7 @@ namespace ShaoLu.Views
         {
             if (string.IsNullOrEmpty(edgeKey)) return;
 
+
             var hit = new Ellipse
             {
                 Width = 18,
@@ -4276,6 +4303,7 @@ namespace ShaoLu.Views
         /// <summary>按下连线端点：开始「沿边框挪端点」，终点拖出节点后再变成改接</summary>
         private void EdgePortHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+
             if (sender is not FrameworkElement handle) return;
             if (handle.Tag is not EdgeHandleTag tag || tag.From == null || string.IsNullOrEmpty(tag.EdgeKey)) return;
             if (!SingletonLocator.Main.IsLoggedIn) return;

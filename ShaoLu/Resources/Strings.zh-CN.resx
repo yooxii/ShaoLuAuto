@@ -2597,6 +2597,12 @@
   <data name="Flow_EdgeFilter_ToolTip" xml:space="preserve">
     <value>勾选=该类型连线全部显示；不勾=只显示与选中步骤相连的（顺序连线始终显示）</value>
   </data>
+  <data name="Flow_Anchor" xml:space="preserve">
+    <value>锚点</value>
+  </data>
+  <data name="Flow_Anchor_Filter_ToolTip" xml:space="preserve">
+    <value>显示 / 隐藏连线锚点；隐藏后不在连线上预览或新增锚点，锚点仍然参与走线</value>
+  </data>
   <data name="FlowReference_Port_ToolTip" xml:space="preserve">
     <value>拖到另一个步骤上表示本步骤引用它（松手后弹窗配置引用方式）</value>
   </data>

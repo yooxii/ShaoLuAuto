@@ -235,8 +235,9 @@
         </Grid.RowDefinitions>
 
         <!-- 只放视图操作；增删步骤/复制粘贴等仍走上方主工具栏 -->
+        <!-- 用 WrapPanel：窗口窄的时候自动换行，右侧的连线/锚点开关不会被裁掉 -->
         <Border Grid.Row="0" Background="#FFF7F8FA" BorderBrush="#FFD5DAE0" BorderThickness="0,0,0,1" Padding="2,3">
-            <StackPanel Orientation="Horizontal">
+            <WrapPanel Orientation="Horizontal">
                 <TextBlock Text="{lex:Loc FlowArrangeMode}" VerticalAlignment="Center" Foreground="#FF6B7885"
                            FontSize="11" Margin="2,0,4,0"/>
                 <ComboBox x:Name="ArrangeModeBox" Width="100" Margin="2" VerticalAlignment="Center"
@@ -272,7 +273,11 @@
                 <ToggleButton x:Name="ShowRefToggle" Margin="2" Padding="8,2" IsChecked="True"
                               Content="{lex:Loc FlowReference}" Click="EdgeFilter_Click"
                               ToolTip="{lex:Loc Flow_EdgeFilter_ToolTip}"/>
-            </StackPanel>
+                <!-- 锚点显示开关：关掉后隐藏已放的锚点，也不会在连线上预览 / 新增锚点 -->
+                <ToggleButton x:Name="ShowAnchorsToggle" Margin="2" Padding="8,2" IsChecked="True"
+                              Content="{lex:Loc Flow_Anchor}" Click="AnchorFilter_Click"
+                              ToolTip="{lex:Loc Flow_Anchor_Filter_ToolTip}"/>
+            </WrapPanel>
         </Border>
 
         <Border Grid.Row="1" Background="White" BorderBrush="#FFD5DAE0" BorderThickness="0,0,0,1" ClipToBounds="True">

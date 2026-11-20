@@ -34,7 +34,7 @@ namespace ShaoLu.Views
         private const double NodeHeight = 96;
         private const double NodeSlotWidth = 236;  // 含出口圆的占位宽
         private const double GridStep = 8;         // 拖动吸附步长
-        private const double LaneStep = 11;        // 同一走线通道里多条连线之间的间距
+        private const double LaneStep = 13;        // 同一走线通道里多条连线之间的间距（重叠时错开得更明显）
         private const double SameRowTolerance = NodeHeight * 0.65;   // 判定「大致同一行」的容差
         private const double SameColumnTolerance = NodeWidth * 0.55; // 判定「大致同一列」的容差
 
@@ -2328,6 +2328,23 @@ namespace ShaoLu.Views
 
         private void RootGrid_MouseMove(object sender, MouseEventArgs e)
         {
+            // 拖动折线段：整段沿垂直方向平移（贴着端口的那一段只挪里侧拐点）
+            if (_dragSegKey != null && _dragSegRoute != null)
+            {
+                var segPoint = e.GetPosition(CanvasHost);
+                var segDelta = segPoint - _dragSegMouseStart;
+                double shift = _dragSegHorizontal ? segDelta.Y : segDelta.X;
+                if (Math.Abs(shift) >= 0.5)
+                {
+                    var moved = MoveRouteSegment(_dragSegRoute, _dragSegIndex, _dragSegHorizontal, shift);
+                    Services.FlowEdgeAnchorStore.Set(AnchorKey(_dragSegKey), RouteToAnchors(moved));
+                    _dragSegMoved = true;
+                    RebuildEdges();
+                }
+                e.Handled = true;
+                return;
+            }
+
             // 拖动连线端点：先尝试贴着节点边框挪，终点拖出节点后再变成改接
             if (_dragPortKey != null)
             {
@@ -2391,6 +2408,31 @@ namespace ShaoLu.Views
 
         private void RootGrid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            // 结束折线段拖动：记一条撤销
+            if (_dragSegKey != null)
+            {
+                string segKey = _dragSegKey;
+                bool segMoved = _dragSegMoved;
+                var segBefore = _dragSegBefore ?? new List<Point>();
+                _dragSegKey = null;
+                _dragSegRoute = null;
+                _dragSegMoved = false;
+                _dragSegBefore = null;
+                RootGrid.ReleaseMouseCapture();
+                HideSegmentHint();
+                e.Handled = true;
+
+                if (segMoved)
+                {
+                    var segAfter = new List<Point>(Services.FlowEdgeAnchorStore.Get(AnchorKey(segKey)));
+                    PushFlowUndo(
+                        () => { Services.FlowEdgeAnchorStore.Set(AnchorKey(segKey), segBefore); RebuildEdges(); },
+                        () => { Services.FlowEdgeAnchorStore.Set(AnchorKey(segKey), segAfter); RebuildEdges(); });
+                }
+                RebuildEdges();
+                return;
+            }
+
             // 结束端点拖动：记一条撤销（起点/终点的边框落点）
             if (_dragPortKey != null)
             {
@@ -2671,6 +2713,7 @@ namespace ShaoLu.Views
 
         private void RebuildEdges()
         {
+            HideSegmentHint();
             UpdateLayoutMetrics();
             EdgeLayer.Children.Clear();
             HandleLayer.Children.Clear();
@@ -2848,7 +2891,8 @@ namespace ShaoLu.Views
                 : spec.IsTrue ? EdgeTrueBrush
                 : spec.IsFalse ? EdgeFalseBrush
                 : EdgeNormalBrush;
-            double thickness = explicitJump ? 1.8 : 1.4;
+            // 顺序连线画成实心粗箭头（LabVIEW 那种粗线），真 / 假跳转保持细线
+            double thickness = explicitJump ? 1.8 : 2.6;
 
             string label = spec.IsTrue && spec.IsFalse
                 ? LanguageService.GetLocalizedString("FlowChart_EdgeBoth")
@@ -2899,6 +2943,20 @@ namespace ShaoLu.Views
         private string _dragAnchorKey;
         private int _dragAnchorIndex = -1;
         private List<Point> _dragAnchorBefore;
+
+        // 拖动折线段（LabVIEW 那样：点在线上按住平移这一段）
+        private const double SegmentGrabDistance = 6;      // 离线 ≤6px 算「在线上」，可以拖这段
+        private const double AnchorPreviewDistance = 17;   // 6~17px 算「靠近线」，可以加锚点
+        private string _dragSegKey;
+        private List<Point> _dragSegRoute;
+        private int _dragSegIndex;
+        private bool _dragSegHorizontal;
+        private Point _dragSegMouseStart;
+        private List<Point> _dragSegBefore;
+        private bool _dragSegMoved;
+        private int _hoverSegmentIndex = -1;
+        private Path _segHint;
+        private static readonly Brush SegmentHintBrush = new SolidColorBrush(Color.FromArgb(0x55, 0x2B, 0x6F, 0xD6));
 
         // 每个节点每条边已经用掉的端口数：同一侧的多条线按设置里的间隔依次排开
         private readonly Dictionary<string, int> _portSlots = new Dictionary<string, int>();
@@ -3365,7 +3423,7 @@ namespace ShaoLu.Views
             {
                 Data = geometry,
                 Stroke = Brushes.Transparent,
-                StrokeThickness = 12,
+                StrokeThickness = 34,      // 宽热区：靠近但不贴线也能点到，用来加锚点
                 Cursor = Cursors.Cross,
                 Tag = edgeKey,
             };
@@ -3377,38 +3435,69 @@ namespace ShaoLu.Views
 
         private void EdgePath_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!ShowAnchors) return;
             if (sender is not FrameworkElement element || element.Tag is not string key) return;
             if (!_edgeRoutes.TryGetValue(key, out var route)) return;
 
             var point = e.GetPosition(CanvasHost);
-            var projected = ProjectOnPath(route, point, out double distance);
-            if (projected == null || distance > 30) { HideAnchorPreview(); return; }
+            var projected = ProjectOnPath(route, point, out double distance, out int segmentIndex, out bool horizontal);
+            if (projected == null) { HideAnchorPreview(); HideSegmentHint(); return; }
+
+            // 在线上：这一段可以按住平移，鼠标形状提示方向
+            if (distance <= SegmentGrabDistance)
+            {
+                HideAnchorPreview();
+                _hoverEdgeKey = key;
+                _hoverEdgePoint = projected.Value;
+                _hoverSegmentIndex = segmentIndex;
+                element.Cursor = horizontal ? Cursors.SizeNS : Cursors.SizeWE;
+                ShowSegmentHint(key, route, segmentIndex);
+                return;
+            }
+
+            // 靠近但不在线上：给锚点预览（锚点开关关掉时不加）
+            HideSegmentHint();
+            _hoverSegmentIndex = -1;
+            element.Cursor = Cursors.Cross;
+            if (!ShowAnchors) { HideAnchorPreview(); return; }
+            if (distance > AnchorPreviewDistance) { HideAnchorPreview(); return; }
 
             _hoverEdgeKey = key;
-            _hoverEdgePoint = projected.Value;
-            ShowAnchorPreview(projected.Value);
+            _hoverEdgePoint = SnapAnchor(point);
+            ShowAnchorPreview(_hoverEdgePoint);
         }
 
         private void EdgePath_MouseLeave(object sender, MouseEventArgs e)
         {
             HideAnchorPreview();
+            HideSegmentHint();
+            _hoverSegmentIndex = -1;
+            if (sender is FrameworkElement element) element.Cursor = Cursors.Cross;
         }
 
         /// <summary>连线上左键点击：把这个位置加进锚点列表（之后连线就固定在这一点）</summary>
         private void EdgePath_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!ShowAnchors) return;
             if (sender is not FrameworkElement element || element.Tag is not string key) return;
             if (!_edgeRoutes.TryGetValue(key, out var route)) return;
 
             string anchorKey = AnchorKey(key);
             var point = e.GetPosition(CanvasHost);
-            var projected = ProjectOnPath(route, point, out double distance);
-            if (projected == null || distance > 30) return;
+            var projected = ProjectOnPath(route, point, out double distance, out int segmentIndex, out bool horizontal);
+            if (projected == null) return;
+
+            // 点在线上：拖动这一段（平移）；靠近但不在线上：加锚点
+            if (distance <= SegmentGrabDistance)
+            {
+                BeginSegmentDrag(key, route, segmentIndex, horizontal, point);
+                e.Handled = true;
+                return;
+            }
+
+            if (!ShowAnchors || distance > AnchorPreviewDistance) return;
 
             var before = new List<Point>(Services.FlowEdgeAnchorStore.Get(anchorKey));
-            var at = SnapAnchor(projected.Value);
+            // 锚点放在鼠标位置（不是投影点）：线会拐过去经过它
+            var at = SnapAnchor(point);
 
             // 按点击位置在曲线上的先后插进锚点序列，避免新锚点总被排到最后导致绕线
             var after = new List<Point>(before);
@@ -3468,16 +3557,16 @@ namespace ShaoLu.Views
                 int index = i;
                 var dot = new Ellipse
                 {
-                    Width = 9,
-                    Height = 9,
-                    Fill = Brushes.White,
-                    Stroke = LinkBrush,
-                    StrokeThickness = 1.6,
+                    Width = 7,
+                    Height = 7,
+                    Fill = LinkBrush,        // 实心小点，比原来小一圈
+                    Stroke = Brushes.White,
+                    StrokeThickness = 1.2,
                     Cursor = Cursors.SizeAll,
                     ToolTip = LanguageService.GetLocalizedString("Flow_Anchor_ToolTip", "锚点：拖动可改变连线走向，右键删除"),
                 };
-                Canvas.SetLeft(dot, anchors[i].X - 4.5);
-                Canvas.SetTop(dot, anchors[i].Y - 4.5);
+                Canvas.SetLeft(dot, anchors[i].X - 3.5);
+                Canvas.SetTop(dot, anchors[i].Y - 3.5);
 
                 dot.MouseLeftButtonDown += (s, e) =>
                 {
@@ -3504,6 +3593,100 @@ namespace ShaoLu.Views
             }
         }
 
+        #region 折线段拖动
+
+        /// <summary>按住在线上的一段：整段沿垂直方向平移，松手后记一条撤销</summary>
+        private void BeginSegmentDrag(string edgeKey, IReadOnlyList<Point> route, int segmentIndex, bool horizontal, Point mousePoint)
+        {
+            if (!SingletonLocator.Main.IsLoggedIn) return;
+            if (segmentIndex < 1 || segmentIndex >= route.Count) return;
+
+            _dragSegKey = edgeKey;
+            _dragSegRoute = new List<Point>(route);
+            _dragSegIndex = segmentIndex;
+            _dragSegHorizontal = horizontal;
+            _dragSegMouseStart = mousePoint;
+            _dragSegBefore = new List<Point>(Services.FlowEdgeAnchorStore.Get(AnchorKey(edgeKey)));
+            _dragSegMoved = false;
+            HideAnchorPreview();
+            HideSegmentHint();
+            RootGrid.CaptureMouse();
+        }
+
+        /// <summary>把折线里的某一段沿垂直方向平移；贴着节点端口的那一段只挪靠里的拐点</summary>
+        private static List<Point> MoveRouteSegment(IReadOnlyList<Point> route, int segmentIndex, bool horizontal, double shift)
+        {
+            var moved = new List<Point>(route);
+            int a = segmentIndex - 1;
+            int b = segmentIndex;
+
+            Point Shift(Point p) => horizontal ? new Point(p.X, p.Y + shift) : new Point(p.X + shift, p.Y);
+
+            if (a > 0) moved[a] = Shift(moved[a]);
+            if (b < moved.Count - 1) moved[b] = Shift(moved[b]);
+            return moved;
+        }
+
+        /// <summary>
+        /// 走线转锚点：只留中间拐点。长度 0 的段直接去掉（相邻点重合就合并），
+        /// 还在同一条直线上的点也去掉，免得线上留下没意义的小点。
+        /// </summary>
+        private static List<Point> RouteToAnchors(IReadOnlyList<Point> route)
+        {
+            var anchors = new List<Point>();
+            for (int i = 1; i < route.Count - 1; i++)
+            {
+                var p = route[i];
+                if (anchors.Count > 0 && (p - anchors[anchors.Count - 1]).Length < 1.0) continue;
+                anchors.Add(p);
+            }
+
+            // 去掉与前后两点共线的锚点（正交折线里只剩真正拐弯的点）
+            for (int i = anchors.Count - 2; i >= 1; i--)
+            {
+                var prev = i - 1 >= 0 ? anchors[i - 1] : route[0];
+                var next = i + 1 < anchors.Count ? anchors[i + 1] : route[route.Count - 1];
+                bool sameY = Math.Abs(prev.Y - anchors[i].Y) < 0.5 && Math.Abs(anchors[i].Y - next.Y) < 0.5;
+                bool sameX = Math.Abs(prev.X - anchors[i].X) < 0.5 && Math.Abs(anchors[i].X - next.X) < 0.5;
+                if (sameY || sameX) anchors.RemoveAt(i);
+            }
+
+            return anchors;
+        }
+
+        /// <summary>悬停到某一段时高亮它，提示「这段可以拖」</summary>
+        private void ShowSegmentHint(string edgeKey, IReadOnlyList<Point> route, int segmentIndex)
+        {
+            if (segmentIndex < 1 || segmentIndex >= route.Count) { HideSegmentHint(); return; }
+
+            if (_segHint == null)
+            {
+                _segHint = new Path
+                {
+                    Stroke = SegmentHintBrush,
+                    StrokeThickness = 7,
+                    StrokeStartLineCap = PenLineCap.Round,
+                    StrokeEndLineCap = PenLineCap.Round,
+                    IsHitTestVisible = false,
+                };
+                OverlayLayer.Children.Add(_segHint);
+            }
+
+            var figure = new PathFigure { StartPoint = route[segmentIndex - 1], IsClosed = false };
+            figure.Segments.Add(new LineSegment(route[segmentIndex], true));
+            var geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+            _segHint.Data = geometry;
+        }
+
+        private void HideSegmentHint()
+        {
+            if (_segHint != null && OverlayLayer.Children.Contains(_segHint))
+                OverlayLayer.Children.Remove(_segHint);
+            _segHint = null;
+        }
+
+        #endregion
         /// <summary>把点投影到节点边框上：返回最靠近的那条边与沿线比例</summary>
         private static (string Side, double Fraction) ProjectOnBorder(Rect rect, Point point)
         {
@@ -3570,9 +3753,14 @@ namespace ShaoLu.Views
 
         /// <summary>鼠标点到折线上的最近点</summary>
         private static Point? ProjectOnPath(IReadOnlyList<Point> points, Point p, out double distance)
+            => ProjectOnPath(points, p, out distance, out _, out _);
+
+        private static Point? ProjectOnPath(IReadOnlyList<Point> points, Point p, out double distance, out int segmentIndex, out bool horizontal)
         {
             Point? best = null;
             double bestDistance = double.MaxValue;
+            int bestIndex = -1;
+            bool bestHorizontal = false;
 
             for (int i = 1; i < points.Count; i++)
             {
@@ -3591,10 +3779,14 @@ namespace ShaoLu.Views
                 {
                     bestDistance = d;
                     best = projected;
+                    bestIndex = i;
+                    bestHorizontal = Math.Abs(dx) >= Math.Abs(dy);
                 }
             }
 
             distance = bestDistance;
+            segmentIndex = bestIndex;
+            horizontal = bestHorizontal;
             return best;
         }
 
@@ -4195,7 +4387,7 @@ namespace ShaoLu.Views
                 path.StrokeDashArray = new DoubleCollection { 5, 3 };
             EdgeLayer.Children.Add(path);
 
-            AddArrowHead(end, end - control2, brush);
+            AddArrowHead(end, end - control2, brush, Math.Max(9, thickness * 5));
             if (!string.IsNullOrEmpty(label))
                 AddEdgeLabel(labelPoint, label, brush);
         }
@@ -4227,18 +4419,19 @@ namespace ShaoLu.Views
 
             var end = points[points.Count - 1];
             var previous = points[points.Count - 2];
-            AddArrowHead(end, end - previous, brush);
+            AddArrowHead(end, end - previous, brush, Math.Max(9, thickness * 5));
 
             if (!string.IsNullOrEmpty(label))
                 AddEdgeLabel(labelPoint, label, brush);
         }
 
-        private void AddArrowHead(Point tip, Vector direction, Brush brush)
+        private void AddArrowHead(Point tip, Vector direction, Brush brush, double size = 9)
         {
+            if (size < 1) size = 9;
             if (direction.Length < 0.01) direction = new Vector(0, 1);
             direction.Normalize();
-            var back = tip - direction * 9;
-            var perpendicular = new Vector(-direction.Y, direction.X) * 4.5;
+            var back = tip - direction * size;
+            var perpendicular = new Vector(-direction.Y, direction.X) * (size * 0.5);
 
             var arrow = new Polygon
             {

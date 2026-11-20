@@ -365,7 +365,11 @@ namespace ShaoLu.Views
         private void Vm_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(StepsViewModel.SelectedStep))
+            {
                 HighlightSelection();
+                // 表格里换选步骤时也立刻刷新焦点预览
+                if (FocusMode) RebuildEdges();
+            }
         }
 
         private void Step_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -1177,6 +1181,9 @@ namespace ShaoLu.Views
                 _selectedUids.Add(step.Uid);
 
             HighlightSelection();
+
+            // 焦点预览要跟着选中走：换了选中步骤立刻重画，不用手动开关
+            if (FocusMode) RebuildEdges();
         }
 
         private void ToggleSelection(AutomationStepBase step)
@@ -3432,29 +3439,113 @@ namespace ShaoLu.Views
         {
             if (points == null || points.Count < 2) return;
 
-            var figure = new PathFigure { StartPoint = points[0], IsClosed = false, IsFilled = false };
+
+
+            // 热区要躲开节点：被节点盖住的那段不做热区，节点优先级高于连线
             for (int i = 1; i < points.Count; i++)
-                figure.Segments.Add(new LineSegment(points[i], true));
-
-            var geometry = new PathGeometry();
-            geometry.Figures.Add(figure);
-            geometry.Freeze();
-
-            var hit = new Path
             {
-                Data = geometry,
-                Stroke = Brushes.Transparent,
-                StrokeThickness = 34,      // 宽热区：靠近但不贴线也能点到，用来加锚点
-                Cursor = Cursors.Cross,
-                Tag = edgeKey,
-            };
-            hit.MouseMove += EdgePath_MouseMove;
-            hit.MouseLeave += EdgePath_MouseLeave;
-            hit.MouseLeftButtonDown += EdgePath_MouseLeftButtonDown;
-            hit.MouseRightButtonDown += EdgePath_MouseRightButtonDown;
-            HandleLayer.Children.Add(hit);
+                foreach (var seg in SplitHitSegment(points[i - 1], points[i]))
+                {
+                    var segFigure = new PathFigure { StartPoint = seg.A, IsClosed = false, IsFilled = false };
+                    segFigure.Segments.Add(new LineSegment(seg.B, true));
+                    var segGeometry = new PathGeometry();
+                    segGeometry.Figures.Add(segFigure);
+                    segGeometry.Freeze();
+
+                    var hit = new Path
+                    {
+                        Data = segGeometry,
+                        Stroke = Brushes.Transparent,
+                        StrokeThickness = 34,      // 宽热区：靠近但不贴线也能点到，用来加锚点
+                        Cursor = Cursors.Cross,
+                        Tag = edgeKey,
+                    };
+                    hit.MouseMove += EdgePath_MouseMove;
+                    hit.MouseLeave += EdgePath_MouseLeave;
+                    hit.MouseLeftButtonDown += EdgePath_MouseLeftButtonDown;
+                    hit.MouseRightButtonDown += EdgePath_MouseRightButtonDown;
+                    HandleLayer.Children.Add(hit);
+                }
+            }
         }
 
+        /// <summary>
+        /// 把一段连线按节点矩形切开：返回没被节点盖住的子段（只保留 1px 以上的部分）。
+        /// 正交折线按轴切，曲线采样点用中点判断是否落在节点里。
+        /// </summary>
+        private IEnumerable<(Point A, Point B)> SplitHitSegment(Point a, Point b)
+        {
+            var segments = new List<(Point A, Point B)> { (a, b) };
+            const double pad = 2;
+
+            foreach (var node in _nodes.Values)
+            {
+                if (!TryGetNodeRect(node, out var rect)) continue;
+                var blocked = new Rect(rect.Left - pad, rect.Top - pad, rect.Width + pad * 2, rect.Height + pad * 2);
+
+                var next = new List<(Point A, Point B)>();
+                foreach (var seg in segments)
+                {
+                    bool horizontal = Math.Abs(seg.A.Y - seg.B.Y) < 0.5;
+                    bool vertical = Math.Abs(seg.A.X - seg.B.X) < 0.5;
+
+                    if (horizontal)
+                    {
+                        double y = seg.A.Y;
+                        if (y < blocked.Top || y > blocked.Bottom) { next.Add(seg); continue; }
+
+                        double x1 = Math.Min(seg.A.X, seg.B.X), x2 = Math.Max(seg.A.X, seg.B.X);
+                        double bx1 = Math.Max(x1, blocked.Left), bx2 = Math.Min(x2, blocked.Right);
+                        if (bx1 >= bx2) { next.Add(seg); continue; }
+
+                        bool forward = seg.B.X >= seg.A.X;
+                        Point P(double x) => new Point(x, y);
+                        if (forward)
+                        {
+                            if (bx1 > x1) next.Add((P(x1), P(bx1)));
+                            if (bx2 < x2) next.Add((P(bx2), P(x2)));
+                        }
+                        else
+                        {
+                            if (bx2 < x1) next.Add((P(x1), P(bx2)));
+                            if (bx1 > x2) next.Add((P(bx1), P(x2)));
+                        }
+                    }
+                    else if (vertical)
+                    {
+                        double x = seg.A.X;
+                        if (x < blocked.Left || x > blocked.Right) { next.Add(seg); continue; }
+
+                        double y1 = Math.Min(seg.A.Y, seg.B.Y), y2 = Math.Max(seg.A.Y, seg.B.Y);
+                        double by1 = Math.Max(y1, blocked.Top), by2 = Math.Min(y2, blocked.Bottom);
+                        if (by1 >= by2) { next.Add(seg); continue; }
+
+                        bool forward = seg.B.Y >= seg.A.Y;
+                        Point P(double yy) => new Point(x, yy);
+                        if (forward)
+                        {
+                            if (by1 > y1) next.Add((P(y1), P(by1)));
+                            if (by2 < y2) next.Add((P(by2), P(y2)));
+                        }
+                        else
+                        {
+                            if (by2 < y1) next.Add((P(y1), P(by2)));
+                            if (by1 > y2) next.Add((P(by1), P(y2)));
+                        }
+                    }
+                    else
+                    {
+                        // 曲线段：中点落在节点里就整段不要热区
+                        var mid = new Point((seg.A.X + seg.B.X) / 2, (seg.A.Y + seg.B.Y) / 2);
+                        if (!blocked.Contains(mid)) next.Add(seg);
+                    }
+                }
+
+                segments = next;
+            }
+
+            return segments.Where(s => (s.Item2 - s.Item1).Length > 1);
+        }
         private void EdgePath_MouseMove(object sender, MouseEventArgs e)
         {
             if (sender is not FrameworkElement element || element.Tag is not string key) return;

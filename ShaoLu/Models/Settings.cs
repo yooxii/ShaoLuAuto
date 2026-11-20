@@ -49,6 +49,9 @@ namespace ShaoLu.Models
         /// </summary>
         public int FlowEdgeStyle { get; set; } = 0;
 
+        /// <summary>流程图自动整理的排列方式：0=横向 S 型，1=竖直排列（居中向下、不画顺序连线）</summary>
+        public int FlowArrangeMode { get; set; } = 0;
+
         /// <summary>流程图：拖动节点是否吸附到网格</summary>
         public bool FlowSnapToGrid { get; set; } = true;
 

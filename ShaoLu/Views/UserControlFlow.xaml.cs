@@ -47,6 +47,18 @@ namespace ShaoLu.Views
         private double CellW => NodeWidth + _gapX;
         private double CellH => NodeHeight + _gapY;
         private const int MinColumns = 1;
+        // 竖直排列时节点之间的紧密间距
+        private const double VerticalTightGap = 12;
+
+        /// <summary>自动整理用竖直排列（居中一列往下排、不画顺序连线）</summary>
+        private bool IsVerticalArrange
+        {
+            get
+            {
+                try { return SingletonLocator.Settings.Step.FlowArrangeMode == 1; }
+                catch { return false; }
+            }
+        }
 
         private const double ZoomMin = 0.3;
         private const double ZoomMax = 2.0;
@@ -135,6 +147,8 @@ namespace ShaoLu.Views
         private string _lastEdgeKey;
         // 正在把设置里的连线样式同步到工具栏下拉时不触发切换
         private bool _edgeStyleSyncing;
+        // 正在把设置里的排列方式同步到工具栏下拉时不触发切换
+        private bool _arrangeModeSyncing;
         // 正在拖的连线类型：true=引用步骤连线（拖已有引用线时带上原条件对象）
         private bool _linkIsReference;
         private Models.StepCondition _linkCondition;
@@ -420,6 +434,11 @@ namespace ShaoLu.Views
         private List<Point> BuildLayoutPoints(int columns)
         {
             var steps = _vm.AutomationStepBases;
+
+            // 竖直排列：所有节点居中排成一列、自上而下紧密排列
+            if (IsVerticalArrange)
+                return BuildVerticalLayoutPoints(steps);
+
             var points = new List<Point>();
 
             int row = 0;
@@ -462,6 +481,31 @@ namespace ShaoLu.Views
 
                     points.Add(CurrentCell());
                     Advance();
+                }
+            }
+
+            return points;
+        }
+
+        /// <summary>
+        /// 竖直排列：所有节点在同一列、水平居中，自上而下按紧密间距排列。
+        /// 该排列不画顺序连线，真/假连线走右侧、引用连线走左侧。
+        /// </summary>
+        private List<Point> BuildVerticalLayoutPoints(IList<AutomationStepBase> steps)
+        {
+            var points = new List<Point>();
+
+            // 居中的基准：优先按可见宽度算，还没量出宽度时按 1000 估算
+            double viewWidth = Scroll != null && Scroll.ActualWidth > 0 ? Scroll.ActualWidth : 1000;
+            double centerX = Math.Max(X0, (viewWidth - NodeWidth) / 2);
+            double y = Y0;
+
+            if (steps != null)
+            {
+                for (int i = 0; i < steps.Count; i++)
+                {
+                    points.Add(new Point(centerX, y));
+                    y += NodeHeight + VerticalTightGap;
                 }
             }
 
@@ -582,11 +626,19 @@ namespace ShaoLu.Views
                 finally { _edgeStyleSyncing = false; }
             }
 
+            if (ArrangeModeBox != null)
+            {
+                _arrangeModeSyncing = true;
+                try { ArrangeModeBox.SelectedIndex = IsVerticalArrange ? 1 : 0; } catch { }
+                finally { _arrangeModeSyncing = false; }
+            }
+
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 var alive = new HashSet<Guid>(_nodes.Keys);
                 _selectedUids.RemoveWhere(uid => !alive.Contains(uid));
                 RefreshAllPreviews();
+                ApplyPortSides();
                 HighlightSelection();
             }), DispatcherPriority.Loaded);
         }
@@ -614,6 +666,28 @@ namespace ShaoLu.Views
         private void UpdateEmptyHint()
         {
             EmptyHint.Visibility = _nodes.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>竖直排列时把引用出口挪到节点左侧（真假出口始终在右侧，与连线走向一致）</summary>
+        private void ApplyPortSides()
+        {
+            bool vertical = IsVerticalArrange;
+            foreach (var node in _nodes.Values)
+            {
+                var refPort = FindChild<Grid>(node, "RefPort");
+                if (refPort == null) continue;
+
+                if (vertical)
+                {
+                    refPort.HorizontalAlignment = HorizontalAlignment.Left;
+                    refPort.Margin = new Thickness(-7, 0, 0, 0);
+                }
+                else
+                {
+                    refPort.HorizontalAlignment = HorizontalAlignment.Right;
+                    refPort.Margin = new Thickness(0, 0, 3, 0);
+                }
+            }
         }
 
         #endregion
@@ -713,14 +787,29 @@ namespace ShaoLu.Views
             e.Handled = true;
         }
 
-        private void AutoLayout_Click(object sender, RoutedEventArgs e)
+        private void AutoLayout_Click(object sender, RoutedEventArgs e) => ArrangeAll(pushUndo: true);
+
+        /// <summary>工具栏切换排列方式：存进设置后按新模式重排一遍</summary>
+        private void ArrangeMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ArrangeModeBox == null || _arrangeModeSyncing || ArrangeModeBox.SelectedIndex < 0) return;
+            try { SingletonLocator.Settings.Step.FlowArrangeMode = ArrangeModeBox.SelectedIndex; } catch { }
+            if (!_loadedOnce) return;
+
+            // 换排列方式也会改出口位置（引用出口左右挪），先重建节点再整理一次
+            RebuildAll();
+            ArrangeAll(pushUndo: true);
+        }
+
+        /// <summary>按当前排列方式重摆所有没被锚定的节点（横向 S 型 / 竖直居中一列）</summary>
+        private void ArrangeAll(bool pushUndo)
         {
             var steps = _vm.AutomationStepBases;
             if (steps == null) return;
 
             UpdateLayoutMetrics();
             var points = BuildLayoutPoints(ComputeColumns());
-            var before = CapturePositions();
+            var before = pushUndo ? CapturePositions() : null;
 
             for (int i = 0; i < steps.Count; i++)
             {
@@ -735,8 +824,11 @@ namespace ShaoLu.Views
                 }
             }
 
-            var after = CapturePositions();
-            PushFlowUndo(() => RestorePositions(before), () => RestorePositions(after));
+            if (pushUndo)
+            {
+                var after = CapturePositions();
+                PushFlowUndo(() => RestorePositions(before), () => RestorePositions(after));
+            }
 
             // 先让节点位置真正生效（走完一次布局），再按新位置重新走线
             UpdateCanvasSize();
@@ -2606,6 +2698,8 @@ namespace ShaoLu.Views
             // 先画顺序连线，再画真假跳转（引用连线在最后单独画），端口按这个优先级占位
             foreach (var spec in specs.Values.OrderBy(s => s.IsSequential ? 0 : 1))
             {
+                // 竖直排列不画顺序连线（含默认顺流的灰线），只留真假跳转与引用线
+                if (IsVerticalArrange && !spec.IsTrue && !spec.IsFalse) continue;
                 if (!ShouldShowEdge(spec)) continue;
                 DrawEdge(spec);
             }
@@ -2724,7 +2818,9 @@ namespace ShaoLu.Views
             string kind = spec.IsTrue && spec.IsFalse ? "B" : spec.IsTrue ? "T" : spec.IsFalse ? "F" : "S";
             string edgeKey = EdgeKey(spec.From.Uid, spec.To.Uid, kind);
             _lastEdgeKey = edgeKey;
-            DrawRoutedEdge(fromRect, toRect, spec.From.Uid, spec.To.Uid, brush, thickness, label, false, edgeKey);
+            // 竖直排列：真假跳转固定走节点右侧
+            string forcedSide = IsVerticalArrange && explicitJump ? "R" : null;
+            DrawRoutedEdge(fromRect, toRect, spec.From.Uid, spec.To.Uid, brush, thickness, label, false, edgeKey, forcedSide);
         }
 
         #region 统一走线（最短路径 + 同一节点边框上的端点不重叠）
@@ -2929,7 +3025,7 @@ namespace ShaoLu.Views
         /// 候选方向里优先选「不穿节点、也不和已画连线重叠」的；都被占就选重叠最少的。
         /// </summary>
         private List<Point> DrawRoutedEdge(Rect from, Rect to, Guid fromUid, Guid toUid,
-            Brush brush, double thickness, string label, bool dashed, string edgeKey)
+            Brush brush, double thickness, string label, bool dashed, string edgeKey, string forcedSide = null)
         {
             List<Point> best = null;
             string bestFromSide = null, bestToSide = null;
@@ -2939,6 +3035,11 @@ namespace ShaoLu.Views
 
             double stagger = SpreadIndex(_edgeLane) * LaneStep;
             double spacing = PortSpacing;
+
+            // 竖直排列等场景要求固定从某一侧进出：只试这一侧（起点终点都在同一侧）
+            var sideCandidates = string.IsNullOrEmpty(forcedSide)
+                ? SideCandidates(from, to)
+                : new List<(string From, string To)> { (forcedSide, forcedSide) };
 
             void Consider(List<Point> route, string sideFrom, string sideTo, int slotFrom, int slotTo, bool blocked)
             {
@@ -2963,14 +3064,14 @@ namespace ShaoLu.Views
 
             if (hasPortOverride)
             {
-                var fromSide = hasStartPort ? startSide : SideCandidates(from, to)[0].From;
-                var toSide = hasEndPort ? endSide : SideCandidates(from, to)[0].To;
+                var fromSide = hasStartPort ? startSide : sideCandidates[0].From;
+                var toSide = hasEndPort ? endSide : sideCandidates[0].To;
                 var route = BuildRoute(from, to, fromSide, toSide, PeekPortSlot(fromUid, fromSide), PeekPortSlot(toUid, toSide),
                     stagger, spacing, hasStartPort ? startFrac : (double?)null, hasEndPort ? endFrac : (double?)null);
                 Consider(route, fromSide, toSide, PeekPortSlot(fromUid, fromSide), PeekPortSlot(toUid, toSide), false);
             }
 
-            foreach (var (sideFrom, sideTo) in SideCandidates(from, to))
+            foreach (var (sideFrom, sideTo) in sideCandidates)
             {
                 if (hasPortOverride) break;   // 端点落点已固定，不再自动选边
                 int slotFrom = PeekPortSlot(fromUid, sideFrom);
@@ -2985,8 +3086,8 @@ namespace ShaoLu.Views
             if (bestBlocked)
             {
                 double dx = (to.Left + to.Width / 2) - (from.Left + from.Width / 2);
-                string sideFrom = dx >= 0 ? "R" : "L";
-                string sideTo = dx >= 0 ? "R" : "L";   // 同一个侧面绕过去，不会在节点上下沿冒出小尖
+                string sideFrom = !string.IsNullOrEmpty(forcedSide) ? forcedSide : dx >= 0 ? "R" : "L";
+                string sideTo = sideFrom;   // 同一个侧面绕过去，不会在节点上下沿冒出小尖
 
                 foreach (bool above in new[] { true, false })
                 {
@@ -3562,6 +3663,20 @@ namespace ShaoLu.Views
         /// <summary>自引用：在节点上方画一个小回环（走行间空隙，不会被相邻节点挡住）</summary>
         private void DrawSelfLoop(Rect rect, Brush brush, double thickness, string label)
         {
+            // 竖直排列时自循环绕到节点右侧，跟右侧的真/假连线走同一边
+            if (IsVerticalArrange)
+            {
+                double y1 = rect.Top + 24;
+                double y2 = rect.Top + 72;
+                var rightStart = new Point(rect.Right, y1);
+                var rightEnd = new Point(rect.Right, y2);
+                var rightC1 = new Point(rect.Right + 34, y1);
+                var rightC2 = new Point(rect.Right + 34, y2);
+                AddBezierEdge(rightStart, rightC1, rightC2, rightEnd, brush, thickness, label,
+                    BezierPoint(rightStart, rightC1, rightC2, rightEnd, 0.5));
+                return;
+            }
+
             double x1 = rect.Left + 34;
             double x2 = rect.Left + 92;
             var start = new Point(x1, rect.Top);
@@ -4000,8 +4115,10 @@ namespace ShaoLu.Views
             _edgeLane++;
 
             // 引用连线也按最短路径走，只是画成紫色虚线；端口与真假线共用同一套占位，互不重叠
+            // 竖直排列时引用线固定走节点左侧，与右侧的真/假线分开
+            string forcedSide = IsVerticalArrange ? "L" : null;
             var points = DrawRoutedEdge(fromRect, toRect, from.Uid, to.Uid, EdgeBothBrush, 1.5,
-                LanguageService.GetLocalizedString("FlowReference", "引用"), true, edgeKey);
+                LanguageService.GetLocalizedString("FlowReference", "引用"), true, edgeKey, forcedSide);
             if (points == null) return;
 
             AddReferenceHitArea(points, from, to, condition);

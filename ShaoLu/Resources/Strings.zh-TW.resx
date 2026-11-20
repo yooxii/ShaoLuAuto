@@ -2342,6 +2342,15 @@
   <data name="FlowChart_AutoLayout" xml:space="preserve">
     <value>自動整理</value>
   </data>
+  <data name="FlowArrangeMode" xml:space="preserve">
+    <value>排列方式</value>
+  </data>
+  <data name="FlowArrange_Snake" xml:space="preserve">
+    <value>橫向 S 型</value>
+  </data>
+  <data name="FlowArrange_Vertical" xml:space="preserve">
+    <value>直式排列</value>
+  </data>
   <data name="FlowChart_FitToWindow" xml:space="preserve">
     <value>適應視窗</value>
   </data>

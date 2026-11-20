@@ -2342,6 +2342,15 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="FlowChart_AutoLayout" xml:space="preserve">
     <value>Auto layout</value>
   </data>
+  <data name="FlowArrangeMode" xml:space="preserve">
+    <value>Arrange mode</value>
+  </data>
+  <data name="FlowArrange_Snake" xml:space="preserve">
+    <value>Horizontal S</value>
+  </data>
+  <data name="FlowArrange_Vertical" xml:space="preserve">
+    <value>Vertical</value>
+  </data>
   <data name="FlowChart_FitToWindow" xml:space="preserve">
     <value>Fit to window</value>
   </data>

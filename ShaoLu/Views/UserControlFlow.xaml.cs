@@ -741,19 +741,35 @@ namespace ShaoLu.Views
 
         #region 窗口内全屏
 
+        private bool _isFullscreen;
+
         /// <summary>全屏状态变化：宿主（UserControlSteps）据此让出编辑区、把详情面板改成悬浮</summary>
         public event EventHandler FullscreenChanged;
 
         /// <summary>当前是否处于窗口内全屏</summary>
-        public bool IsFullscreen => FullscreenToggle != null && FullscreenToggle.IsChecked == true;
+        public bool IsFullscreen => _isFullscreen;
 
         /// <summary>设置全屏状态（只改界面与画布尺寸，不动步骤数据）</summary>
         public void SetFullscreen(bool fullscreen)
         {
             if (FullscreenToggle == null) return;
-            if (FullscreenToggle.IsChecked == fullscreen) return;
+            if (FullscreenToggle.IsChecked != fullscreen)
+                FullscreenToggle.IsChecked = fullscreen;
+            ApplyFullscreenState(fullscreen);
+        }
 
-            FullscreenToggle.IsChecked = fullscreen;
+        /// <summary>退出全屏（外部切回表格视图时调用）</summary>
+        public void ExitFullscreen() => SetFullscreen(false);
+
+        // 点击时 IsChecked 已经翻过来了，这里只看新状态，不做「值相同就返回」的判断
+        private void FullscreenToggle_Click(object sender, RoutedEventArgs e)
+            => ApplyFullscreenState(FullscreenToggle.IsChecked == true);
+
+        private void ApplyFullscreenState(bool fullscreen)
+        {
+            if (_isFullscreen == fullscreen) return;
+            _isFullscreen = fullscreen;
+
             UpdateFullscreenToolTip();
             FullscreenChanged?.Invoke(this, EventArgs.Empty);
 
@@ -766,15 +782,9 @@ namespace ShaoLu.Views
             }), DispatcherPriority.Background);
         }
 
-        /// <summary>退出全屏（外部切回表格视图时调用）</summary>
-        public void ExitFullscreen() => SetFullscreen(false);
-
-        private void FullscreenToggle_Click(object sender, RoutedEventArgs e)
-            => SetFullscreen(FullscreenToggle.IsChecked == true);
-
         private void UpdateFullscreenToolTip()
         {
-            bool fullscreen = IsFullscreen;
+            bool fullscreen = _isFullscreen;
             FullscreenToggle.ToolTip = LanguageService.GetLocalizedString(
                 fullscreen ? "FlowChart_ExitFullscreen_ToolTip" : "FlowChart_Fullscreen_ToolTip",
                 fullscreen ? "退出全屏" : "全屏");

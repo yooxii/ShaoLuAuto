@@ -1130,7 +1130,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
         public PopupButtons PopupButtons { get => _popupButtons; set => SetProperty(ref _popupButtons, value); }
 
         private bool _pauseRunOnShow;
-        /// <summary>弹出弹窗的同时暂停运行：弹窗出来后流程停在下一步之前，等用户点「继续」再往下走</summary>
+        /// <summary>弹出弹窗的同时暂停运行：弹窗出来后流程停下，关掉弹窗就自动继续</summary>
         public bool PauseRunOnShow { get => _pauseRunOnShow; set => SetProperty(ref _pauseRunOnShow, value); }
 
         #region 关闭模式
@@ -1466,11 +1466,33 @@ namespace ShaoLu.Viewmodels.AutomationStep
             // 1. 启动异步弹窗任务（应用自定义位置、背景颜色、背景不透明度与窗口样式）
             var (popupWindow, popupTask) = ShowPopupWindow(iconType);
 
-            // 弹出时暂停运行：弹窗一出来就置暂停，关掉弹窗后流程仍停在下一步之前，等用户点「继续」
+            // 弹出时暂停运行：弹窗一出来就置暂停，关掉弹窗后自动继续（本来就在暂停的，保持暂停不动）
             if (PauseRunOnShow)
             {
-                try { SingletonLocator.Steps.IsPaused = true; }
+                bool pausedByPopup = false;
+                try
+                {
+                    var steps = SingletonLocator.Steps;
+                    if (!steps.IsPaused)
+                    {
+                        steps.IsPaused = true;
+                        pausedByPopup = true;
+                    }
+                }
                 catch (Exception ex) { NLog.LogManager.GetCurrentClassLogger().Warn(ex, "Popup: pause run failed"); }
+
+                if (pausedByPopup && popupWindow != null)
+                {
+                    popupWindow.Closed += (s, e) =>
+                    {
+                        try
+                        {
+                            var steps = SingletonLocator.Steps;
+                            if (steps.IsPaused) steps.IsPaused = false;
+                        }
+                        catch (Exception ex) { NLog.LogManager.GetCurrentClassLogger().Warn(ex, "Popup: resume run failed"); }
+                    };
+                }
             }
 
             // StepReached 模式：不等待窗口关闭，直接继续执行；到达目标步骤时由执行引擎关闭弹窗。

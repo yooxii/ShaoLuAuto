@@ -681,7 +681,7 @@
                 <CheckBox IsChecked="{Binding RecordDetails}" Content="{lex:Loc RecordDetails}" Margin="12,0,0,0"
                           Visibility="{Binding EnableLog, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
-            <!-- 弹出时暂停运行：弹窗出来就暂停，关掉后停在下一步之前等用户继续 -->
+            <!-- 弹出时暂停运行：弹窗出来就暂停，关掉弹窗自动继续 -->
             <CheckBox IsChecked="{Binding PauseRunOnShow}" Content="{lex:Loc Popup_PauseRunOnShow}" Margin="0,0,0,4"/>
             <StackPanel Orientation="Horizontal" Margin="0,2">
                 <Label Content="{lex:Loc Title}" Padding="0,0,5,0" VerticalAlignment="Center"/>

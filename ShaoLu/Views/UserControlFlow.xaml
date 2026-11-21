@@ -22,6 +22,17 @@
                 <ResourceDictionary Source="pack://application:,,,/Nodify;component/Themes/Light.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- 只保留卡片自己的边框：Node / ItemContainer 的底色与选中框都设成透明 -->
+            <Color x:Key="Node.BackgroundColor">Transparent</Color>
+            <Color x:Key="Node.ContentColor">Transparent</Color>
+            <Color x:Key="Node.HeaderColor">Transparent</Color>
+            <Color x:Key="Node.FooterColor">Transparent</Color>
+            <Color x:Key="Node.BorderColor">Transparent</Color>
+            <Color x:Key="NodeInput.BackgroundColor">Transparent</Color>
+            <Color x:Key="NodeOutput.BackgroundColor">Transparent</Color>
+            <Color x:Key="ItemContainer.BorderColor">Transparent</Color>
+            <Color x:Key="ItemContainer.SelectedColor">Transparent</Color>
+
             <conv:StepTypeToBrushConverter x:Key="StepTypeBrush"/>
 
             <!-- 画布底色：白底 + 点阵，随编辑器视口一起平移缩放 -->
@@ -74,12 +85,12 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <ItemsControl Grid.Column="0" ItemsSource="{TemplateBinding Input}"
-                                              ItemTemplate="{TemplateBinding InputConnectorTemplate}" VerticalAlignment="Center"/>
+                                <ItemsControl Grid.Column="0" ItemsSource="{Binding Input, RelativeSource={RelativeSource TemplatedParent}}"
+                                              ItemTemplate="{Binding InputConnectorTemplate, RelativeSource={RelativeSource TemplatedParent}}" VerticalAlignment="Center"/>
                                 <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}"
                                                   ContentTemplate="{TemplateBinding ContentTemplate}"/>
-                                <ItemsControl Grid.Column="2" ItemsSource="{TemplateBinding Output}"
-                                              ItemTemplate="{TemplateBinding OutputConnectorTemplate}" VerticalAlignment="Center"/>
+                                <ItemsControl Grid.Column="2" ItemsSource="{Binding Output, RelativeSource={RelativeSource TemplatedParent}}"
+                                              ItemTemplate="{Binding OutputConnectorTemplate, RelativeSource={RelativeSource TemplatedParent}}" VerticalAlignment="Center"/>
                             </Grid>
                         </ControlTemplate>
                     </Setter.Value>
@@ -87,7 +98,7 @@
             </Style>
             <!-- 节点卡片：用 Nodify 的 Node 托管出入口，连接才能正常拖线 -->
             <DataTemplate x:Key="FlowNodeTemplate" DataType="{x:Type local:FlowNode}">
-                <nodify:Node Input="{Binding Inputs}" Output="{Binding Outputs}" Header="{x:Null}" Background="Transparent"
+                <nodify:Node Input="{Binding Inputs}" Output="{Binding Outputs}" Header="{x:Null}"
                              Content="{Binding}" MinHeight="0">
                     <nodify:Node.InputConnectorTemplate>
                         <DataTemplate DataType="{x:Type local:FlowConnector}">
@@ -237,6 +248,13 @@
                     <nodify:NodifyEditor.ItemContainerStyle>
                         <Style TargetType="{x:Type nodify:ItemContainer}">
                             <Setter Property="Location" Value="{Binding Location, Mode=TwoWay}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type nodify:ItemContainer}">
+                                        <ContentPresenter Content="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" ContentTemplate="{Binding ContentTemplate, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </nodify:NodifyEditor.ItemContainerStyle>
 

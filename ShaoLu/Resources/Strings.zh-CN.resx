@@ -2633,6 +2633,9 @@
   <data name="FlowEdgeStyle_Straight" xml:space="preserve">
     <value>直线</value>
   </data>
+  <data name="FlowChart_LogBadge" xml:space="preserve">
+    <value>记</value>
+  </data>
   <data name="Flow_Anchor" xml:space="preserve">
     <value>锚点</value>
   </data>

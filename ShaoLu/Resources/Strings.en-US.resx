@@ -2633,6 +2633,9 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="FlowEdgeStyle_Straight" xml:space="preserve">
     <value>Straight</value>
   </data>
+  <data name="FlowChart_LogBadge" xml:space="preserve">
+    <value>Log</value>
+  </data>
   <data name="Flow_Anchor" xml:space="preserve">
     <value>Anchors</value>
   </data>

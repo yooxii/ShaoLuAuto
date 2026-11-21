@@ -6,30 +6,27 @@
              xmlns:lex="http://wpflocalizeextension.codeplex.com"
              lex:ResxLocalizationProvider.DefaultAssembly="ShaoLu"
              lex:ResxLocalizationProvider.DefaultDictionary="Strings"
-             xmlns:utils="clr-namespace:ShaoLu.Utils"
-             xmlns:viewmodel="clr-namespace:ShaoLu.Viewmodels"
+             xmlns:nodify="https://miroiu.github.io/nodify"
+             xmlns:local="clr-namespace:ShaoLu.Views"
              xmlns:conv="clr-namespace:ShaoLu.Converters"
-             d:DataContext="{d:DesignInstance Type=viewmodel:StepsViewModel}"
              mc:Ignorable="d"
              UseLayoutRounding="True"
              SnapsToDevicePixels="True"
              Focusable="True"
              FocusVisualStyle="{x:Null}"
-             TextOptions.TextFormattingMode="Display"
              d:DesignHeight="450" d:DesignWidth="800">
-
-    <UserControl.InputBindings>
-        <KeyBinding Key="Delete" Command="{Binding DelStepCommand}"/>
-    </UserControl.InputBindings>
 
     <UserControl.Resources>
         <ResourceDictionary>
-            <utils:SingletonLocator x:Key="VMLocator"/>
-            <!-- 按步骤类型给节点配色 -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Nodify;component/Themes/Light.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
             <conv:StepTypeToBrushConverter x:Key="StepTypeBrush"/>
 
-            <!-- 画布底色：白底 + 浅灰点阵，接近 draw.io 的网格感 -->
-            <DrawingBrush x:Key="FlowCanvasBackdrop" TileMode="Tile" Viewport="0,0,20,20" ViewportUnits="Absolute">
+            <!-- 画布底色：白底 + 点阵，随编辑器视口一起平移缩放 -->
+            <DrawingBrush x:Key="FlowBackdrop" TileMode="Tile" ViewportUnits="Absolute" Viewport="0,0,20,20"
+                          Transform="{Binding ViewportTransform, ElementName=Editor}">
                 <DrawingBrush.Drawing>
                     <DrawingGroup>
                         <GeometryDrawing Brush="#FFFFFFFF">
@@ -46,276 +43,238 @@
                 </DrawingBrush.Drawing>
             </DrawingBrush>
 
-            <!-- 步骤节点：名称/备注可直接双击编辑，右侧摘要或裁剪图缩略图，右上角切换是否记录日志 -->
-            <DataTemplate x:Key="FlowNodeTemplate">
-                <Grid Width="236" Height="96" Background="Transparent">
-                    <Border x:Name="NodeBorder" Width="220" Height="96" HorizontalAlignment="Left"
-                            CornerRadius="8" SnapsToDevicePixels="True">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="#FFFFFFFF"/>
-                                <Setter Property="BorderBrush" Value="#FFB7C0CA"/>
-                                <Setter Property="BorderThickness" Value="1"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsNeed}" Value="False">
-                                        <Setter Property="Background" Value="#FFF2F3F5"/>
-                                        <Setter Property="Opacity" Value="0.75"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding IsError}" Value="True">
-                                        <Setter Property="BorderBrush" Value="#FFE04B4B"/>
-                                        <Setter Property="ToolTip" Value="{Binding ErrorMessage}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <Grid Margin="8,6,8,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="50"/>
-                            </Grid.ColumnDefinitions>
-                            <!-- 左侧类型色条：一眼看出这是哪一类步骤 -->
-                            <Rectangle Width="4" HorizontalAlignment="Left" VerticalAlignment="Stretch"
-                                       Margin="-8,-6,0,-6" RadiusX="2" RadiusY="2" IsHitTestVisible="False"
-                                       Grid.ColumnSpan="2"
-                                       Fill="{Binding Type, Converter={StaticResource StepTypeBrush}}"/>
-
-                            <Grid Grid.Column="0" Margin="0,0,4,0">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <DockPanel Grid.Row="0" LastChildFill="True">
-                                    <Border DockPanel.Dock="Left" Background="{Binding Type, Converter={StaticResource StepTypeBrush}}" CornerRadius="4"
-                                            Padding="4,0" Margin="0,0,4,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding LineNo}" Foreground="White" FontSize="10.5" FontWeight="SemiBold"/>
-                                    </Border>
-                                    <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                             IsReadOnly="True" IsHitTestVisible="False" BorderThickness="0"
-                                             Background="Transparent" Padding="0" FontSize="12" FontWeight="SemiBold"
-                                             Foreground="#FF243444" VerticalAlignment="Center" TextWrapping="NoWrap"
-                                             SpellCheck.IsEnabled="False"/>
-                                </DockPanel>
-                                <TextBox x:Name="DescBox" Grid.Row="1" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                                         IsReadOnly="True" IsHitTestVisible="False" BorderThickness="0"
-                                         Background="Transparent" Padding="0" Margin="0,2,0,0" FontSize="10.5"
-                                         Foreground="#FF6B7885" TextWrapping="Wrap" AcceptsReturn="False" Height="42"
-                                         VerticalAlignment="Top" VerticalScrollBarVisibility="Hidden"
-                                         HorizontalScrollBarVisibility="Hidden" SpellCheck.IsEnabled="False"/>
-                                <DockPanel Grid.Row="2" LastChildFill="False">
-                                    <TextBlock DockPanel.Dock="Left" Text="{Binding Type}" FontSize="9.5"
-                                           Foreground="{Binding Type, Converter={StaticResource StepTypeBrush}}"/>
-                                    <TextBlock DockPanel.Dock="Left" Text="{Binding ConditionSummary}" FontSize="9.5"
-                                               Foreground="#FF8A6D3B" Margin="6,0,0,0"/>
-                                    <TextBlock DockPanel.Dock="Right" Text="{lex:Loc FlowChart_SkipBadge}" FontSize="9.5" Foreground="#FFD9534F">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsNeed}" Value="False">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </DockPanel>
+            <!-- 出口 / 入口圆点：T 真、F 假、R 引用、S 顺序、I 入口 -->
+            <Style x:Key="FlowConnectorStyle" TargetType="{x:Type nodify:Connector}">
+                <Setter Property="Anchor" Value="{Binding Anchor, Mode=OneWayToSource}"/>
+                <Setter Property="IsConnected" Value="{Binding IsConnected, Mode=TwoWay}"/>
+                <Setter Property="Cursor" Value="Cross"/>
+                <Setter Property="ToolTip" Value="{Binding Tip}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type nodify:Connector}">
+                            <Grid Width="14" Height="14" Background="Transparent">
+                                <Ellipse Fill="{Binding Brush}" Stroke="White" StrokeThickness="1.5"/>
+                                <TextBlock Text="{Binding Text}" FontSize="8" Foreground="White"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           IsHitTestVisible="False"/>
                             </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
 
-                            <!-- 右侧摘要：图片步骤显示裁剪图缩略图，其余显示关键参数摘要 -->
-                            <Grid Grid.Column="1" VerticalAlignment="Center" Margin="0,0,0,0">
-                                <Border x:Name="ThumbBorder" Width="48" Height="48" CornerRadius="4"
-                                        Background="#FFF2F4F7" ClipToBounds="True" Visibility="Collapsed">
-                                    <Image x:Name="ThumbImage" Stretch="UniformToFill"/>
-                                </Border>
-                                <TextBlock x:Name="SummaryText" FontSize="9" Foreground="#FF8A96A3" TextWrapping="Wrap"
-                                           MaxHeight="54" Visibility="Collapsed"/>
+            <!-- 去掉 Nodify 默认 Node 的标题条：只留 左入口 | 卡片 | 右出口 -->
+            <Style x:Key="FlowNodeStyle" TargetType="{x:Type nodify:Node}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type nodify:Node}">
+                            <Grid Background="Transparent">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ItemsControl Grid.Column="0" ItemsSource="{TemplateBinding Input}"
+                                              ItemTemplate="{TemplateBinding InputConnectorTemplate}" VerticalAlignment="Center"/>
+                                <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                                <ItemsControl Grid.Column="2" ItemsSource="{TemplateBinding Output}"
+                                              ItemTemplate="{TemplateBinding OutputConnectorTemplate}" VerticalAlignment="Center"/>
                             </Grid>
-                        </Grid>
-                    </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <!-- 节点卡片：用 Nodify 的 Node 托管出入口，连接才能正常拖线 -->
+            <DataTemplate x:Key="FlowNodeTemplate" DataType="{x:Type local:FlowNode}">
+                <nodify:Node Input="{Binding Inputs}" Output="{Binding Outputs}" Header="{x:Null}" Background="Transparent"
+                             Content="{Binding}" MinHeight="0">
+                    <nodify:Node.InputConnectorTemplate>
+                        <DataTemplate DataType="{x:Type local:FlowConnector}">
+                            <nodify:Connector Style="{StaticResource FlowConnectorStyle}"/>
+                        </DataTemplate>
+                    </nodify:Node.InputConnectorTemplate>
+                    <nodify:Node.OutputConnectorTemplate>
+                        <DataTemplate DataType="{x:Type local:FlowConnector}">
+                            <nodify:Connector Style="{StaticResource FlowConnectorStyle}"/>
+                        </DataTemplate>
+                    </nodify:Node.OutputConnectorTemplate>
+                    <nodify:Node.ContentTemplate>
+                        <DataTemplate DataType="{x:Type local:FlowNode}">
+                            <Border x:Name="Card" Width="220" Height="96" CornerRadius="8" SnapsToDevicePixels="True">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#FFFFFFFF"/>
+                                        <Setter Property="BorderBrush" Value="#FFB7C0CA"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Step.IsNeed}" Value="False">
+                                                <Setter Property="Background" Value="#FFF2F3F5"/>
+                                                <Setter Property="Opacity" Value="0.75"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Step.IsError}" Value="True">
+                                                <Setter Property="BorderBrush" Value="#FFE04B4B"/>
+                                                <Setter Property="ToolTip" Value="{Binding Step.ErrorMessage}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=nodify:ItemContainer}}" Value="True">
+                                                <Setter Property="BorderBrush" Value="#FF2B6FD6"/>
+                                                <Setter Property="BorderThickness" Value="2"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid Margin="8,6,8,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="26"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- 左侧类型色条 -->
+                                    <Rectangle Width="4" HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                                               Margin="-8,-6,0,-6" RadiusX="2" RadiusY="2" IsHitTestVisible="False"
+                                               Grid.ColumnSpan="2" Fill="{Binding Step.Type, Converter={StaticResource StepTypeBrush}}"/>
 
-                    <!-- 右上角两个开关：左边「记」记录执行日志，右边「锚」把节点钉住（自动整理不动它） -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,3,22,0">
-                    <ToggleButton x:Name="LogToggle" Width="16" Height="16" Margin="0,0,4,0"
-                                  IsChecked="{Binding EnableLog, Mode=TwoWay}" Cursor="Hand" Focusable="False"
-                                  Click="LogToggle_Click"
-                                  ToolTip="{lex:Loc FlowChart_LogToggle_ToolTip}">
-                        <ToggleButton.Template>
-                            <ControlTemplate TargetType="ToggleButton">
-                                <Border x:Name="LogDot" Width="16" Height="16" CornerRadius="8"
-                                        Background="#FFF0F2F5" BorderBrush="#FFC3CAD2" BorderThickness="1">
-                                    <TextBlock x:Name="LogGlyph" Text="记" FontSize="8.5" Foreground="#FF8A96A3"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsChecked" Value="True">
-                                        <Setter TargetName="LogDot" Property="Background" Value="#FF2FA36B"/>
-                                        <Setter TargetName="LogDot" Property="BorderBrush" Value="#FF2FA36B"/>
-                                        <Setter TargetName="LogGlyph" Property="Foreground" Value="White"/>
-                                    </Trigger>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="LogDot" Property="BorderBrush" Value="#FF2B6FD6"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </ToggleButton.Template>
-                    </ToggleButton>
+                                    <Grid Grid.Column="0" Margin="0,0,4,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <DockPanel Grid.Row="0" LastChildFill="True">
+                                            <Border DockPanel.Dock="Left" Background="{Binding Step.Type, Converter={StaticResource StepTypeBrush}}" CornerRadius="4"
+                                                    Padding="4,0" Margin="0,0,4,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Step.LineNo}" Foreground="White" FontSize="10.5" FontWeight="SemiBold"/>
+                                            </Border>
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Step.Name}" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="#FF243444" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </DockPanel>
+                                        <TextBlock Grid.Row="1" Text="{Binding Step.Description}" Margin="0,2,0,0" FontSize="10.5"
+                                                   Foreground="#FF6B7885" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+                                        <DockPanel Grid.Row="2" LastChildFill="False">
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Step.Type}" FontSize="9.5"
+                                                       Foreground="{Binding Step.Type, Converter={StaticResource StepTypeBrush}}"/>
+                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Step.ConditionSummary}" FontSize="9.5"
+                                                       Foreground="#FF8A6D3B" Margin="6,0,0,0"/>
+                                            <TextBlock DockPanel.Dock="Right" Text="{lex:Loc FlowChart_SkipBadge}" FontSize="9.5" Foreground="#FFD9534F">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Step.IsNeed}" Value="False">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DockPanel>
+                                    </Grid>
 
-                    <!-- 锚定：钉住的节点在自动整理时保持原位，只能手动拖 -->
-                    <ToggleButton x:Name="PinToggle" Width="16" Height="16"
-                                  IsChecked="{Binding FlowPinned, Mode=TwoWay}" Cursor="Hand" Focusable="False"
-                                  Click="PinToggle_Click"
-                                  ToolTip="{lex:Loc FlowChart_Pin_ToolTip}">
-                        <ToggleButton.Template>
-                            <ControlTemplate TargetType="ToggleButton">
-                                <Border x:Name="PinDot" Width="16" Height="16" CornerRadius="8"
-                                        Background="#FFF0F2F5" BorderBrush="#FFC3CAD2" BorderThickness="1">
-                                    <TextBlock x:Name="PinGlyph" Text="锚" FontSize="8.5" Foreground="#FF8A96A3"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsChecked" Value="True">
-                                        <Setter TargetName="PinDot" Property="Background" Value="#FFF0A200"/>
-                                        <Setter TargetName="PinDot" Property="BorderBrush" Value="#FFF0A200"/>
-                                        <Setter TargetName="PinGlyph" Property="Foreground" Value="White"/>
-                                    </Trigger>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="PinDot" Property="BorderBrush" Value="#FF2B6FD6"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </ToggleButton.Template>
-                    </ToggleButton>
-                    </StackPanel>
-
-                    <!-- 真 / 假 出口：从这里拖到目标节点即建立跳转（任何排列方式都放在右侧） -->
-                    <StackPanel x:Name="TrueFalsePorts" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,3,0">
-                        <Grid Width="14" Height="14" Margin="0,0,0,8" Background="Transparent" Cursor="Cross"
-                              Tag="T" MouseLeftButtonDown="Port_MouseLeftButtonDown"
-                              ToolTip="{lex:Loc FlowChart_TruePort_ToolTip}">
-                            <Ellipse Fill="#FF2FA36B" Stroke="White" StrokeThickness="1.5"/>
-                            <TextBlock Text="T" FontSize="8" Foreground="White" HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" IsHitTestVisible="False"/>
-                        </Grid>
-                        <Grid Width="14" Height="14" Margin="0,0,0,8" Background="Transparent" Cursor="Cross"
-                              Tag="F" MouseLeftButtonDown="Port_MouseLeftButtonDown"
-                              ToolTip="{lex:Loc FlowChart_FalsePort_ToolTip}">
-                            <Ellipse Fill="#FFDC5B4C" Stroke="White" StrokeThickness="1.5"/>
-                            <TextBlock Text="F" FontSize="8" Foreground="White" HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" IsHitTestVisible="False"/>
-                        </Grid>
-                        <!-- 引用出口：与真假出口排在同一列、留出间隔，拖到另一步骤即表示本步骤引用它 -->
-                        <Grid x:Name="RefPort" Width="14" Height="14" Background="Transparent" Cursor="Cross"
-                              Tag="R" MouseLeftButtonDown="Port_MouseLeftButtonDown"
-                              ToolTip="{lex:Loc FlowReference_Port_ToolTip}">
-                            <Ellipse Fill="#FF7B5CD6" Stroke="White" StrokeThickness="1.5"/>
-                            <TextBlock Text="R" FontSize="8" Foreground="White" HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" IsHitTestVisible="False"/>
-                        </Grid>
-                    </StackPanel>
-
-                    <Border x:Name="SelectionRing" Width="224" Height="100" HorizontalAlignment="Left"
-                            VerticalAlignment="Center" Margin="-2,0,0,0" CornerRadius="9"
-                            BorderBrush="#FF2B6FD6" BorderThickness="2" Visibility="Collapsed" IsHitTestVisible="False"/>
-                    <Border x:Name="DropRing" Width="224" Height="100" HorizontalAlignment="Left"
-                            VerticalAlignment="Center" Margin="-2,0,0,0" CornerRadius="9"
-                            BorderBrush="#FFF0A200" BorderThickness="2" Visibility="Collapsed" IsHitTestVisible="False"/>
-                </Grid>
-            </DataTemplate>
-        </ResourceDictionary>
+                                    <!-- 右侧：执行日志开关（「记」） -->
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                        <Border x:Name="LogBadge" Width="16" Height="16" CornerRadius="8" Cursor="Hand"
+                                                ToolTip="{lex:Loc FlowChart_LogToggle_ToolTip}"
+                                                MouseLeftButtonDown="LogBadge_Click">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#FFE3E8EE"/>
+                                                    <Setter Property="BorderBrush" Value="#FFC3CBD4"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Step.EnableLog}" Value="True">
+                                                            <Setter Property="Background" Value="#FF7BA7E2"/>
+                                                            <Setter Property="BorderBrush" Value="#FF2B6FD6"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{lex:Loc FlowChart_LogBadge}" FontSize="8.5" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" Foreground="#FF243444"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </nodify:Node.ContentTemplate>
+                </nodify:Node>
+            </DataTemplate>        </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid x:Name="RootGrid" MouseMove="RootGrid_MouseMove" MouseLeftButtonUp="RootGrid_MouseLeftButtonUp"
-          MouseRightButtonUp="RootGrid_MouseRightButtonUp">
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 只放视图操作；增删步骤/复制粘贴等仍走上方主工具栏 -->
-        <!-- 用 WrapPanel：窗口窄的时候自动换行，右侧的连线/锚点开关不会被裁掉 -->
+        <!-- 视图操作 -->
         <Border Grid.Row="0" Background="#FFF7F8FA" BorderBrush="#FFD5DAE0" BorderThickness="0,0,0,1" Padding="2,3">
             <WrapPanel Orientation="Horizontal">
-                <TextBlock Text="{lex:Loc FlowArrangeMode}" VerticalAlignment="Center" Foreground="#FF6B7885"
-                           FontSize="11" Margin="2,0,4,0"/>
-                <ComboBox x:Name="ArrangeModeBox" Width="100" Margin="2" VerticalAlignment="Center"
-                          SelectionChanged="ArrangeMode_SelectionChanged"
-                          ToolTip="{lex:Loc FlowArrangeMode}">
-                    <ComboBoxItem Content="{lex:Loc FlowArrange_Snake}"/>
-                    <ComboBoxItem Content="{lex:Loc FlowArrange_Vertical}"/>
-                </ComboBox>
                 <Button Content="{lex:Loc FlowChart_AutoLayout}" Margin="2" Padding="8,2" Click="AutoLayout_Click"/>
                 <Button Content="{lex:Loc FlowChart_FitToWindow}" Margin="2" Padding="8,2" Click="FitToWindow_Click"/>
                 <Rectangle Width="1" Height="18" Fill="#FFD5DAE0" Margin="6,0"/>
                 <Button Content="&#x2212;" Margin="2" Padding="8,1" Click="ZoomOut_Click"/>
-                <TextBlock x:Name="ZoomLabel" Text="100%" Width="46" TextAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding ViewportZoom, ElementName=Editor, StringFormat={}{0:P0}}" Width="46"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
                 <Button Content="+" Margin="2" Padding="8,1" Click="ZoomIn_Click"/>
                 <Rectangle Width="1" Height="18" Fill="#FFD5DAE0" Margin="6,0"/>
-                <!-- 连线显示方式：勾上=该类型全部显示，不勾=只显示与选中步骤相连的（顺序连线始终显示） -->
-                <TextBlock Text="{lex:Loc Settings_EdgeStyle}" VerticalAlignment="Center" Foreground="#FF6B7885"
-                           FontSize="11" Margin="2,0,4,0"/>
-                <ComboBox x:Name="EdgeStyleBox" Width="76" Margin="2" VerticalAlignment="Center"
-                          SelectionChanged="EdgeStyle_SelectionChanged">
-                    <ComboBoxItem Content="{lex:Loc FlowEdgeStyle_Polyline}"/>
-                    <ComboBoxItem Content="{lex:Loc FlowEdgeStyle_Curve}"/>
-                    <ComboBoxItem Content="{lex:Loc FlowEdgeStyle_Straight}"/>
-                </ComboBox>
-                <Rectangle Width="1" Height="18" Fill="#FFD5DAE0" Margin="6,0"/>
-                <TextBlock Text="{lex:Loc Flow_EdgeFilter}" VerticalAlignment="Center" Foreground="#FF6B7885"
-                           FontSize="11" Margin="2,0,4,0"/>
-                <ToggleButton x:Name="ShowTrueToggle" Margin="2" Padding="8,2" IsChecked="True"
-                              Content="{lex:Loc FlowChart_EdgeTrue}" Click="EdgeFilter_Click"
-                              ToolTip="{lex:Loc Flow_EdgeFilter_ToolTip}"/>
-                <ToggleButton x:Name="ShowFalseToggle" Margin="2" Padding="8,2" IsChecked="True"
-                              Content="{lex:Loc FlowChart_EdgeFalse}" Click="EdgeFilter_Click"
-                              ToolTip="{lex:Loc Flow_EdgeFilter_ToolTip}"/>
-                <ToggleButton x:Name="ShowRefToggle" Margin="2" Padding="8,2" IsChecked="True"
-                              Content="{lex:Loc FlowReference}" Click="EdgeFilter_Click"
-                              ToolTip="{lex:Loc Flow_EdgeFilter_ToolTip}"/>
-                <!-- 锚点显示开关：关掉后隐藏已放的锚点，也不会在连线上预览 / 新增锚点 -->
-                <ToggleButton x:Name="ShowAnchorsToggle" Margin="2" Padding="8,2" IsChecked="True"
-                              Content="{lex:Loc Flow_Anchor}" Click="AnchorFilter_Click"
-                              ToolTip="{lex:Loc Flow_Anchor_Filter_ToolTip}"/>
-                <!-- 焦点预览：只高亮与选中步骤相连的连线，其余半透明 -->
                 <ToggleButton x:Name="FocusModeToggle" Margin="2" Padding="8,2"
                               Content="{lex:Loc FlowChart_FocusMode}" Click="FocusMode_Click"
                               ToolTip="{lex:Loc FlowChart_FocusMode_ToolTip}"/>
-
             </WrapPanel>
         </Border>
 
         <Border Grid.Row="1" Background="White" BorderBrush="#FFD5DAE0" BorderThickness="0,0,0,1" ClipToBounds="True">
-            <Grid>
-                <ScrollViewer x:Name="Scroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                              PreviewMouseWheel="Scroll_PreviewMouseWheel">
-                    <Grid x:Name="ZoomHost" HorizontalAlignment="Left" VerticalAlignment="Top">
-                        <Grid.LayoutTransform>
-                            <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1"/>
-                        </Grid.LayoutTransform>
-                        <Grid x:Name="CanvasHost" Width="900" Height="600" ClipToBounds="True">
-                            <Rectangle x:Name="BackdropRect" Fill="{StaticResource FlowCanvasBackdrop}"/>
-                            <!-- 焦点预览模式下，与选中步骤无关的连线画在这一层并整体变淡 -->
-                            <Canvas x:Name="EdgeDimLayer" IsHitTestVisible="False" Opacity="0.18"/>
-                            <Canvas x:Name="EdgeLayer" IsHitTestVisible="False"/>
-                            <Canvas x:Name="NodeLayer" Background="Transparent"
-                                    MouseLeftButtonDown="NodeLayer_MouseLeftButtonDown"
-                                    MouseMove="NodeLayer_MouseMove"
-                                    MouseLeftButtonUp="NodeLayer_MouseLeftButtonUp"
-                                    MouseRightButtonDown="NodeLayer_MouseRightButtonDown"/>
-                            <!-- 连线端点把手层：拖动真/假连线的末端可改接到其他步骤 -->
-                            <Canvas x:Name="HandleLayer"/>
-                            <Canvas x:Name="OverlayLayer" IsHitTestVisible="False"/>
-                        </Grid>
-                    </Grid>
-                </ScrollViewer>
+            <Grid Background="{StaticResource FlowBackdrop}">
+                <Grid Background="{StaticResource FlowBackdrop}" Panel.ZIndex="-2" IsHitTestVisible="False"/>
+
+                <nodify:NodifyEditor x:Name="Editor"
+                                     Background="Transparent"
+                                     ItemsSource="{Binding Nodes}"
+                                     Connections="{Binding Connections}"
+                                     PendingConnection="{Binding Pending}"
+                                     SelectedItems="{Binding Selection}"
+                                     AllowDrop="False">
+                    <nodify:NodifyEditor.ItemContainerStyle>
+                        <Style TargetType="{x:Type nodify:ItemContainer}">
+                            <Setter Property="Location" Value="{Binding Location, Mode=TwoWay}"/>
+                        </Style>
+                    </nodify:NodifyEditor.ItemContainerStyle>
+
+                    <nodify:NodifyEditor.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:FlowNode}">
+                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FlowNodeTemplate}" Focusable="False"/>
+                        </DataTemplate>
+                    </nodify:NodifyEditor.ItemTemplate>
+
+                    <nodify:NodifyEditor.ConnectionTemplate>
+                        <DataTemplate DataType="{x:Type local:FlowEdge}">
+                            <nodify:LineConnection Source="{Binding Source.Anchor}"
+                                                   Target="{Binding Target.Anchor}"
+                                                   Stroke="{Binding Brush}"
+                                                   StrokeThickness="{Binding Thickness}"
+                                                   ArrowSize="10,7" Spacing="6"
+                                                   Opacity="{Binding Opacity}"/>
+                        </DataTemplate>
+                    </nodify:NodifyEditor.ConnectionTemplate>
+
+                    <nodify:NodifyEditor.PendingConnectionTemplate>
+                        <DataTemplate>
+                            <nodify:PendingConnection StartedCommand="{Binding StartCommand}"
+                                                     CompletedCommand="{Binding CompletedCommand}"
+                                                     AllowOnlyConnectors="False"
+                                                     EnablePreview="True"
+                                                     Stroke="#FF2B6FD6"
+                                                     StrokeThickness="2"
+                                                     StrokeDashArray="4,3"/>
+                        </DataTemplate>
+                    </nodify:NodifyEditor.PendingConnectionTemplate>
+                </nodify:NodifyEditor>
+
                 <TextBlock x:Name="EmptyHint" Text="{lex:Loc FlowChart_Empty}" HorizontalAlignment="Center"
                            VerticalAlignment="Center" Foreground="#FF98A2AD" IsHitTestVisible="False"
                            Visibility="Collapsed"/>
-                <!-- 环状一级菜单层：不在缩放变换里，坐标与鼠标位置一一对应 -->
-                <Canvas x:Name="RingLayer" Background="Transparent" Visibility="Collapsed"
-                        MouseLeftButtonDown="RingLayer_MouseLeftButtonDown"/>
-                <!-- 全屏（窗口内铺满编辑区）：固定在画布左下角，图标在展开/收拢之间切换 -->
+
+                <!-- 全屏（窗口内铺满编辑区）：固定在画布左下角 -->
                 <ToggleButton x:Name="FullscreenToggle" Panel.ZIndex="30"
                               HorizontalAlignment="Left" VerticalAlignment="Bottom"
                               Margin="10,0,0,10" Width="34" Height="34" Padding="0" Cursor="Hand"

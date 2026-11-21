@@ -2883,9 +2883,9 @@ namespace ShaoLu.Views
         {
             _drawingEdgeEnd = null;
             _drawingEdgeStart = null;
-            // 焦点预览：没选中任何步骤时全部正常；选中了就只让与它相连的线保持原色
-            _drawingDim = FocusMode && _selectedUids.Count > 0
-                && !IsSelected(spec.From) && !IsSelected(spec.To);
+            // 焦点预览：没选中时全部变淡；选中了就只让与它相连的线保持原色
+            _drawingDim = FocusMode
+                && (_selectedUids.Count == 0 || (!IsSelected(spec.From) && !IsSelected(spec.To)));
             try { DrawEdgeCore(spec); }
             finally { _drawingDim = false; }
 
@@ -3246,6 +3246,9 @@ namespace ShaoLu.Views
                 best = BuildRouteThroughAnchors(from, to, bestFromSide, bestToSide, bestSlotFrom, bestSlotTo, anchors);
                 hasAnchors = true;
             }
+
+            // 尽量不从节点底下穿过去：把穿过节点的内部线段推到节点外侧
+            best = AvoidNodes(best, fromUid, toUid);
 
             RegisterSegments(best);
             _edgeRoutes[edgeKey] = best;
@@ -4034,6 +4037,78 @@ namespace ShaoLu.Views
         }
 
         /// <summary>鼠标点到折线上的最近点</summary>
+        /// <summary>
+        /// 让折线绕开节点：逐段检查内部线段，穿过节点就整段推到最近的上/下（或左/右）侧，
+        /// 相邻的段是正交的，端点一起平移不会变成斜线。只动中间段，端口那一段保持贴着节点。
+        /// </summary>
+        private List<Point> AvoidNodes(List<Point> route, Guid fromUid, Guid toUid)
+        {
+            if (route == null || route.Count < 4) return route;
+
+            var obstacles = new List<Rect>();
+            foreach (var pair in _nodes)
+            {
+                if (pair.Key == fromUid || pair.Key == toUid) continue;   // 两端节点是端点所在，不算障碍
+                if (!TryGetNodeRect(pair.Value, out var rect)) continue;
+                obstacles.Add(rect);
+            }
+            if (obstacles.Count == 0) return route;
+
+            const double gap = 10;
+            var result = new List<Point>(route);
+
+            for (int pass = 0; pass < 6; pass++)
+            {
+                bool moved = false;
+
+                // 只处理「两端都是内部拐点」的线段，保证不会把端口扯离节点
+                for (int i = 2; i < result.Count - 1; i++)
+                {
+                    var a = result[i - 1];
+                    var b = result[i];
+                    bool horizontal = Math.Abs(a.Y - b.Y) < 0.5;
+                    bool vertical = Math.Abs(a.X - b.X) < 0.5;
+                    if (!horizontal && !vertical) continue;
+
+                    foreach (var rect in obstacles)
+                    {
+                        if (horizontal)
+                        {
+                            if (a.Y < rect.Top || a.Y > rect.Bottom) continue;
+                            double x1 = Math.Min(a.X, b.X), x2 = Math.Max(a.X, b.X);
+                            if (x2 < rect.Left || x1 > rect.Right) continue;
+
+                            double up = rect.Top - gap - a.Y;
+                            double down = rect.Bottom + gap - a.Y;
+                            double dy = Math.Abs(up) <= Math.Abs(down) ? up : down;
+
+                            result[i - 1] = new Point(a.X, a.Y + dy);
+                            result[i] = new Point(b.X, b.Y + dy);
+                        }
+                        else
+                        {
+                            if (a.X < rect.Left || a.X > rect.Right) continue;
+                            double y1 = Math.Min(a.Y, b.Y), y2 = Math.Max(a.Y, b.Y);
+                            if (y2 < rect.Top || y1 > rect.Bottom) continue;
+
+                            double left = rect.Left - gap - a.X;
+                            double right = rect.Right + gap - a.X;
+                            double dx = Math.Abs(left) <= Math.Abs(right) ? left : right;
+
+                            result[i - 1] = new Point(a.X + dx, a.Y);
+                            result[i] = new Point(b.X + dx, b.Y);
+                        }
+
+                        moved = true;
+                        break;
+                    }
+                }
+
+                if (!moved) break;
+            }
+
+            return result;
+        }
         private static Point? ProjectOnPath(IReadOnlyList<Point> points, Point p, out double distance)
             => ProjectOnPath(points, p, out distance, out _, out _);
 
@@ -4650,9 +4725,9 @@ namespace ShaoLu.Views
             _drawingEdgeEnd = null;
             _edgeLane++;
 
-            // 焦点预览：与选中步骤无关的引用线也变淡
-            _drawingDim = FocusMode && _selectedUids.Count > 0
-                && !IsSelected(from) && !IsSelected(to);
+            // 焦点预览：没选中时引用线也全部变淡；选中了就只保留与它相连的
+            _drawingDim = FocusMode
+                && (_selectedUids.Count == 0 || (!IsSelected(from) && !IsSelected(to)));
             try {
             // 引用出口在右侧，引用线按最短路径自动选边（不再强制从左边进出）
             var points = DrawRoutedEdge(fromRect, toRect, from.Uid, to.Uid, EdgeBothBrush, 1.5,

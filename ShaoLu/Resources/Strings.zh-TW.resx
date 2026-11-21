@@ -2630,6 +2630,9 @@
   <data name="Flow_NetLabel_Used" xml:space="preserve">
     <value>這個網路標籤名已被另一條連線使用（單向連線只能一起一終）。</value>
   </data>
+  <data name="FlowEdgeStyle_Straight" xml:space="preserve">
+    <value>直線</value>
+  </data>
   <data name="Flow_Anchor" xml:space="preserve">
     <value>錨點</value>
   </data>

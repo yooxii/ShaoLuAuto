@@ -297,4 +297,78 @@ namespace ShaoLu.Services
             }
         }
     }
+
+    /// <summary>
+    /// 连线标签（网络标签的「起 / 终」与真假标签）被手动挪动后的偏移量（按「连线 Key|槽位」记录）。
+    /// 标签位置 = 默认位置 + 偏移；随工程写进 flow.json。
+    /// </summary>
+    public static class FlowLabelOffsetStore
+    {
+        private static readonly object Gate = new object();
+        private static readonly Dictionary<string, (double DX, double DY)> Offsets =
+            new Dictionary<string, (double DX, double DY)>();
+
+        public static bool TryGet(string key, out double dx, out double dy)
+        {
+            lock (Gate)
+            {
+                if (Offsets.TryGetValue(key, out var v))
+                {
+                    dx = v.DX;
+                    dy = v.DY;
+                    return true;
+                }
+            }
+            dx = 0;
+            dy = 0;
+            return false;
+        }
+
+        public static void Set(string key, double dx, double dy)
+        {
+            lock (Gate)
+            {
+                if (Math.Abs(dx) < 0.5 && Math.Abs(dy) < 0.5) Offsets.Remove(key);
+                else Offsets[key] = (dx, dy);
+            }
+        }
+
+        public static void Remove(string key)
+        {
+            lock (Gate)
+            {
+                Offsets.Remove(key);
+            }
+        }
+
+        public static Dictionary<string, (double DX, double DY)> Snapshot()
+        {
+            lock (Gate)
+            {
+                return new Dictionary<string, (double DX, double DY)>(Offsets);
+            }
+        }
+
+        public static void ReplaceAll(IDictionary<string, (double DX, double DY)> offsets)
+        {
+            lock (Gate)
+            {
+                Offsets.Clear();
+                if (offsets == null) return;
+                foreach (var pair in offsets)
+                {
+                    if (string.IsNullOrEmpty(pair.Key)) continue;
+                    Offsets[pair.Key] = pair.Value;
+                }
+            }
+        }
+
+        public static void Clear()
+        {
+            lock (Gate)
+            {
+                Offsets.Clear();
+            }
+        }
+    }
 }

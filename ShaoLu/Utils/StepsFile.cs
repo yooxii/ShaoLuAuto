@@ -237,7 +237,12 @@ namespace ShaoLu.Utils
                     file.Edges.Add(new FlowEdgeLayout { Key = pair.Key, Label = pair.Value });
                 }
 
-                if (file.Nodes.Count == 0 && file.Edges.Count == 0)
+                foreach (var pair in FlowLabelOffsetStore.Snapshot())
+                {
+                    file.Labels.Add(new FlowLabelLayout { Key = pair.Key, DX = pair.Value.DX, DY = pair.Value.DY });
+                }
+
+                if (file.Nodes.Count == 0 && file.Edges.Count == 0 && file.Labels.Count == 0)
                     return null;
 
                 string json = JsonSerializer.Serialize(file, new JsonSerializerOptions
@@ -328,6 +333,17 @@ namespace ShaoLu.Utils
                     }
                 }
                 FlowEdgeLabelStore.ReplaceAll(labels);
+
+                var labelOffsets = new Dictionary<string, (double DX, double DY)>();
+                if (file.Labels != null)
+                {
+                    foreach (var label in file.Labels)
+                    {
+                        if (label == null || string.IsNullOrEmpty(label.Key)) continue;
+                        labelOffsets[label.Key] = (label.DX, label.DY);
+                    }
+                }
+                FlowLabelOffsetStore.ReplaceAll(labelOffsets);
             }
             catch (Exception ex)
             {

@@ -2621,6 +2621,9 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="Flow_NetLabel_Used" xml:space="preserve">
     <value>This net label name is already used by another link (a one-way link allows only one start and one end).</value>
   </data>
+  <data name="FlowEdgeStyle_Straight" xml:space="preserve">
+    <value>Straight</value>
+  </data>
   <data name="Flow_Anchor" xml:space="preserve">
     <value>Anchors</value>
   </data>

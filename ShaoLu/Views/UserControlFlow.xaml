@@ -259,6 +259,7 @@
                           SelectionChanged="EdgeStyle_SelectionChanged">
                     <ComboBoxItem Content="{lex:Loc FlowEdgeStyle_Polyline}"/>
                     <ComboBoxItem Content="{lex:Loc FlowEdgeStyle_Curve}"/>
+                    <ComboBoxItem Content="{lex:Loc FlowEdgeStyle_Straight}"/>
                 </ComboBox>
                 <Rectangle Width="1" Height="18" Fill="#FFD5DAE0" Margin="6,0"/>
                 <TextBlock Text="{lex:Loc Flow_EdgeFilter}" VerticalAlignment="Center" Foreground="#FF6B7885"

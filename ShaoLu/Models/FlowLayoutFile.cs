@@ -14,6 +14,8 @@ namespace ShaoLu.Models
         public List<FlowNodeLayout> Nodes { get; set; } = new List<FlowNodeLayout>();
 
         public List<FlowEdgeLayout> Edges { get; set; } = new List<FlowEdgeLayout>();
+
+        public List<FlowLabelLayout> Labels { get; set; } = new List<FlowLabelLayout>();
     }
 
     /// <summary>一个节点在流程图里的位置与是否锚定</summary>
@@ -47,6 +49,16 @@ namespace ShaoLu.Models
 
         /// <summary>网络标签名（空表示这条线照常画；有名字说明线被两端标签代替，同名标签视为同一网络）</summary>
         public string Label { get; set; }
+    }
+
+    /// <summary>标签被挪动后的偏移（按「连线 Key|槽位」）</summary>
+    public sealed class FlowLabelLayout
+    {
+        public string Key { get; set; } = string.Empty;
+
+        public double DX { get; set; }
+
+        public double DY { get; set; }
     }
 
     public sealed class FlowPoint

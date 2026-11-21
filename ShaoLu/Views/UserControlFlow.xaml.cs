@@ -2336,6 +2336,14 @@ namespace ShaoLu.Views
 
         private void RootGrid_MouseMove(object sender, MouseEventArgs e)
         {
+            // 拖动连线标签（网络标签 / 真假标签）：改偏移量，实时重画
+            if (_dragLabelKey != null)
+            {
+                UpdateLabelDrag(e.GetPosition(CanvasHost));
+                e.Handled = true;
+                return;
+            }
+
             // 拖动折线段：整段沿垂直方向平移（贴着端口的那一段只挪里侧拐点）
             if (_dragSegKey != null && _dragSegRoute != null)
             {
@@ -2416,6 +2424,14 @@ namespace ShaoLu.Views
 
         private void RootGrid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            // 结束标签拖动：记一条撤销
+            if (_dragLabelKey != null)
+            {
+                EndLabelDrag();
+                e.Handled = true;
+                return;
+            }
+
             // 结束折线段拖动：记一条撤销
             if (_dragSegKey != null)
             {
@@ -2725,6 +2741,7 @@ namespace ShaoLu.Views
             UpdateLayoutMetrics();
             EdgeLayer.Children.Clear();
             EdgeDimLayer.Children.Clear();
+            _straightEdges.Clear();
             HandleLayer.Children.Clear();
             if (_rebuilding || _nodes.Count == 0) return;
 
@@ -3156,6 +3173,10 @@ namespace ShaoLu.Views
         private List<Point> DrawRoutedEdge(Rect from, Rect to, Guid fromUid, Guid toUid,
             Brush brush, double thickness, string label, bool dashed, string edgeKey, string forcedSide = null)
         {
+
+            // 直线模式：从两张卡片四条边的中点里挑最近的一对，直连；不看锚点、不给端点把手
+            if (SingletonLocator.Settings.Step.FlowEdgeStyle == 2)
+                return DrawStraightEdge(from, to, brush, thickness, label, dashed, edgeKey);
             List<Point> best = null;
             string bestFromSide = null, bestToSide = null;
             int bestSlotFrom = 0, bestSlotTo = 0;
@@ -3237,6 +3258,7 @@ namespace ShaoLu.Views
             int beforeTo = PeekPortSlot(toUid, bestToSide);
             if (beforeTo == bestSlotTo) CommitPortSlot(toUid, bestToSide);
 
+            _currentEdgeKey = edgeKey;
             var anchors = Services.FlowEdgeAnchorStore.Get(AnchorKey(edgeKey));
             bool hasAnchors = anchors.Count > 0;
 
@@ -3553,6 +3575,7 @@ namespace ShaoLu.Views
         {
             if (sender is not FrameworkElement element || element.Tag is not string key) return;
             if (!_edgeRoutes.TryGetValue(key, out var route)) return;
+            if (_straightEdges.Contains(key)) { HideAnchorPreview(); HideSegmentHint(); element.Cursor = Cursors.Arrow; return; }
 
             var point = e.GetPosition(CanvasHost);
             var projected = ProjectOnPath(route, point, out double distance, out int segmentIndex, out bool horizontal);
@@ -3595,6 +3618,7 @@ namespace ShaoLu.Views
         {
             if (sender is not FrameworkElement element || element.Tag is not string key) return;
             if (!_edgeRoutes.TryGetValue(key, out var route)) return;
+            if (_straightEdges.Contains(key)) return;   // 直线模式不加锚点、不拖段
 
             string anchorKey = AnchorKey(key);
             var point = e.GetPosition(CanvasHost);
@@ -3709,6 +3733,80 @@ namespace ShaoLu.Views
             }
         }
 
+        #region 直线模式
+
+        /// <summary>节点某条边的中点</summary>
+        private static Point SideMid(Rect r, string side) => side switch
+        {
+            "L" => new Point(r.Left, r.Top + r.Height / 2),
+            "R" => new Point(r.Right, r.Top + r.Height / 2),
+            "T" => new Point(r.Left + r.Width / 2, r.Top),
+            _ => new Point(r.Left + r.Width / 2, r.Bottom),
+        };
+
+        /// <summary>
+        /// 直线模式：两张卡片四条边的中点里挑最近的一对直连；网络标签照常可用，
+        /// 锚点与端点把手不用（直线没有折点可拖）。
+        /// </summary>
+        private List<Point> DrawStraightEdge(Rect from, Rect to, Brush brush, double thickness, string label, bool dashed, string edgeKey)
+        {
+            _currentEdgeKey = edgeKey;
+            string[] sides = { "L", "R", "T", "B" };
+            var bestA = new Point();
+            var bestB = new Point();
+            double bestDistance = double.MaxValue;
+
+            foreach (var sa in sides)
+            {
+                var a = SideMid(from, sa);
+                foreach (var sb in sides)
+                {
+                    var b = SideMid(to, sb);
+                    double d = (b - a).Length;
+                    if (d >= bestDistance) continue;
+                    bestDistance = d;
+                    bestA = a;
+                    bestB = b;
+                }
+            }
+
+            var route = new List<Point> { bestA, bestB };
+            _straightEdges.Add(edgeKey);
+            _edgeRoutes[edgeKey] = route;
+
+            if (Services.FlowEdgeLabelStore.TryGet(edgeKey, out var netLabel) && !string.IsNullOrWhiteSpace(netLabel))
+            {
+                DrawNetLabelEdge(route, netLabel, brush, edgeKey);
+                _drawingEdgeEnd = null;
+                return route;
+            }
+
+            var figure = new PathFigure { StartPoint = bestA, IsClosed = false };
+            figure.Segments.Add(new LineSegment(bestB, true));
+            var geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+
+            var line = new Path
+            {
+                Data = geometry,
+                Stroke = brush,
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+            };
+            if (dashed) line.StrokeDashArray = new DoubleCollection { 5, 3 };
+            EdgeTarget.Children.Add(line);
+
+            AddArrowHead(bestB, bestB - bestA, brush, Math.Max(9, thickness * 5));
+            if (!string.IsNullOrEmpty(label))
+                AddEdgeLabel(new Point((bestA.X + bestB.X) / 2, (bestA.Y + bestB.Y) / 2), label, brush);
+
+            if (!dashed) AddEdgeInteractivePath(route, edgeKey);
+            _drawingEdgeEnd = null;   // 直线模式不挂端点把手
+            return route;
+        }
+
+        #endregion
         #region 网络标签
 
         /// <summary>
@@ -3725,7 +3823,7 @@ namespace ShaoLu.Views
             var startDir = Unit(route[1] - start);
             var outEnd = start + startDir * Math.Min(stub, (route[1] - start).Length);
             AddNetStub(start, outEnd, brush);
-            AddNetLabelTag(outEnd, startDir, LanguageService.GetLocalizedString("Flow_NetLabel_Out", "起"), label, brush, edgeKey);
+            AddNetLabelTag(outEnd, startDir, LanguageService.GetLocalizedString("Flow_NetLabel_Out", "起"), label, brush, edgeKey, "S");
 
             var end = route[route.Count - 1];
             var prev = route[route.Count - 2];
@@ -3733,7 +3831,7 @@ namespace ShaoLu.Views
             var inStart = end - endDir * Math.Min(stub, (end - prev).Length);
             AddNetStub(inStart, end, brush);
             AddArrowHead(end, end - prev, brush, 10);
-            AddNetLabelTag(inStart, -endDir, LanguageService.GetLocalizedString("Flow_NetLabel_In", "终"), label, brush, edgeKey);
+            AddNetLabelTag(inStart, -endDir, LanguageService.GetLocalizedString("Flow_NetLabel_In", "终"), label, brush, edgeKey, "E");
         }
 
         private void AddNetStub(Point a, Point b, Brush brush)
@@ -3752,7 +3850,7 @@ namespace ShaoLu.Views
             });
         }
 
-        private void AddNetLabelTag(Point at, Vector outward, string kind, string text, Brush brush, string edgeKey)
+        private void AddNetLabelTag(Point at, Vector outward, string kind, string text, Brush brush, string edgeKey, string slot)
         {
             var border = new Border
             {
@@ -3785,14 +3883,14 @@ namespace ShaoLu.Views
                 oy = outward.Y >= 0 ? 4 : -size.Height - 4;
             }
 
-            Canvas.SetLeft(border, at.X + ox);
-            Canvas.SetTop(border, at.Y + oy);
             border.MouseRightButtonDown += (s, e) =>
             {
                 ShowEdgeLabelMenu(border, edgeKey);
                 e.Handled = true;
             };
-            EdgeTarget.Children.Add(border);
+
+            var storeKey = string.IsNullOrEmpty(edgeKey) ? null : edgeKey + "|" + slot;
+            PlaceEdgeLabel(border, at, new Point(at.X + ox, at.Y + oy), size, storeKey, brush);
         }
 
         private static Vector Unit(Vector v)
@@ -4153,6 +4251,21 @@ namespace ShaoLu.Views
         private Canvas EdgeTarget => _drawingDim ? EdgeDimLayer : EdgeLayer;
 
         private readonly List<(Point A, Point B)> _drawnSegments = new List<(Point, Point)>();
+
+        /// <summary>直线模式画出来的线：不做锚点预览 / 加锚点 / 拖段</summary>
+        private readonly HashSet<string> _straightEdges = new HashSet<string>();
+
+        // 连线标签拖动：网络标签「起 / 终」与真假标签都能挪，带虚线表示从属关系
+        private string _currentEdgeKey;
+        private string _dragLabelKey;
+        private Point _dragLabelStart;
+        private Point _dragLabelDefault;
+        private Size _dragLabelSize;
+        private double _dragLabelBaseX;
+        private double _dragLabelBaseY;
+        private double _dragLabelBeforeX;
+        private double _dragLabelBeforeY;
+        private bool _dragLabelMoved;
 
         private void RegisterSegments(IReadOnlyList<Point> route)
         {
@@ -4960,9 +5073,166 @@ namespace ShaoLu.Views
                 Child = new TextBlock { Text = text, FontSize = 10, Foreground = brush },
             };
             label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            Canvas.SetLeft(label, at.X - label.DesiredSize.Width / 2);
-            Canvas.SetTop(label, at.Y - label.DesiredSize.Height / 2);
-            EdgeTarget.Children.Add(label);
+            var size = label.DesiredSize;
+            var storeKey = string.IsNullOrEmpty(_currentEdgeKey) ? null : _currentEdgeKey + "|L";
+            PlaceEdgeLabel(label, at, new Point(at.X - size.Width / 2, at.Y - size.Height / 2), size, storeKey, brush);
+        }
+
+        /// <summary>
+        /// 标签统一摆位：默认位置 + 用户拖出来的偏移；偏移会把标签压到节点上时退回默认位置，
+        /// 有偏移就画一根虚线连回它所属的连线（虚线尽量绕开节点）。
+        /// </summary>
+        private void PlaceEdgeLabel(Border label, Point anchor, Point defaultTopLeft, Size size, string storeKey, Brush brush)
+        {
+            double ox = 0, oy = 0;
+            bool hasOffset = !string.IsNullOrEmpty(storeKey)
+                && Services.FlowLabelOffsetStore.TryGet(storeKey, out ox, out oy);
+
+            var position = new Point(defaultTopLeft.X + ox, defaultTopLeft.Y + oy);
+            var rect = new Rect(position, size);
+            if (hasOffset && (LabelHitsNode(rect) || position.X < 0 || position.Y < 0))
+            {
+                hasOffset = false;
+                position = defaultTopLeft;
+                rect = new Rect(position, size);
+            }
+
+            Canvas.SetLeft(label, position.X);
+            Canvas.SetTop(label, position.Y);
+
+            if (hasOffset)
+                DrawLabelLeader(anchor, rect, brush);
+
+            if (!string.IsNullOrEmpty(storeKey))
+            {
+                label.Cursor = Cursors.Hand;
+                label.MouseLeftButtonDown += (s, e) =>
+                {
+                    BeginLabelDrag(storeKey, anchor, defaultTopLeft, size, e);
+                    e.Handled = true;
+                };
+            }
+
+            HandleLayer.Children.Add(label);   // 标签放在节点之上，才能被拖动；位置本身会避开节点
+        }
+
+        private void BeginLabelDrag(string storeKey, Point anchor, Point defaultTopLeft, Size size, MouseButtonEventArgs e)
+        {
+            if (!SingletonLocator.Main.IsLoggedIn) return;
+
+            Services.FlowLabelOffsetStore.TryGet(storeKey, out var bx, out var by);
+            _dragLabelKey = storeKey;
+            _dragLabelStart = e.GetPosition(CanvasHost);
+            _dragLabelDefault = defaultTopLeft;
+            _dragLabelSize = size;
+            _dragLabelBaseX = bx;
+            _dragLabelBaseY = by;
+            _dragLabelBeforeX = bx;
+            _dragLabelBeforeY = by;
+            _dragLabelMoved = false;
+            RootGrid.CaptureMouse();
+        }
+
+        /// <summary>标签拖动的实时处理：偏移后的矩形压在节点上就不动（等一下个位置）</summary>
+        private void UpdateLabelDrag(Point mouse)
+        {
+            if (_dragLabelKey == null) return;
+
+            var delta = mouse - _dragLabelStart;
+            double ox = _dragLabelBaseX + delta.X;
+            double oy = _dragLabelBaseY + delta.Y;
+            var position = new Point(_dragLabelDefault.X + ox, _dragLabelDefault.Y + oy);
+            if (position.X < 0 || position.Y < 0) return;
+            if (LabelHitsNode(new Rect(position, _dragLabelSize))) return;
+
+            Services.FlowLabelOffsetStore.Set(_dragLabelKey, ox, oy);
+            _dragLabelMoved = true;
+            RebuildEdges();
+        }
+
+        private void EndLabelDrag()
+        {
+            if (_dragLabelKey == null) return;
+
+            string key = _dragLabelKey;
+            bool moved = _dragLabelMoved;
+            double beforeX = _dragLabelBeforeX, beforeY = _dragLabelBeforeY;
+            _dragLabelKey = null;
+            _dragLabelMoved = false;
+            RootGrid.ReleaseMouseCapture();
+
+            if (!moved) { RebuildEdges(); return; }
+
+            Services.FlowLabelOffsetStore.TryGet(key, out var afterX, out var afterY);
+            PushFlowUndo(
+                () => { SetLabelOffset(key, beforeX, beforeY); RebuildEdges(); },
+                () => { SetLabelOffset(key, afterX, afterY); RebuildEdges(); });
+            RebuildEdges();
+        }
+
+        private static void SetLabelOffset(string key, double dx, double dy)
+        {
+            if (Math.Abs(dx) < 0.5 && Math.Abs(dy) < 0.5) Services.FlowLabelOffsetStore.Remove(key);
+            else Services.FlowLabelOffsetStore.Set(key, dx, dy);
+        }
+
+        private bool LabelHitsNode(Rect rect)
+        {
+            foreach (var node in _nodes.Values)
+            {
+                if (!TryGetNodeRect(node, out var r)) continue;
+                var inflated = new Rect(r.Left - 2, r.Top - 2, r.Width + 4, r.Height + 4);
+                if (inflated.IntersectsWith(rect)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>标签及其所属连线之间的虚线：先横后竖或先竖后横，挑一条不穿节点的</summary>
+        private void DrawLabelLeader(Point anchor, Rect labelRect, Brush brush)
+        {
+            var target = new Point(
+                Math.Max(labelRect.Left, Math.Min(anchor.X, labelRect.Right)),
+                Math.Max(labelRect.Top, Math.Min(anchor.Y, labelRect.Bottom)));
+
+            var path = new Path
+            {
+                Stroke = brush,
+                StrokeThickness = 1,
+                StrokeDashArray = new DoubleCollection { 4, 3 },
+                Opacity = 0.75,
+                IsHitTestVisible = false,
+            };
+
+            var figure = new PathFigure { StartPoint = anchor, IsClosed = false };
+            if (!SegmentCrossesNode(anchor, target))
+            {
+                figure.Segments.Add(new LineSegment(target, true));
+            }
+            else
+            {
+                var elbowA = new Point(target.X, anchor.Y);
+                var elbowB = new Point(anchor.X, target.Y);
+                var elbow = SegmentCrossesNode(anchor, elbowA) || SegmentCrossesNode(elbowA, target) ? elbowB : elbowA;
+                figure.Segments.Add(new LineSegment(elbow, true));
+                figure.Segments.Add(new LineSegment(target, true));
+            }
+
+            var geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+            path.Data = geometry;
+            HandleLayer.Children.Add(path);
+        }
+
+        private bool SegmentCrossesNode(Point a, Point b)
+        {
+            var box = new Rect(new Point(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y)),
+                new Size(Math.Abs(b.X - a.X), Math.Abs(b.Y - a.Y)));
+            foreach (var node in _nodes.Values)
+            {
+                if (!TryGetNodeRect(node, out var r)) continue;
+                if (box.IntersectsWith(r)) return true;
+            }
+            return false;
         }
 
         private static PathGeometry CreateBezierGeometry(Point start, Point control1, Point control2, Point end)

@@ -1,4 +1,4 @@
-﻿using Nodify;
+using Nodify;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -14,6 +14,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Point = System.Windows.Point;
 
 namespace ShaoLu.Views
@@ -47,6 +48,27 @@ namespace ShaoLu.Views
         private bool _loadedOnce;
         private bool _syncingSelection;
         private readonly List<AutomationStepBase> _hookedSteps = new List<AutomationStepBase>();
+        private readonly List<FlowNode> _hookedNodes = new List<FlowNode>();
+        private readonly List<FlowConnector> _hookedConnectors = new List<FlowConnector>();
+
+        /// <summary>节点卡片本身的尺寸（不含左右各 14 的出口 / 入口列）</summary>
+        private const double NodeWidth = 220d;
+        private const double NodeHeight = 96d;
+
+        /// <summary>卡片左右两侧各一排连接口所占的宽度</summary>
+        private const double NodeConnectorWidth = 14d;
+
+        /// <summary>连线绕开节点时留出的安全距离</summary>
+        private const double RouteMargin = FlowRouteGrid.DefaultMargin;
+
+        /// <summary>出口 / 入口先水平挣脱节点的那一小段</summary>
+        private const double RouteStub = 18d;
+
+        /// <summary>节点或连线太多时退回简单折线，避免拖拽卡顿</summary>
+        private const int RouteNodeLimit = 120;
+        private const int RouteEdgeLimit = 200;
+
+        private readonly DispatcherTimer _routeTimer;
 
         public UserControlFlow()
         {
@@ -59,6 +81,9 @@ namespace ShaoLu.Views
 
             InputBindings.Add(new KeyBinding { Key = Key.Delete, Command = _vm.DelStepCommand });
             Focusable = true;
+
+            _routeTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(140) };
+            _routeTimer.Tick += (s, e) => { _routeTimer.Stop(); RouteConnections(); };
         }
 
         #region 生命周期
@@ -74,6 +99,8 @@ namespace ShaoLu.Views
                 UpdateEmptyHint();
                 UpdateDim();
                 SyncSelectionFromViewModel();
+                RouteConnections();
+                ScheduleRoute();
             }), System.Windows.Threading.DispatcherPriority.Background);
         }
 
@@ -127,7 +154,14 @@ namespace ShaoLu.Views
                     var node = new FlowNode(step);
                     Nodes.Add(node);
                     step.PropertyChanged += Step_PropertyChanged;
+                    node.PropertyChanged += Node_PropertyChanged;
+                    foreach (var connector in node.AllConnectors)
+                    {
+                        connector.PropertyChanged += Connector_PropertyChanged;
+                        _hookedConnectors.Add(connector);
+                    }
                     _hookedSteps.Add(step);
+                    _hookedNodes.Add(node);
                 }
             }
             finally
@@ -143,6 +177,26 @@ namespace ShaoLu.Views
             foreach (var step in _hookedSteps)
                 step.PropertyChanged -= Step_PropertyChanged;
             _hookedSteps.Clear();
+
+            foreach (var node in _hookedNodes)
+                node.PropertyChanged -= Node_PropertyChanged;
+            _hookedNodes.Clear();
+
+            foreach (var connector in _hookedConnectors)
+                connector.PropertyChanged -= Connector_PropertyChanged;
+            _hookedConnectors.Clear();
+        }
+
+        private void Node_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(FlowNode.Location))
+                ScheduleRoute();
+        }
+
+        private void Connector_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(FlowConnector.Anchor))
+                ScheduleRoute();
         }
 
         private void Step_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -204,6 +258,7 @@ namespace ShaoLu.Views
             Connections.Clear();
             foreach (var edge in edges) Connections.Add(edge);
             UpdateDim();
+            RouteConnections();
 
             static bool blUid(Guid target, Guid self) => target != Guid.Empty && target != self;
         }
@@ -246,6 +301,113 @@ namespace ShaoLu.Views
 
             RebuildConnections();
         }
+
+        #endregion
+
+        #region 走线
+
+        /// <summary>稍微延迟再重算走线：拖动节点时不必每帧都跑一遍 A*</summary>
+        private void ScheduleRoute()
+        {
+            if (_routeTimer == null) return;
+            _routeTimer.Stop();
+            _routeTimer.Start();
+        }
+
+        /// <summary>按当前节点位置重算所有连线的折线点</summary>
+        private void RouteConnections()
+        {
+            var edges = Connections.ToList();
+            if (edges.Count == 0) return;
+
+            var nodes = Nodes.ToList();
+            if (nodes.Count > RouteNodeLimit || edges.Count > RouteEdgeLimit)
+            {
+                // 节点太多时省掉绕障，只保留简单折线，保证拖拽流畅
+                foreach (var edge in edges)
+                    edge.Points = ToCollection(SimplePolyline(edge));
+                return;
+            }
+
+            var obstacles = nodes.Select(NodeBounds).ToList();
+            var jobs = new List<(FlowEdge Edge, Point Source, Point StubStart, Point StubEnd, Point Target)>();
+            foreach (var edge in edges)
+            {
+                var source = edge.Source.Anchor;
+                var target = edge.Target.Anchor;
+                if (!IsUsable(source) || !IsUsable(target)) continue;
+                jobs.Add((edge, source, new Point(source.X + RouteStub, source.Y), new Point(target.X - RouteStub, target.Y), target));
+            }
+
+            if (jobs.Count == 0) return;
+
+            var terminals = jobs.SelectMany(j => new[]
+            {
+                j.StubStart,
+                j.StubEnd,
+                new Point(j.Source.X + RouteStub * 2, j.Source.Y),
+                new Point(j.Target.X - RouteStub * 2, j.Target.Y),
+            }).ToList();
+            var grid = FlowRouteGrid.Build(obstacles, RouteMargin, terminals);
+
+            foreach (var job in jobs)
+            {
+                var points = new List<Point> { job.Source };
+                var routed = grid.Solve(job.StubStart, job.StubEnd);
+                if (routed != null)
+                {
+                    points.AddRange(routed);
+                }
+                else
+                {
+                    // 起点 / 终点离节点太近时，退一步用更长的水平接头再试一次
+                    var wideStart = new Point(job.Source.X + RouteStub * 2, job.Source.Y);
+                    var wideEnd = new Point(job.Target.X - RouteStub * 2, job.Target.Y);
+                    var wide = grid.Solve(wideStart, wideEnd);
+                    points.Add(job.StubStart);
+                    if (wide != null)
+                    {
+                        points.AddRange(wide);
+                    }
+                    else
+                    {
+                        points.Add(new Point(job.StubStart.X, job.Target.Y));
+                        points.Add(job.StubEnd);
+                    }
+                }
+
+                if (points[points.Count - 1] != job.Target) points.Add(job.Target);
+                job.Edge.Points = ToCollection(points);
+            }
+
+            static bool IsUsable(Point point)
+                => !double.IsNaN(point.X) && !double.IsNaN(point.Y) && Math.Abs(point.X) + Math.Abs(point.Y) > 0.5d;
+        }
+
+        /// <summary>节点太多或走线失败时的简单折线</summary>
+        private List<Point> SimplePolyline(FlowEdge edge)
+        {
+            var source = edge.Source.Anchor;
+            var target = edge.Target.Anchor;
+            return new List<Point>
+            {
+                source,
+                new Point(source.X + RouteStub, source.Y),
+                new Point(source.X + RouteStub, target.Y),
+                new Point(target.X - RouteStub, target.Y),
+                target,
+            };
+        }
+
+        private static PointCollection ToCollection(List<Point> points)
+        {
+            var collection = new PointCollection(points);
+            collection.Freeze();
+            return collection;
+        }
+
+        private static Rect NodeBounds(FlowNode node)
+            => new Rect(node.Location.X + NodeConnectorWidth, node.Location.Y, NodeWidth, NodeHeight);
 
         #endregion
 
@@ -331,7 +493,11 @@ namespace ShaoLu.Views
                 any = true;
             }
 
-            if (any) UpdateEditorExtent();
+            if (any)
+            {
+                UpdateEditorExtent();
+                RouteConnections();
+            }
         }
 
         private void UpdateEditorExtent()
@@ -586,6 +752,7 @@ namespace ShaoLu.Views
     public sealed class FlowEdge : INotifyPropertyChanged
     {
         private bool _isDim;
+        private PointCollection _points;
 
         public FlowEdge(FlowConnector source, FlowConnector target, Brush brush, double thickness, StepsViewModel vm, bool dashed = false)
         {
@@ -615,6 +782,17 @@ namespace ShaoLu.Views
 
         /// <summary>参考线用虚线，其余连线不设虚线</summary>
         public DoubleCollection DashArray => Dashed ? DashStroke : null;
+
+        /// <summary>绕开节点后的折线点（由视图算好后填进来）</summary>
+        public PointCollection Points
+        {
+            get => _points;
+            set
+            {
+                _points = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Points)));
+            }
+        }
 
         public bool IsDim
         {

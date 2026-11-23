@@ -254,20 +254,19 @@
                         </DataTemplate>
                     </nodify:NodifyEditor.ItemTemplate>
 
-                    <!-- 连线：参考 Nodify Workflow 示例，用 StepConnection 走横平竖直的圆角折线，
-                         从节点右侧出口出发、折向目标节点左侧入口，末端带实心箭头 -->
+                    <!-- 连线：参考 Nodify Workflow 示例的横平竖直走法，圆角 + 末端实心箭头；
+                         折线点由 FlowRouter 绕开所有卡片算好后绑定到 Points -->
                     <nodify:NodifyEditor.ConnectionTemplate>
                         <DataTemplate DataType="{x:Type local:FlowEdge}">
-                            <nodify:StepConnection Source="{Binding Source.Anchor}"
-                                                   Target="{Binding Target.Anchor}"
-                                                   SourcePosition="Right" TargetPosition="Left"
-                                                   SourceOffset="0 0" TargetOffset="10 0"
-                                                   Spacing="24" CornerRadius="8"
-                                                   Stroke="{Binding Brush}"
-                                                   StrokeThickness="{Binding Thickness}"
-                                                   StrokeDashArray="{Binding DashArray}"
-                                                   ArrowSize="9,7"
-                                                   Opacity="{Binding Opacity}"/>
+                            <local:FlowConnection Source="{Binding Source.Anchor}"
+                                                  Target="{Binding Target.Anchor}"
+                                                  Points="{Binding Points}"
+                                                  Direction="Forward" TargetOrientation="Horizontal"
+                                                  Stroke="{Binding Brush}"
+                                                  StrokeThickness="{Binding Thickness}"
+                                                  StrokeDashArray="{Binding DashArray}"
+                                                  ArrowSize="9,7"
+                                                  Opacity="{Binding Opacity}"/>
                         </DataTemplate>
                     </nodify:NodifyEditor.ConnectionTemplate>
 

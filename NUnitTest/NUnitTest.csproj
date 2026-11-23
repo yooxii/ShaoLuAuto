@@ -53,6 +53,7 @@
     <Compile Include="ModelTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StepExecutionContextTests.cs" />
+    <Compile Include="FlowRouterTests.cs" />
     <Compile Include="StepsFileTests.cs" />
     <Compile Include="BurnInServiceTests.cs" />
     <Compile Include="RegressionTests.cs" />

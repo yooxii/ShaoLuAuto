@@ -1,4 +1,4 @@
-using Nodify;
+﻿using Nodify;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -603,6 +603,18 @@ namespace ShaoLu.Views
         public Brush Brush { get; }
         public double Thickness { get; }
         public bool Dashed { get; }
+
+        private static readonly DoubleCollection DashStroke = CreateDashStroke();
+
+        private static DoubleCollection CreateDashStroke()
+        {
+            var dash = new DoubleCollection { 4d, 3d };
+            dash.Freeze();
+            return dash;
+        }
+
+        /// <summary>参考线用虚线，其余连线不设虚线</summary>
+        public DoubleCollection DashArray => Dashed ? DashStroke : null;
 
         public bool IsDim
         {

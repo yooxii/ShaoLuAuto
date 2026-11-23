@@ -108,6 +108,21 @@ namespace NUnitTest
         }
 
         [Test]
+        public void ApproachToTarget_IsHorizontal()
+        {
+            var obstacle = new Rect(230, 30, 120, 140);
+            var source = new Point(0, 100);
+            var target = new Point(400, 100);
+            var grid = FlowRouteGrid.Build(new[] { obstacle }, 12, new[] { source, target });
+            var path = grid.Solve(source, target);
+
+            Assert.That(path, Is.Not.Null);
+            var before = path[path.Count - 2];
+            Assert.That(before.Y, Is.EqualTo(target.Y).Within(0.001),
+                "最后一小段必须水平进入目标，不能竖直扎进接头");
+        }
+
+        [Test]
         public void NoPath_ReturnsNull()
         {
             // 起点被完整包在障碍里，没有任何出口

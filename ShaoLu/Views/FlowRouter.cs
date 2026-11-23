@@ -22,6 +22,9 @@ namespace ShaoLu.Views
 
         private const double Eps = 0.5d;
 
+        /// <summary>竖直扎进终点时的重罚，保证最后一小段是水平的</summary>
+        private const double GoalBendPenalty = 400d;
+
         private readonly Rect[] _obstacles;
         private readonly double[] _xs;
         private readonly double[] _ys;
@@ -166,8 +169,8 @@ namespace ShaoLu.Views
                     double step = length + (incoming == dir ? 0d : bendPenalty);
                     int nextState = nextPoint * 2 + dir;
                     double nextCost = cost[current] + step;
-                    // 收尾要水平进入目标节点：竖直进来要再算一次拐弯
-                    if (nextPoint == goalPoint && dir == 1) nextCost += bendPenalty;
+                    // 收尾必须水平进入目标节点：竖直扎进终点会让接头和箭头糊在一起，重罚到几乎不会选
+                    if (nextPoint == goalPoint && dir == 1) nextCost += GoalBendPenalty;
                     if (nextCost >= cost[nextState]) continue;
 
                     cost[nextState] = nextCost;

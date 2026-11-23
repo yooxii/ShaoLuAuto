@@ -62,7 +62,7 @@ namespace ShaoLu.Views
         private const double RouteMargin = FlowRouteGrid.DefaultMargin;
 
         /// <summary>出口 / 入口先水平挣脱节点的那一小段</summary>
-        private const double RouteStub = 18d;
+        private const double RouteStub = 26d;
 
         /// <summary>节点或连线太多时退回简单折线，避免拖拽卡顿</summary>
         private const int RouteNodeLimit = 120;

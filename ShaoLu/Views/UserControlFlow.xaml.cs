@@ -323,82 +323,166 @@ namespace ShaoLu.Views
             var nodes = Nodes.ToList();
             if (nodes.Count > RouteNodeLimit || edges.Count > RouteEdgeLimit)
             {
-                // 节点太多时省掉绕障，只保留简单折线，保证拖拽流畅
                 foreach (var edge in edges)
-                    edge.Points = ToCollection(SimplePolyline(edge));
+                {
+                    var card = CardBounds(edge.Target.Node);
+                    var port = LeftPort(card, edge.Source.Anchor);
+                    edge.TargetPoint = port;
+                    edge.TargetOrientation = Orientation.Horizontal;
+                    edge.ArrowDirection = Nodify.ConnectionDirection.Forward;
+                    edge.Points = ToCollection(SimplePolyline(edge, port));
+                }
                 return;
             }
 
             var obstacles = nodes.Select(NodeBounds).ToList();
-            var jobs = new List<(FlowEdge Edge, Point Source, Point StubStart, Point StubEnd, Point Target)>();
+            var jobs = new List<RouteJob>();
             foreach (var edge in edges)
             {
                 var source = edge.Source.Anchor;
-                var target = edge.Target.Anchor;
-                if (!IsUsable(source) || !IsUsable(target)) continue;
-                jobs.Add((edge, source, new Point(source.X + RouteStub, source.Y), new Point(target.X - RouteStub, target.Y), target));
+                if (!IsUsable(source)) continue;
+
+                var card = CardBounds(edge.Target.Node);
+                if (card.Width < 1 || card.Height < 1) continue;
+
+                var job = new RouteJob
+                {
+                    Edge = edge,
+                    Source = source,
+                    StubStart = new Point(source.X + RouteStub, source.Y),
+                };
+
+                // 入口候选：卡片左/上/下边框各取几个位置，谁的路更短就用谁，避免竖直折返
+                foreach (var y in PortSpots(card.Top, card.Bottom))
+                    job.Candidates.Add(new RouteCandidate(new Point(card.Left, y), new Point(card.Left - RouteStub, y), Orientation.Horizontal, Nodify.ConnectionDirection.Forward, 0d));
+                foreach (var x in PortSpots(card.Left, card.Right))
+                    job.Candidates.Add(new RouteCandidate(new Point(x, card.Top), new Point(x, card.Top - RouteStub), Orientation.Vertical, Nodify.ConnectionDirection.Forward, 12d));
+                foreach (var x in PortSpots(card.Left, card.Right))
+                    job.Candidates.Add(new RouteCandidate(new Point(x, card.Bottom), new Point(x, card.Bottom + RouteStub), Orientation.Vertical, Nodify.ConnectionDirection.Backward, 12d));
+
+                jobs.Add(job);
             }
 
             if (jobs.Count == 0) return;
 
-            var terminals = jobs.SelectMany(j => new[]
+            var terminals = new List<Point>();
+            foreach (var job in jobs)
             {
-                j.StubStart,
-                j.StubEnd,
-                new Point(j.Source.X + RouteStub * 2, j.Source.Y),
-                new Point(j.Target.X - RouteStub * 2, j.Target.Y),
-            }).ToList();
+                terminals.Add(job.StubStart);
+                foreach (var candidate in job.Candidates) terminals.Add(candidate.Stub);
+            }
+
             var grid = FlowRouteGrid.Build(obstacles, RouteMargin, terminals);
 
             foreach (var job in jobs)
             {
-                var points = new List<Point> { job.Source };
-                var routed = grid.Solve(job.StubStart, job.StubEnd);
-                if (routed != null)
+                List<Point> bestPoints = null;
+                RouteCandidate best = default(RouteCandidate);
+                double bestCost = double.MaxValue;
+
+                foreach (var candidate in job.Candidates)
                 {
+                    var routed = grid.Solve(job.StubStart, candidate.Stub);
+                    if (routed == null) continue;
+
+                    var points = new List<Point> { job.Source };
                     points.AddRange(routed);
-                }
-                else
-                {
-                    // 起点 / 终点离节点太近时，退一步用更长的水平接头再试一次
-                    var wideStart = new Point(job.Source.X + RouteStub * 2, job.Source.Y);
-                    var wideEnd = new Point(job.Target.X - RouteStub * 2, job.Target.Y);
-                    var wide = grid.Solve(wideStart, wideEnd);
-                    points.Add(job.StubStart);
-                    if (wide != null)
+                    if (points[points.Count - 1] != candidate.Port) points.Add(candidate.Port);
+
+                    double cost = PathLength(points) + candidate.Penalty;
+                    if (cost < bestCost)
                     {
-                        points.AddRange(wide);
-                    }
-                    else
-                    {
-                        points.Add(new Point(job.StubStart.X, job.Target.Y));
-                        points.Add(job.StubEnd);
+                        bestCost = cost;
+                        best = candidate;
+                        bestPoints = points;
                     }
                 }
 
-                if (points[points.Count - 1] != job.Target) points.Add(job.Target);
-                job.Edge.Points = ToCollection(points);
+                if (bestPoints == null)
+                {
+                    var card = CardBounds(job.Edge.Target.Node);
+                    var port = LeftPort(card, job.Source);
+                    best = new RouteCandidate(port, new Point(port.X - RouteStub, port.Y), Orientation.Horizontal, Nodify.ConnectionDirection.Forward, 0d);
+                    bestPoints = SimplePolyline(job.Edge, port);
+                }
+
+                job.Edge.TargetPoint = best.Port;
+                job.Edge.TargetOrientation = best.Orientation;
+                job.Edge.ArrowDirection = best.Direction;
+                job.Edge.Points = ToCollection(bestPoints);
             }
 
             static bool IsUsable(Point point)
                 => !double.IsNaN(point.X) && !double.IsNaN(point.Y) && Math.Abs(point.X) + Math.Abs(point.Y) > 0.5d;
         }
 
+        /// <summary>一条线在目标节点边框上的入口候选</summary>
+        private struct RouteCandidate
+        {
+            public RouteCandidate(Point port, Point stub, Orientation orientation, Nodify.ConnectionDirection direction, double penalty)
+            {
+                Port = port;
+                Stub = stub;
+                Orientation = orientation;
+                Direction = direction;
+                Penalty = penalty;
+            }
+
+            public Point Port { get; }
+            public Point Stub { get; }
+            public Orientation Orientation { get; }
+            public Nodify.ConnectionDirection Direction { get; }
+            public double Penalty { get; }
+        }
+
+        private sealed class RouteJob
+        {
+            public FlowEdge Edge { get; set; }
+            public Point Source { get; set; }
+            public Point StubStart { get; set; }
+            public List<RouteCandidate> Candidates { get; } = new List<RouteCandidate>();
+        }
+
+        /// <summary>边框上的几个候选位置：两端各留一点余量，再加中点</summary>
+        private static IEnumerable<double> PortSpots(double start, double end)
+        {
+            double span = end - start;
+            double inset = Math.Min(18d, span / 3d);
+            yield return start + inset;
+            yield return start + span / 2d;
+            yield return end - inset;
+        }
+
+        /// <summary>左边框上离给定高度最近的落点</summary>
+        private static Point LeftPort(Rect card, Point near)
+        {
+            double y = Math.Max(card.Top + 14d, Math.Min(card.Bottom - 14d, near.Y));
+            return new Point(card.Left, y);
+        }
+
+        private static Rect CardBounds(FlowNode node)
+            => new Rect(node.Location.X + NodeConnectorWidth, node.Location.Y, NodeWidth - NodeConnectorWidth * 2, NodeHeight);
+
+        private static double PathLength(IReadOnlyList<Point> points)
+        {
+            double length = 0d;
+            for (int i = 1; i < points.Count; i++)
+                length += Math.Abs(points[i].X - points[i - 1].X) + Math.Abs(points[i].Y - points[i - 1].Y);
+            return length;
+        }
         /// <summary>节点太多或走线失败时的简单折线</summary>
-        private List<Point> SimplePolyline(FlowEdge edge)
+        private List<Point> SimplePolyline(FlowEdge edge, Point port)
         {
             var source = edge.Source.Anchor;
-            var target = edge.Target.Anchor;
             return new List<Point>
             {
                 source,
                 new Point(source.X + RouteStub, source.Y),
-                new Point(source.X + RouteStub, target.Y),
-                new Point(target.X - RouteStub, target.Y),
-                target,
+                new Point(source.X + RouteStub, port.Y),
+                new Point(port.X - RouteStub, port.Y),
+                port,
             };
         }
-
         private static PointCollection ToCollection(List<Point> points)
         {
             var collection = new PointCollection(points);
@@ -770,6 +854,31 @@ namespace ShaoLu.Views
         public Brush Brush { get; }
         public double Thickness { get; }
         public bool Dashed { get; }
+
+        private Point _targetPoint;
+        private Orientation _targetOrientation = Orientation.Horizontal;
+        private Nodify.ConnectionDirection _arrowDirection = Nodify.ConnectionDirection.Forward;
+
+        /// <summary>入口在卡片边框上的落点（每条线各自选一个，不再共用固定圆点）</summary>
+        public Point TargetPoint
+        {
+            get => _targetPoint;
+            set { if (_targetPoint != value) { _targetPoint = value; Raise(nameof(TargetPoint)); } }
+        }
+
+        /// <summary>进入方向：水平（左/右边框）或竖直（上/下边框）</summary>
+        public Orientation TargetOrientation
+        {
+            get => _targetOrientation;
+            set { if (_targetOrientation != value) { _targetOrientation = value; Raise(nameof(TargetOrientation)); } }
+        }
+
+        /// <summary>箭头朝向：下边框进入时箭头朝上</summary>
+        public Nodify.ConnectionDirection ArrowDirection
+        {
+            get => _arrowDirection;
+            set { if (_arrowDirection != value) { _arrowDirection = value; Raise(nameof(ArrowDirection)); } }
+        }
 
         private static readonly DoubleCollection DashStroke = CreateDashStroke();
 

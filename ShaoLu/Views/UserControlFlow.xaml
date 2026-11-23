@@ -75,7 +75,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <ItemsControl x:Name="PART_Input" Grid.Column="0" ItemsSource="{Binding Input, RelativeSource={RelativeSource TemplatedParent}}"
+                                <ItemsControl x:Name="PART_Input" Grid.Column="0" Width="14" ItemsSource="{Binding Input, RelativeSource={RelativeSource TemplatedParent}}"
                                               ItemTemplate="{Binding InputConnectorTemplate, RelativeSource={RelativeSource TemplatedParent}}" VerticalAlignment="Center"/>
                                 <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}"
                                                   ContentTemplate="{TemplateBinding ContentTemplate}"/>
@@ -91,8 +91,9 @@
                 <nodify:Node Style="{StaticResource FlowNodeStyle}" Input="{Binding Inputs}" Output="{Binding Outputs}" Header="{x:Null}"
                              Content="{Binding}" MinHeight="0">
                     <nodify:Node.InputConnectorTemplate>
+                        <!-- 入口不再挂圆点：连线贴在卡片边框上任意位置进入，箭头就是入口 -->
                         <DataTemplate DataType="{x:Type local:FlowConnector}">
-                            <nodify:Connector Style="{StaticResource FlowConnectorStyle}"/>
+                            <Grid Width="0" Height="0"/>
                         </DataTemplate>
                     </nodify:Node.InputConnectorTemplate>
                     <nodify:Node.OutputConnectorTemplate>
@@ -259,9 +260,9 @@
                     <nodify:NodifyEditor.ConnectionTemplate>
                         <DataTemplate DataType="{x:Type local:FlowEdge}">
                             <local:FlowConnection Source="{Binding Source.Anchor}"
-                                                  Target="{Binding Target.Anchor}"
+                                                  Target="{Binding TargetPoint}"
                                                   Points="{Binding Points}"
-                                                  Direction="Forward" TargetOrientation="Horizontal"
+                                                  Direction="{Binding ArrowDirection}" TargetOrientation="{Binding TargetOrientation}"
                                                   Stroke="{Binding Brush}"
                                                   StrokeThickness="{Binding Thickness}"
                                                   StrokeDashArray="{Binding DashArray}"

@@ -263,9 +263,11 @@
                                                   Target="{Binding TargetPoint}"
                                                   Points="{Binding Points}"
                                                   Direction="{Binding ArrowDirection}" TargetOrientation="{Binding TargetOrientation}"
+                                                  SourceOffset="0 0" TargetOffset="0 0"
                                                   Stroke="{Binding Brush}"
                                                   StrokeThickness="{Binding Thickness}"
                                                   StrokeDashArray="{Binding DashArray}"
+                                                  Fill="{Binding Brush}"
                                                   ArrowSize="9,7"
                                                   Opacity="{Binding Opacity}"/>
                         </DataTemplate>

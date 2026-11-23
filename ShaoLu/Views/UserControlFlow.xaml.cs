@@ -68,6 +68,10 @@ namespace ShaoLu.Views
         private const int RouteNodeLimit = 120;
         private const int RouteEdgeLimit = 200;
 
+        /// <summary>同向并线时最多错开几条车道，每条错开一点，避免两根线重叠</summary>
+        private const int RouteLaneCount = 3;
+        private const double RouteLaneGap = 6d;
+
         private readonly DispatcherTimer _routeTimer;
 
         public UserControlFlow()
@@ -372,44 +376,87 @@ namespace ShaoLu.Views
                 foreach (var candidate in job.Candidates) terminals.Add(candidate.Stub);
             }
 
-            var grid = FlowRouteGrid.Build(obstacles, RouteMargin, terminals);
+            // 每条线从第 0 道开始试；若和已排好的线挤在同一条走廊上，就换下一道重新绕一次
+            var grids = new FlowRouteGrid[RouteLaneCount];
+            var accepted = new List<List<Point>>();
 
             foreach (var job in jobs)
             {
-                List<Point> bestPoints = null;
+                RouteCandidate chosen = default(RouteCandidate);
+                List<Point> chosenPoints = null;
+
+                for (int lane = 0; lane < RouteLaneCount; lane++)
+                {
+                    if (grids[lane] == null)
+                        grids[lane] = FlowRouteGrid.Build(obstacles, RouteMargin + lane * RouteLaneGap, BuildTerminals(jobs, lane));
+
+                    var best = SolveJob(grids[lane], job, lane, out var bestPoints);
+                    if (bestPoints == null) continue;
+
+                    if (chosenPoints == null)
+                    {
+                        chosen = best;
+                        chosenPoints = bestPoints;
+                    }
+
+                    if (!OverlapsAny(bestPoints, accepted))
+                    {
+                        chosen = best;
+                        chosenPoints = bestPoints;
+                        break;
+                    }
+                }
+
+                if (chosenPoints == null)
+                {
+                    var card = CardBounds(job.Edge.Target.Node);
+                    var port = LeftPort(card, job.Source);
+                    chosen = new RouteCandidate(port, new Point(port.X - RouteStub, port.Y), Orientation.Horizontal, Nodify.ConnectionDirection.Forward, 0d);
+                    chosenPoints = SimplePolyline(job.Edge, port);
+                }
+
+                accepted.Add(chosenPoints);
+                job.Edge.TargetPoint = chosen.Port;
+                job.Edge.TargetOrientation = chosen.Orientation;
+                job.Edge.ArrowDirection = chosen.Direction;
+                job.Edge.Points = ToCollection(chosenPoints);
+            }
+
+            static RouteCandidate SolveJob(FlowRouteGrid grid, RouteJob job, int lane, out List<Point> points)
+            {
                 RouteCandidate best = default(RouteCandidate);
+                points = null;
                 double bestCost = double.MaxValue;
 
                 foreach (var candidate in job.Candidates)
                 {
-                    var routed = grid.Solve(job.StubStart, candidate.Stub);
+                    var routed = grid.Solve(StubStartFor(job, lane), candidate.Stub);
                     if (routed == null) continue;
 
-                    var points = new List<Point> { job.Source };
-                    points.AddRange(routed);
-                    if (points[points.Count - 1] != candidate.Port) points.Add(candidate.Port);
+                    var path = new List<Point> { job.Source };
+                    path.AddRange(routed);
+                    if (path[path.Count - 1] != candidate.Port) path.Add(candidate.Port);
 
-                    double cost = PathLength(points) + candidate.Penalty;
+                    double cost = PathLength(path) + candidate.Penalty;
                     if (cost < bestCost)
                     {
                         bestCost = cost;
                         best = candidate;
-                        bestPoints = points;
+                        points = path;
                     }
                 }
 
-                if (bestPoints == null)
+                return best;
+            }
+
+            static bool OverlapsAny(List<Point> path, List<List<Point>> others)
+            {
+                foreach (var other in others)
                 {
-                    var card = CardBounds(job.Edge.Target.Node);
-                    var port = LeftPort(card, job.Source);
-                    best = new RouteCandidate(port, new Point(port.X - RouteStub, port.Y), Orientation.Horizontal, Nodify.ConnectionDirection.Forward, 0d);
-                    bestPoints = SimplePolyline(job.Edge, port);
+                    if (SharesCorridor(path, other)) return true;
                 }
 
-                job.Edge.TargetPoint = best.Port;
-                job.Edge.TargetOrientation = best.Orientation;
-                job.Edge.ArrowDirection = best.Direction;
-                job.Edge.Points = ToCollection(bestPoints);
+                return false;
             }
 
             static bool IsUsable(Point point)
@@ -463,6 +510,59 @@ namespace ShaoLu.Views
         private static Rect CardBounds(FlowNode node)
             => new Rect(node.Location.X + NodeConnectorWidth, node.Location.Y, NodeWidth - NodeConnectorWidth * 2, NodeHeight);
 
+        /// <summary>出口先水平挣脱节点的那一段：每条线按自己的车道错开，避免同一起点出去的线挤在一条竖线上</summary>
+        private static Point StubStartFor(RouteJob job, int lane)
+            => new Point(job.Source.X + RouteStub + lane * RouteLaneGap, job.Source.Y);
+
+        /// <summary>每一条车道用到的所有端点，供栅格建线</summary>
+        private static List<Point> BuildTerminals(List<RouteJob> jobs, int lane)
+        {
+            var terminals = new List<Point>();
+            foreach (var job in jobs)
+            {
+                terminals.Add(StubStartFor(job, lane));
+                foreach (var candidate in job.Candidates) terminals.Add(candidate.Stub);
+            }
+
+            return terminals;
+        }
+        /// <summary>两条折线是否有贴在一起走的同向线段</summary>
+        private static bool SharesCorridor(IReadOnlyList<Point> first, IReadOnlyList<Point> second)
+        {
+            for (int i = 1; i < first.Count; i++)
+            {
+                var a1 = first[i - 1];
+                var a2 = first[i];
+                bool aHorizontal = Math.Abs(a1.Y - a2.Y) < 0.5d;
+                bool aVertical = Math.Abs(a1.X - a2.X) < 0.5d;
+                if (!aHorizontal && !aVertical) continue;
+
+                for (int j = 1; j < second.Count; j++)
+                {
+                    var b1 = second[j - 1];
+                    var b2 = second[j];
+                    bool bHorizontal = Math.Abs(b1.Y - b2.Y) < 0.5d;
+                    bool bVertical = Math.Abs(b1.X - b2.X) < 0.5d;
+
+                    if (aHorizontal && bHorizontal)
+                    {
+                        if (Math.Abs(a1.Y - b1.Y) > 2d) continue;
+                        double overlap = Math.Min(Math.Max(a1.X, a2.X), Math.Max(b1.X, b2.X))
+                                         - Math.Max(Math.Min(a1.X, a2.X), Math.Min(b1.X, b2.X));
+                        if (overlap > 3d) return true;
+                    }
+                    else if (aVertical && bVertical)
+                    {
+                        if (Math.Abs(a1.X - b1.X) > 2d) continue;
+                        double overlap = Math.Min(Math.Max(a1.Y, a2.Y), Math.Max(b1.Y, b2.Y))
+                                         - Math.Max(Math.Min(a1.Y, a2.Y), Math.Min(b1.Y, b2.Y));
+                        if (overlap > 3d) return true;
+                    }
+                }
+            }
+
+            return false;
+        }
         private static double PathLength(IReadOnlyList<Point> points)
         {
             double length = 0d;

@@ -645,9 +645,8 @@ namespace ShaoLu.Views
 
             foreach (var edge in Connections)
             {
-                edge.IsDim = focus
-                    && !selected.Contains(edge.Source.Node.Step.Uid)
-                    && !selected.Contains(edge.Target.Node.Step.Uid);
+                // 焦点预览只看「从选中节点走出去的线」：别的节点连进来的线一样变淡
+                edge.IsDim = focus && !selected.Contains(edge.Source.Node.Step.Uid);
             }
         }
 
@@ -660,7 +659,7 @@ namespace ShaoLu.Views
             if (Nodes.Count == 0) return;
             if (Editor == null) return;
 
-            if (ApplyRingLayout(onlyUnplaced: true))
+            if (ApplyAutoLayout(FlowArrangeKind.Perimeter, onlyUnplaced: true))
             {
                 UpdateEditorExtent();
                 RouteConnections();
@@ -673,9 +672,24 @@ namespace ShaoLu.Views
             UpdateEmptyHint();
         }
 
+        /// <summary>自动整理：点按钮弹出二级菜单，选「默认」（口字形）或「垂直流」</summary>
         private void AutoLayout_Click(object sender, RoutedEventArgs e)
         {
-            ApplyRingLayout(onlyUnplaced: false);
+            var menu = AutoLayoutButton == null ? null : AutoLayoutButton.ContextMenu;
+            if (menu == null) return;
+
+            menu.PlacementTarget = AutoLayoutButton;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            menu.IsOpen = true;
+        }
+
+        private void AutoLayoutDefault_Click(object sender, RoutedEventArgs e) => ArrangeAll(FlowArrangeKind.Perimeter);
+
+        private void AutoLayoutVertical_Click(object sender, RoutedEventArgs e) => ArrangeAll(FlowArrangeKind.Vertical);
+
+        private void ArrangeAll(FlowArrangeKind kind)
+        {
+            ApplyAutoLayout(kind, onlyUnplaced: false);
             FitToWindow();
         }
 
@@ -683,20 +697,28 @@ namespace ShaoLu.Views
         private const double LayoutOriginX = 60d;
         private const double LayoutOriginY = 36d;
 
+        /// <summary>自动排列的排法：「默认」口字形 / 「垂直流」一列向下</summary>
+        private enum FlowArrangeKind
+        {
+            Perimeter,
+            Vertical,
+        }
+
         /// <summary>
-        /// 按「回字形」摆放节点：左上 → 右上 → 右下 → 左下 绕一圈，绕回起点旁边就整体往外扩一圈继续，
-        /// 不往中间填；锚定（节点右上角「锚」）的节点原地不动，新位置也不会压到它们。
+        /// 按指定排法摆放节点，锚定（节点右上角「锚」）的节点原地不动，新位置也不会压到它们：
+        /// - 默认（口字形）：节点只占矩形四条边，左上 → 右上 → 右下 → 左下；节点多时把矩形撑大；
+        /// - 垂直流：顶部居中一路向下排成一列，连线自然走两边。
         /// </summary>
         /// <param name="onlyUnplaced">true = 只摆还没有位置的节点（打开工程 / 新增步骤时用）</param>
         /// <returns>是否真的动过节点</returns>
-        private bool ApplyRingLayout(bool onlyUnplaced)
+        private bool ApplyAutoLayout(FlowArrangeKind kind, bool onlyUnplaced)
         {
             var nodes = Nodes.ToList();
             if (nodes.Count == 0) return false;
 
-            var cells = new List<Point>(nodes.Count);
-            foreach (var cell in FlowRingLayout.Build(nodes.Count))
-                cells.Add(new Point(cell.X + LayoutOriginX, cell.Y + LayoutOriginY));
+            var cells = kind == FlowArrangeKind.Vertical
+                ? BuildVerticalCells(nodes.Count)
+                : BuildPerimeterCells(nodes.Count);
 
             // 不动的节点（锚定的，或已经摆好且只补空缺时）先占住格子，新位置要避开它们；
             // 会移动的节点不能算占用，否则它自己的旧位置会把自己的新位置挡掉
@@ -714,7 +736,7 @@ namespace ShaoLu.Views
                 if (node.IsPinned) continue;
                 if (onlyUnplaced && FlowLayoutStore.TryGet(node.Step.Uid, out _)) continue;
 
-                Point target = NextFreeCell(cells, ref cursor, occupied) ?? cells[cells.Count - 1];
+                Point target = NextFreeCell(cells, ref cursor, occupied, kind);
                 occupied.Add(CellBounds(target));
                 if (node.Location == target) continue;
 
@@ -725,16 +747,51 @@ namespace ShaoLu.Views
             return moved;
         }
 
-        /// <summary>取下一个不和已占格子重叠的位置</summary>
-        private static Point? NextFreeCell(IReadOnlyList<Point> cells, ref int cursor, IReadOnlyList<Rect> occupied)
+        private static List<Point> BuildPerimeterCells(int count)
         {
-            while (cursor < cells.Count)
+            var cells = new List<Point>(count);
+            foreach (var cell in FlowAutoLayout.BuildPerimeter(count))
+                cells.Add(new Point(cell.X + LayoutOriginX, cell.Y + LayoutOriginY));
+            return cells;
+        }
+
+        private static List<Point> BuildVerticalCells(int count)
+        {
+            var cells = new List<Point>(count);
+            foreach (var cell in FlowAutoLayout.BuildVertical(count))
+                cells.Add(new Point(cell.X, cell.Y + LayoutOriginY));
+            return cells;
+        }
+
+        /// <summary>取下一个不和已占格子重叠的位置</summary>
+        private static Point NextFreeCell(List<Point> cells, ref int cursor, IReadOnlyList<Rect> occupied, FlowArrangeKind kind)
+        {
+            while (true)
             {
+                // 格子被锚定节点全占住的极端情况下继续往下补格子（正常排法用不到）
+                if (cursor >= cells.Count) AppendExtraCells(cells, kind);
+
                 var point = cells[cursor++];
                 if (!OverlapsAny(CellBounds(point), occupied)) return point;
             }
+        }
 
-            return null;
+        private static void AppendExtraCells(List<Point> cells, FlowArrangeKind kind)
+        {
+            if (cells.Count == 0) return;
+
+            if (kind == FlowArrangeKind.Vertical)
+            {
+                var last = cells[cells.Count - 1];
+                cells.Add(new Point(last.X, last.Y + FlowAutoLayout.VerticalGap));
+                return;
+            }
+
+            double minX = cells.Min(p => p.X);
+            double maxX = cells.Max(p => p.X);
+            double maxY = cells.Max(p => p.Y);
+            for (double x = minX; x <= maxX + 0.5; x += FlowAutoLayout.CellWidth)
+                cells.Add(new Point(x, maxY + FlowAutoLayout.CellHeight));
         }
 
         private static bool OverlapsAny(Rect rect, IReadOnlyList<Rect> others)
@@ -752,7 +809,7 @@ namespace ShaoLu.Views
         }
 
         private static Rect CellBounds(Point topLeft)
-            => new Rect(topLeft, new Size(FlowRingLayout.CellWidth, FlowRingLayout.CellHeight));
+            => new Rect(topLeft, new Size(FlowAutoLayout.CellWidth, FlowAutoLayout.CellHeight));
 
         private void FitToWindow_Click(object sender, RoutedEventArgs e) => FitToWindow();
 
@@ -807,6 +864,75 @@ namespace ShaoLu.Views
                 node.IsPinned = !node.IsPinned;
                 e.Handled = true;
             }
+        }
+
+        /// <summary>双击节点标题就地改名称（回车确认、Esc 取消、点别处也算确认）</summary>
+        private void NodeTitle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount != 2) return;
+            if (!SingletonLocator.Main.IsLoggedIn) return;
+            if (!(sender is FrameworkElement element) || !(element.DataContext is FlowNode node)) return;
+
+            e.Handled = true;
+            node.IsTitleEditing = true;
+        }
+
+        private void NodeTitleBox_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(sender is TextBox box) || !box.IsVisible) return;
+
+            // 输入框刚显示出来时先拿焦点并全选，直接输入就能替换旧名字
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try
+                {
+                    box.Focus();
+                    Keyboard.Focus(box);
+                    box.SelectAll();
+                }
+                catch { }
+            }), System.Windows.Threading.DispatcherPriority.Input);
+        }
+
+        private void NodeTitleBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!(sender is TextBox box)) return;
+
+            if (e.Key == Key.Enter)
+            {
+                e.Handled = true;
+                CommitNodeTitle(box, apply: true);
+            }
+            else if (e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                CommitNodeTitle(box, apply: false);
+            }
+        }
+
+        private void NodeTitleBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox box) CommitNodeTitle(box, apply: true);
+        }
+
+        /// <summary>结束编辑：apply=true 时把输入框里的文字写回步骤名称（空名称按原名处理）</summary>
+        private void CommitNodeTitle(TextBox box, bool apply)
+        {
+            if (!(box.DataContext is FlowNode node)) return;
+
+            string original = node.Step.Name ?? string.Empty;
+            if (apply)
+            {
+                string name = (box.Text ?? string.Empty).Trim();
+                if (name.Length > 0 && !string.Equals(original, name, StringComparison.Ordinal))
+                {
+                    _vm.PushUndoForFlowEdit();
+                    node.Step.Name = name;
+                }
+            }
+
+            box.Text = node.Step.Name ?? string.Empty;
+            node.IsTitleEditing = false;
         }
 
         #endregion
@@ -941,6 +1067,7 @@ namespace ShaoLu.Views
     public sealed class FlowNode : INotifyPropertyChanged
     {
         private Point _location;
+        private bool _isTitleEditing;
 
         public FlowNode(AutomationStepBase step)
         {
@@ -1001,6 +1128,18 @@ namespace ShaoLu.Views
         }
 
         public void Refresh() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Step)));
+
+        /// <summary>节点标题是否正在就地编辑（双击标题进入，回车 / 点别处结束）</summary>
+        public bool IsTitleEditing
+        {
+            get => _isTitleEditing;
+            set
+            {
+                if (_isTitleEditing == value) return;
+                _isTitleEditing = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsTitleEditing)));
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
     }

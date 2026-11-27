@@ -1,10 +1,14 @@
-﻿using NLog;
+using CommunityToolkit.Mvvm.Input;
+using NLog;
 using ShaoLu.Models;
 using ShaoLu.Services;
+using ShaoLu.Utils;
 using ShaoLu.Viewmodels.AutomationStep;
 using System;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace ShaoLu.Viewmodels
 {
@@ -41,6 +45,58 @@ namespace ShaoLu.Viewmodels
             Description = description;
         }
 
+        #region 扫码窗口位置 / 置顶
+
+        private bool _windowPositionRelative;
+
+        /// <summary>扫码窗口位置是否为屏幕相对坐标（WindowX/WindowY 存占屏幕宽/高的百分比；切换时自动换算）</summary>
+        public bool WindowPositionRelative
+        {
+            get => _windowPositionRelative;
+            set
+            {
+                if (!SetProperty(ref _windowPositionRelative, value)) return;
+                // -1 为「居中显示」的哨兵值，不参与换算
+                if (WindowX < 0 && WindowY < 0) return;
+                WindowX = ScreenCoordinates.ConvertX(WindowX, !value, value);
+                WindowY = ScreenCoordinates.ConvertY(WindowY, !value, value);
+            }
+        }
+
+        private double _windowX = -1;
+
+        /// <summary>扫码窗口 X 位置（-1 表示居中显示；相对模式下为占屏幕宽度的百分比）</summary>
+        public double WindowX { get => _windowX; set => SetProperty(ref _windowX, value); }
+
+        private double _windowY = -1;
+
+        /// <summary>扫码窗口 Y 位置（-1 表示居中显示；相对模式下为占屏幕高度的百分比）</summary>
+        public double WindowY { get => _windowY; set => SetProperty(ref _windowY, value); }
+
+        private bool _alwaysOnTop;
+
+        /// <summary>扫码窗口是否强制置顶（不会被别的窗口盖住）</summary>
+        public bool AlwaysOnTop { get => _alwaysOnTop; set => SetProperty(ref _alwaysOnTop, value); }
+
+        [JsonIgnore]
+        private ICommand _selectPositionCommand;
+
+        /// <summary>屏幕取点：把扫码窗口放到选中的位置</summary>
+        [JsonIgnore]
+        public ICommand SelectPositionCommand => _selectPositionCommand ??= new RelayCommand(SelectPosition);
+
+        private void SelectPosition()
+        {
+            var point = Views.WindowSelectPoint.ShowAndSelect();
+            if (!point.HasValue) return;
+
+            // 相对模式下存百分比，绝对模式下存逻辑像素
+            WindowX = ScreenCoordinates.ConvertX(point.Value.X, false, WindowPositionRelative);
+            WindowY = ScreenCoordinates.ConvertY(point.Value.Y, false, WindowPositionRelative);
+        }
+
+        #endregion
+
         public override async Task<bool> RunAsync(CancellationToken cancellationToken = default)
         {
             string prefix = Loc("ScanCode_Failed", "扫码失败：");
@@ -49,7 +105,9 @@ namespace ShaoLu.Viewmodels
                 if (WaitTime > 0) await Task.Delay((int)(WaitTime * 1000), cancellationToken);
 
                 var prompt = ScanPromptOverride;
-                string barcode = prompt != null ? prompt() : ShaoLu.Views.WindowScanCode.ShowAndWait();
+                string barcode = prompt != null
+                    ? prompt()
+                    : ShaoLu.Views.WindowScanCode.ShowAndWait(WindowX, WindowY, WindowPositionRelative, AlwaysOnTop);
                 if (string.IsNullOrWhiteSpace(barcode))
                     return Fail(prefix + Loc("ScanCode_Canceled", "未扫码或已取消"));
 
@@ -105,6 +163,10 @@ namespace ShaoLu.Viewmodels
             clone.ConditionMode = ConditionMode;
             clone.Conditions = new(Conditions);
             clone.IsSave = IsSave;
+            clone.WindowPositionRelative = WindowPositionRelative;
+            clone.WindowX = WindowX;
+            clone.WindowY = WindowY;
+            clone.AlwaysOnTop = AlwaysOnTop;
             return clone;
         }
     }

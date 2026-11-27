@@ -17,6 +17,7 @@ namespace ShaoLu.Converters
         public DataTemplate TypeTextFromFileTemplate { get; set; }
         public DataTemplate PopupTemplate { get; set; }
         public DataTemplate AcbelUploadTemplate { get; set; }
+        public DataTemplate ScanCodeTemplate { get; set; }
         public DataTemplate GetInputTemplate { get; set; }
         public DataTemplate MouseActionTemplate { get; set; }
         public DataTemplate StatisticsTemplate { get; set; }
@@ -46,7 +47,7 @@ namespace ShaoLu.Converters
                     StepType.TypeTextFromFile => TypeTextFromFileTemplate,
                     StepType.Popup => PopupTemplate,
                     StepType.AcbelUpload => AcbelUploadTemplate,
-                    StepType.ScanCode => EmptyStepTemplate,
+                    StepType.ScanCode => ScanCodeTemplate,
                     StepType.GetInput => GetInputTemplate,
                     StepType.MouseAction => MouseActionTemplate,
                     StepType.Statistics => StatisticsTemplate,

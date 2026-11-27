@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="ShaoLu.Views.UserControlFlow"
+<UserControl x:Class="ShaoLu.Views.UserControlFlow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -146,8 +146,40 @@
                                                     Padding="4,0" Margin="0,0,4,0" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Step.LineNo}" Foreground="White" FontSize="10.5" FontWeight="SemiBold"/>
                                             </Border>
-                                            <TextBlock DockPanel.Dock="Left" Text="{Binding Step.Name}" FontSize="12" FontWeight="SemiBold"
-                                                       Foreground="#FF243444" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <!-- 名称：双击就地改名（回车确认 / Esc 取消 / 点别处也算确认） -->
+                                            <Grid>
+                                                <TextBlock x:Name="TitleText" Text="{Binding Step.Name}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="#FF243444" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{lex:Loc FlowChart_TitleEdit_ToolTip}"
+                                                           MouseLeftButtonDown="NodeTitle_MouseLeftButtonDown">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsTitleEditing}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBox x:Name="TitleBox" MinWidth="60"
+                                                         Text="{Binding Step.Name, Mode=OneWay}"
+                                                         FontSize="12" FontWeight="SemiBold" MinHeight="20" Padding="2,0"
+                                                         VerticalContentAlignment="Center"
+                                                         KeyDown="NodeTitleBox_KeyDown" LostFocus="NodeTitleBox_LostFocus"
+                                                         IsVisibleChanged="NodeTitleBox_IsVisibleChanged">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsTitleEditing}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                            </Grid>
                                         </DockPanel>
                                         <TextBlock Grid.Row="1" Text="{Binding Step.Description}" Margin="0,2,0,0" FontSize="10.5"
                                                    Foreground="#FF6B7885" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
@@ -232,7 +264,16 @@
         <!-- 视图操作 -->
         <Border Grid.Row="0" Background="#FFF7F8FA" BorderBrush="#FFD5DAE0" BorderThickness="0,0,0,1" Padding="2,3">
             <WrapPanel Orientation="Horizontal">
-                <Button Content="{lex:Loc FlowChart_AutoLayout}" Margin="2" Padding="8,2" Click="AutoLayout_Click"/>
+                <Button x:Name="AutoLayoutButton" Content="{lex:Loc FlowChart_AutoLayout}" Margin="2" Padding="8,2" Click="AutoLayout_Click">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="{lex:Loc FlowChart_AutoLayout_Default}" Click="AutoLayoutDefault_Click"
+                                      ToolTip="{lex:Loc FlowChart_AutoLayout_Default_ToolTip}"/>
+                            <MenuItem Header="{lex:Loc FlowChart_AutoLayout_Vertical}" Click="AutoLayoutVertical_Click"
+                                      ToolTip="{lex:Loc FlowChart_AutoLayout_Vertical_ToolTip}"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
                 <Button Content="{lex:Loc FlowChart_FitToWindow}" Margin="2" Padding="8,2" Click="FitToWindow_Click"/>
                 <Rectangle Width="1" Height="18" Fill="#FFD5DAE0" Margin="6,0"/>
                 <Button Content="&#x2212;" Margin="2" Padding="8,1" Click="ZoomOut_Click"/>

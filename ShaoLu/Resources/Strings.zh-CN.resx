@@ -2150,6 +2150,9 @@
   <data name="AddScanCodeStep" xml:space="preserve">
     <value>扫码</value>
   </data>
+  <data name="ScanCode_WindowHint" xml:space="preserve">
+    <value>扫码窗口的位置：X / Y 留空或 -1 时居中显示；勾选「始终置顶」后弹窗不会被别的窗口盖住。</value>
+  </data>
   <data name="ScanCode_Title" xml:space="preserve">
     <value>扫码</value>
   </data>
@@ -2366,8 +2369,23 @@
   <data name="FlowChart_ClearGoto" xml:space="preserve">
     <value>清除本步跳转</value>
   </data>
+  <data name="FlowChart_TitleEdit_ToolTip" xml:space="preserve">
+    <value>双击可改名称（回车确认，Esc 取消）</value>
+  </data>
+  <data name="FlowChart_AutoLayout_Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="FlowChart_AutoLayout_Default_ToolTip" xml:space="preserve">
+    <value>口字形：节点只摆在矩形四条边上（左上 → 右上 → 右下 → 左下），节点多时自动加大矩形</value>
+  </data>
+  <data name="FlowChart_AutoLayout_Vertical" xml:space="preserve">
+    <value>垂直流</value>
+  </data>
+  <data name="FlowChart_AutoLayout_Vertical_ToolTip" xml:space="preserve">
+    <value>顶部居中一路向下排成一列，连线走两边</value>
+  </data>
   <data name="FlowChart_Hint" xml:space="preserve">
-    <value>拖动节点可自由摆放；从节点右侧的「T / F」圆点拖到目标步骤可建立真/假跳转，拖到空白处清除该跳转，拖到源节点中心的「↺」可连回自身。双击名称或备注可直接编辑，节点右上角的「记」切换是否记录执行日志、「锚」切换是否锚定（锚定后「自动整理」不会动它）。连线只表示执行顺序与跳转，不改变步骤在列表中的先后。</value>
+    <value>拖动节点可自由摆放；从节点右侧的「T / F」圆点拖到目标步骤可建立真/假跳转，拖到空白处清除该跳转，拖到源节点中心的「↺」可连回自身。双击名称可直接改名，节点右上角的「记」切换是否记录执行日志、「锚」切换是否锚定（锚定后「自动整理」不会动它）。连线只表示执行顺序与跳转，不改变步骤在列表中的先后。</value>
   </data>
   <data name="FlowChart_Empty" xml:space="preserve">
     <value>当前工程还没有步骤</value>
@@ -2613,7 +2631,7 @@
     <value>焦点预览</value>
   </data>
   <data name="FlowChart_FocusMode_ToolTip" xml:space="preserve">
-    <value>只高亮与选中步骤相连的连线，其余连线半透明（没选中步骤时全部正常显示）。</value>
+    <value>只高亮从选中步骤走出去的连线，连进选中步骤的与其它连线一起变淡（没选中步骤时全部正常显示）。</value>
   </data>
   <data name="Flow_NetLabel" xml:space="preserve">
     <value>网络标签</value>

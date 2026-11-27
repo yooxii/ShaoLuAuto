@@ -403,6 +403,9 @@ namespace ShaoLu.Viewmodels
             RaiseUndoRedoCanExecuteChanged();
         }
 
+        /// <summary>流程图里就地改节点标题前记录撤销点（与步骤列表共用同一条撤销时间线）</summary>
+        public void PushUndoForFlowEdit() => PushListUndoSnapshot();
+
         private void RestoreListSnapshot(List<AutomationStepBase> snapshot)
         {
             if (snapshot == null) return;

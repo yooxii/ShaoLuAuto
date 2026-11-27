@@ -36,6 +36,9 @@ namespace ShaoLu.Views
         /// <summary>扫码得到的条码（取消时为 null）</summary>
         public string ScannedCode { get; private set; }
 
+        /// <summary>用户配置的「强制置顶」（抢焦点时会临时置顶，之后恢复成这个值）</summary>
+        private bool _alwaysOnTop;
+
         public WindowScanCode()
         {
             InitializeComponent();
@@ -64,9 +67,9 @@ namespace ShaoLu.Views
         {
             try
             {
-                // 临时置顶可绕开“后台程序不能抢前台”的限制，随后立刻取消，不改变正常层级
+                // 临时置顶可绕开“后台程序不能抢前台”的限制，随后恢复成用户配置的置顶状态
                 Topmost = true;
-                Topmost = false;
+                Topmost = _alwaysOnTop;
                 Activate();
 
                 IntPtr hwnd = new WindowInteropHelper(this).Handle;
@@ -220,14 +223,36 @@ namespace ShaoLu.Views
             catch { }
         }
 
+        /// <summary>
+        /// 按步骤配置摆放窗口：X / Y 都 >= 0 时按该坐标显示（相对模式按百分比换算），
+        /// 否则保持默认的居中显示；alwaysOnTop 决定窗口是否一直置顶。
+        /// </summary>
+        public void ApplyPlacement(double windowX, double windowY, bool positionRelative, bool alwaysOnTop)
+        {
+            _alwaysOnTop = alwaysOnTop;
+
+            double left = Utils.ScreenCoordinates.ToPixelX(windowX, positionRelative);
+            double top = Utils.ScreenCoordinates.ToPixelY(windowY, positionRelative);
+            if (left < 0 || top < 0) return;
+
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Left = left;
+            Top = top;
+        }
+
         /// <summary>在 UI 线程弹出扫码对话框并等待结果；取消返回 null。</summary>
-        public static string ShowAndWait(Window owner = null)
+        public static string ShowAndWait(Window owner = null) => ShowAndWait(-1, -1, false, false, owner);
+
+        /// <summary>按步骤配置的位置 / 置顶弹出扫码对话框并等待结果；取消返回 null。</summary>
+        public static string ShowAndWait(double windowX, double windowY, bool positionRelative, bool alwaysOnTop,
+            Window owner = null)
         {
             var dispatcher = Application.Current?.Dispatcher;
             if (dispatcher != null && !dispatcher.CheckAccess())
-                return dispatcher.Invoke(() => ShowAndWait(owner));
+                return dispatcher.Invoke(() => ShowAndWait(windowX, windowY, positionRelative, alwaysOnTop, owner));
 
             var window = new WindowScanCode();
+            window.ApplyPlacement(windowX, windowY, positionRelative, alwaysOnTop);
             if (owner != null) window.Owner = owner;
             else if (Application.Current?.MainWindow != null) window.Owner = Application.Current.MainWindow;
 

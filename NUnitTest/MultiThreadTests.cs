@@ -866,6 +866,7 @@ namespace NUnitTest
         {
             var rangeEnd = Guid.NewGuid();
             var trueGoto = Guid.NewGuid();
+            var limitGoto = Guid.NewGuid();
             var original = new MultiThreadStartStep("mt", "d")
             {
                 ThreadCount = 5,
@@ -874,7 +875,7 @@ namespace NUnitTest
                 WaitTime = 0.5,
                 EnableLog = true,
                 IsNeed = false,
-                SelfReferenceLimit = 3,
+                GotoLimitGotoUid = limitGoto,
                 TrueGotoUid = trueGoto,
             };
 
@@ -886,7 +887,7 @@ namespace NUnitTest
             Assert.That(clone.WaitTime, Is.EqualTo(0.5));
             Assert.That(clone.EnableLog, Is.True);
             Assert.That(clone.IsNeed, Is.False);
-            Assert.That(clone.SelfReferenceLimit, Is.EqualTo(3));
+            Assert.That(clone.GotoLimitGotoUid, Is.EqualTo(limitGoto));
             Assert.That(clone.TrueGotoUid, Is.EqualTo(trueGoto));
             Assert.That(clone.Type, Is.EqualTo(StepType.MultiThread));
 

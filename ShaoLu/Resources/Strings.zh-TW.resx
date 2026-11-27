@@ -2507,8 +2507,17 @@
   <data name="GotoGuard_Count" xml:space="preserve">
     <value>次數上限</value>
   </data>
+  <data name="GotoGuard_LimitGoto" xml:space="preserve">
+    <value>上限後跳到</value>
+  </data>
+  <data name="GotoGuard_LimitGoto_Hint" xml:space="preserve">
+    <value>真 / 假分支的跳轉次數或逾時到達上限後跳到這個步驟；留空則改走另一分支，另一分支也不跳就順序執行下一步</value>
+  </data>
+  <data name="Msg_GotoGuardLimitJump" xml:space="preserve">
+    <value>步驟「{0}」跳轉次數 / 逾時到達上限，跳到指定步驟</value>
+  </data>
   <data name="GotoGuard_Count_Hint" xml:space="preserve">
-    <value>-1=不限制，0=不跳轉；超過後改走另一分支</value>
+    <value>-1=不限制，0=不跳轉；到達上限後按「上限後跳到」處理（沒設定就改走另一分支）</value>
   </data>
   <data name="GotoGuard_Timeout" xml:space="preserve">
     <value>逾時(秒)</value>

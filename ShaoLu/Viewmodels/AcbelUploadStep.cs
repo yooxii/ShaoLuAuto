@@ -1,4 +1,4 @@
-﻿using AcbelMes;
+﻿﻿using AcbelMes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
@@ -1017,7 +1017,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 WaitTime = WaitTime,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
+                GotoLimitGotoUid = GotoLimitGotoUid, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 ConditionMode = ConditionMode,
                 Conditions = new ObservableCollection<StepCondition>(Conditions),
                 TrueGotoUid = TrueGotoUid,

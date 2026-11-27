@@ -52,11 +52,11 @@ namespace ShaoLu.Views
         private readonly List<FlowConnector> _hookedConnectors = new List<FlowConnector>();
 
         /// <summary>节点卡片本身的尺寸（不含左右各 14 的出口 / 入口列）</summary>
-        private const double NodeWidth = 220d;
-        private const double NodeHeight = 96d;
+        private const double NodeWidth = FlowAutoLayout.NodeWidth;
+        private const double NodeHeight = FlowAutoLayout.NodeHeight;
 
         /// <summary>卡片左右两侧各一排连接口所占的宽度</summary>
-        private const double NodeConnectorWidth = 14d;
+        private const double NodeConnectorWidth = FlowAutoLayout.NodeConnectorWidth;
 
         /// <summary>连线绕开节点时留出的安全距离</summary>
         private const double RouteMargin = FlowRouteGrid.DefaultMargin;
@@ -508,7 +508,7 @@ namespace ShaoLu.Views
         }
 
         private static Rect CardBounds(FlowNode node)
-            => new Rect(node.Location.X + NodeConnectorWidth, node.Location.Y, NodeWidth - NodeConnectorWidth * 2, NodeHeight);
+            => new Rect(node.Location.X + NodeConnectorWidth, node.Location.Y, NodeWidth, NodeHeight);
 
         /// <summary>出口先水平挣脱节点的那一段：每条线按自己的车道错开，避免同一起点出去的线挤在一条竖线上</summary>
         private static Point StubStartFor(RouteJob job, int lane)

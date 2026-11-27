@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿﻿using CommunityToolkit.Mvvm.Input;
 using ShaoLu.Models;
 using ShaoLu.Services;
 using ShaoLu.Utils;
@@ -115,7 +115,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 IsTrue = IsTrue,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
+                GotoLimitGotoUid = GotoLimitGotoUid, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 OneByOne = OneByOne,
                 Images = new(Images?.Select(img => (ImageRecognition)img.Clone()).ToList()),
                 Clicks = Clicks,
@@ -219,7 +219,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 IsTrue = IsTrue,
                 IsSave = IsSave,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
+                GotoLimitGotoUid = GotoLimitGotoUid, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 IsNeed = IsNeed,
                 OneByOne = OneByOne,
                 Images = new(Images?.Select(img => (ImageRecognition)img.Clone()).ToList()),

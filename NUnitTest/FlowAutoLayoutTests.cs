@@ -110,11 +110,13 @@ namespace NUnitTest
                 Assert.That(cells[i].Y - cells[i - 1].Y, Is.EqualTo(FlowAutoLayout.VerticalGap).Within(0.001),
                     "相邻两个节点按固定行距往下");
 
-            double center = cells[0].X + FlowAutoLayout.CellWidth / 2d;
+            double center = cells[0].X + FlowAutoLayout.NodeConnectorWidth + FlowAutoLayout.NodeWidth / 2d;
             Assert.That(center, Is.EqualTo(FlowAutoLayout.VerticalCenterX).Within(0.001), "整列应该居中");
             Assert.That(cells[0].Y, Is.EqualTo(0), "第一个在最上面");
-            Assert.That(FlowAutoLayout.VerticalGap, Is.GreaterThan(FlowAutoLayout.CellHeight),
+            Assert.That(FlowAutoLayout.VerticalGap, Is.GreaterThan(FlowAutoLayout.NodeHeight),
                 "行距要比卡片高，留出绕线的通道");
+            Assert.That(FlowAutoLayout.CellWidth, Is.GreaterThan(FlowAutoLayout.NodeWidth + FlowAutoLayout.NodeConnectorWidth * 2),
+                "格子要比卡片宽，留出横向间隙");
         }
 
         [Test]

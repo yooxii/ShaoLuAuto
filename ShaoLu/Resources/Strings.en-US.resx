@@ -2507,8 +2507,17 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   <data name="GotoGuard_Count" xml:space="preserve">
     <value>Max jumps</value>
   </data>
+  <data name="GotoGuard_LimitGoto" xml:space="preserve">
+    <value>Jump to after limit</value>
+  </data>
+  <data name="GotoGuard_LimitGoto_Hint" xml:space="preserve">
+    <value>When the true / false branch reaches its jump count or timeout limit, jump to this step; leave empty to fall back to the other branch (and then to the next step)</value>
+  </data>
+  <data name="Msg_GotoGuardLimitJump" xml:space="preserve">
+    <value>Step "{0}" reached its jump limit and jumped to the configured step</value>
+  </data>
   <data name="GotoGuard_Count_Hint" xml:space="preserve">
-    <value>-1 = unlimited, 0 = never jump. When exceeded the other branch is taken.</value>
+    <value>-1 = unlimited, 0 = no jump; when the limit is reached use "Jump to after limit" (if empty, switch to the other branch)</value>
   </data>
   <data name="GotoGuard_Timeout" xml:space="preserve">
     <value>Timeout(s)</value>

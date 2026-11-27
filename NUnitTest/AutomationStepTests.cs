@@ -51,7 +51,6 @@ namespace NUnitTest
                 Assert.That(step.IsTrue, Is.False);
                 Assert.That(step.WaitTime, Is.EqualTo(0.1));
                 Assert.That(step.DelayBetweenKeys, Is.EqualTo(0.05));
-                Assert.That(step.SelfReferenceLimit, Is.EqualTo(10));
                 Assert.That(step.ConditionMode, Is.EqualTo(ConditionMode.Default));
                 Assert.That(step.EnableLog, Is.False);
             }
@@ -449,10 +448,10 @@ namespace NUnitTest
             }
 
             [Test]
-            public void SelfReferenceCount_DefaultIsZero()
+            public void GotoLimitTarget_DefaultIsNull()
             {
                 var step = new TypeTextStep();
-                Assert.That(step.SelfReferenceCount, Is.EqualTo(0));
+                Assert.That(step.GotoLimitGotoUid, Is.Null, "默认不改跳，按老行为处理跳转上限");
             }
 
             [Test]

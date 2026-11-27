@@ -324,7 +324,7 @@ namespace ShaoLu.Viewmodels
             clone.IsSave = step.IsSave;
             clone.WaitTime = step.WaitTime;
             clone.EnableLog = step.EnableLog;
-            clone.SelfReferenceLimit = step.SelfReferenceLimit;
+            clone.GotoLimitGotoUid = step.GotoLimitGotoUid;
             clone.TrueGotoMaxCount = step.TrueGotoMaxCount;
             clone.FalseGotoMaxCount = step.FalseGotoMaxCount;
             clone.TrueGotoTimeoutSeconds = step.TrueGotoTimeoutSeconds;
@@ -639,7 +639,7 @@ namespace ShaoLu.Viewmodels
         private static readonly HashSet<string> StepStateSkipProperties = new()
         {
             "Uid", "Type", "LineNo", "LastResult", "IsError", "ErrorMessage", "IsTrue",
-            "SelfReferenceCount", "ConditionSummary",
+            "ConditionSummary",
             // 裁剪图是 [JsonIgnore] 运行时缓存：快照里没有它，赋值会触发磁盘读 + PNG 回写（M22），
             // 且恢复后本来也只能按同名文件懒加载，故跳过该属性
             "CroppedImg",
@@ -1027,7 +1027,6 @@ namespace ShaoLu.Viewmodels
         /// </summary>
         private void ApplyDefaultSettings(AutomationStepBase step)
         {
-            step.SelfReferenceLimit = _stepSettings.DefaultSelfReferenceLimit;
             step.WaitTime = _stepSettings.DefaultWaitTime;
 
             if (step is ImageRecognitionBase imageStep)
@@ -1443,8 +1442,7 @@ namespace ShaoLu.Viewmodels
                 Application.Current.MainWindow.WindowState = WindowState.Minimized;
             foreach (var step in AutomationStepBases)
             {
-                // 重置自引用计数器与循环跳转保护
-                step.SelfReferenceCount = 0;
+                // 重置循环跳转保护（跳转次数 / 超时）
                 step.ResetGotoGuards();
                 step.ErrorType = StepErrorType.None;
                 // 弹窗步骤：忘掉上次运行/测试留下的窗口记录
@@ -2373,8 +2371,8 @@ namespace ShaoLu.Viewmodels
 
         /// <summary>
         /// Q3：检测跳转链里的环（A→B→A 这类两段跳转环）。
-        /// 只做诊断告警、不中断流程：直接自跳已有 SelfReferenceLimit 兜底，
-        /// 而两段跳转环常被用作"轮询直到满足条件"的合法循环，强制中断会破坏现有流程。
+        /// 只做诊断告警、不中断流程：自跳与两段跳转环都靠各步骤的跳转次数 / 超时保护兜底，
+        /// 而这类环常被用作"轮询直到满足条件"的合法循环，强制中断会破坏现有流程。
         /// 跳转链在遇到"不跳转的步骤"时清空，避免把正常流程的重复访问误判成环。
         /// </summary>
         private void DetectJumpCycle(Guid targetUid)
@@ -2669,10 +2667,10 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
-        /// 按跳转配置解析下一个执行索引（含自引用上限、循环跳转次数/超时保护）。
+        /// 按跳转配置解析下一个执行索引（含循环跳转次数 / 超时保护与「上限后跳到」）。
         /// 返回 -1 表示不跳转（继续下一步）；否则返回目标步骤索引。
         /// </summary>
-        private static int ResolveNextIndex(AutomationStepBase step, int currentIndex, IList<AutomationStepBase> steps)
+        internal static int ResolveNextIndex(AutomationStepBase step, int currentIndex, IList<AutomationStepBase> steps)
         {
             bool isTrue = step.IsTrue;
             int nextIndex = FindGotoTarget(step, isTrue, steps);
@@ -2681,16 +2679,26 @@ namespace ShaoLu.Viewmodels
             if (nextIndex < 0)
             {
                 step.ResetGotoGuards();
-                step.SelfReferenceCount = 0;
                 return -1;
             }
 
-            // 循环保护：该分支的跳转次数或累计时长超限时不再跳转，改走另一分支，
-            // 另一分支也不跳转就顺序执行下一步（即「跳出该环执行下一步」）
+            // 循环保护：该分支的跳转次数或累计时长到达上限时不再跳转。
+            // 配了「上限后跳到」就跳过去；没配就照旧改走另一分支，另一分支也不跳就顺序执行下一步
             if (GotoGuardExceeded(step, isTrue))
             {
                 step.ResetGotoGuards();
-                step.SelfReferenceCount = 0;
+
+                if (step.GotoLimitGotoUid.HasValue && step.GotoLimitGotoUid.Value != Guid.Empty)
+                {
+                    int limitIndex = FindIndexByUidIn(steps, step.GotoLimitGotoUid.Value);
+                    if (limitIndex >= 0 && limitIndex != currentIndex)
+                    {
+                        step.ErrorMessage = string.Format(
+                            LanguageService.GetLocalizedString("Msg_GotoGuardLimitJump"), step.Name);
+                        return limitIndex;
+                    }
+                }
+
                 bool other = !isTrue;
                 int altIndex = FindGotoTarget(step, other, steps);
                 step.IsTrue = other;
@@ -2708,32 +2716,8 @@ namespace ShaoLu.Viewmodels
 
             CountGoto(step, isTrue);
 
-            if (nextIndex != currentIndex)
-            {
-                step.SelfReferenceCount = 0; // 非自引用时重置
-                return nextIndex;
-            }
-
-            // 自引用检测
-            step.SelfReferenceCount++;
-            // SelfReferenceLimit: -1=无限制, 0=禁止自引用, >0=限制次数
-            if (step.SelfReferenceLimit < 0 || step.SelfReferenceCount < step.SelfReferenceLimit)
-                return nextIndex;
-
-            // 达到自引用上限：自身结果强制为 false
-            step.IsTrue = false;
-            step.ErrorMessage = string.Format(LanguageService.GetLocalizedString("Msg_SelfReferenceLimit"), step.Name, step.SelfReferenceLimit);
-            step.SelfReferenceCount = 0;
-            step.ResetGotoGuards();
-
-            // 按 false 结果重新解析跳转目标；FalseGoto 为空或仍指向自身时不跳转
-            if (step.FalseGotoUid.HasValue && step.FalseGotoUid.Value != Guid.Empty)
-            {
-                int falseIndex = FindIndexByUidIn(steps, step.FalseGotoUid.Value);
-                if (falseIndex >= 0 && falseIndex != currentIndex)
-                    return falseIndex;
-            }
-            return -1;
+            // 自引用（跳回自己）不再单独设上限，统一受该分支的跳转次数 / 超时保护约束
+            return nextIndex;
         }
 
         /// <summary>按分支取跳转目标索引，没设置或找不到返回 -1</summary>

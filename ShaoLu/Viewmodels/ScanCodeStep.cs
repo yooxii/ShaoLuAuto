@@ -155,7 +155,7 @@ namespace ShaoLu.Viewmodels
             clone.FalseGotoUid = FalseGotoUid;
             clone.IsNeed = IsNeed;
             clone.EnableLog = EnableLog;
-            clone.SelfReferenceLimit = SelfReferenceLimit;
+            clone.GotoLimitGotoUid = GotoLimitGotoUid;
             clone.TrueGotoMaxCount = TrueGotoMaxCount;
             clone.FalseGotoMaxCount = FalseGotoMaxCount;
             clone.TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds;

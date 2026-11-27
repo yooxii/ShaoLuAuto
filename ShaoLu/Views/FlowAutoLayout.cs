@@ -13,14 +13,23 @@ namespace ShaoLu.Views
     /// </summary>
     public static class FlowAutoLayout
     {
-        /// <summary>格子宽度：卡片 220 + 左右各一排连接口，再留出竖直走线的通道</summary>
-        public const double CellWidth = 300d;
+        /// <summary>卡片本身的宽度（不含左右各一排出口 / 入口列）</summary>
+        public const double NodeWidth = 190d;
 
-        /// <summary>格子高度：卡片 96，再留出上下走线的通道</summary>
-        public const double CellHeight = 150d;
+        /// <summary>卡片本身的高度</summary>
+        public const double NodeHeight = 80d;
+
+        /// <summary>卡片左右两侧各一排连接口所占的宽度</summary>
+        public const double NodeConnectorWidth = 14d;
+
+        /// <summary>格子宽度：卡片 + 左右各一排连接口，再留出竖直走线的通道</summary>
+        public const double CellWidth = 260d;
+
+        /// <summary>格子高度：卡片，再留出上下走线的通道</summary>
+        public const double CellHeight = 130d;
 
         /// <summary>垂直流的行距：比格子高一些，让相邻两格之间的通道更宽，线好绕到两边</summary>
-        public const double VerticalGap = 180d;
+        public const double VerticalGap = 150d;
 
         /// <summary>垂直流的列心（世界坐标），画完「适应窗口」后自然出现在屏幕中间</summary>
         public const double VerticalCenterX = 760d;
@@ -79,14 +88,15 @@ namespace ShaoLu.Views
         }
 
         /// <summary>
-        /// 垂直流：一列向下，水平居中在 <see cref="VerticalCenterX"/>，第 0 个在最上面。
+        /// 垂直流：一列向下，卡片水平居中在 <see cref="VerticalCenterX"/>，第 0 个在最上面。
         /// </summary>
         public static List<Point> BuildVertical(int count)
         {
             var cells = new List<Point>();
             if (count <= 0) return cells;
 
-            double left = VerticalCenterX - (CellWidth / 2d);
+            // 卡片居中：格子左边 = 列心 - 半个卡片 - 左侧连接口列
+            double left = VerticalCenterX - (NodeWidth / 2d) - NodeConnectorWidth;
             for (int i = 0; i < count; i++)
                 cells.Add(new Point(left, i * VerticalGap));
 

@@ -198,10 +198,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
         /// </summary>
         public StepErrorType ErrorType { get => _errorType; set => SetProperty(ref _errorType, value); }
 
-        // 自引用次数上限（-1=无限制, 0=禁止自引用, >0=限制次数）
-        private int _selfReferenceLimit = 10;
-        public int SelfReferenceLimit { get => _selfReferenceLimit; set => SetProperty(ref _selfReferenceLimit, value); }
-
         /// <summary>
         /// 流程图里是否被「锚定」（钉住）：自动整理时该节点保持原位，只能手动拖动。
         /// 视图层状态，不进工程文件。
@@ -217,10 +213,6 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 OnPropertyChanged();
             }
         }
-
-        // 运行时自引用计数器（不序列化）
-        [JsonIgnore]
-        public int SelfReferenceCount { get; set; }
 
         #region 循环跳转保护（跳出循环的次数 / 时间限制）
 
@@ -239,6 +231,13 @@ namespace ShaoLu.Viewmodels.AutomationStep
         private double _falseGotoTimeoutSeconds;
         /// <summary>假分支跳转超时（秒，0 = 不限制）</summary>
         public double FalseGotoTimeoutSeconds { get => _falseGotoTimeoutSeconds; set => SetProperty(ref _falseGotoTimeoutSeconds, value); }
+
+        private Guid? _gotoLimitGotoUid;
+        /// <summary>
+        /// 跳转次数 / 超时到达上限后跳到哪个步骤（空 = 按原来的处理：改走另一分支，另一分支也不跳就顺序执行下一步）。
+        /// 真、假两个分支共用这个出口，自引用（跳回自己）也算在跳转次数里。
+        /// </summary>
+        public Guid? GotoLimitGotoUid { get => _gotoLimitGotoUid; set => SetProperty(ref _gotoLimitGotoUid, value); }
 
         /// <summary>运行时：真分支已跳转次数（不序列化）</summary>
         [JsonIgnore]
@@ -716,7 +715,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
+                GotoLimitGotoUid = GotoLimitGotoUid, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
             };
         }
         #endregion
@@ -851,7 +850,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
+                GotoLimitGotoUid = GotoLimitGotoUid, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
             };
         }
         #endregion
@@ -985,7 +984,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 IsNeed = IsNeed,
                 Index = Index,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
+                GotoLimitGotoUid = GotoLimitGotoUid, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
             };
         }
         #endregion
@@ -1370,7 +1369,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 TrueGotoUid = TrueGotoUid,
                 FalseGotoUid = FalseGotoUid,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
+                GotoLimitGotoUid = GotoLimitGotoUid, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
                 Title = Title,
                 PopupText = PopupText,
                 PopupFont = PopupFont?.Clone(),
@@ -1773,7 +1772,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
                 FalseGotoUid = FalseGotoUid,
                 IsNeed = IsNeed,
                 EnableLog = EnableLog,
-                SelfReferenceLimit = SelfReferenceLimit, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
+                GotoLimitGotoUid = GotoLimitGotoUid, TrueGotoMaxCount = TrueGotoMaxCount, FalseGotoMaxCount = FalseGotoMaxCount, TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds, FalseGotoTimeoutSeconds = FalseGotoTimeoutSeconds,
             };
         }
 

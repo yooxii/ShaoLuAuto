@@ -158,7 +158,6 @@ namespace NUnitTest
 
                 Assert.That(step.ShowErrorPopup, Is.False);
                 Assert.That(step.MinimizeOnRun, Is.True);
-                Assert.That(step.DefaultSelfReferenceLimit, Is.EqualTo(10));
                 Assert.That(step.ConfirmBeforeRun, Is.False);
                 Assert.That(step.DefaultSimilarityThreshold, Is.EqualTo(0.85));
                 Assert.That(step.DefaultWaitTime, Is.EqualTo(0.1));

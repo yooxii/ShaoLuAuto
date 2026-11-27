@@ -121,12 +121,26 @@
                     <wd:NumericBox Value="{Binding FalseGotoTimeoutSeconds, Mode=TwoWay}" Minimum="0" Maximum="86400" Precision="1" Interval="1" Width="60"
                                    ToolTip="{lex:Loc GotoGuard_Timeout_Hint}"/>
                 </StackPanel>
-                <Label Grid.Row="6" Content="{lex:Loc SelfReferenceLimit}" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
-                    <wd:NumericBox Value="{Binding SelfReferenceLimit, Mode=TwoWay}" Minimum="-1" Maximum="9999" Width="80"
-                                   ToolTip="{lex:Loc SelfReferenceLimitHint}"/>
-                    <TextBlock Text="{lex:Loc SelfReferenceLimitHint}" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray" FontSize="11"/>
-                </StackPanel>
+                <!-- 跳转上限后跳到：真 / 假分支的次数或超时到达上限时改跳这个步骤（留空 = 改走另一分支，另一分支也不跳就顺序执行下一步） -->
+                <Label Grid.Row="6" Content="{lex:Loc GotoGuard_LimitGoto}" VerticalAlignment="Center" Margin="0,0,5,0"
+                       ToolTip="{lex:Loc GotoGuard_LimitGoto_Hint}"/>
+                <ComboBox Grid.Row="6" Grid.Column="1"
+                          ItemsSource="{Binding AllSteps}"
+                          SelectedValue="{Binding GotoLimitGotoUid, TargetNullValue={x:Static sys:Guid.Empty}}"
+                          SelectedValuePath="Uid"
+                          IsEditable="False"
+                          MinWidth="120"
+                          ToolTip="{lex:Loc GotoGuard_LimitGoto_Hint}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding LineNo, Mode=OneWay}"/>
+                                <Run Text=" - "/>
+                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </Grid>
           </ScrollViewer>
         </GroupBox>

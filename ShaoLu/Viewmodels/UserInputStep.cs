@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using ShaoLu.Models;
@@ -196,7 +196,7 @@ namespace ShaoLu.Viewmodels.AutomationStep
             clone.FalseGotoUid = FalseGotoUid;
             clone.IsNeed = IsNeed;
             clone.EnableLog = EnableLog;
-            clone.SelfReferenceLimit = SelfReferenceLimit;
+            clone.GotoLimitGotoUid = GotoLimitGotoUid;
             clone.TrueGotoMaxCount = TrueGotoMaxCount;
             clone.FalseGotoMaxCount = FalseGotoMaxCount;
             clone.TrueGotoTimeoutSeconds = TrueGotoTimeoutSeconds;

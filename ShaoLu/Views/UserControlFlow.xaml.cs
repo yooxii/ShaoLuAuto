@@ -660,24 +660,7 @@ namespace ShaoLu.Views
             if (Nodes.Count == 0) return;
             if (Editor == null) return;
 
-            double viewWidth = Editor.ActualWidth > 40 ? Editor.ActualWidth : 900;
-            int columns = Math.Max(1, (int)((viewWidth - 80) / 300));
-            double x0 = 60, y0 = 36, cellW = 300, cellH = 140;
-
-            bool any = false;
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                var node = Nodes[i];
-                if (FlowLayoutStore.TryGet(node.Step.Uid, out _)) continue;
-
-                int row = i / columns;
-                int col = i % columns;
-                if (row % 2 == 1) col = Math.Max(0, columns - 1 - col);
-                node.Location = new Point(x0 + col * cellW, y0 + row * cellH);
-                any = true;
-            }
-
-            if (any)
+            if (ApplyRingLayout(onlyUnplaced: true))
             {
                 UpdateEditorExtent();
                 RouteConnections();
@@ -692,20 +675,84 @@ namespace ShaoLu.Views
 
         private void AutoLayout_Click(object sender, RoutedEventArgs e)
         {
-            double viewWidth = Editor != null && Editor.ActualWidth > 40 ? Editor.ActualWidth : 900;
-            int columns = Math.Max(1, (int)((viewWidth - 80) / 300));
-            const double x0 = 60, y0 = 36, cellW = 300, cellH = 140;
-
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                int row = i / columns;
-                int col = i % columns;
-                if (row % 2 == 1) col = Math.Max(0, columns - 1 - col);
-                Nodes[i].Location = new Point(x0 + col * cellW, y0 + row * cellH);
-            }
-
+            ApplyRingLayout(onlyUnplaced: false);
             FitToWindow();
         }
+
+        /// <summary>自动排列的起始边距</summary>
+        private const double LayoutOriginX = 60d;
+        private const double LayoutOriginY = 36d;
+
+        /// <summary>
+        /// 按「回字形」摆放节点：左上 → 右上 → 右下 → 左下 绕一圈，绕回起点旁边就整体往外扩一圈继续，
+        /// 不往中间填；锚定（节点右上角「锚」）的节点原地不动，新位置也不会压到它们。
+        /// </summary>
+        /// <param name="onlyUnplaced">true = 只摆还没有位置的节点（打开工程 / 新增步骤时用）</param>
+        /// <returns>是否真的动过节点</returns>
+        private bool ApplyRingLayout(bool onlyUnplaced)
+        {
+            var nodes = Nodes.ToList();
+            if (nodes.Count == 0) return false;
+
+            var cells = new List<Point>(nodes.Count);
+            foreach (var cell in FlowRingLayout.Build(nodes.Count))
+                cells.Add(new Point(cell.X + LayoutOriginX, cell.Y + LayoutOriginY));
+
+            // 不动的节点（锚定的，或已经摆好且只补空缺时）先占住格子，新位置要避开它们；
+            // 会移动的节点不能算占用，否则它自己的旧位置会把自己的新位置挡掉
+            var occupied = new List<Rect>();
+            foreach (var node in nodes)
+            {
+                if (!node.IsPinned && !(onlyUnplaced && FlowLayoutStore.TryGet(node.Step.Uid, out _))) continue;
+                occupied.Add(CellBounds(node.Location));
+            }
+
+            int cursor = 0;
+            bool moved = false;
+            foreach (var node in nodes)
+            {
+                if (node.IsPinned) continue;
+                if (onlyUnplaced && FlowLayoutStore.TryGet(node.Step.Uid, out _)) continue;
+
+                Point target = NextFreeCell(cells, ref cursor, occupied) ?? cells[cells.Count - 1];
+                occupied.Add(CellBounds(target));
+                if (node.Location == target) continue;
+
+                node.Location = target;
+                moved = true;
+            }
+
+            return moved;
+        }
+
+        /// <summary>取下一个不和已占格子重叠的位置</summary>
+        private static Point? NextFreeCell(IReadOnlyList<Point> cells, ref int cursor, IReadOnlyList<Rect> occupied)
+        {
+            while (cursor < cells.Count)
+            {
+                var point = cells[cursor++];
+                if (!OverlapsAny(CellBounds(point), occupied)) return point;
+            }
+
+            return null;
+        }
+
+        private static bool OverlapsAny(Rect rect, IReadOnlyList<Rect> others)
+        {
+            for (int i = 0; i < others.Count; i++)
+            {
+                // 只认真正压在一起的：紧挨着（共边）算不冲突，否则相邻格会被误判成占用
+                var other = others[i];
+                if (rect.Left < other.Right - 0.5 && rect.Right > other.Left + 0.5
+                    && rect.Top < other.Bottom - 0.5 && rect.Bottom > other.Top + 0.5)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static Rect CellBounds(Point topLeft)
+            => new Rect(topLeft, new Size(FlowRingLayout.CellWidth, FlowRingLayout.CellHeight));
 
         private void FitToWindow_Click(object sender, RoutedEventArgs e) => FitToWindow();
 
@@ -715,8 +762,8 @@ namespace ShaoLu.Views
 
             double left = Nodes.Min(n => n.Location.X);
             double top = Nodes.Min(n => n.Location.Y);
-            double right = Nodes.Max(n => n.Location.X + 300);
-            double bottom = Nodes.Max(n => n.Location.Y + 96);
+            double right = Nodes.Max(n => n.Location.X + NodeConnectorWidth * 2 + NodeWidth);
+            double bottom = Nodes.Max(n => n.Location.Y + NodeHeight);
 
             double vw = Editor.ActualWidth - 40;
             double vh = Editor.ActualHeight - 40;
@@ -747,6 +794,17 @@ namespace ShaoLu.Views
             if (sender is FrameworkElement element && element.DataContext is FlowNode node)
             {
                 node.Step.EnableLog = !node.Step.EnableLog;
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>节点右上角「锚」：钉住 / 取消锚定（自动整理时钉住的节点不动）</summary>
+        private void PinBadge_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (!SingletonLocator.Main.IsLoggedIn) return;
+            if (sender is FrameworkElement element && element.DataContext is FlowNode node)
+            {
+                node.IsPinned = !node.IsPinned;
                 e.Handled = true;
             }
         }
@@ -924,6 +982,21 @@ namespace ShaoLu.Views
                 _location = value;
                 FlowLayoutStore.Set(Step.Uid, value);
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Location)));
+            }
+        }
+
+        /// <summary>
+        /// 锚定：钉住（点节点右上角「锚」）后自动整理不会移动它，手动拖动照常。
+        /// 状态存在 FlowLayoutStore 里，随工程写进 flow.json。
+        /// </summary>
+        public bool IsPinned
+        {
+            get => FlowLayoutStore.IsPinned(Step.Uid);
+            set
+            {
+                if (IsPinned == value) return;
+                FlowLayoutStore.SetPinned(Step.Uid, value);
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsPinned)));
             }
         }
 

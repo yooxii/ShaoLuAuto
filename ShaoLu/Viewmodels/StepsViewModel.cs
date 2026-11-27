@@ -896,27 +896,36 @@ namespace ShaoLu.Viewmodels
         }
 
         /// <summary>
-        /// 确保存在「用户输入」步骤且位于扫码步骤之前、包含工单号/站别/工号/线别四个字段。
-        /// 不满足时先提示，再自动创建（首行）或补齐缺失字段。
+        /// 上传链条要求「用户输入」步骤提供的字段：工单号 / 站别 / 工号 / 线别写进 MES 数据段，
+        /// 程序名作为镭雕程式文件名（insert 第 3 参数）。
         /// </summary>
-        private void EnsureUserInputForScan(AutomationStepBase anchorStep)
+        private static readonly string[] UploadUserInputFields = { "工单号", "站别", "工号", "线别", UploadProgramNameField };
+
+        /// <summary>「程序名」字段名：上传步骤把它填进镭雕程式文件名。</summary>
+        private const string UploadProgramNameField = "程序名";
+
+        /// <summary>
+        /// 确保存在「用户输入」步骤且位于扫码步骤之前、包含工单号/站别/工号/线别/程序名五个字段。
+        /// 不满足时先提示，再自动创建（首行）或补齐缺失字段；返回可用的用户输入步骤（补不出时为空）。
+        /// </summary>
+        private UserInputStep EnsureUserInputForScan(AutomationStepBase anchorStep)
         {
             int anchorIndex = AutomationStepBases.IndexOf(anchorStep);
             var userInput = AutomationStepBases.OfType<UserInputStep>().FirstOrDefault();
             int uiIndex = userInput == null ? -1 : AutomationStepBases.IndexOf(userInput);
 
-            var requiredFields = new[] { "工单号", "站别", "工号", "线别" };
+            var requiredFields = UploadUserInputFields;
             var missingFields = userInput == null
                 ? new List<string>(requiredFields)
                 : requiredFields.Where(n => !userInput.Fields.Any(f =>
                     string.Equals((f?.Name ?? string.Empty).Trim(), n, StringComparison.OrdinalIgnoreCase))).ToList();
 
             bool createNew = userInput == null || uiIndex > anchorIndex;
-            if (!createNew && missingFields.Count == 0) return;
+            if (!createNew && missingFields.Count == 0) return userInput;
 
-            string title = LanguageService.GetLocalizedString("ScanCode_ChainTitle", "扫码步骤需要用户输入");
-            string message = LanguageService.GetLocalizedString("ScanCode_AutoAddUserInput",
-                "扫码步骤需要用户输入步骤提供工单号/站别/工号/线别。\n\n将自动创建用户输入步骤并放到首行（缺少的字段会补齐）。");
+            string title = LanguageService.GetLocalizedString("AcbelChain_Title", "上传 Acbel 需要用户输入");
+            string message = LanguageService.GetLocalizedString("AcbelChain_AddUserInput",
+                "上传 Acbel 需要用户输入步骤提供工单号/站别/工号/线别/程序名（工单号、站别+工号、线别写进 MES 数据段，程序名作为镭雕程式文件名）。\n\n将自动创建用户输入步骤并放到首行（缺少的字段会补齐）。");
             try
             {
                 WPFDevelopers.Controls.MessageBox.Show(message, title,
@@ -929,7 +938,7 @@ namespace ShaoLu.Viewmodels
             {
                 var ui = new UserInputStep($"UserInput_{AutomationStepBases.Count(t => t.Type == StepType.UserInput) + 1}")
                 {
-                    PromptTitle = LanguageService.GetLocalizedString("ScanCode_UserInputTitle", "扫码信息")
+                    PromptTitle = LanguageService.GetLocalizedString("AcbelChain_UserInputTitle", "扫码信息")
                 };
                 foreach (var name in requiredFields)
                 {
@@ -955,6 +964,8 @@ namespace ShaoLu.Viewmodels
                     });
                 }
             }
+
+            return createNew ? AutomationStepBases.OfType<UserInputStep>().FirstOrDefault() : userInput;
         }
 
         /// <summary>上传步骤依赖扫码步骤：没有时提示并自动插入一个扫码步骤。</summary>
@@ -963,8 +974,8 @@ namespace ShaoLu.Viewmodels
             var scan = AutomationStepBases.OfType<ScanCodeStep>().FirstOrDefault();
             if (scan == null)
             {
-                string title = LanguageService.GetLocalizedString("ScanCode_ChainTitle", "扫码步骤需要用户输入");
-                string message = LanguageService.GetLocalizedString("ScanCode_AutoAddScan",
+                string title = LanguageService.GetLocalizedString("AcbelChain_Title", "上传 Acbel 需要用户输入");
+                string message = LanguageService.GetLocalizedString("AcbelChain_AddScan",
                     "上传步骤需要扫码步骤（验证网络 → 扫码 → 验证条码）。\n\n将在上传步骤前自动插入一个扫码步骤。");
                 try
                 {
@@ -980,8 +991,8 @@ namespace ShaoLu.Viewmodels
                 AutomationStepBases.Insert(uploadIndex < 0 ? 0 : uploadIndex, scan);
             }
 
-            // 上传链条同时要求「用户输入」步骤提供工单号/站别/工号/线别
-            EnsureUserInputForScan(scan);
+            // 上传链条同时要求「用户输入」步骤提供工单号/站别/工号/线别/程序名
+            var chainUserInput = EnsureUserInputForScan(scan);
 
             // 把上传的 INTERNAL_SR（第 4 段，单体条码）引用到扫码步骤的文本；用户已配引用时不覆盖
             try
@@ -991,6 +1002,18 @@ namespace ShaoLu.Viewmodels
                 {
                     row.RefStepUid = scan.Uid;
                     row.RefKind = AcbelReferenceKind.ScanResult;
+                }
+            }
+            catch { }
+
+            // 镭雕程式文件名引用用户输入的「程序名」；已经配了引用或填了固定文本时不覆盖
+            try
+            {
+                var programFileRow = uploadStep.ProgramFileRow;
+                if (chainUserInput != null && programFileRow != null
+                    && !programFileRow.IsReferenced && string.IsNullOrWhiteSpace(programFileRow.Text))
+                {
+                    programFileRow.SetReference(chainUserInput.Uid, AcbelReferenceKind.UserInput, UploadProgramNameField);
                 }
             }
             catch { }

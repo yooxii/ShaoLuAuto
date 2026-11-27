@@ -1907,8 +1907,12 @@
                             <DataGridTemplateColumn Header="{lex:Loc UserInput_Required}" Width="42">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <CheckBox IsChecked="{Binding IsRequired}"
-                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <!-- 必要：必须显式 TwoWay + PropertyChanged 才会立刻回写字段。
+                                             单元格模板里的勾选框默认按 LostFocus 提交，没进过编辑状态就拿不到焦点，
+                                             勾了也回写不到数据里（冻结列一直能改，正是因为它带了 PropertyChanged）。 -->
+                                        <CheckBox IsChecked="{Binding IsRequired, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  ToolTip="{lex:Loc UserInput_RequiredHint}"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

@@ -171,7 +171,7 @@
                                         </DockPanel>
                                     </Grid>
 
-                                    <!-- 右侧：执行日志开关（「记」） -->
+                                    <!-- 右侧：执行日志开关（「记」）与锚定开关（「锚」） -->
                                     <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
                                         <Border x:Name="LogBadge" Width="16" Height="16" CornerRadius="8" Cursor="Hand"
                                                 ToolTip="{lex:Loc FlowChart_LogToggle_ToolTip}"
@@ -190,6 +190,27 @@
                                                 </Style>
                                             </Border.Style>
                                             <TextBlock Text="{lex:Loc FlowChart_LogBadge}" FontSize="8.5" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" Foreground="#FF243444"/>
+                                        </Border>
+                                        <!-- 锚定：点一下钉住，自动整理时本节点不动（只能手动拖动） -->
+                                        <Border x:Name="PinBadge" Width="16" Height="16" CornerRadius="8" Cursor="Hand"
+                                                Margin="0,3,0,0"
+                                                ToolTip="{lex:Loc FlowChart_Pin_ToolTip}"
+                                                MouseLeftButtonDown="PinBadge_Click">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#FFE3E8EE"/>
+                                                    <Setter Property="BorderBrush" Value="#FFC3CBD4"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                                            <Setter Property="Background" Value="#FFFFC76B"/>
+                                                            <Setter Property="BorderBrush" Value="#FFE09A17"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{lex:Loc FlowChart_PinBadge}" FontSize="8.5" HorizontalAlignment="Center"
                                                        VerticalAlignment="Center" Foreground="#FF243444"/>
                                         </Border>
                                     </StackPanel>

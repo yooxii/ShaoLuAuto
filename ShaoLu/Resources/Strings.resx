@@ -1722,6 +1722,9 @@
   <data name="UserInput_Required" xml:space="preserve">
     <value>Required</value>
   </data>
+  <data name="UserInput_RequiredHint" xml:space="preserve">
+    <value>Required: the step fails before running while this field is empty</value>
+  </data>
   <data name="UserInput_Options" xml:space="preserve">
     <value>Options</value>
   </data>
@@ -2163,7 +2166,7 @@ Reason: {0}</value>
     <value>Upload Acbel needs user input</value>
   </data>
   <data name="AcbelChain_AddUserInput" xml:space="preserve">
-    <value>The Upload Acbel step needs a User Input step with work order / station / employee / line (they are written to MES as MO, station+employee and line).
+    <value>The Upload Acbel step needs a User Input step with work order / station / employee / line / program name (work order, station+employee and line are written to MES; the program name is used as the laser program file name).
 
 A User Input step will be created at the top automatically (missing fields are added).</value>
   </data>
@@ -2355,7 +2358,7 @@ OCR features will be unavailable afterwards and the program will restart. Delete
     <value>Clear jumps</value>
   </data>
   <data name="FlowChart_Hint" xml:space="preserve">
-    <value>Drag nodes to arrange them. Drag from the T / F dot to a target step to set that jump, drop on empty canvas to clear it: drop on the ↺ inside the source node to link back to itself. Double-click the name or note to edit, and click the log badge at the node's top-right to toggle execution logging. Edges only show run order and jumps; they do not change the step order in the list.</value>
+    <value>Drag nodes to arrange them. Drag from the T / F dot to a target step to set that jump, drop on empty canvas to clear it: drop on the ↺ inside the source node to link back to itself. Double-click the name or note to edit; the badges at the node's top-right toggle execution logging (log) and pinning (pin, auto layout leaves pinned nodes alone). Edges only show run order and jumps; they do not change the step order in the list.</value>
   </data>
   <data name="FlowChart_Empty" xml:space="preserve">
     <value>No steps in this project yet</value>
@@ -2644,6 +2647,9 @@ OCR features will be unavailable afterwards and the program will restart. Delete
   </data>
   <data name="FlowChart_Pin_ToolTip" xml:space="preserve">
     <value>Pin this node: auto layout leaves it in place (only manual dragging moves it)</value>
+  </data>
+  <data name="FlowChart_PinBadge" xml:space="preserve">
+    <value>P</value>
   </data>
   <data name="Flow_Anchor_ToolTip" xml:space="preserve">
     <value>Anchor: drag to reroute the connection, right-click to remove</value>

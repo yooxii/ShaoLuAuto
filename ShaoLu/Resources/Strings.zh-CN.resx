@@ -1722,6 +1722,9 @@
   <data name="UserInput_Required" xml:space="preserve">
     <value>必填</value>
   </data>
+  <data name="UserInput_RequiredHint" xml:space="preserve">
+    <value>必填：这一项没填，运行前就判定本步骤失败</value>
+  </data>
   <data name="UserInput_Options" xml:space="preserve">
     <value>下拉选项</value>
   </data>
@@ -2163,7 +2166,7 @@
     <value>上传 Acbel 需要用户输入</value>
   </data>
   <data name="AcbelChain_AddUserInput" xml:space="preserve">
-    <value>上传 Acbel 需要用户输入步骤提供工单号/站别/工号/线别（工单号、站别+工号、线别都会写进 MES）。
+    <value>上传 Acbel 需要用户输入步骤提供工单号/站别/工号/线别/程序名（工单号、站别+工号、线别都会写进 MES，程序名作为镭雕程式文件名）。
 
 将自动创建用户输入步骤并放到首行（缺少的字段会补齐）。</value>
   </data>
@@ -2364,7 +2367,7 @@
     <value>清除本步跳转</value>
   </data>
   <data name="FlowChart_Hint" xml:space="preserve">
-    <value>拖动节点可自由摆放；从节点右侧的「T / F」圆点拖到目标步骤可建立真/假跳转，拖到空白处清除该跳转，拖到源节点中心的「↺」可连回自身。双击名称或备注可直接编辑，节点右上角的「记」切换是否记录执行日志。连线只表示执行顺序与跳转，不改变步骤在列表中的先后。</value>
+    <value>拖动节点可自由摆放；从节点右侧的「T / F」圆点拖到目标步骤可建立真/假跳转，拖到空白处清除该跳转，拖到源节点中心的「↺」可连回自身。双击名称或备注可直接编辑，节点右上角的「记」切换是否记录执行日志、「锚」切换是否锚定（锚定后「自动整理」不会动它）。连线只表示执行顺序与跳转，不改变步骤在列表中的先后。</value>
   </data>
   <data name="FlowChart_Empty" xml:space="preserve">
     <value>当前工程还没有步骤</value>
@@ -2653,6 +2656,9 @@
   </data>
   <data name="FlowChart_Pin_ToolTip" xml:space="preserve">
     <value>锚定：自动整理时这个节点不动，只能手动拖动</value>
+  </data>
+  <data name="FlowChart_PinBadge" xml:space="preserve">
+    <value>锚</value>
   </data>
   <data name="Flow_Anchor_ToolTip" xml:space="preserve">
     <value>锚点：拖动可改变连线走向，右键删除</value>

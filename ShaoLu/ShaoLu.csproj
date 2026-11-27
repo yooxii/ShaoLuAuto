@@ -20,7 +20,7 @@
     <ApplicationRevision>0</ApplicationRevision>
     <!-- 版本号三处一致：本行 ApplicationVersion + Properties\AssemblyInfo.cs 的
          AssemblyVersion / AssemblyFileVersion。tools\build-app.ps1 每次构建都会校验。 -->
-    <ApplicationVersion>0.8.1.2632</ApplicationVersion>
+    <ApplicationVersion>0.8.1.2633</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -190,6 +190,8 @@
     </Compile>
     <Compile Include="Services\IConfigurationService.cs" />
     <Compile Include="Services\ConditionEvaluator.cs" />
+    <Compile Include="Services\DebugActions.cs" />
+    <Compile Include="Services\DebugLogService.cs" />
     <Compile Include="Services\ExecutionLogService.cs" />
     <Compile Include="Services\BurnInService.cs" />
     <Compile Include="Services\RecentFilesService.cs" />

@@ -228,6 +228,25 @@
                                 </TextBlock>
                             </StackPanel>
                         </ToggleButton>
+                        <!-- 调试组：默认折叠，点开才显示调试工具栏 -->
+                        <ToggleButton x:Name="DebugGroupToggle" Margin="2" Padding="8,2"
+                                      ToolTip="{lex:Loc Debug_Group_ToolTip}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{lex:Loc Menu_Debug}"/>
+                                <TextBlock Margin="5,0,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="▸"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, ElementName=DebugGroupToggle}" Value="True">
+                                                    <Setter Property="Text" Value="▾"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </ToggleButton>
                     </ToolBar>
                     <ToolBar Header="{lex:Loc Edit}" IsEnabled="{Binding Main.IsLoggedIn, Source={StaticResource VMLocator}}"
                              Visibility="{Binding IsChecked, ElementName=EditGroupToggle, Converter={StaticResource BoolToVis}}">
@@ -283,6 +302,35 @@
                             <MenuItem Header="{lex:Loc AddPopupStep}" Click="MenuItemAddImageStep_Click" CommandParameter="Popup"/>
                             <MenuItem Header="{lex:Loc AddFocusWindowStep}" Click="MenuItemAddImageStep_Click" CommandParameter="FocusWindow"/>
                         </wd:SplitButton>
+                    </ToolBar>
+                    <!-- 调试：调试模式（独立日志）、日志与截图、识别标示开关；默认折叠，避免挤占工具栏 -->
+                    <ToolBar Header="{lex:Loc Menu_Debug}"
+                             Visibility="{Binding IsChecked, ElementName=DebugGroupToggle, Converter={StaticResource BoolToVis}}">
+                        <ToggleButton x:Name="DebugModeToggle" Margin="2" Padding="8,2"
+                                      Content="{lex:Loc Debug_Mode}"
+                                      IsChecked="{Binding Main.DebugMode, Source={StaticResource VMLocator}, Mode=TwoWay}"
+                                      ToolTip="{lex:Loc Debug_Mode_ToolTip}"/>
+                        <Separator/>
+                        <!-- 单步：暂停时点一下只执行下一步（跟「暂停」配合做逐步排查） -->
+                        <Button Margin="3" Content="{lex:Loc Debug_StepOnce}" Command="{Binding StepOnceCommand}"
+                                ToolTip="{lex:Loc Debug_StepOnce_ToolTip}"/>
+                        <Separator/>
+                        <Button Margin="3" Content="{lex:Loc Debug_OpenLatest}" Click="DebugOpenLatest_Click"
+                                ToolTip="{lex:Loc Debug_OpenLatest_ToolTip}"/>
+                        <Button Margin="3" Content="{lex:Loc Debug_OpenFolder}" Click="DebugOpenFolder_Click"/>
+                        <Button Margin="3" Content="{lex:Loc Debug_Clear}" Click="DebugClear_Click"/>
+                        <Button Margin="3" Content="{lex:Loc Debug_Screenshot}" Click="DebugScreenshot_Click"
+                                ToolTip="{lex:Loc Debug_Screenshot_ToolTip}"/>
+                        <Separator/>
+                        <ToggleButton Margin="2" Padding="8,2" Content="{lex:Loc Debug_ShowOcr}"
+                                      IsChecked="{Binding Main.ShowOcrRegionOnRun, Source={StaticResource VMLocator}, Mode=TwoWay}"
+                                      ToolTip="{lex:Loc Debug_OverlayGroup_ToolTip}"/>
+                        <ToggleButton Margin="2" Padding="8,2" Content="{lex:Loc Debug_ShowFound}"
+                                      IsChecked="{Binding Main.ShowFoundImageOnRun, Source={StaticResource VMLocator}, Mode=TwoWay}"
+                                      ToolTip="{lex:Loc Debug_OverlayGroup_ToolTip}"/>
+                        <ToggleButton Margin="2" Padding="8,2" Content="{lex:Loc Debug_ShowClick}"
+                                      IsChecked="{Binding Main.ShowClickPositionOnRun, Source={StaticResource VMLocator}, Mode=TwoWay}"
+                                      ToolTip="{lex:Loc Debug_OverlayGroup_ToolTip}"/>
                     </ToolBar>
                 </ToolBarTray>
             </ToolBarPanel>

@@ -36,6 +36,11 @@ namespace ShaoLu.Models
         public bool MinimizeOnRun { get; set; } = true;
 
         /// <summary>
+        /// 调试模式：把每一步的执行细节写进独立的调试日志（logs\debug\），与执行记录、程序日志分开保存
+        /// </summary>
+        public bool DebugMode { get; set; } = false;
+
+        /// <summary>
         /// 运行前是否弹出确认对话框
         /// </summary>
         public bool ConfirmBeforeRun { get; set; } = false;

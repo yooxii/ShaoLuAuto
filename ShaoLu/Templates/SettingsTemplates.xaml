@@ -81,6 +81,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="8"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{lex:Loc ShowErrorPopup}" VerticalAlignment="Center"/>
@@ -97,6 +99,9 @@
 
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="{lex:Loc CloseWindowsOnFinish}" VerticalAlignment="Center"/>
                     <CheckBox Grid.Row="8" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding CloseWindowsOnFinish}"/>
+
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="{lex:Loc Debug_Mode}" VerticalAlignment="Center" ToolTip="{lex:Loc Debug_Mode_ToolTip}"/>
+                    <CheckBox Grid.Row="10" Grid.Column="1" VerticalAlignment="Center" IsChecked="{Binding DebugMode}" ToolTip="{lex:Loc Debug_Mode_ToolTip}"/>
                 </Grid>
             </Expander>
 

@@ -735,6 +735,81 @@
   <data name="EnableLog" xml:space="preserve">
     <value>記錄執行日誌</value>
   </data>
+  <data name="Menu_Debug" xml:space="preserve">
+    <value>偵錯</value>
+  </data>
+  <data name="Debug_StepOnce" xml:space="preserve">
+    <value>單步</value>
+  </data>
+  <data name="Debug_StepOnce_ToolTip" xml:space="preserve">
+    <value>暫停後點一下只執行下一步，然後繼續暫停（快速鍵 F8）</value>
+  </data>
+  <data name="Debug_StatusBar" xml:space="preserve">
+    <value>偵錯模式：記錄偵錯日誌</value>
+  </data>
+  <data name="Debug_Mode" xml:space="preserve">
+    <value>偵錯模式</value>
+  </data>
+  <data name="Debug_Mode_ToolTip" xml:space="preserve">
+    <value>開啟後把每一步的執行細節（參數、結果、耗時、跳轉）寫進獨立的偵錯日誌 logs\debug\，與執行記錄、程式日誌分開保存</value>
+  </data>
+  <data name="Debug_OpenFolder" xml:space="preserve">
+    <value>開啟日誌資料夾</value>
+  </data>
+  <data name="Debug_OpenLatest" xml:space="preserve">
+    <value>開啟最近日誌</value>
+  </data>
+  <data name="Debug_OpenLatest_ToolTip" xml:space="preserve">
+    <value>用預設程式開啟最近一份偵錯日誌</value>
+  </data>
+  <data name="Debug_Clear" xml:space="preserve">
+    <value>清除偵錯日誌</value>
+  </data>
+  <data name="Debug_ClearConfirm" xml:space="preserve">
+    <value>確定刪除全部偵錯日誌（含偵錯截圖）嗎？</value>
+  </data>
+  <data name="Debug_Cleared" xml:space="preserve">
+    <value>已清除 {0} 個偵錯日誌檔案。</value>
+  </data>
+  <data name="Debug_Screenshot" xml:space="preserve">
+    <value>截圖目前畫面</value>
+  </data>
+  <data name="Debug_Screenshot_ToolTip" xml:space="preserve">
+    <value>把目前螢幕截圖存進偵錯日誌資料夾，方便記錄出錯時的現場</value>
+  </data>
+  <data name="Debug_ScreenshotSaved" xml:space="preserve">
+    <value>截圖已儲存：{0}</value>
+  </data>
+  <data name="Debug_ScreenshotFailed" xml:space="preserve">
+    <value>截圖失敗，請檢查螢幕權限。</value>
+  </data>
+  <data name="Debug_OpenFailed" xml:space="preserve">
+    <value>開啟失敗：{0}</value>
+  </data>
+  <data name="Debug_NoLog" xml:space="preserve">
+    <value>還沒有偵錯日誌：先勾選「偵錯模式」，再執行一次流程。</value>
+  </data>
+  <data name="Debug_OverlayGroup" xml:space="preserve">
+    <value>辨識標示</value>
+  </data>
+  <data name="Debug_OverlayGroup_ToolTip" xml:space="preserve">
+    <value>執行中在螢幕上畫出辨識區域 / 比對區域 / 點擊位置，方便看清這一步在看哪裡</value>
+  </data>
+  <data name="Debug_ShowOcr" xml:space="preserve">
+    <value>辨識區域</value>
+  </data>
+  <data name="Debug_ShowFound" xml:space="preserve">
+    <value>比對區域</value>
+  </data>
+  <data name="Debug_ShowClick" xml:space="preserve">
+    <value>點擊位置</value>
+  </data>
+  <data name="Debug_Group_ToolTip" xml:space="preserve">
+    <value>展開 / 收起偵錯工具列</value>
+  </data>
+  <data name="Debug_ExecutionLog" xml:space="preserve">
+    <value>執行記錄</value>
+  </data>
   <data name="ExecutionLog" xml:space="preserve">
     <value>執行日誌</value>
   </data>

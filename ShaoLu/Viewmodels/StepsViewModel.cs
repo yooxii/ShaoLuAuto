@@ -69,8 +69,9 @@ namespace ShaoLu.Viewmodels
             get => _isPaused;
             set
             {
-                if (SetProperty(ref _isPaused, value))
-                    OnPropertyChanged(nameof(RunStateText));
+                if (!SetProperty(ref _isPaused, value)) return;
+                OnPropertyChanged(nameof(RunStateText));
+                StepOnceCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -108,6 +109,7 @@ namespace ShaoLu.Viewmodels
                     if (!value) CurrentRunStepName = string.Empty;
                     RunCommand.RaiseCanExecuteChanged();
                     StopCommand.RaiseCanExecuteChanged();
+                    StepOnceCommand.RaiseCanExecuteChanged();
                     AddStepCommand.RaiseCanExecuteChanged();
                     DelStepCommand.RaiseCanExecuteChanged();
                     UpStepCommand.RaiseCanExecuteChanged();
@@ -183,11 +185,21 @@ namespace ShaoLu.Viewmodels
         private RelayCommand pauseCommand;
         public RelayCommand PauseCommand => pauseCommand ??= new RelayCommand(TogglePause);
 
+        /// <summary>暂停中的单步请求（1 = 放行一步）</summary>
+        private int _stepOnceRequested;
+
+        private RelayCommand stepOnceCommand;
+        /// <summary>调试用单步：暂停时点一下只执行下一步，然后继续停在暂停状态</summary>
+        public RelayCommand StepOnceCommand => stepOnceCommand ??= new RelayCommand(
+            () => Interlocked.Exchange(ref _stepOnceRequested, 1),
+            () => _isRunning && _isPaused && !StopSignal);
+
         private void TogglePause()
         {
             if (!_isRunning) return;
             IsPaused = !IsPaused;
             logger.Info(IsPaused ? "Pause Auto" : "Resume Auto");
+            DebugLogService.Note(IsPaused ? "用户暂停" : "用户继续");
         }
 
 
@@ -1397,6 +1409,7 @@ namespace ShaoLu.Viewmodels
         private void Stop()
         {
             logger.Info("Stop Auto");
+            DebugLogService.Note("用户点击「停止」");
             // 只发出"停止请求"：运行态（IsRunning）必须等旧循环真正退出后，
             // 在 Run() 的 finally 里复位，否则刚点停止就能再点开始，叠加出第二套循环（S8）
             StopSignal = true;
@@ -1418,6 +1431,7 @@ namespace ShaoLu.Viewmodels
             // 重置停止信号和暂停状态
             StopSignal = false;
             IsPaused = false;
+            Interlocked.Exchange(ref _stepOnceRequested, 0);
             // 重置跳转链（Q3 环形检测用，只统计本次运行）
             _jumpVisits.Clear();
             // 初始化自动化引擎
@@ -1682,6 +1696,9 @@ namespace ShaoLu.Viewmodels
 
                 logger.Info("Start Auto");
 
+                // 调试模式：本次运行单独一个调试日志文件（logs\debug\）
+                DebugLogService.BeginSession(CurrentProjectName(), AutomationStepBases.Count);
+
                 for (int i = 0; i < AutomationStepBases.Count; i++)
                 {
                     // 在每个步骤开始前检查停止信号和取消标志
@@ -1691,10 +1708,16 @@ namespace ShaoLu.Viewmodels
                         break;
                     }
 
-                    // 暂停等待：处于暂停状态时在每个步骤间等待，直到恢复或停止
+                    // 暂停等待：处于暂停状态时在每个步骤间等待，直到恢复或停止；
+                    // 「单步」请求会放行一步，执行完下一步继续停在这里
                     while (IsPaused && !StopSignal)
                     {
                         token.ThrowIfCancellationRequested();
+                        if (Interlocked.Exchange(ref _stepOnceRequested, 0) == 1)
+                        {
+                            DebugLogService.Note("单步：执行下一步");
+                            break;
+                        }
                         await Task.Delay(100, token);
                     }
                     if (StopSignal)
@@ -1730,13 +1753,19 @@ namespace ShaoLu.Viewmodels
                     CheckAndCloseStepReachedPopups(step.Uid);
 
                     if (!step.IsNeed)
+                    {
+                        DebugLogService.Note($"第 {i + 1} 步 {step.Name} 标记为不执行，跳过");
                         continue;
+                    }
 
                     // 多线程开始步骤解析出的区域末尾（-1 表示不跳过区域）
                     int multiThreadSkipEndIndex = -1;
 
                     // 计时器放在 try 之外，异常路径也要用它记录耗时
                     var sw = Stopwatch.StartNew();
+
+                    // 调试模式 / 「更多细节」用：这一步的参数摘要（纯字符串拼接，成本很低）
+                    string stepDetails = null;
 
                     // 每一步单独的取消源（链接运行总令牌）：中断/结束运行可以立刻中止「正在执行」的步骤，
                     // 不必等这一步自己跑完（例如自引用、单步循环、超时很长的步骤）
@@ -1754,6 +1783,7 @@ namespace ShaoLu.Viewmodels
                         // 记录当前正在执行的步骤（供统计窗口展示）
                         _executionContext.RunningStepUid = step.Uid;
 
+                        DebugLogService.StepStarted(i, step);
                         await step.RunAsync(stepCts.Token);
                         sw.Stop();
 
@@ -1822,6 +1852,9 @@ namespace ShaoLu.Viewmodels
                         }
 
                         // 通用日志记录（T4 契约：Log 返回是否落库成功，失败只告警、不静默）
+                        if (step.EnableLog || DebugLogService.IsEnabled)
+                            stepDetails = BuildStepDetails(step, result);
+
                         if (step.EnableLog)
                         {
                             string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
@@ -1836,7 +1869,7 @@ namespace ShaoLu.Viewmodels
                                 threadName: "主线程",
                                 textSource: result.TextSource,
                                 errorMessage: step.IsError ? step.ErrorMessage : null,
-                                details: step.RecordDetails ? BuildStepDetails(step, result) : null))
+                                details: step.RecordDetails ? stepDetails : null))
                             {
                                 logger.Warn("执行日志未落库：{0}", step.Name);
                             }
@@ -1895,6 +1928,7 @@ namespace ShaoLu.Viewmodels
                         step.ErrorType = InferErrorType(ex);
                         sw.Stop();
                         RecordFailureResult(step, _executionContext, sw.Elapsed.TotalMilliseconds, ex.Message);
+                        DebugLogService.StepFailed(i, step, ex.Message, sw.Elapsed.TotalMilliseconds);
                         if (_stepSettings.ShowErrorPopup)
                         {
                             var (_, popupTask) = WindowAsyncPopup.Show(
@@ -1924,8 +1958,18 @@ namespace ShaoLu.Viewmodels
                         stepCts.Dispose();
                     }
 
-                    // 确定下一个执行索引（通过 Uid 查找目标步骤，含自引用上限处理）
+                    // 确定下一个执行索引（通过 Uid 查找目标步骤，含循环跳转保护）
                     int nextIndex = ResolveNextIndex(step, i, AutomationStepBases);
+
+                    // 调试日志：这一步的结果与跳转走向
+                    if (DebugLogService.IsEnabled)
+                    {
+                        string nextName = nextIndex >= 0 && nextIndex < AutomationStepBases.Count
+                            ? AutomationStepBases[nextIndex].Name
+                            : null;
+                        DebugLogService.StepFinished(i, step, step.LastResult, stepDetails, nextIndex, nextName);
+                    }
+
                     if (nextIndex >= 0)
                     {
                         // Q3：记录跳转路径，检测 A→B→A 这类环（仅告警）
@@ -1961,6 +2005,9 @@ namespace ShaoLu.Viewmodels
             }
             finally
             {
+                // 调试日志：收尾（写清结束原因）
+                DebugLogService.EndSession(StopSignal ? "用户停止" : runEndedNormally ? "正常结束" : "已结束");
+
                 // S9：正常结束 / 用户取消 / 外层异常，都在这里统一收尾，
                 // 避免异常路径不复位运行状态、统计窗关不掉、主窗卡在最小化。
                 // 放在子线程等待之前：用户点停止时界面立即恢复（与多线程功能改造前一致）。
@@ -2543,8 +2590,12 @@ namespace ShaoLu.Viewmodels
                     // 计时器放在 try 之外，异常路径也要用它记录耗时
                     var sw = Stopwatch.StartNew();
 
+                    // 调试日志用：这一步的参数摘要
+                    string stepDetails = null;
+
                     try
                     {
+                        DebugLogService.StepStarted(i, step, context.ThreadName);
                         await step.RunAsync(token);
                         sw.Stop();
 
@@ -2574,6 +2625,9 @@ namespace ShaoLu.Viewmodels
                         context.SetResult(step.LineNo, result);
                         context.SetResultByUid(step.Uid, result);
 
+                        if (step.EnableLog || DebugLogService.IsEnabled)
+                            stepDetails = BuildStepDetails(step, result);
+
                         if (step.EnableLog)
                         {
                             string fileName = Path.GetFileNameWithoutExtension(SingletonLocator.Main.StepFilePath ?? "unsaved");
@@ -2587,7 +2641,7 @@ namespace ShaoLu.Viewmodels
                                 threadName: context.ThreadName,
                                 textSource: result.TextSource,
                                 errorMessage: step.IsError ? step.ErrorMessage : null,
-                                details: step.RecordDetails ? BuildStepDetails(step, result) : null))
+                                details: step.RecordDetails ? stepDetails : null))
                             {
                                 logger.Warn("执行日志未落库（子线程）：{0}", step.Name);
                             }
@@ -2626,6 +2680,7 @@ namespace ShaoLu.Viewmodels
                         // 失败也要写入执行上下文，统计窗口才能看到子线程步骤的结果/次数/耗时
                         sw.Stop();
                         var failResult = RecordFailureResult(step, context, sw.Elapsed.TotalMilliseconds, ex.Message);
+                        DebugLogService.StepFailed(i, step, ex.Message, sw.Elapsed.TotalMilliseconds, context.ThreadName);
                         // 异常路径同样补一条日志，内容带上异常消息
                         if (step.EnableLog)
                         {
@@ -2646,6 +2701,14 @@ namespace ShaoLu.Viewmodels
 
                     // 区域内的跳转；指向区域之外时结束该子线程并记日志
                     int nextIndex = ResolveNextIndex(step, i, steps);
+
+                    if (DebugLogService.IsEnabled)
+                    {
+                        string nextName = nextIndex >= 0 && nextIndex < steps.Count ? steps[nextIndex].Name : null;
+                        DebugLogService.StepFinished(i, step, step.LastResult, stepDetails, nextIndex, nextName,
+                            context.ThreadName);
+                    }
+
                     if (nextIndex < 0) continue;
 
                     if (nextIndex < regionStart || nextIndex > regionEnd)
@@ -2769,6 +2832,17 @@ namespace ShaoLu.Viewmodels
                 if (steps[i].Uid == uid) return i;
             }
             return -1;
+        }
+
+        /// <summary>当前工程名（未保存时为 unsaved）：调试日志与执行记录共用</summary>
+        private static string CurrentProjectName()
+        {
+            try
+            {
+                string path = SingletonLocator.Main?.StepFilePath;
+                return Path.GetFileNameWithoutExtension(path ?? "unsaved") ?? "unsaved";
+            }
+            catch { return "unsaved"; }
         }
 
         #endregion

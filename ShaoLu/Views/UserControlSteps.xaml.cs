@@ -155,6 +155,18 @@ namespace ShaoLu.Views
             UpdateLayout();
         }
 
+        #region 调试工具栏
+
+        private void DebugOpenLatest_Click(object sender, RoutedEventArgs e) => DebugActions.OpenLatestLog();
+
+        private void DebugOpenFolder_Click(object sender, RoutedEventArgs e) => DebugActions.OpenLogFolder();
+
+        private void DebugClear_Click(object sender, RoutedEventArgs e) => DebugActions.ClearLogs();
+
+        private void DebugScreenshot_Click(object sender, RoutedEventArgs e) => DebugActions.Screenshot();
+
+        #endregion
+
         /// <summary>
         /// 视图切换：标准表格 ↔ 流程图。两者共用 StepsViewModel 里的同一份步骤数据，
         /// 流程图里拖动节点 / 拖 T、F 圆点连线都直接改这份数据。

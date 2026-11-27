@@ -99,6 +99,7 @@ namespace ShaoLu.Viewmodels
         private bool _showOCRRegionOnRun;
         private bool _showFoundImageRegionOnRun;
         private bool _showClickPositionOnRun;
+        private bool _debugMode;
         private double _defaultSimilarityThreshold;
         private double _defaultWaitTime;
         private double _defaultTimeout;
@@ -125,6 +126,7 @@ namespace ShaoLu.Viewmodels
         public OverlaySetting OCRRegionOverlay { get; set; }
         public OverlaySetting FoundImageOverlay { get; set; }
         public OverlaySetting ClickPositionOverlay { get; set; }
+        public bool DebugMode { get => _debugMode; set => SetProperty(ref _debugMode, value); }
         public double DefaultSimilarityThreshold { get => _defaultSimilarityThreshold; set => SetProperty(ref _defaultSimilarityThreshold, value); }
         public double DefaultWaitTime { get => _defaultWaitTime; set => SetProperty(ref _defaultWaitTime, value); }
         public double DefaultTimeout { get => _defaultTimeout; set => SetProperty(ref _defaultTimeout, value); }
@@ -154,6 +156,7 @@ namespace ShaoLu.Viewmodels
             OCRRegionOverlay = model.OCRRegionOverlay;
             FoundImageOverlay = model.FoundImageOverlay;
             ClickPositionOverlay = model.ClickPositionOverlay;
+            DebugMode = model.DebugMode;
             DefaultSimilarityThreshold = model.DefaultSimilarityThreshold;
             DefaultWaitTime = model.DefaultWaitTime;
             DefaultTimeout = model.DefaultTimeout;
@@ -184,6 +187,7 @@ namespace ShaoLu.Viewmodels
             model.OCRRegionOverlay = OCRRegionOverlay;
             model.FoundImageOverlay = FoundImageOverlay;
             model.ClickPositionOverlay = ClickPositionOverlay;
+            model.DebugMode = DebugMode;
             model.DefaultSimilarityThreshold = DefaultSimilarityThreshold;
             model.DefaultWaitTime = DefaultWaitTime;
             model.DefaultTimeout = DefaultTimeout;

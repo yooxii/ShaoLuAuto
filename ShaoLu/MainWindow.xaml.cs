@@ -114,6 +114,9 @@ namespace ShaoLu
 
             Loaded += MainWindow_Loaded;
 
+            // 调试：F8 暂停时单步（暂停后按一下只执行下一步，排查流程用）
+            InputBindings.Add(new KeyBinding(stepsViewModel.StepOnceCommand, Key.F8, ModifierKeys.None));
+
             // 扩展菜单里的状态行（OCR 扩展是否已加载）
             RefreshExtensionMenu();
 
@@ -863,6 +866,18 @@ namespace ShaoLu
             WindowExecutionLog window = new();
             window.Show();
         }
+
+        #region 调试菜单
+
+        private void DebugOpenFolder_Click(object sender, RoutedEventArgs e) => DebugActions.OpenLogFolder();
+
+        private void DebugOpenLatest_Click(object sender, RoutedEventArgs e) => DebugActions.OpenLatestLog();
+
+        private void DebugClear_Click(object sender, RoutedEventArgs e) => DebugActions.ClearLogs();
+
+        private void DebugScreenshot_Click(object sender, RoutedEventArgs e) => DebugActions.Screenshot();
+
+        #endregion
 
         private void BurnInStatistics_Click(object sender, RoutedEventArgs e)
         {

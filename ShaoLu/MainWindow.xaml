@@ -100,6 +100,32 @@
             </MenuItem>
             <MenuItem x:Name="Setting" Header="{lex:Loc}" Click="Setting_Click">
             </MenuItem>
+            <!-- 调试：调试模式（独立调试日志）、快速打开/清理日志、截图、识别标示开关 -->
+            <MenuItem x:Name="DebugMenu" Header="{lex:Loc Menu_Debug}">
+                <MenuItem x:Name="DebugModeItem" Header="{lex:Loc Debug_Mode}" IsCheckable="True"
+                          IsChecked="{Binding Main.DebugMode, Source={StaticResource VMLocator}, Mode=TwoWay}"
+                          ToolTip="{lex:Loc Debug_Mode_ToolTip}"/>
+                <MenuItem x:Name="DebugStepOnceItem" Header="{lex:Loc Debug_StepOnce}"
+                          Command="{Binding Steps.StepOnceCommand, Source={StaticResource VMLocator}}"
+                          InputGestureText="F8" ToolTip="{lex:Loc Debug_StepOnce_ToolTip}"/>
+                <Separator/>
+                <MenuItem x:Name="DebugOpenFolderItem" Header="{lex:Loc Debug_OpenFolder}" Click="DebugOpenFolder_Click"/>
+                <MenuItem x:Name="DebugOpenLatestItem" Header="{lex:Loc Debug_OpenLatest}" Click="DebugOpenLatest_Click"/>
+                <MenuItem x:Name="DebugClearItem" Header="{lex:Loc Debug_Clear}" Click="DebugClear_Click"/>
+                <MenuItem x:Name="DebugScreenshotItem" Header="{lex:Loc Debug_Screenshot}" Click="DebugScreenshot_Click"/>
+                <Separator/>
+                <MenuItem x:Name="DebugOverlayGroup" Header="{lex:Loc Debug_OverlayGroup}"
+                          ToolTip="{lex:Loc Debug_OverlayGroup_ToolTip}">
+                    <MenuItem x:Name="DebugShowOcrItem" Header="{lex:Loc Debug_ShowOcr}" IsCheckable="True"
+                              IsChecked="{Binding Main.ShowOcrRegionOnRun, Source={StaticResource VMLocator}, Mode=TwoWay}"/>
+                    <MenuItem x:Name="DebugShowFoundItem" Header="{lex:Loc Debug_ShowFound}" IsCheckable="True"
+                              IsChecked="{Binding Main.ShowFoundImageOnRun, Source={StaticResource VMLocator}, Mode=TwoWay}"/>
+                    <MenuItem x:Name="DebugShowClickItem" Header="{lex:Loc Debug_ShowClick}" IsCheckable="True"
+                              IsChecked="{Binding Main.ShowClickPositionOnRun, Source={StaticResource VMLocator}, Mode=TwoWay}"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem x:Name="DebugExecutionLogItem" Header="{lex:Loc Debug_ExecutionLog}" Click="ExecutionLog_Click"/>
+            </MenuItem>
             <MenuItem x:Name="ManagementMenu" Header="{lex:Loc Management}">
                 <MenuItem x:Name="LoginLogout" Header="{lex:Loc Menu_Login}" Click="LoginLogout_Click"/>
                 <MenuItem x:Name="UserManagement" Header="{lex:Loc UserManagementTitle}" Click="UserManagement_Click"
@@ -139,6 +165,21 @@
         <StatusBar Grid.Row="2" Height="24">
             <StatusBarItem HorizontalContentAlignment="Left">
                 <TextBlock Text="{Binding Steps.CurrentRunStepName}"/>
+            </StatusBarItem>
+            <!-- 调试模式提醒：开着时状态栏右侧亮一个小标记，避免忘了关 -->
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Text="{lex:Loc Debug_StatusBar}" Foreground="#FF8A4600" FontWeight="SemiBold">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Main.DebugMode, Source={StaticResource VMLocator}}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
                 <TextBlock Text="{Binding Steps.RunStateText}"/>

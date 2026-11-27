@@ -735,6 +735,81 @@
   <data name="EnableLog" xml:space="preserve">
     <value>Enable Execution Log</value>
   </data>
+  <data name="Menu_Debug" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="Debug_StepOnce" xml:space="preserve">
+    <value>Step</value>
+  </data>
+  <data name="Debug_StepOnce_ToolTip" xml:space="preserve">
+    <value>While paused, execute just the next step and stay paused (shortcut F8)</value>
+  </data>
+  <data name="Debug_StatusBar" xml:space="preserve">
+    <value>Debug mode: logging</value>
+  </data>
+  <data name="Debug_Mode" xml:space="preserve">
+    <value>Debug mode</value>
+  </data>
+  <data name="Debug_Mode_ToolTip" xml:space="preserve">
+    <value>Writes per-step details (parameters, result, timing, jump) into a separate debug log under logs\debug\</value>
+  </data>
+  <data name="Debug_OpenFolder" xml:space="preserve">
+    <value>Debug log folder</value>
+  </data>
+  <data name="Debug_OpenLatest" xml:space="preserve">
+    <value>Latest debug log</value>
+  </data>
+  <data name="Debug_OpenLatest_ToolTip" xml:space="preserve">
+    <value>Open the latest debug log with the default program</value>
+  </data>
+  <data name="Debug_Clear" xml:space="preserve">
+    <value>Clear debug logs</value>
+  </data>
+  <data name="Debug_ClearConfirm" xml:space="preserve">
+    <value>Delete all debug logs (including debug screenshots)?</value>
+  </data>
+  <data name="Debug_Cleared" xml:space="preserve">
+    <value>Removed {0} debug log file(s).</value>
+  </data>
+  <data name="Debug_Screenshot" xml:space="preserve">
+    <value>Capture screen</value>
+  </data>
+  <data name="Debug_Screenshot_ToolTip" xml:space="preserve">
+    <value>Save a screenshot of the current screen into the debug log folder</value>
+  </data>
+  <data name="Debug_ScreenshotSaved" xml:space="preserve">
+    <value>Screenshot saved: {0}</value>
+  </data>
+  <data name="Debug_ScreenshotFailed" xml:space="preserve">
+    <value>Screenshot failed, please check screen permission.</value>
+  </data>
+  <data name="Debug_OpenFailed" xml:space="preserve">
+    <value>Open failed: {0}</value>
+  </data>
+  <data name="Debug_NoLog" xml:space="preserve">
+    <value>No debug log yet: turn on Debug mode and run the flow once.</value>
+  </data>
+  <data name="Debug_OverlayGroup" xml:space="preserve">
+    <value>Recognition overlays</value>
+  </data>
+  <data name="Debug_OverlayGroup_ToolTip" xml:space="preserve">
+    <value>Draw the OCR region / matched region / click position on screen while running</value>
+  </data>
+  <data name="Debug_ShowOcr" xml:space="preserve">
+    <value>OCR region</value>
+  </data>
+  <data name="Debug_ShowFound" xml:space="preserve">
+    <value>Match region</value>
+  </data>
+  <data name="Debug_ShowClick" xml:space="preserve">
+    <value>Click position</value>
+  </data>
+  <data name="Debug_Group_ToolTip" xml:space="preserve">
+    <value>Expand / collapse the debug toolbar</value>
+  </data>
+  <data name="Debug_ExecutionLog" xml:space="preserve">
+    <value>Execution records</value>
+  </data>
   <data name="ExecutionLog" xml:space="preserve">
     <value>Execution Log</value>
   </data>

@@ -735,6 +735,81 @@
   <data name="EnableLog" xml:space="preserve">
     <value>记录执行日志</value>
   </data>
+  <data name="Menu_Debug" xml:space="preserve">
+    <value>调试</value>
+  </data>
+  <data name="Debug_StepOnce" xml:space="preserve">
+    <value>单步</value>
+  </data>
+  <data name="Debug_StepOnce_ToolTip" xml:space="preserve">
+    <value>暂停后点一下只执行下一步，然后继续暂停（快捷键 F8）</value>
+  </data>
+  <data name="Debug_StatusBar" xml:space="preserve">
+    <value>调试模式：记录调试日志</value>
+  </data>
+  <data name="Debug_Mode" xml:space="preserve">
+    <value>调试模式</value>
+  </data>
+  <data name="Debug_Mode_ToolTip" xml:space="preserve">
+    <value>打开后把每一步的执行细节（参数、结果、耗时、跳转）写进独立的调试日志 logs\debug\，与执行记录、程序日志分开保存</value>
+  </data>
+  <data name="Debug_OpenFolder" xml:space="preserve">
+    <value>打开日志文件夹</value>
+  </data>
+  <data name="Debug_OpenLatest" xml:space="preserve">
+    <value>打开最近日志</value>
+  </data>
+  <data name="Debug_OpenLatest_ToolTip" xml:space="preserve">
+    <value>用默认程序打开最近一份调试日志</value>
+  </data>
+  <data name="Debug_Clear" xml:space="preserve">
+    <value>清空调试日志</value>
+  </data>
+  <data name="Debug_ClearConfirm" xml:space="preserve">
+    <value>确定删除全部调试日志（含调试截图）吗？</value>
+  </data>
+  <data name="Debug_Cleared" xml:space="preserve">
+    <value>已清理 {0} 个调试日志文件。</value>
+  </data>
+  <data name="Debug_Screenshot" xml:space="preserve">
+    <value>截图当前屏幕</value>
+  </data>
+  <data name="Debug_Screenshot_ToolTip" xml:space="preserve">
+    <value>把当前屏幕截图存进调试日志目录，方便记录出错时的现场</value>
+  </data>
+  <data name="Debug_ScreenshotSaved" xml:space="preserve">
+    <value>截图已保存：{0}</value>
+  </data>
+  <data name="Debug_ScreenshotFailed" xml:space="preserve">
+    <value>截图失败，请检查屏幕权限。</value>
+  </data>
+  <data name="Debug_OpenFailed" xml:space="preserve">
+    <value>打开失败：{0}</value>
+  </data>
+  <data name="Debug_NoLog" xml:space="preserve">
+    <value>还没有调试日志：先勾选「调试模式」，再运行一次流程。</value>
+  </data>
+  <data name="Debug_OverlayGroup" xml:space="preserve">
+    <value>识别标示</value>
+  </data>
+  <data name="Debug_OverlayGroup_ToolTip" xml:space="preserve">
+    <value>运行中在屏幕上画出识别区域 / 匹配区域 / 点击位置，方便看清这一步在看哪里</value>
+  </data>
+  <data name="Debug_ShowOcr" xml:space="preserve">
+    <value>识别区域</value>
+  </data>
+  <data name="Debug_ShowFound" xml:space="preserve">
+    <value>匹配区域</value>
+  </data>
+  <data name="Debug_ShowClick" xml:space="preserve">
+    <value>点击位置</value>
+  </data>
+  <data name="Debug_Group_ToolTip" xml:space="preserve">
+    <value>展开 / 收起调试工具栏</value>
+  </data>
+  <data name="Debug_ExecutionLog" xml:space="preserve">
+    <value>执行记录</value>
+  </data>
   <data name="ExecutionLog" xml:space="preserve">
     <value>执行日志</value>
   </data>
